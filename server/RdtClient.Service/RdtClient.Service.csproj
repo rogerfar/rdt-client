@@ -1,11 +1,25 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <OutputType>library</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Hangfire.Core" Version="1.7.10" />
+    <PackageReference Include="MonoTorrent" Version="1.0.19" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="SharpCompress" Version="0.25.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\RdtClient.Data\RdtClient.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="RDNET">
+      <HintPath>..\libs\RDNET.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

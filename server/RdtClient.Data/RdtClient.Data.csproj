@@ -5,13 +5,46 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Migrations\20200402172935_AspNetIdentity.cs" />
+    <Compile Remove="Migrations\20200402172935_AspNetIdentity.Designer.cs" />
+    <Compile Remove="Migrations\20200402173119_Torrents.cs" />
+    <Compile Remove="Migrations\20200402173119_Torrents.Designer.cs" />
+    <Compile Remove="Migrations\20200402190746_Torrents.cs" />
+    <Compile Remove="Migrations\20200402190746_Torrents.Designer.cs" />
+    <Compile Remove="Migrations\20200402194059_Torrents.cs" />
+    <Compile Remove="Migrations\20200402194059_Torrents.Designer.cs" />
+    <Compile Remove="Migrations\20200402212417_Torrents.cs" />
+    <Compile Remove="Migrations\20200402212417_Torrents.Designer.cs" />
+    <Compile Remove="Migrations\20200403143200_Torrent.cs" />
+    <Compile Remove="Migrations\20200403143200_Torrent.Designer.cs" />
+    <Compile Remove="Migrations\20200403143240_Settings.cs" />
+    <Compile Remove="Migrations\20200403143240_Settings.Designer.cs" />
+    <Compile Remove="Migrations\20200403145651_Settings.cs" />
+    <Compile Remove="Migrations\20200403145651_Settings.Designer.cs" />
+    <Compile Remove="Migrations\20200403164143_Downloads.cs" />
+    <Compile Remove="Migrations\20200403164143_Downloads.Designer.cs" />
+    <Compile Remove="Migrations\20200403174830_Initia.cs" />
+    <Compile Remove="Migrations\20200403174830_Initia.Designer.cs" />
+    <Compile Remove="Migrations\20200403174846_Initial.cs" />
+    <Compile Remove="Migrations\20200403174846_Initial.Designer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="3.1.3" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="3.1.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="3.1.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="RDNET">
+      <HintPath>..\libs\RDNET.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

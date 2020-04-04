@@ -1,0 +1,27 @@
+<td>{{ torrent.rdName }}</td>
+<td>
+  {{ torrent.rdSize | filesize }}
+</td>
+<td>
+  {{ torrent | status }}
+</td>
+<td>
+  <span
+    class="icon download-icon"
+    (click)="download($event)"
+    title="Download to disk"
+    *ngIf="!loading && torrent.status === 1"
+  >
+    <i class="fas fa-download"></i>
+  </span>
+</td>
+<td>
+  <span
+    class="icon delete-icon"
+    (click)="delete($event)"
+    title="Delete torrent"
+    *ngIf="!loading"
+  >
+    <i class="fas fa-times"></i>
+  </span>
+</td>

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using RdtClient.Service.Services;
 
 namespace RdtClient.Service
 {
@@ -6,7 +7,10 @@ namespace RdtClient.Service
     {
         public static void Config(IServiceCollection services)
         {
-            //services.AddScoped<IFql, Fql>();
+            services.AddScoped<IDownloads, Downloads>();
+            services.AddScoped<IScheduler, Scheduler>();
+            services.AddScoped<ISettings, Settings>();
+            services.AddScoped<ITorrents, Torrents>();
         }
     }
 }

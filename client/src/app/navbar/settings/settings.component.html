@@ -1,0 +1,79 @@
+<div class="modal" [class.is-active]="isActive">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Settings</p>
+      <button class="delete" aria-label="close" (click)="cancel()"></button>
+    </header>
+    <section class="modal-card-body">
+      <div class="field">
+        <label class="label">Real-Debrid API Key</label>
+        <div class="control">
+          <input
+            class="input"
+            type="text"
+            maxlength="100"
+            [(ngModel)]="settingRealDebridApiKey"
+          />
+        </div>
+        <p class="help">
+          You can find your API key here:
+          <a
+            href="https://real-debrid.com/apitoken"
+            target="_blank"
+            rel="noopener"
+            >https://real-debrid.com/apitoken</a
+          >.
+        </p>
+      </div>
+      <div class="field">
+        <label class="label">Download folder</label>
+        <div class="control">
+          <input
+            class="input"
+            type="text"
+            maxlength="1000"
+            [(ngModel)]="settingDownloadFolder"
+          />
+        </div>
+        <p class="help">
+          Path on the host where Real Debrid Client is hosted.
+        </p>
+      </div>
+      <div class="field">
+        <label class="label">Maximum parallel downloads</label>
+        <div class="control">
+          <input
+            class="input"
+            type="number"
+            max="100"
+            min="1"
+            [(ngModel)]="settingDownloadLimit"
+          />
+        </div>
+        <p class="help">
+          Maximum amount of torrents that get downloaded to your host at the
+          same time.
+        </p>
+      </div>
+      <div class="notification is-danger is-light" *ngIf="error?.length > 0">
+        Error saving settings: {{ error }}
+      </div>
+    </section>
+    <footer class="modal-card-foot">
+      <button class="button is-success" *ngIf="saving">
+        <span class="icon">
+          <i class="fas fa-spinner fa-pulse"></i>
+        </span>
+        <span>Save Settings</span>
+      </button>
+
+      <button class="button is-success" (click)="ok()" *ngIf="!saving">
+        Save Settings
+      </button>
+      <button class="button" (click)="cancel()" [disabled]="saving">
+        Cancel
+      </button>
+    </footer>
+  </div>
+</div>

@@ -1,0 +1,77 @@
+<nav
+  class="navbar is-dark is-fixed-top"
+  role="navigation"
+  aria-label="main navigation"
+>
+  <div class="navbar-brand">
+    <a class="navbar-item">
+      <img src="../../assets/logo.png" />
+    </a>
+
+    <a
+      role="button"
+      class="navbar-burger burger"
+      aria-label="menu"
+      aria-expanded="false"
+      [class.is-active]="showMobileMenu"
+      (click)="showMobileMenu = !showMobileMenu"
+    >
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+
+  <div class="navbar-menu" [class.is-active]="showMobileMenu">
+    <div class="navbar-start">
+      <a class="navbar-item" (click)="this.showNewTorrent = true">
+        <span class="icon">
+          <i class="fas fa-plus" aria-hidden="true"></i>
+        </span>
+        <span>Add New Torrent</span>
+      </a>
+      <a class="navbar-item" (click)="this.showSettings = true">
+        <span class="icon">
+          <i class="fas fa-cog" aria-hidden="true"></i>
+        </span>
+        <span>Settings</span>
+      </a>
+      <a
+        class="navbar-item"
+        *ngIf="profile"
+        href="https://real-debrid.com/?id=1348683"
+        target="_blank"
+        rel="noopener"
+      >
+        <span class="icon">
+          <i class="fas fa-euro-sign" aria-hidden="true"></i>
+        </span>
+        <span>Premium Status: {{ profile.expiration | date }}</span>
+      </a>
+    </div>
+
+    <div class="navbar-end">
+      <div class="navbar-item has-dropdown is-hoverable">
+        <span class="navbar-link">
+          Account
+        </span>
+
+        <div class="navbar-dropdown is-right">
+          <a class="navbar-item">
+            Profile
+          </a>
+          <a class="navbar-item">
+            Logout
+          </a>
+          <hr class="navbar-divider" />
+          <div class="navbar-item">
+            Version 0.8.0
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<app-add-new-torrent [(open)]="showNewTorrent"></app-add-new-torrent>
+<app-settings [(open)]="showSettings"></app-settings>

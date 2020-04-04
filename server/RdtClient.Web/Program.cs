@@ -1,6 +1,7 @@
 using System;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace RdtClient.Web
 {
@@ -13,8 +14,15 @@ namespace RdtClient.Web
                 .Run();
         }
 
-        private static IHostBuilder CreateHostBuilder(String[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
+        private static IHostBuilder CreateHostBuilder(String[] args)
+        {
+            return Host
+                   .CreateDefaultBuilder(args)
+                   .ConfigureLogging(logging =>
+                   {
+                       logging.AddFile("app.log");
+                   })
+                   .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
+        }
     }
 }
