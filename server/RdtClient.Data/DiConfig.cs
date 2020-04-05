@@ -10,6 +10,7 @@ namespace RdtClient.Data
             services.AddScoped<IDownloadData, DownloadData>();
             services.AddScoped<ISettingData, SettingData>();
             services.AddScoped<ITorrentData, TorrentData>();
+            services.AddScoped<IUserData, UserData>();
         }
     }
 }

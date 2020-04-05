@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RdtClient.Data.Models.Data;
@@ -9,6 +10,7 @@ using RdtClient.Service.Services;
 
 namespace RdtClient.Web.Controllers
 {
+    [Authorize]
     [Route("Api/Torrents")]
     public class TorrentsController : Controller
     {

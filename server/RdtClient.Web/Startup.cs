@@ -1,13 +1,16 @@
+using System.Threading.Tasks;
 using Hangfire;
 using Hangfire.MemoryStorage;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using RdtClient.Data;
 using RdtClient.Data.Data;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Services;
@@ -16,12 +19,12 @@ namespace RdtClient.Web
 {
     public class Startup
     {
-        private IConfiguration Configuration { get; }
-
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
+
+        private IConfiguration Configuration { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
@@ -34,10 +37,7 @@ namespace RdtClient.Web
 
             services.AddControllers();
 
-            services.AddSpaStaticFiles(configuration =>
-            {
-                configuration.RootPath = "wwwroot";
-            });
+            services.AddSpaStaticFiles(configuration => { configuration.RootPath = "wwwroot"; });
 
             services.AddHttpContextAccessor();
 
@@ -63,7 +63,7 @@ namespace RdtClient.Web
 
             services.AddIdentity<IdentityUser, IdentityRole>(options =>
                     {
-                        options.User.RequireUniqueEmail = true;
+                        options.User.RequireUniqueEmail = false;
                         options.Password.RequiredLength = 10;
                         options.Password.RequireUppercase = false;
                         options.Password.RequireLowercase = false;
@@ -73,6 +73,15 @@ namespace RdtClient.Web
                     .AddEntityFrameworkStores<DataContext>()
                     .AddDefaultTokenProviders();
 
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.Events.OnRedirectToLogin = context =>
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return Task.CompletedTask;
+                };
+            });
+
             services.AddHangfire(configuration => configuration
                                                   .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
                                                   .UseSimpleAssemblyNameTypeSerializer()
@@ -81,7 +90,7 @@ namespace RdtClient.Web
 
             services.AddHangfireServer();
 
-            Data.DiConfig.Config(services);
+            DiConfig.Config(services);
             Service.DiConfig.Config(services);
         }
 
@@ -90,6 +99,7 @@ namespace RdtClient.Web
             if (env.IsDevelopment())
             {
                 app.UseCors("Dev");
+                app.UseDeveloperExceptionPage();
             }
             else
             {
@@ -102,19 +112,15 @@ namespace RdtClient.Web
 
             app.UseRouting();
 
+            app.UseAuthentication();
+
             app.UseAuthorization();
 
             app.UseHangfireServer();
 
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 
-            app.UseSpa(spa =>
-            {
-                spa.Options.SourcePath = "wwwroot";
-            });
+            app.UseSpa(spa => { spa.Options.SourcePath = "wwwroot"; });
 
             dataContext.Migrate();
 

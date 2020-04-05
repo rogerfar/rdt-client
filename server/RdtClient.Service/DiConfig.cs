@@ -7,6 +7,7 @@ namespace RdtClient.Service
     {
         public static void Config(IServiceCollection services)
         {
+            services.AddScoped<IAuthentication, Authentication>();
             services.AddScoped<IDownloads, Downloads>();
             services.AddScoped<IScheduler, Scheduler>();
             services.AddScoped<ISettings, Settings>();

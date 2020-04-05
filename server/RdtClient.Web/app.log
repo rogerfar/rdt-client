@@ -510,3 +510,402 @@
 2020-04-04T14:50:10.8721989-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Application started. Press Ctrl+C to shut down.
 2020-04-04T14:50:10.8807198-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Hosting environment: Development
 2020-04-04T14:50:10.8830457-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Content root path: C:\Projects\rdt-client\server\RdtClient.Web
+2020-04-05T13:45:28.3326607-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T13:45:28.3381196-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T13:45:28.6485220-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T13:45:28.6495838-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T13:45:28.6605020-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:12736:e4e9d49d successfully announced in 287.7051 ms
+2020-04-05T13:45:28.6615229-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:12736:0d1a3c29 successfully announced in 6.0803 ms
+2020-04-05T13:45:28.6687331-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:12736:0d1a3c29 is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T13:45:28.6697101-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:12736:e4e9d49d is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T13:45:28.8078956-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:12736:0d1a3c29 all the dispatchers started
+2020-04-05T13:45:28.8169220-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:12736:e4e9d49d all the dispatchers started
+2020-04-05T13:45:29.8935551-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Application started. Press Ctrl+C to shut down.
+2020-04-05T13:45:29.8955304-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Hosting environment: Development
+2020-04-05T13:45:29.8974193-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Content root path: C:\Projects\rdt-client\server\RdtClient.Web
+2020-04-05T13:46:51.4321020-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T13:46:51.4372964-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T13:46:51.6383571-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T13:46:51.6395229-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T13:46:51.6796943-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:20128:1bb081e5 successfully announced in 31.1286 ms
+2020-04-05T13:46:51.6808646-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:20128:7b5d084a successfully announced in 212.183 ms
+2020-04-05T13:46:51.6961942-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:20128:1bb081e5 is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T13:46:51.7004735-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:20128:7b5d084a is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T13:46:51.8758727-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:20128:1bb081e5 all the dispatchers started
+2020-04-05T13:46:51.8778524-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:20128:7b5d084a all the dispatchers started
+2020-04-05T13:46:52.8655711-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Application started. Press Ctrl+C to shut down.
+2020-04-05T13:46:52.8740737-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Hosting environment: Development
+2020-04-05T13:46:52.8764471-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Content root path: C:\Projects\rdt-client\server\RdtClient.Web
+2020-04-05T13:49:02.8075971-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T13:49:02.8117256-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T13:49:02.9244165-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T13:49:02.9244510-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T13:49:02.9486004-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:22912:8f2632ad successfully announced in 124.3205 ms
+2020-04-05T13:49:02.9486004-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:22912:a758e9fc successfully announced in 22.5422 ms
+2020-04-05T13:49:02.9516480-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:22912:a758e9fc is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T13:49:02.9516481-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:22912:8f2632ad is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T13:49:02.9577847-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:22912:a758e9fc all the dispatchers started
+2020-04-05T13:49:02.9578387-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:22912:8f2632ad all the dispatchers started
+2020-04-05T13:49:04.2414369-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Application started. Press Ctrl+C to shut down.
+2020-04-05T13:49:04.2489867-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Hosting environment: Development
+2020-04-05T13:49:04.2509606-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Content root path: C:\Projects\rdt-client\server\RdtClient.Web
+2020-04-05T14:10:42.5154921-06:00	FAIL	[Microsoft.AspNetCore.Server.IIS.Core.IISHttpServer]	[ApplicationError]	Connection ID "18230571293206380816", Request ID "80000111-0000-fd00-b63f-84710c7967bb": An unhandled exception was thrown by the application.System.InvalidOperationException: The SPA default page middleware could not return the default page '/index.html' because it was not found, and no other middleware handled the request.
+
+   at Microsoft.AspNetCore.SpaServices.SpaDefaultPageMiddleware.<>c__DisplayClass0_0.<Attach>b__1(HttpContext context, Func`1 next)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_1.<Use>b__1(HttpContext context)
+   at Microsoft.AspNetCore.StaticFiles.StaticFileMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_2.<Use>b__2()
+   at Microsoft.AspNetCore.SpaServices.SpaDefaultPageMiddleware.<>c__DisplayClass0_0.<Attach>b__0(HttpContext context, Func`1 next)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_1.<Use>b__1(HttpContext context)
+   at Microsoft.AspNetCore.Routing.EndpointMiddleware.Invoke(HttpContext httpContext)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Server.IIS.Core.IISHttpContextOfT`1.ProcessRequestAsync()
+
+2020-04-05T14:11:01.8847368-06:00	FAIL	[Microsoft.AspNetCore.Server.IIS.Core.IISHttpServer]	[ApplicationError]	Connection ID "18230571293206380818", Request ID "80000113-0000-fd00-b63f-84710c7967bb": An unhandled exception was thrown by the application.System.InvalidOperationException: The SPA default page middleware could not return the default page '/index.html' because it was not found, and no other middleware handled the request.
+
+   at Microsoft.AspNetCore.SpaServices.SpaDefaultPageMiddleware.<>c__DisplayClass0_0.<Attach>b__1(HttpContext context, Func`1 next)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_1.<Use>b__1(HttpContext context)
+   at Microsoft.AspNetCore.StaticFiles.StaticFileMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_2.<Use>b__2()
+   at Microsoft.AspNetCore.SpaServices.SpaDefaultPageMiddleware.<>c__DisplayClass0_0.<Attach>b__0(HttpContext context, Func`1 next)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_1.<Use>b__1(HttpContext context)
+   at Microsoft.AspNetCore.Routing.EndpointMiddleware.Invoke(HttpContext httpContext)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Server.IIS.Core.IISHttpContextOfT`1.ProcessRequestAsync()
+
+2020-04-05T14:11:18.9235042-06:00	FAIL	[Microsoft.AspNetCore.Server.IIS.Core.IISHttpServer]	[ApplicationError]	Connection ID "18158513733528191424", Request ID "800001c1-0008-fc00-b63f-84710c7967bb": An unhandled exception was thrown by the application.System.InvalidOperationException: The SPA default page middleware could not return the default page '/index.html' because it was not found, and no other middleware handled the request.
+
+   at Microsoft.AspNetCore.SpaServices.SpaDefaultPageMiddleware.<>c__DisplayClass0_0.<Attach>b__1(HttpContext context, Func`1 next)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_1.<Use>b__1(HttpContext context)
+   at Microsoft.AspNetCore.StaticFiles.StaticFileMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_2.<Use>b__2()
+   at Microsoft.AspNetCore.SpaServices.SpaDefaultPageMiddleware.<>c__DisplayClass0_0.<Attach>b__0(HttpContext context, Func`1 next)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_1.<Use>b__1(HttpContext context)
+   at Microsoft.AspNetCore.Routing.EndpointMiddleware.Invoke(HttpContext httpContext)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Server.IIS.Core.IISHttpContextOfT`1.ProcessRequestAsync()
+
+2020-04-05T14:11:56.7499606-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T14:11:56.7544722-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T14:11:56.9041708-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T14:11:56.9054377-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T14:11:56.9491285-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:12032:56df2ad2 successfully announced in 176.3042 ms
+2020-04-05T14:11:56.9503891-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:12032:2b2aa6a2 successfully announced in 38.3411 ms
+2020-04-05T14:11:56.9620426-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:12032:2b2aa6a2 is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T14:11:56.9630933-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:12032:56df2ad2 is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T14:11:57.0774907-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:12032:56df2ad2 all the dispatchers started
+2020-04-05T14:11:57.0850830-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:12032:2b2aa6a2 all the dispatchers started
+2020-04-05T14:11:57.8633375-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Application started. Press Ctrl+C to shut down.
+2020-04-05T14:11:57.8702473-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Hosting environment: Development
+2020-04-05T14:11:57.8719618-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Content root path: C:\Projects\rdt-client\server\RdtClient.Web
+2020-04-05T14:11:57.9937313-06:00	FAIL	[Microsoft.AspNetCore.Server.IIS.Core.IISHttpServer]	[ApplicationError]	Connection ID "18374686494167139407", Request ID "80000450-0003-ff00-b63f-84710c7967bb": An unhandled exception was thrown by the application.System.InvalidOperationException: The SPA default page middleware could not return the default page '/index.html' because it was not found, and no other middleware handled the request.
+
+   at Microsoft.AspNetCore.SpaServices.SpaDefaultPageMiddleware.<>c__DisplayClass0_0.<Attach>b__1(HttpContext context, Func`1 next)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_1.<Use>b__1(HttpContext context)
+   at Microsoft.AspNetCore.StaticFiles.StaticFileMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_2.<Use>b__2()
+   at Microsoft.AspNetCore.SpaServices.SpaDefaultPageMiddleware.<>c__DisplayClass0_0.<Attach>b__0(HttpContext context, Func`1 next)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_1.<Use>b__1(HttpContext context)
+   at Microsoft.AspNetCore.Routing.EndpointMiddleware.Invoke(HttpContext httpContext)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Server.IIS.Core.IISHttpContextOfT`1.ProcessRequestAsync()
+
+2020-04-05T14:13:48.4444651-06:00	FAIL	[Microsoft.AspNetCore.Server.IIS.Core.IISHttpServer]	[ApplicationError]	Connection ID "18230571323271151879", Request ID "80000108-0007-fd00-b63f-84710c7967bb": An unhandled exception was thrown by the application.System.InvalidOperationException: The SPA default page middleware could not return the default page '/index.html' because it was not found, and no other middleware handled the request.
+
+   at Microsoft.AspNetCore.SpaServices.SpaDefaultPageMiddleware.<>c__DisplayClass0_0.<Attach>b__1(HttpContext context, Func`1 next)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_1.<Use>b__1(HttpContext context)
+   at Microsoft.AspNetCore.StaticFiles.StaticFileMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_2.<Use>b__2()
+   at Microsoft.AspNetCore.SpaServices.SpaDefaultPageMiddleware.<>c__DisplayClass0_0.<Attach>b__0(HttpContext context, Func`1 next)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_1.<Use>b__1(HttpContext context)
+   at Microsoft.AspNetCore.Routing.EndpointMiddleware.Invoke(HttpContext httpContext)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Server.IIS.Core.IISHttpContextOfT`1.ProcessRequestAsync()
+
+2020-04-05T14:14:33.0245393-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T14:14:33.0291643-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T14:14:33.1823149-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T14:14:33.1835542-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T14:14:33.2237994-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:10192:29c7381c successfully announced in 176.0118 ms
+2020-04-05T14:14:33.2248671-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:10192:3043a89a successfully announced in 33.654 ms
+2020-04-05T14:14:33.2366363-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:10192:3043a89a is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T14:14:33.2377551-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:10192:29c7381c is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T14:14:33.3611710-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:10192:3043a89a all the dispatchers started
+2020-04-05T14:14:33.3692201-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:10192:29c7381c all the dispatchers started
+2020-04-05T14:14:34.1738976-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Application started. Press Ctrl+C to shut down.
+2020-04-05T14:14:34.1758602-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Hosting environment: Development
+2020-04-05T14:14:34.1830956-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Content root path: C:\Projects\rdt-client\server\RdtClient.Web
+2020-04-05T14:14:34.2962618-06:00	FAIL	[Microsoft.AspNetCore.Server.IIS.Core.IISHttpServer]	[ApplicationError]	Connection ID "18302628891539276758", Request ID "800003d7-0001-fe00-b63f-84710c7967bb": An unhandled exception was thrown by the application.System.InvalidOperationException: The SPA default page middleware could not return the default page '/index.html' because it was not found, and no other middleware handled the request.
+
+   at Microsoft.AspNetCore.SpaServices.SpaDefaultPageMiddleware.<>c__DisplayClass0_0.<Attach>b__1(HttpContext context, Func`1 next)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_1.<Use>b__1(HttpContext context)
+   at Microsoft.AspNetCore.StaticFiles.StaticFileMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_2.<Use>b__2()
+   at Microsoft.AspNetCore.SpaServices.SpaDefaultPageMiddleware.<>c__DisplayClass0_0.<Attach>b__0(HttpContext context, Func`1 next)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_1.<Use>b__1(HttpContext context)
+   at Microsoft.AspNetCore.Routing.EndpointMiddleware.Invoke(HttpContext httpContext)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Server.IIS.Core.IISHttpContextOfT`1.ProcessRequestAsync()
+
+2020-04-05T14:14:50.3467710-06:00	FAIL	[Microsoft.AspNetCore.Server.IIS.Core.IISHttpServer]	[ApplicationError]	Connection ID "18086456165260067175", Request ID "80000168-000e-fb00-b63f-84710c7967bb": An unhandled exception was thrown by the application.System.InvalidOperationException: The SPA default page middleware could not return the default page '/index.html' because it was not found, and no other middleware handled the request.
+
+   at Microsoft.AspNetCore.SpaServices.SpaDefaultPageMiddleware.<>c__DisplayClass0_0.<Attach>b__1(HttpContext context, Func`1 next)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_1.<Use>b__1(HttpContext context)
+   at Microsoft.AspNetCore.StaticFiles.StaticFileMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_2.<Use>b__2()
+   at Microsoft.AspNetCore.SpaServices.SpaDefaultPageMiddleware.<>c__DisplayClass0_0.<Attach>b__0(HttpContext context, Func`1 next)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_1.<Use>b__1(HttpContext context)
+   at Microsoft.AspNetCore.Routing.EndpointMiddleware.Invoke(HttpContext httpContext)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Server.IIS.Core.IISHttpContextOfT`1.ProcessRequestAsync()
+
+2020-04-05T14:15:00.1335622-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T14:15:00.1383319-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T14:15:00.2952046-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T14:15:00.2962542-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T14:15:00.3398457-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:25096:bcce27fe successfully announced in 36.3169 ms
+2020-04-05T14:15:00.3408193-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:25096:da77809c successfully announced in 178.846 ms
+2020-04-05T14:15:00.3515002-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:25096:da77809c is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T14:15:00.3525549-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:25096:bcce27fe is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T14:15:00.4702974-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:25096:da77809c all the dispatchers started
+2020-04-05T14:15:00.4717584-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:25096:bcce27fe all the dispatchers started
+2020-04-05T14:15:01.2526071-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Application started. Press Ctrl+C to shut down.
+2020-04-05T14:15:01.2596217-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Hosting environment: Development
+2020-04-05T14:15:01.2614298-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Content root path: C:\Projects\rdt-client\server\RdtClient.Web
+2020-04-05T14:15:01.3740737-06:00	FAIL	[Microsoft.AspNetCore.Server.IIS.Core.IISHttpServer]	[ApplicationError]	Connection ID "18158513733528191426", Request ID "800001c3-0008-fc00-b63f-84710c7967bb": An unhandled exception was thrown by the application.System.InvalidOperationException: The SPA default page middleware could not return the default page '/index.html' because it was not found, and no other middleware handled the request.
+
+   at Microsoft.AspNetCore.SpaServices.SpaDefaultPageMiddleware.<>c__DisplayClass0_0.<Attach>b__1(HttpContext context, Func`1 next)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_1.<Use>b__1(HttpContext context)
+   at Microsoft.AspNetCore.StaticFiles.StaticFileMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_2.<Use>b__2()
+   at Microsoft.AspNetCore.SpaServices.SpaDefaultPageMiddleware.<>c__DisplayClass0_0.<Attach>b__0(HttpContext context, Func`1 next)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_1.<Use>b__1(HttpContext context)
+   at Microsoft.AspNetCore.Routing.EndpointMiddleware.Invoke(HttpContext httpContext)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Server.IIS.Core.IISHttpContextOfT`1.ProcessRequestAsync()
+
+2020-04-05T14:15:25.5504347-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T14:15:25.5548395-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T14:15:25.7294398-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T14:15:25.7307341-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T14:15:25.7379358-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:2108:0293bd89 successfully announced in 163.0078 ms
+2020-04-05T14:15:25.7390840-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:2108:bf282f24 successfully announced in 2.6504 ms
+2020-04-05T14:15:25.7474449-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:2108:0293bd89 is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T14:15:25.7486758-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:2108:bf282f24 is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T14:15:25.8723418-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:2108:bf282f24 all the dispatchers started
+2020-04-05T14:15:25.8897109-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:2108:0293bd89 all the dispatchers started
+2020-04-05T14:15:26.7778087-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Application started. Press Ctrl+C to shut down.
+2020-04-05T14:15:26.7850998-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Hosting environment: Development
+2020-04-05T14:15:26.7868856-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Content root path: C:\Projects\rdt-client\server\RdtClient.Web
+2020-04-05T14:15:26.8919371-06:00	FAIL	[Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddleware]	[UnhandledException]	An unhandled exception has occurred while executing the request.System.InvalidOperationException: The SPA default page middleware could not return the default page '/index.html' because it was not found, and no other middleware handled the request.
+
+   at Microsoft.AspNetCore.SpaServices.SpaDefaultPageMiddleware.<>c__DisplayClass0_0.<Attach>b__1(HttpContext context, Func`1 next)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_1.<Use>b__1(HttpContext context)
+   at Microsoft.AspNetCore.StaticFiles.StaticFileMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_2.<Use>b__2()
+   at Microsoft.AspNetCore.SpaServices.SpaDefaultPageMiddleware.<>c__DisplayClass0_0.<Attach>b__0(HttpContext context, Func`1 next)
+   at Microsoft.AspNetCore.Builder.UseExtensions.<>c__DisplayClass0_1.<Use>b__1(HttpContext context)
+   at Microsoft.AspNetCore.Routing.EndpointMiddleware.Invoke(HttpContext httpContext)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddleware.Invoke(HttpContext context)
+
+2020-04-05T14:15:55.1356301-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T14:15:55.1404886-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T14:15:55.3048285-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T14:15:55.3058840-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T14:15:55.3486321-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:9540:0475dcc2 successfully announced in 185.5134 ms
+2020-04-05T14:15:55.3496885-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:9540:b64dfe1f successfully announced in 38.3769 ms
+2020-04-05T14:15:55.3607127-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:9540:b64dfe1f is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T14:15:55.3619100-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:9540:0475dcc2 is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T14:15:55.4962395-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:9540:0475dcc2 all the dispatchers started
+2020-04-05T14:15:55.5042848-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:9540:b64dfe1f all the dispatchers started
+2020-04-05T14:15:56.2950028-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Application started. Press Ctrl+C to shut down.
+2020-04-05T14:15:56.3019478-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Hosting environment: Development
+2020-04-05T14:15:56.3036761-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Content root path: C:\Projects\rdt-client\server\RdtClient.Web
+2020-04-05T14:16:03.7001763-06:00	WARN	[Microsoft.AspNetCore.Identity.UserManager]	[14]	User b31d575e-bc02-49d0-816e-6b84bf84e9ae password validation failed: PasswordTooShort;PasswordRequiresUniqueChars.
+2020-04-05T14:17:18.3136182-06:00	WARN	[Microsoft.AspNetCore.Identity.UserManager]	[14]	User 7fe2e7ee-ed95-4296-ab93-7da08a83aca4 password validation failed: PasswordTooShort;PasswordRequiresUniqueChars.
+2020-04-05T14:17:31.1335278-06:00	WARN	[Microsoft.AspNetCore.Identity.UserManager]	[14]	User 3fd3721a-291f-4ca3-9e38-4d92f12ec719 password validation failed: PasswordTooShort;PasswordRequiresUniqueChars.
+2020-04-05T14:27:25.9596516-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T14:27:25.9640455-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T14:27:26.1181571-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T14:27:26.1192243-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T14:27:26.1658311-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:16652:4e8eb588 successfully announced in 183.1437 ms
+2020-04-05T14:27:26.1668729-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:16652:b010bf2b successfully announced in 41.928 ms
+2020-04-05T14:27:26.1776605-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:16652:b010bf2b is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T14:27:26.1787097-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:16652:4e8eb588 is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T14:27:26.2947111-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:16652:4e8eb588 all the dispatchers started
+2020-04-05T14:27:26.2999844-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:16652:b010bf2b all the dispatchers started
+2020-04-05T14:27:27.0890075-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Application started. Press Ctrl+C to shut down.
+2020-04-05T14:27:27.0966552-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Hosting environment: Development
+2020-04-05T14:27:27.0985544-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Content root path: C:\Projects\rdt-client\server\RdtClient.Web
+2020-04-05T14:27:27.5493007-06:00	WARN	[Microsoft.AspNetCore.Identity.UserManager]	[13]	User 72a2755a-26ac-4bf6-8d9c-ed9c7a87aa41 validation failed: InvalidEmail.
+2020-04-05T14:28:52.5373815-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T14:28:52.5436157-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T14:28:52.7374914-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T14:28:52.7388085-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T14:28:52.7995890-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:18588:f35627db successfully announced in 232.1254 ms
+2020-04-05T14:28:52.8006659-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:18588:3bb85702 successfully announced in 51.8775 ms
+2020-04-05T14:28:52.8173288-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:18588:f35627db is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T14:28:52.8184988-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:18588:3bb85702 is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T14:28:52.9354290-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:18588:3bb85702 all the dispatchers started
+2020-04-05T14:28:52.9431142-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:18588:f35627db all the dispatchers started
+2020-04-05T14:28:53.7409456-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Application started. Press Ctrl+C to shut down.
+2020-04-05T14:28:53.7492840-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Hosting environment: Development
+2020-04-05T14:28:53.7513626-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Content root path: C:\Projects\rdt-client\server\RdtClient.Web
+2020-04-05T14:29:10.7957756-06:00	WARN	[Hangfire.AutomaticRetryAttribute]	[0]	Failed to process the job 'f3f6c4dc-a989-441e-9172-baddaa290035': an exception occurred. Retry attempt 1 of 10 will be performed in 00:00:44.System.Net.Http.HttpRequestException: The SSL connection could not be established, see inner exception.
+ ---> System.IO.IOException: Authentication failed because the remote party has closed the transport stream.
+   at System.Net.Security.SslStream.StartReadFrame(Byte[] buffer, Int32 readBytes, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.StartReceiveBlob(Byte[] buffer, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.CheckCompletionBeforeNextReceive(ProtocolToken message, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.StartSendBlob(Byte[] incoming, Int32 count, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.ProcessReceivedBlob(Byte[] buffer, Int32 count, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.StartReadFrame(Byte[] buffer, Int32 readBytes, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.StartReceiveBlob(Byte[] buffer, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.CheckCompletionBeforeNextReceive(ProtocolToken message, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.StartSendBlob(Byte[] incoming, Int32 count, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.ProcessReceivedBlob(Byte[] buffer, Int32 count, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.StartReadFrame(Byte[] buffer, Int32 readBytes, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.StartReceiveBlob(Byte[] buffer, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.CheckCompletionBeforeNextReceive(ProtocolToken message, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.StartSendBlob(Byte[] incoming, Int32 count, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.ProcessReceivedBlob(Byte[] buffer, Int32 count, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.StartReadFrame(Byte[] buffer, Int32 readBytes, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.StartReceiveBlob(Byte[] buffer, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.CheckCompletionBeforeNextReceive(ProtocolToken message, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.StartSendBlob(Byte[] incoming, Int32 count, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.ProcessReceivedBlob(Byte[] buffer, Int32 count, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.StartReadFrame(Byte[] buffer, Int32 readBytes, AsyncProtocolRequest asyncRequest)
+   at System.Net.Security.SslStream.PartialFrameCallback(AsyncProtocolRequest asyncRequest)
+--- End of stack trace from previous location where exception was thrown ---
+   at System.Net.Security.SslStream.ThrowIfExceptional()
+   at System.Net.Security.SslStream.InternalEndProcessAuthentication(LazyAsyncResult lazyResult)
+   at System.Net.Security.SslStream.EndProcessAuthentication(IAsyncResult result)
+   at System.Net.Security.SslStream.EndAuthenticateAsClient(IAsyncResult asyncResult)
+   at System.Net.Security.SslStream.<>c.<AuthenticateAsClientAsync>b__65_1(IAsyncResult iar)
+   at System.Threading.Tasks.TaskFactory`1.FromAsyncCoreLogic(IAsyncResult iar, Func`2 endFunction, Action`1 endAction, Task`1 promise, Boolean requiresSynchronization)
+--- End of stack trace from previous location where exception was thrown ---
+   at System.Net.Http.ConnectHelper.EstablishSslConnectionAsyncCore(Stream stream, SslClientAuthenticationOptions sslOptions, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.ConnectHelper.EstablishSslConnectionAsyncCore(Stream stream, SslClientAuthenticationOptions sslOptions, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean allowHttp2, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.GetHttpConnectionAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithRetryAsync(HttpRequestMessage request, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.FinishSendAsyncBuffered(Task`1 sendTask, HttpRequestMessage request, CancellationTokenSource cts, Boolean disposeCts)
+   at RDNET.RdNetClient.Get[T](String url, Boolean repeatRequest) in C:\Projects\RD.NET\RDNET\RDNET\RdNetClient.cs:line 529
+   at RDNET.RdNetClient.TorrentsAsync(Nullable`1 offset, Nullable`1 limit, String filter) in C:\Projects\RD.NET\RDNET\RDNET\RdNetClient.cs:line 438
+   at RdtClient.Service.Services.Torrents.Update() in C:\Projects\rdt-client\server\RdtClient.Service\Services\Torrents.cs:line 117
+   at RdtClient.Service.Services.Scheduler.Process() in C:\Projects\rdt-client\server\RdtClient.Service\Services\Scheduler.cs:line 36
+   at System.Runtime.CompilerServices.TaskAwaiter.GetResult()
+
+2020-04-05T14:37:08.0803796-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T14:37:08.0854115-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T14:37:08.2629890-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Starting Hangfire Server using job storage: 'Hangfire.MemoryStorage.MemoryStorage'
+2020-04-05T14:37:08.2640604-06:00	INFO	[Hangfire.BackgroundJobServer]	[0]	Using the following options for Hangfire Server:
+    Worker count: 20
+    Listening queues: 'default'
+    Shutdown timeout: 00:00:15
+    Schedule polling interval: 00:00:15
+2020-04-05T14:37:08.3090213-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:15040:fe3eb9ba successfully announced in 193.9269 ms
+2020-04-05T14:37:08.3102131-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:15040:77dba8c6 successfully announced in 35.0663 ms
+2020-04-05T14:37:08.3217200-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:15040:77dba8c6 is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T14:37:08.3227734-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:15040:fe3eb9ba is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler...
+2020-04-05T14:37:08.4576865-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:15040:77dba8c6 all the dispatchers started
+2020-04-05T14:37:08.4685132-06:00	INFO	[Hangfire.Server.BackgroundServerProcess]	[0]	Server roger-pc:15040:fe3eb9ba all the dispatchers started
+2020-04-05T14:37:09.3505349-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Application started. Press Ctrl+C to shut down.
+2020-04-05T14:37:09.3570494-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Hosting environment: Development
+2020-04-05T14:37:09.3591078-06:00	INFO	[Microsoft.Hosting.Lifetime]	[0]	Content root path: C:\Projects\rdt-client\server\RdtClient.Web

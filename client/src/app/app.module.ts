@@ -1,7 +1,7 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { NgxFilesizeModule, FileSizePipe } from 'ngx-filesize';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -16,6 +16,7 @@ import { SettingsComponent } from './navbar/settings/settings.component';
 import { TorrentStatusPipe } from './torrent-status.pipe';
 import { FileStatusPipe } from './file-status.pipe';
 import { LoginComponent } from './login/login.component';
+import { AuthInterceptor } from './auth.interceptor';
 
 @NgModule({
   declarations: [
@@ -38,7 +39,10 @@ import { LoginComponent } from './login/login.component';
     HttpClientModule,
     NgxFilesizeModule,
   ],
-  providers: [FileSizePipe],
+  providers: [
+    FileSizePipe,
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+  ],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

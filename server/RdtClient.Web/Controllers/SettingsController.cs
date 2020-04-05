@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RdtClient.Data.Models.Data;
 using RdtClient.Service.Models;
@@ -8,6 +9,7 @@ using RdtClient.Service.Services;
 
 namespace RdtClient.Web.Controllers
 {
+    [Authorize]
     [Route("Api/Settings")]
     public class SettingsController : Controller
     {

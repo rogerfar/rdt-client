@@ -25,7 +25,7 @@ export class Torrent {
 export class TorrentFile {
   id: string;
   path: string;
-  bytes: string;
+  bytes: number;
   selected: boolean;
 
   download: Download;
