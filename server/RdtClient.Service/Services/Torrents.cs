@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MonoTorrent;
 using Newtonsoft.Json;
 using RDNET;
-using RdtClient.Data.Data;
 using RdtClient.Data.Enums;
-using RdtClient.Data.Models.Data;
 using RdtClient.Service.Models;
+using ITorrentData = RdtClient.Data.Data.ITorrentData;
+using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services
 {
@@ -29,15 +30,21 @@ namespace RdtClient.Service.Services
 
     public class Torrents : ITorrents
     {
-        private readonly ITorrentData _torrentData;
-        private readonly ISettings _settings;
-        private readonly IDownloads _downloads;
-
         private static RdNetClient _rdtClient;
 
         private static DateTime _rdtLastUpdate = DateTime.UtcNow;
 
-        private static readonly SemaphoreSlim SemaphoreSlim = new SemaphoreSlim(1,1);
+        private static readonly SemaphoreSlim SemaphoreSlim = new SemaphoreSlim(1, 1);
+        private readonly IDownloads _downloads;
+        private readonly ISettings _settings;
+        private readonly ITorrentData _torrentData;
+
+        public Torrents(ITorrentData torrentData, ISettings settings, IDownloads downloads)
+        {
+            _torrentData = torrentData;
+            _settings = settings;
+            _downloads = downloads;
+        }
 
         private RdNetClient RdNetClient
         {
@@ -45,7 +52,8 @@ namespace RdtClient.Service.Services
             {
                 if (_rdtClient == null)
                 {
-                    var apiKey = _settings.GetString("RealDebridApiKey").Result;
+                    var apiKey = _settings.GetString("RealDebridApiKey")
+                                          .Result;
 
                     if (String.IsNullOrWhiteSpace(apiKey))
                     {
@@ -57,13 +65,6 @@ namespace RdtClient.Service.Services
 
                 return _rdtClient;
             }
-        }
-
-        public Torrents(ITorrentData torrentData, ISettings settings, IDownloads downloads)
-        {
-            _torrentData = torrentData;
-            _settings = settings;
-            _downloads = downloads;
         }
 
         public async Task<IList<Torrent>> Get()
@@ -79,7 +80,8 @@ namespace RdtClient.Service.Services
 
             foreach (var torrent in torrents)
             {
-                var downloads = DownloadManager.ActiveDownloads.Where(m => m.Value.TorrentId == torrent.TorrentId).ToList();
+                var downloads = DownloadManager.ActiveDownloads.Where(m => m.Value.TorrentId == torrent.TorrentId)
+                                               .ToList();
 
                 if (torrent.Files.Count > 0)
                 {
@@ -179,7 +181,7 @@ namespace RdtClient.Service.Services
 
         public async Task UploadMagnet(String magnetLink)
         {
-            var magnet = MonoTorrent.MagnetLink.Parse(magnetLink);
+            var magnet = MagnetLink.Parse(magnetLink);
 
             var rdTorrent = await RdNetClient.TorrentAddMagnet(magnetLink);
 
@@ -214,9 +216,9 @@ namespace RdtClient.Service.Services
 
             var rdTorrent = await RdNetClient.TorrentInfoAsync(torrent.RdId);
 
-            foreach (var file in rdTorrent.Files)
+            foreach (var link in rdTorrent.Links)
             {
-                var unrestrictedLink = await RdNetClient.UnrestrictLinkAsync(file.Path);
+                var unrestrictedLink = await RdNetClient.UnrestrictLinkAsync(link);
 
                 await _downloads.Add(torrent.TorrentId, unrestrictedLink.Download);
             }
@@ -251,7 +253,8 @@ namespace RdtClient.Service.Services
             {
                 if (!rdTorrent.Files.Any(m => m.Selected))
                 {
-                    var fileIds = rdTorrent.Files.Select(m => m.Id.ToString()).ToArray();
+                    var fileIds = rdTorrent.Files.Select(m => m.Id.ToString())
+                                           .ToArray();
 
                     await RdNetClient.TorrentSelectFiles(rdTorrentId, fileIds);
                 }
@@ -294,12 +297,27 @@ namespace RdtClient.Service.Services
             torrent.RdSpeed = rdTorrent.Speed;
             torrent.RdSeeders = rdTorrent.Seeders;
 
-            await _torrentData.UpdateRdData(torrent);
-
-            if (torrent.Status == TorrentStatus.RealDebrid && torrent.RdProgress == 100)
+            if (torrent.Status == TorrentStatus.RealDebrid)
             {
-                await _torrentData.UpdateStatus(torrent.TorrentId, TorrentStatus.WaitingForDownload);
+                if (torrent.Status == TorrentStatus.RealDebrid && torrent.RdProgress == 100)
+                {
+                    torrent.Status = TorrentStatus.WaitingForDownload;
+                }
+                else
+                {
+                    // Current status of the torrent: magnet_error, magnet_conversion, waiting_files_selection, queued, downloading, downloaded, error, virus, compressing, uploading, dead
+                    torrent.Status = rdTorrent.Status switch
+                    {
+                        "magnet_error" => TorrentStatus.Error,
+                        "error" => TorrentStatus.Error,
+                        "virus" => TorrentStatus.Error,
+                        "dead" => TorrentStatus.Error,
+                        _ => TorrentStatus.RealDebrid
+                    };
+                }
             }
+
+            await _torrentData.UpdateRdData(torrent);
         }
     }
 }

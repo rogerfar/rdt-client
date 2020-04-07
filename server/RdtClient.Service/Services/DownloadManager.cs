@@ -13,11 +13,9 @@ using SharpCompress.Readers;
 
 namespace RdtClient.Service.Services
 {
-    public class DownloadManager
+    public static class DownloadManager
     {
         public static readonly ConcurrentDictionary<Guid, Download> ActiveDownloads = new ConcurrentDictionary<Guid, Download>();
-
-        private static readonly Object Lock = new Object();
 
         static DownloadManager()
         {
