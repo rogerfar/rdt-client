@@ -23,5 +23,14 @@ namespace RdtClient.Data.Models.Data
 
         [NotMapped]
         public Int32 Progress { get; set; }
+
+        [NotMapped]
+        public Int64 Speed { get; set; }
+
+        [NotMapped]
+        public DateTime NextUpdate { get; set; }
+
+        [NotMapped]
+        public Int64 BytesLastUpdate { get; set; }
     }
 }

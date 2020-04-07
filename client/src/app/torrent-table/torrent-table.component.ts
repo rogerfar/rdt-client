@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { Torrent } from '../models/torrent.model';
 import { TorrentService } from '../torrent.service';
+import { DownloadStatus } from '../models/download.model';
 
 @Component({
   selector: 'app-torrent-table',
@@ -26,6 +27,15 @@ export class TorrentTableComponent implements OnInit, OnDestroy {
     this.timer = setInterval(() => {
       this.torrentService.getList().subscribe((result) => {
         this.torrents = result;
+
+        this.torrents.forEach((torrent) => {
+          const activeDownloads = torrent.downloads.filter(
+            (m) => m.status === DownloadStatus.Downloading
+          );
+          if (activeDownloads.length > 0) {
+            torrent.activeDownload = activeDownloads[0];
+          }
+        });
       });
     }, 1000);
   }

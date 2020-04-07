@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Hangfire;
 using RdtClient.Data.Enums;
@@ -52,8 +53,10 @@ namespace RdtClient.Service.Services
                     return;
                 }
 
+                var folderPath = Path.Combine(destinationFolderPath, download.Torrent.RdName);
+
                 download.Torrent = null;
-                BackgroundJob.Enqueue(() => DownloadManager.Download(download, destinationFolderPath));
+                BackgroundJob.Enqueue(() => DownloadManager.Download(download, folderPath));
 
                 await Task.Delay(1000);
             }

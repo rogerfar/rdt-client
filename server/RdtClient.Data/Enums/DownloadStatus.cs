@@ -4,6 +4,7 @@
     {
         PendingDownload = 0,
         Downloading,
+        Unpacking,
         Finished
     }
 }

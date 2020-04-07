@@ -10,6 +10,8 @@ export class Download {
   public status: DownloadStatus;
 
   public progress: number;
+
+  public speed: number;
 }
 
 export enum DownloadStatus {

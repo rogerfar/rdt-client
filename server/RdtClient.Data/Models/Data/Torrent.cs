@@ -36,9 +36,6 @@ namespace RdtClient.Data.Models.Data
         public String RdFiles { get; set; }
 
         [NotMapped]
-        public Int32 DownloadProgress { get; set; }
-
-        [NotMapped]
         public IList<TorrentFile> Files
         {
             get

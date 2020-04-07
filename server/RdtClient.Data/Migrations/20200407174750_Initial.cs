@@ -65,6 +65,7 @@ namespace RdtClient.Data.Migrations
                 {
                     TorrentId = table.Column<Guid>(nullable: false),
                     Hash = table.Column<string>(nullable: true),
+                    Category = table.Column<string>(nullable: true),
                     Status = table.Column<int>(nullable: false),
                     RdId = table.Column<string>(nullable: true),
                     RdName = table.Column<string>(nullable: true),
@@ -102,7 +103,7 @@ namespace RdtClient.Data.Migrations
                         column: x => x.RoleId,
                         principalTable: "AspNetRoles",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -123,7 +124,7 @@ namespace RdtClient.Data.Migrations
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -143,7 +144,7 @@ namespace RdtClient.Data.Migrations
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -161,13 +162,13 @@ namespace RdtClient.Data.Migrations
                         column: x => x.RoleId,
                         principalTable: "AspNetRoles",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_AspNetUserRoles_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -187,7 +188,7 @@ namespace RdtClient.Data.Migrations
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -208,7 +209,7 @@ namespace RdtClient.Data.Migrations
                         column: x => x.TorrentId,
                         principalTable: "Torrents",
                         principalColumn: "TorrentId",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.InsertData(
@@ -224,7 +225,7 @@ namespace RdtClient.Data.Migrations
             migrationBuilder.InsertData(
                 table: "Settings",
                 columns: new[] { "SettingId", "Type", "Value" },
-                values: new object[] { "DownloadLimit", "Int32", "1" });
+                values: new object[] { "DownloadLimit", "Int32", "10" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",

@@ -9,7 +9,7 @@ using RdtClient.Data.Data;
 namespace RdtClient.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20200403195110_Initial")]
+    [Migration("20200407174750_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -265,13 +265,7 @@ namespace RdtClient.Data.Migrations
                         },
                         new
                         {
-                            SettingId = "SpeedLimit",
-                            Type = "Int32",
-                            Value = "0"
-                        },
-                        new
-                        {
-                            SettingId = "SegmentsLimit",
+                            SettingId = "DownloadLimit",
                             Type = "Int32",
                             Value = "10"
                         });
@@ -281,6 +275,9 @@ namespace RdtClient.Data.Migrations
                 {
                     b.Property<Guid>("TorrentId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Category")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Hash")
@@ -335,7 +332,7 @@ namespace RdtClient.Data.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -344,7 +341,7 @@ namespace RdtClient.Data.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -353,7 +350,7 @@ namespace RdtClient.Data.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -362,13 +359,13 @@ namespace RdtClient.Data.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -377,7 +374,7 @@ namespace RdtClient.Data.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -386,7 +383,7 @@ namespace RdtClient.Data.Migrations
                     b.HasOne("RdtClient.Data.Models.Data.Torrent", "Torrent")
                         .WithMany("Downloads")
                         .HasForeignKey("TorrentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 #pragma warning restore 612, 618

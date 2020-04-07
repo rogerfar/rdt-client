@@ -80,12 +80,13 @@ namespace RdtClient.Service.Services
 
             foreach (var torrent in torrents)
             {
-                var downloads = DownloadManager.ActiveDownloads.Where(m => m.Value.TorrentId == torrent.TorrentId)
-                                               .ToList();
-
-                if (torrent.Files.Count > 0)
+                foreach (var download in torrent.Downloads)
                 {
-                    torrent.DownloadProgress = downloads.Sum(m => m.Value.Progress) / torrent.Files.Count;
+                    if (DownloadManager.ActiveDownloads.TryGetValue(download.DownloadId, out var activeDownload))
+                    {
+                        download.Speed = activeDownload.Speed;
+                        download.Progress = activeDownload.Progress;
+                    }
                 }
             }
 
@@ -155,6 +156,7 @@ namespace RdtClient.Service.Services
 
                     if (rdTorrent == null)
                     {
+                        await _downloads.DeleteForTorrent(torrent.TorrentId);
                         await _torrentData.Delete(torrent.TorrentId);
                     }
                 }
@@ -203,6 +205,7 @@ namespace RdtClient.Service.Services
 
             if (torrent != null)
             {
+                await _downloads.DeleteForTorrent(torrent.TorrentId);
                 await _torrentData.Delete(id);
                 await RdNetClient.TorrentDelete(torrent.RdId);
             }

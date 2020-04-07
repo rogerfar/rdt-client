@@ -25,7 +25,7 @@ namespace RdtClient.Data.Data
 
         public async Task<IList<Setting>> GetAll()
         {
-            return await _dataContext.Settings.ToListAsync();
+            return await _dataContext.Settings.AsNoTracking().ToListAsync();
         }
 
         public async Task Update(IList<Setting> settings)
@@ -47,7 +47,7 @@ namespace RdtClient.Data.Data
 
         public async Task<Setting> Get(String key)
         {
-            return await _dataContext.Settings.FirstOrDefaultAsync(m => m.SettingId == key);
+            return await _dataContext.Settings.AsNoTracking().FirstOrDefaultAsync(m => m.SettingId == key);
         }
     }
 }

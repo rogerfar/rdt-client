@@ -27,7 +27,10 @@ namespace RdtClient.Data.Data
 
         public async Task<IList<Download>> Get()
         {
-            return await _dataContext.Downloads.ToListAsync();
+            return await _dataContext.Downloads
+                                     .AsNoTracking()
+                                     .Include(m => m.Torrent)
+                                     .ToListAsync();
         }
 
         public async Task<Download> Add(Guid torrentId, String link)

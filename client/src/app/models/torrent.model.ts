@@ -19,7 +19,7 @@ export class Torrent {
 
   files: TorrentFile[];
   downloads: Download[];
-  downloadProgress: number;
+  activeDownload: Download;
 }
 
 export class TorrentFile {

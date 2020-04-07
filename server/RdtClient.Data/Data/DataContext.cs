@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using RdtClient.Data.Models.Data;
@@ -50,6 +51,15 @@ namespace RdtClient.Data.Data
                        Type = "Int32",
                        Value = "10"
                    });
+
+            var cascadeFKs = builder.Model.GetEntityTypes()
+                                    .SelectMany(t => t.GetForeignKeys())
+                                    .Where(fk => !fk.IsOwnership && fk.DeleteBehavior == DeleteBehavior.Cascade);
+
+            foreach (var fk in cascadeFKs)
+            {
+                fk.DeleteBehavior = DeleteBehavior.Restrict;
+            }
         }
 
         public void Migrate()
