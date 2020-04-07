@@ -15,6 +15,8 @@ namespace RdtClient.Data.Models.Data
 
         public String Hash { get; set; }
 
+        public String Category { get; set; }
+
         public TorrentStatus Status { get; set; }
 
         [InverseProperty("Torrent")]

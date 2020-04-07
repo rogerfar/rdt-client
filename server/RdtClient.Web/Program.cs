@@ -20,7 +20,9 @@ namespace RdtClient.Web
                    .CreateDefaultBuilder(args)
                    .ConfigureLogging(logging =>
                    {
-                       logging.AddFile("app.log");
+                       logging.ClearProviders();
+                       logging.AddConsole();
+                       logging.AddFile($"{AppContext.BaseDirectory}app.log");
                    })
                    .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
         }

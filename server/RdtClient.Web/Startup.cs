@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using RdtClient.Data;
 using RdtClient.Data.Data;
 using RdtClient.Data.Models.Internal;
@@ -35,7 +36,8 @@ namespace RdtClient.Web
 
             services.AddDbContext<DataContext>(options => options.UseSqlite(DataContext.ConnectionString));
 
-            services.AddControllers();
+            services.AddControllers()
+                    .AddNewtonsoftJson();
 
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "wwwroot"; });
 
@@ -80,6 +82,7 @@ namespace RdtClient.Web
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                     return Task.CompletedTask;
                 };
+                options.Cookie.Name = "SID";
             });
 
             services.AddHangfire(configuration => configuration
@@ -94,7 +97,7 @@ namespace RdtClient.Web
             Service.DiConfig.Config(services);
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, DataContext dataContext, IScheduler scheduler)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger, DataContext dataContext, IScheduler scheduler)
         {
             if (env.IsDevelopment())
             {
@@ -106,9 +109,15 @@ namespace RdtClient.Web
                 app.UseHttpsRedirection();
             }
 
-            app.UseDefaultFiles();
+            app.Use(async (context, next) =>
+            {
+                await next.Invoke();
 
-            app.UseSpaStaticFiles();
+                if (context.Response.StatusCode >= 404)
+                {
+                    logger.LogWarning($"404: {context.Request.Path.Value}");
+                }
+            });
 
             app.UseRouting();
 
@@ -120,8 +129,16 @@ namespace RdtClient.Web
 
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 
-            app.UseSpa(spa => { spa.Options.SourcePath = "wwwroot"; });
-
+            app.MapWhen(x => !x.Request.Path.Value.StartsWith("/api"), builder =>
+            {
+                builder.UseSpaStaticFiles();
+                builder.UseSpa(spa =>
+                {
+                    spa.Options.SourcePath = "wwwroot";
+                    spa.Options.DefaultPage = "/index.html";
+                });
+            });
+            
             dataContext.Migrate();
 
             scheduler.Start();

@@ -15,8 +15,10 @@ namespace RdtClient.Service.Services
     public interface ITorrents
     {
         Task<IList<Torrent>> Get();
-        Task<Torrent> Get(Guid id);
+        Task<Torrent> GetById(Guid id);
+        Task<Torrent> GetByHash(String hash);
         Task<IList<Torrent>> Update();
+        Task UpdateCategory(String hash, String category);
         Task UploadMagnet(String magnetLink);
         Task UploadFile(Byte[] bytes);
         Task Delete(Guid id);
@@ -88,9 +90,23 @@ namespace RdtClient.Service.Services
             return torrents;
         }
 
-        public async Task<Torrent> Get(Guid id)
+        public async Task<Torrent> GetById(Guid id)
         {
-            var torrent = await _torrentData.Get(id);
+            var torrent = await _torrentData.GetById(id);
+
+            if (torrent != null)
+            {
+                var rdTorrent = await RdNetClient.TorrentInfoAsync(torrent.RdId);
+
+                await Update(torrent, rdTorrent);
+            }
+
+            return torrent;
+        }
+
+        public async Task<Torrent> GetByHash(String hash)
+        {
+            var torrent = await _torrentData.GetByHash(hash);
 
             if (torrent != null)
             {
@@ -123,7 +139,7 @@ namespace RdtClient.Service.Services
                     if (torrent == null)
                     {
                         var newTorrent = await _torrentData.Add(rdTorrent.Id, rdTorrent.Hash);
-                        await Get(newTorrent.TorrentId);
+                        await GetById(newTorrent.TorrentId);
                     }
                     else
                     {
@@ -149,6 +165,18 @@ namespace RdtClient.Service.Services
             }
         }
 
+        public async Task UpdateCategory(String hash, String category)
+        {
+            var torrent = await _torrentData.GetByHash(hash);
+
+            if (torrent == null)
+            {
+                return;
+            }
+
+            await _torrentData.UpdateCategory(torrent.TorrentId, category);
+        }
+
         public async Task UploadMagnet(String magnetLink)
         {
             var magnet = MonoTorrent.MagnetLink.Parse(magnetLink);
@@ -169,7 +197,7 @@ namespace RdtClient.Service.Services
 
         public async Task Delete(Guid id)
         {
-            var torrent = await Get(id);
+            var torrent = await GetById(id);
 
             if (torrent != null)
             {
@@ -180,7 +208,7 @@ namespace RdtClient.Service.Services
 
         public async Task Download(Guid id)
         {
-            var torrent = await _torrentData.Get(id);
+            var torrent = await _torrentData.GetById(id);
 
             await _downloads.DeleteForTorrent(id);
 

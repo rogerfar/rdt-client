@@ -10,10 +10,12 @@ namespace RdtClient.Data.Data
     public interface ITorrentData
     {
         Task<IList<Torrent>> Get();
-        Task<Torrent> Get(Guid id);
+        Task<Torrent> GetById(Guid id);
+        Task<Torrent> GetByHash(String hash);
         Task<Torrent> Add(String realDebridId, String hash);
         Task UpdateRdData(Torrent torrent);
         Task UpdateStatus(Guid torrentId, TorrentStatus status);
+        Task UpdateCategory(Guid torrentId, String category);
         Task Delete(Guid id);
     }
 
@@ -31,11 +33,25 @@ namespace RdtClient.Data.Data
             return await _dataContext.Torrents.ToListAsync();
         }
 
-        public async Task<Torrent> Get(Guid id)
+        public async Task<Torrent> GetById(Guid id)
         {
             var results = await _dataContext.Torrents
                                             .Include(m => m.Downloads)
                                             .FirstOrDefaultAsync(m => m.TorrentId == id);
+
+            foreach (var file in results.Downloads)
+            {
+                file.Torrent = null;
+            }
+
+            return results;
+        }
+
+        public async Task<Torrent> GetByHash(String hash)
+        {
+            var results = await _dataContext.Torrents
+                                            .Include(m => m.Downloads)
+                                            .FirstOrDefaultAsync(m => m.Hash == hash);
 
             foreach (var file in results.Downloads)
             {
@@ -85,6 +101,15 @@ namespace RdtClient.Data.Data
             var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
 
             dbTorrent.Status = status;
+
+            await _dataContext.SaveChangesAsync();
+        }
+
+        public async Task UpdateCategory(Guid torrentId, String category)
+        {
+            var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
+
+            dbTorrent.Category = category;
 
             await _dataContext.SaveChangesAsync();
         }

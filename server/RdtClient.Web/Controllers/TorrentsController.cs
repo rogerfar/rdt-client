@@ -44,7 +44,7 @@ namespace RdtClient.Web.Controllers
         {
             try
             {
-                var result = await _torrents.Get(id);
+                var result = await _torrents.GetById(id);
 
                 if (result == null)
                 {
