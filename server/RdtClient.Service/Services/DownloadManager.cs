@@ -79,14 +79,11 @@ namespace RdtClient.Service.Services
 
                         ActiveDownloads[download.DownloadId].Progress = (Int32) (fileStream.Length * 100 / responseLength);
 
-                        if (DateTime.UtcNow > ActiveDownloads[download.DownloadId]
-                            .NextUpdate)
+                        if (DateTime.UtcNow > ActiveDownloads[download.DownloadId].NextUpdate)
                         {
                             ActiveDownloads[download.DownloadId].Speed = fileStream.Length - ActiveDownloads[download.DownloadId].BytesLastUpdate;
                             ActiveDownloads[download.DownloadId].NextUpdate = DateTime.UtcNow.AddSeconds(1);
                             ActiveDownloads[download.DownloadId].BytesLastUpdate = fileStream.Length;
-
-                            Debug.WriteLine($"{fileStream.Length}/{responseLength} {ActiveDownloads[download.DownloadId].Speed}");
                         }
                     }
                     else

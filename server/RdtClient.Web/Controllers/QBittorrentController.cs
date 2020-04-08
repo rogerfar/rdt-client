@@ -50,7 +50,7 @@ namespace RdtClient.Web.Controllers
         [AllowAnonymous]
         [Route("auth/login")]
         [HttpPost]
-        public async Task<ActionResult> AuthLoginPost([FromBody] QBAuthLoginRequest request)
+        public async Task<ActionResult> AuthLoginPost([FromForm] QBAuthLoginRequest request)
         {
             return await AuthLogin(request);
         }
@@ -72,7 +72,6 @@ namespace RdtClient.Web.Controllers
             }
         }
 
-        [Authorize]
         [Route("app/version")]
         [HttpGet]
         [HttpPost]
@@ -81,7 +80,6 @@ namespace RdtClient.Web.Controllers
             return Ok("v4.2.3");
         }
 
-        [Authorize]
         [Route("app/webapiVersion")]
         [HttpGet]
         [HttpPost]
@@ -90,7 +88,6 @@ namespace RdtClient.Web.Controllers
             return Ok("2.4.1");
         }
 
-        [Authorize]
         [Route("app/buildInfo")]
         [HttpGet]
         [HttpPost]
@@ -202,7 +199,7 @@ namespace RdtClient.Web.Controllers
         [Authorize]
         [Route("torrents/properties")]
         [HttpPost]
-        public async Task<ActionResult<IList<TorrentInfo>>> TorrentsPropertiesPost([FromBody] QBTorrentsHashRequest request)
+        public async Task<ActionResult<IList<TorrentInfo>>> TorrentsPropertiesPost([FromForm] QBTorrentsHashRequest request)
         {
             return await TorrentsProperties(request);
         }
@@ -259,7 +256,7 @@ namespace RdtClient.Web.Controllers
         [Authorize]
         [Route("torrents/delete")]
         [HttpPost]
-        public async Task<ActionResult> TorrentsDeletePost([FromBody] QBTorrentsDeleteRequest request)
+        public async Task<ActionResult> TorrentsDeletePost([FromForm] QBTorrentsDeleteRequest request)
         {
             return await TorrentsDelete(request);
         }
@@ -289,7 +286,7 @@ namespace RdtClient.Web.Controllers
         [Authorize]
         [Route("torrents/add")]
         [HttpPost]
-        public async Task<ActionResult> TorrentsAddPost([FromBody] QBTorrentsAddRequest request)
+        public async Task<ActionResult> TorrentsAddPost([FromForm] QBTorrentsAddRequest request)
         {
             return await TorrentsAdd(request);
         }
@@ -319,7 +316,7 @@ namespace RdtClient.Web.Controllers
         [Authorize]
         [Route("torrents/setCategory")]
         [HttpPost]
-        public async Task<ActionResult> TorrentsSetCategoryPost([FromBody] QBTorrentsSetCategoryRequest request)
+        public async Task<ActionResult> TorrentsSetCategoryPost([FromForm] QBTorrentsSetCategoryRequest request)
         {
             return await TorrentsSetCategory(request);
         }

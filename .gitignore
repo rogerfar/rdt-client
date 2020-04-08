@@ -38,3 +38,6 @@ server/*.user
 # Common node modules locations
 server/wwwroot/
 server/.vs
+server/RdtClient.Web/wwwroot/
+server/RdtClient.Web/Properties/PublishProfiles/FolderProfile.pubxml.user
+*.user

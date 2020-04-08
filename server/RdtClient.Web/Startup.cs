@@ -54,8 +54,6 @@ namespace RdtClient.Web
                                   });
             });
 
-            services.AddHttpsRedirection(options => { options.HttpsPort = 443; });
-
             services.AddHttpClient();
 
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -103,10 +101,6 @@ namespace RdtClient.Web
             {
                 app.UseCors("Dev");
                 app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseHttpsRedirection();
             }
 
             app.Use(async (context, next) =>

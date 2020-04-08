@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RdtClient.Data.Enums;
@@ -35,12 +36,9 @@ namespace RdtClient.Data.Data
                                             .Include(m => m.Downloads)
                                             .ToListAsync();
 
-            foreach (var torrent in results)
+            foreach (var file in results.SelectMany(torrent => torrent.Downloads))
             {
-                foreach (var file in torrent.Downloads)
-                {
-                    file.Torrent = null;
-                }
+                file.Torrent = null;
             }
 
             return results;
@@ -53,9 +51,12 @@ namespace RdtClient.Data.Data
                                             .Include(m => m.Downloads)
                                             .FirstOrDefaultAsync(m => m.TorrentId == id);
 
-            foreach (var file in results.Downloads)
+            if (results != null)
             {
-                file.Torrent = null;
+                foreach (var file in results.Downloads)
+                {
+                    file.Torrent = null;
+                }
             }
 
             return results;
@@ -68,9 +69,12 @@ namespace RdtClient.Data.Data
                                             .Include(m => m.Downloads)
                                             .FirstOrDefaultAsync(m => m.Hash == hash);
 
-            foreach (var file in results.Downloads)
+            if (results != null)
             {
-                file.Torrent = null;
+                foreach (var file in results.Downloads)
+                {
+                    file.Torrent = null;
+                }
             }
 
             return results;

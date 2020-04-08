@@ -1,7 +1,10 @@
 using System;
+using System.IO;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using RdtClient.Data.Models.Internal;
 
 namespace RdtClient.Web
 {
@@ -9,22 +12,32 @@ namespace RdtClient.Web
     {
         public static void Main(String[] args)
         {
-            CreateHostBuilder(args)
-                .Build()
-                .Run();
-        }
+            var configuration = new ConfigurationBuilder()
+                                .SetBasePath(Directory.GetCurrentDirectory())
+                                .AddJsonFile("appsettings.json", true, false)
+                                .Build();
 
-        private static IHostBuilder CreateHostBuilder(String[] args)
-        {
-            return Host
-                   .CreateDefaultBuilder(args)
+            var hostUrl = configuration["HostUrl"];
+
+            if (String.IsNullOrWhiteSpace(hostUrl))
+            {
+                hostUrl = "http://0.0.0.0:6500";
+            }
+
+            WebHost.CreateDefaultBuilder(args)
+                   .UseStartup<Startup>()
                    .ConfigureLogging(logging =>
                    {
                        logging.ClearProviders();
                        logging.AddConsole();
                        logging.AddFile($"{AppContext.BaseDirectory}app.log");
                    })
-                   .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
+                   .CaptureStartupErrors(false)
+                   .UseUrls(hostUrl)
+                   .UseKestrel()
+                   .UseIISIntegration()
+                   .Build()
+                   .Run();
         }
     }
 }
