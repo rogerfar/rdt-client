@@ -33,11 +33,7 @@ client/e2e/*.map
 # .NET Core build folders
 server/**/bin
 server/**/obj
-server/*.user
-
-# Common node modules locations
-server/wwwroot/
-server/.vs
+server/**/*.user
+server/**/.vs
 server/RdtClient.Web/wwwroot/
-server/RdtClient.Web/Properties/PublishProfiles/FolderProfile.pubxml.user
-*.user
+

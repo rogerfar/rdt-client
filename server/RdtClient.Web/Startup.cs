@@ -1,6 +1,4 @@
 using System.Threading.Tasks;
-using Hangfire;
-using Hangfire.MemoryStorage;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -14,7 +12,6 @@ using Microsoft.Extensions.Logging;
 using RdtClient.Data;
 using RdtClient.Data.Data;
 using RdtClient.Data.Models.Internal;
-using RdtClient.Service.Services;
 
 namespace RdtClient.Web
 {
@@ -83,19 +80,11 @@ namespace RdtClient.Web
                 options.Cookie.Name = "SID";
             });
 
-            services.AddHangfire(configuration => configuration
-                                                  .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
-                                                  .UseSimpleAssemblyNameTypeSerializer()
-                                                  .UseRecommendedSerializerSettings()
-                                                  .UseMemoryStorage());
-
-            services.AddHangfireServer();
-
             DiConfig.Config(services);
             Service.DiConfig.Config(services);
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger, DataContext dataContext, IScheduler scheduler)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger, DataContext dataContext)
         {
             if (env.IsDevelopment())
             {
@@ -107,9 +96,9 @@ namespace RdtClient.Web
             {
                 await next.Invoke();
 
-                if (context.Response.StatusCode >= 404)
+                if (context.Response.StatusCode != 200)
                 {
-                    logger.LogWarning($"404: {context.Request.Path.Value}");
+                    logger.LogWarning($"{context.Response.StatusCode}: {context.Request.Path.Value}");
                 }
             });
 
@@ -118,9 +107,7 @@ namespace RdtClient.Web
             app.UseAuthentication();
 
             app.UseAuthorization();
-
-            app.UseHangfireServer();
-
+            
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 
             app.MapWhen(x => !x.Request.Path.Value.StartsWith("/api"), builder =>
@@ -134,8 +121,6 @@ namespace RdtClient.Web
             });
             
             dataContext.Migrate();
-
-            scheduler.Start();
         }
     }
 }

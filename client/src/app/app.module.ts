@@ -17,6 +17,9 @@ import { TorrentStatusPipe } from './torrent-status.pipe';
 import { FileStatusPipe } from './file-status.pipe';
 import { LoginComponent } from './login/login.component';
 import { AuthInterceptor } from './auth.interceptor';
+import { curray } from 'curray';
+
+curray();
 
 @NgModule({
   declarations: [

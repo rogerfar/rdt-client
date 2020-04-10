@@ -19,9 +19,10 @@ namespace RdtClient.Service.Services
         Task<Torrent> GetById(Guid id);
         Task<Torrent> GetByHash(String hash);
         Task<IList<Torrent>> Update();
+        Task UpdateStatus(Guid torrentId, TorrentStatus status);
         Task UpdateCategory(String hash, String category);
-        Task UploadMagnet(String magnetLink);
-        Task UploadFile(Byte[] bytes);
+        Task UploadMagnet(String magnetLink, Boolean autoDownload, Boolean autoDelete);
+        Task UploadFile(Byte[] bytes, Boolean autoDownload, Boolean autoDelete);
         Task Delete(Guid id);
         Task Download(Guid id);
         void Reset();
@@ -60,7 +61,7 @@ namespace RdtClient.Service.Services
                         throw new Exception("RealDebrid API Key not set in the settings");
                     }
 
-                    _rdtClient = new RdNetClient("X245A4XAIBGVM", null, null, null, null, apiKey);
+                    _rdtClient = new RdNetClient("X245A4XAIBGVM", null, null, null, apiKey);
                 }
 
                 return _rdtClient;
@@ -82,10 +83,11 @@ namespace RdtClient.Service.Services
             {
                 foreach (var download in torrent.Downloads)
                 {
-                    if (DownloadManager.ActiveDownloads.TryGetValue(download.DownloadId, out var activeDownload))
+                    if (TaskRunner.ActiveDownloads.TryGetValue(download.DownloadId, out var activeDownload))
                     {
                         download.Speed = activeDownload.Speed;
-                        download.Progress = activeDownload.Progress;
+                        download.BytesSize = activeDownload.BytesSize;
+                        download.BytesDownloaded = activeDownload.BytesDownloaded;
                     }
                 }
             }
@@ -99,7 +101,7 @@ namespace RdtClient.Service.Services
 
             if (torrent != null)
             {
-                var rdTorrent = await RdNetClient.TorrentInfoAsync(torrent.RdId);
+                var rdTorrent = await RdNetClient.GetTorrentInfoAsync(torrent.RdId);
 
                 await Update(torrent, rdTorrent);
             }
@@ -113,7 +115,7 @@ namespace RdtClient.Service.Services
 
             if (torrent != null)
             {
-                var rdTorrent = await RdNetClient.TorrentInfoAsync(torrent.RdId);
+                var rdTorrent = await RdNetClient.GetTorrentInfoAsync(torrent.RdId);
 
                 await Update(torrent, rdTorrent);
             }
@@ -133,7 +135,7 @@ namespace RdtClient.Service.Services
 
             try
             {
-                var rdTorrents = await RdNetClient.TorrentsAsync(0, 100);
+                var rdTorrents = await RdNetClient.GetTorrentsAsync(0, 100);
 
                 foreach (var rdTorrent in rdTorrents)
                 {
@@ -169,6 +171,11 @@ namespace RdtClient.Service.Services
             }
         }
 
+        public async Task UpdateStatus(Guid torrentId, TorrentStatus status)
+        {
+            await _torrentData.UpdateStatus(torrentId, status);
+        }
+
         public async Task UpdateCategory(String hash, String category)
         {
             var torrent = await _torrentData.GetByHash(hash);
@@ -181,22 +188,22 @@ namespace RdtClient.Service.Services
             await _torrentData.UpdateCategory(torrent.TorrentId, category);
         }
 
-        public async Task UploadMagnet(String magnetLink)
+        public async Task UploadMagnet(String magnetLink, Boolean autoDownload, Boolean autoDelete)
         {
             var magnet = MagnetLink.Parse(magnetLink);
 
-            var rdTorrent = await RdNetClient.TorrentAddMagnet(magnetLink);
+            var rdTorrent = await RdNetClient.AddTorrentMagnetAsync(magnetLink);
 
-            await Add(rdTorrent.Id, magnet.InfoHash.ToHex());
+            await Add(rdTorrent.Id, magnet.InfoHash.ToHex(), autoDownload, autoDelete);
         }
 
-        public async Task UploadFile(Byte[] bytes)
+        public async Task UploadFile(Byte[] bytes, Boolean autoDownload, Boolean autoDelete)
         {
             var torrent = MonoTorrent.Torrent.Load(bytes);
 
-            var rdTorrent = await RdNetClient.TorrentAddFile(bytes);
+            var rdTorrent = await RdNetClient.AddTorrentFileAsync(bytes);
 
-            await Add(rdTorrent.Id, torrent.InfoHash.ToHex());
+            await Add(rdTorrent.Id, torrent.InfoHash.ToHex(), autoDownload, autoDelete);
         }
 
         public async Task Delete(Guid id)
@@ -207,7 +214,7 @@ namespace RdtClient.Service.Services
             {
                 await _downloads.DeleteForTorrent(torrent.TorrentId);
                 await _torrentData.Delete(id);
-                await RdNetClient.TorrentDelete(torrent.RdId);
+                await RdNetClient.DeleteTorrentAsync(torrent.RdId);
             }
         }
 
@@ -217,7 +224,9 @@ namespace RdtClient.Service.Services
 
             await _downloads.DeleteForTorrent(id);
 
-            var rdTorrent = await RdNetClient.TorrentInfoAsync(torrent.RdId);
+            await _torrentData.UpdateStatus(id, TorrentStatus.DownloadQueued);
+
+            var rdTorrent = await RdNetClient.GetTorrentInfoAsync(torrent.RdId);
 
             foreach (var link in rdTorrent.Links)
             {
@@ -235,7 +244,12 @@ namespace RdtClient.Service.Services
 
         public async Task<Profile> GetProfile()
         {
-            var user = await _rdtClient.UserAsync();
+            if (_rdtClient == null)
+            {
+                return new Profile();
+            }
+
+            var user = await _rdtClient.GetUserAsync();
 
             var profile = new Profile
             {
@@ -246,11 +260,11 @@ namespace RdtClient.Service.Services
             return profile;
         }
 
-        private async Task Add(String rdTorrentId, String infoHash)
+        private async Task Add(String rdTorrentId, String infoHash, Boolean autoDownload, Boolean autoDelete)
         {
             var newTorrent = await _torrentData.Add(rdTorrentId, infoHash);
 
-            var rdTorrent = await RdNetClient.TorrentInfoAsync(rdTorrentId);
+            var rdTorrent = await RdNetClient.GetTorrentInfoAsync(rdTorrentId);
 
             if (rdTorrent.Files != null && rdTorrent.Files.Count > 0)
             {
@@ -259,14 +273,14 @@ namespace RdtClient.Service.Services
                     var fileIds = rdTorrent.Files.Select(m => m.Id.ToString())
                                            .ToArray();
 
-                    await RdNetClient.TorrentSelectFiles(rdTorrentId, fileIds);
+                    await RdNetClient.SelectTorrentFilesAsync(rdTorrentId, fileIds);
                 }
             }
 
             await Update(newTorrent, rdTorrent);
         }
 
-        private async Task Update(Torrent torrent, RDNET.Models.Torrent rdTorrent)
+        private async Task Update(Torrent torrent, RDNET.Torrent rdTorrent)
         {
             if (!String.IsNullOrWhiteSpace(rdTorrent.Filename))
             {
@@ -300,11 +314,13 @@ namespace RdtClient.Service.Services
             torrent.RdSpeed = rdTorrent.Speed;
             torrent.RdSeeders = rdTorrent.Seeders;
 
+            await _torrentData.UpdateRdData(torrent);
+
             if (torrent.Status == TorrentStatus.RealDebrid)
             {
                 if (torrent.Status == TorrentStatus.RealDebrid && torrent.RdProgress == 100)
                 {
-                    torrent.Status = TorrentStatus.WaitingForDownload;
+                    await _torrentData.UpdateStatus(torrent.TorrentId, TorrentStatus.WaitingForDownload);
                 }
                 else
                 {
@@ -317,10 +333,10 @@ namespace RdtClient.Service.Services
                         "dead" => TorrentStatus.Error,
                         _ => TorrentStatus.RealDebrid
                     };
+
+                    await _torrentData.UpdateStatus(torrent.TorrentId, torrent.Status);
                 }
             }
-
-            await _torrentData.UpdateRdData(torrent);
         }
     }
 }

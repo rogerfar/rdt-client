@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Newtonsoft.Json;
-using RDNET.Models;
+using RDNET;
 using RdtClient.Data.Enums;
 
 namespace RdtClient.Data.Models.Data
@@ -16,6 +16,10 @@ namespace RdtClient.Data.Models.Data
         public String Hash { get; set; }
 
         public String Category { get; set; }
+
+        public Boolean AutoDownload { get; set; }
+
+        public Boolean AutoDelete { get; set; }
 
         public TorrentStatus Status { get; set; }
 

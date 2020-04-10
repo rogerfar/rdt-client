@@ -10,9 +10,10 @@ namespace RdtClient.Service
             services.AddScoped<IAuthentication, Authentication>();
             services.AddScoped<IDownloads, Downloads>();
             services.AddScoped<IQBittorrent, QBittorrent>();
-            services.AddScoped<IScheduler, Scheduler>();
             services.AddScoped<ISettings, Settings>();
             services.AddScoped<ITorrents, Torrents>();
+
+            services.AddHostedService<TaskRunner>();
         }
     }
 }

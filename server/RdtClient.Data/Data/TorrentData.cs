@@ -101,8 +101,6 @@ namespace RdtClient.Data.Data
         {
             var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrent.TorrentId);
 
-            dbTorrent.Status = torrent.Status;
-
             dbTorrent.RdName = torrent.RdName;
             dbTorrent.RdSize = torrent.RdSize;
             dbTorrent.RdHost = torrent.RdHost;
@@ -113,6 +111,11 @@ namespace RdtClient.Data.Data
             dbTorrent.RdEnded = torrent.RdEnded;
             dbTorrent.RdSpeed = torrent.RdSpeed;
             dbTorrent.RdSeeders = torrent.RdSeeders;
+
+            if (torrent.Files != null)
+            {
+                dbTorrent.RdFiles = torrent.RdFiles;
+            }
 
             await _dataContext.SaveChangesAsync();
         }

@@ -9,7 +9,7 @@ using RdtClient.Data.Data;
 namespace RdtClient.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20200407174750_Initial")]
+    [Migration("20200408224831_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -276,6 +276,12 @@ namespace RdtClient.Data.Migrations
                     b.Property<Guid>("TorrentId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("AutoDelete")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AutoDownload")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Category")
                         .HasColumnType("TEXT");

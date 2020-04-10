@@ -11,6 +11,7 @@ namespace RdtClient.Data.Data
     public interface IDownloadData
     {
         Task<IList<Download>> Get();
+        Task<IList<Download>> GetForTorrent(Guid torrentId);
         Task<Download> Add(Guid torrentId, String link);
         Task UpdateStatus(Guid downloadId, DownloadStatus status);
         Task DeleteForTorrent(Guid torrentId);
@@ -30,6 +31,14 @@ namespace RdtClient.Data.Data
             return await _dataContext.Downloads
                                      .AsNoTracking()
                                      .Include(m => m.Torrent)
+                                     .ToListAsync();
+        }
+
+        public async Task<IList<Download>> GetForTorrent(Guid torrentId)
+        {
+            return await _dataContext.Downloads
+                                     .AsNoTracking()
+                                     .Where(m => m.TorrentId == torrentId)
                                      .ToListAsync();
         }
 

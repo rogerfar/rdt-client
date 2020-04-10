@@ -275,6 +275,12 @@ namespace RdtClient.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("AutoDelete")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AutoDownload")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Category")
                         .HasColumnType("TEXT");
 

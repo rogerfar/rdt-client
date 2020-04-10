@@ -15,12 +15,10 @@ namespace RdtClient.Web.Controllers
     public class TorrentsController : Controller
     {
         private readonly ITorrents _torrents;
-        private readonly IScheduler _scheduler;
 
-        public TorrentsController(ITorrents torrents, IScheduler scheduler)
+        public TorrentsController(ITorrents torrents)
         {
             _torrents = torrents;
-            _scheduler = scheduler;
         }
 
         [HttpGet]
@@ -34,7 +32,7 @@ namespace RdtClient.Web.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex);
+                return BadRequest(ex.Message);
             }
         }
 
@@ -55,7 +53,7 @@ namespace RdtClient.Web.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex);
+                return BadRequest(ex.Message);
             }
         }
 
@@ -78,7 +76,7 @@ namespace RdtClient.Web.Controllers
 
                 var bytes = memoryStream.ToArray();
                 
-                await _torrents.UploadFile(bytes);
+                await _torrents.UploadFile(bytes, false, false);
 
                 return Ok();
             }
@@ -94,7 +92,7 @@ namespace RdtClient.Web.Controllers
         {
             try
             {
-                await _torrents.UploadMagnet(request.MagnetLink);
+                await _torrents.UploadMagnet(request.MagnetLink, false, false);
 
                 return Ok();
             }
@@ -127,7 +125,6 @@ namespace RdtClient.Web.Controllers
             try
             {
                 await _torrents.Download(id);
-                await _scheduler.Process();
 
                 return Ok();
             }

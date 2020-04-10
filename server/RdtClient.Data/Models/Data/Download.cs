@@ -22,15 +22,12 @@ namespace RdtClient.Data.Models.Data
         public Torrent Torrent { get; set; }
 
         [NotMapped]
-        public Int32 Progress { get; set; }
+        public Int64 BytesSize { get; set; }
+
+        [NotMapped]
+        public Int64 BytesDownloaded { get; set; }
 
         [NotMapped]
         public Int64 Speed { get; set; }
-
-        [NotMapped]
-        public DateTime NextUpdate { get; set; }
-
-        [NotMapped]
-        public Int64 BytesLastUpdate { get; set; }
     }
 }

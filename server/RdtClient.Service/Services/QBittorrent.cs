@@ -18,7 +18,7 @@ namespace RdtClient.Service.Services
         Task<IList<TorrentInfo>> TorrentInfo();
         Task<TorrentProperties> TorrentProperties(String hash);
         Task TorrentsDelete(String hash, Boolean deleteFiles);
-        Task TorrentsAdd(String url);
+        Task TorrentsAdd(String magnetLink, Boolean autoDownload, Boolean autoDelete);
         Task TorrentsSetCategory(String hash, String category);
         Task<IDictionary<String, TorrentCategory>> TorrentsCategories();
     }
@@ -363,9 +363,9 @@ namespace RdtClient.Service.Services
             }
         }
 
-        public async Task TorrentsAdd(String url)
+        public async Task TorrentsAdd(String magnetLink, Boolean autoDownload, Boolean autoDelete)
         {
-            await _torrents.UploadMagnet(url);
+            await _torrents.UploadMagnet(magnetLink, autoDownload, autoDelete);
         }
 
         public async Task TorrentsSetCategory(String hash, String category)

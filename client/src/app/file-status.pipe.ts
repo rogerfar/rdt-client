@@ -15,7 +15,11 @@ export class FileStatusPipe implements PipeTransform {
     }
 
     if (value.download.status === DownloadStatus.Downloading) {
-      return `${value.download.progress}%`;
+      const progress = (
+        (value.download.bytesDownloaded / value.download.bytesSize) *
+        100
+      ).toFixed(2);
+      return `${progress || 0}%`;
     }
 
     if (value.download.status === DownloadStatus.Finished) {

@@ -16,7 +16,7 @@ import { DownloadStatus } from '../models/download.model';
 })
 export class TorrentTableComponent implements OnInit, OnDestroy {
   public torrents: Torrent[] = [];
-
+  public error: string;
   public showFiles: { [key: string]: boolean } = {};
 
   private timer: any;
@@ -25,18 +25,15 @@ export class TorrentTableComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.timer = setInterval(() => {
-      this.torrentService.getList().subscribe((result) => {
-        this.torrents = result;
-
-        this.torrents.forEach((torrent) => {
-          const activeDownloads = torrent.downloads.filter(
-            (m) => m.status === DownloadStatus.Downloading
-          );
-          if (activeDownloads.length > 0) {
-            torrent.activeDownload = activeDownloads[0];
-          }
-        });
-      });
+      this.torrentService.getList().subscribe(
+        (result) => {
+          this.torrents = result;
+        },
+        (err) => {
+          this.error = err.error;
+          clearInterval(this.timer);
+        }
+      );
     }, 1000);
   }
 

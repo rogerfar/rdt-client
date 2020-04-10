@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using RdtClient.Data.Data;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using SharpCompress.Common;
@@ -14,32 +10,37 @@ using SharpCompress.Readers;
 
 namespace RdtClient.Service.Services
 {
-    public static class DownloadManager
+    public class DownloadManager
     {
-        public static readonly Dictionary<Guid, Download> ActiveDownloads = new Dictionary<Guid, Download>();
+        public DownloadStatus? NewStatus { get; set; }
+        public Download Download { get; set; }
+        public Int64 Speed { get; private set; }
+        public Int64 BytesDownloaded { get; private set; }
+        public Int64 BytesSize { get; private set; }
 
-        static DownloadManager()
+        private DateTime _nextUpdate;
+        private Int64 _bytesLastUpdate;
+
+        public DownloadManager()
         {
             ServicePointManager.Expect100Continue = false;
             ServicePointManager.DefaultConnectionLimit = 100;
             ServicePointManager.MaxServicePointIdleTime = 1000;
         }
 
-        public static async Task Download(Download download, String destinationFolderPath)
+        private DownloadManager ActiveDownload => TaskRunner.ActiveDownloads[Download.DownloadId];
+
+        public async Task Start(String destinationFolderPath)
         {
-            await UpdateStatus(download.DownloadId, DownloadStatus.Downloading, TorrentStatus.Downloading);
+            ActiveDownload.NewStatus = DownloadStatus.Downloading;
+            ActiveDownload.BytesDownloaded = 0;
+            ActiveDownload.BytesSize = 0;
+            ActiveDownload.Speed = 0;
+            
+            _bytesLastUpdate = 0;
+            _nextUpdate = DateTime.UtcNow.AddSeconds(1);
 
-            if (!ActiveDownloads.TryAdd(download.DownloadId, download))
-            {
-                return;
-            }
-
-            download.Progress = 0;
-            download.BytesLastUpdate = 0;
-            download.NextUpdate = DateTime.UtcNow.AddSeconds(1);
-            download.Speed = 0;
-
-            var fileUrl = download.Link;
+            var fileUrl = Download.Link;
 
             var uri = new Uri(fileUrl);
             var filePath = Path.Combine(destinationFolderPath, uri.Segments.Last());
@@ -77,13 +78,15 @@ namespace RdtClient.Service.Services
                     {
                         fileStream.Write(buffer, 0, read);
 
-                        ActiveDownloads[download.DownloadId].Progress = (Int32) (fileStream.Length * 100 / responseLength);
+                        ActiveDownload.BytesDownloaded = fileStream.Length;
+                        ActiveDownload.BytesSize = responseLength;
 
-                        if (DateTime.UtcNow > ActiveDownloads[download.DownloadId].NextUpdate)
+                        if (DateTime.UtcNow > _nextUpdate)
                         {
-                            ActiveDownloads[download.DownloadId].Speed = fileStream.Length - ActiveDownloads[download.DownloadId].BytesLastUpdate;
-                            ActiveDownloads[download.DownloadId].NextUpdate = DateTime.UtcNow.AddSeconds(1);
-                            ActiveDownloads[download.DownloadId].BytesLastUpdate = fileStream.Length;
+                            ActiveDownload.Speed = fileStream.Length - _bytesLastUpdate;
+
+                            _nextUpdate = DateTime.UtcNow.AddSeconds(1);
+                            _bytesLastUpdate = fileStream.Length;
                         }
                     }
                     else
@@ -93,13 +96,14 @@ namespace RdtClient.Service.Services
                 }
             }
 
-            ActiveDownloads[download.DownloadId].Speed = 0;
+            ActiveDownload.Speed = 0;
+            ActiveDownload.BytesDownloaded = ActiveDownload.BytesSize;
 
             try
             {
                 if (filePath.EndsWith(".rar"))
                 {
-                    await UpdateStatus(download.DownloadId, DownloadStatus.Unpacking, TorrentStatus.Downloading);
+                    ActiveDownload.NewStatus = DownloadStatus.Unpacking;
 
                     await using (Stream stream = File.OpenRead(filePath))
                     {
@@ -141,43 +145,7 @@ namespace RdtClient.Service.Services
                 // ignored
             }
 
-            await UpdateStatus(download.DownloadId, DownloadStatus.Finished, TorrentStatus.Finished);
-
-            ActiveDownloads.Remove(download.DownloadId);
-        }
-
-        private static async Task UpdateStatus(Guid downloadId, DownloadStatus downloadStatus, TorrentStatus torrentStatus)
-        {
-            await using var context = new DataContext();
-
-            var download = await context.Downloads.FirstOrDefaultAsync(m => m.DownloadId == downloadId);
-
-            download.Status = downloadStatus;
-
-            await context.SaveChangesAsync();
-
-            var torrent = await context.Torrents.FirstOrDefaultAsync(m => m.TorrentId == download.TorrentId);
-
-            if (torrentStatus == TorrentStatus.Finished)
-            {
-                var allDownloads = await context.Downloads.Where(m => m.TorrentId == download.TorrentId)
-                                                .ToListAsync();
-
-                if (allDownloads.All(m => m.Status == DownloadStatus.Finished))
-                {
-                    torrent.Status = TorrentStatus.Finished;
-                }
-                else
-                {
-                    torrent.Status = TorrentStatus.Downloading;
-                }
-            }
-            else
-            {
-                torrent.Status = torrentStatus;
-            }
-
-            await context.SaveChangesAsync();
+            ActiveDownload.NewStatus = DownloadStatus.Finished;
         }
     }
 }

@@ -272,7 +272,7 @@ namespace RdtClient.Web.Controllers
 
                 foreach (var url in urls)
                 {
-                    await _qBittorrent.TorrentsAdd(url.Trim());
+                    await _qBittorrent.TorrentsAdd(url.Trim(), true, true);
                 }
 
                 return Ok();

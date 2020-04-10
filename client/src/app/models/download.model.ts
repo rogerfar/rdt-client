@@ -9,13 +9,16 @@ export class Download {
 
   public status: DownloadStatus;
 
-  public progress: number;
+  public bytesDownloaded: number;
+
+  public bytesSize: number;
 
   public speed: number;
 }
 
 export enum DownloadStatus {
   PendingDownload = 0,
-  Downloading,
-  Finished,
+  Downloading = 1,
+  Unpacking = 2,
+  Finished = 3,
 }

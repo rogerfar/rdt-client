@@ -10,6 +10,7 @@ namespace RdtClient.Service.Services
     public interface IDownloads
     {
         Task<IList<Download>> Get();
+        Task<IList<Download>> GetForTorrent(Guid torrentId);
         Task<Download> Add(Guid torrentId, String link);
         Task UpdateStatus(Guid downloadId, DownloadStatus status);
         Task DeleteForTorrent(Guid torrentId);
@@ -18,17 +19,20 @@ namespace RdtClient.Service.Services
     public class Downloads : IDownloads
     {
         private readonly IDownloadData _downloadData;
-        private readonly ISettings _settings;
 
-        public Downloads(IDownloadData downloadData, ISettings settings)
+        public Downloads(IDownloadData downloadData)
         {
             _downloadData = downloadData;
-            _settings = settings;
         }
 
         public async Task<IList<Download>> Get()
         {
             return await _downloadData.Get();
+        }
+
+        public async Task<IList<Download>> GetForTorrent(Guid torrentId)
+        {
+            return await _downloadData.GetForTorrent(torrentId);
         }
 
         public async Task<Download> Add(Guid torrentId, String link)

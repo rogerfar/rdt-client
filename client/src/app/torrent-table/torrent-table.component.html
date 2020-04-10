@@ -1,3 +1,7 @@
+<div class="notification is-danger is-light" *ngIf="error && error.length > 0">
+  An error has occured: {{ error }}<br />
+  Please refresh the screen after fixing this error.
+</div>
 <div class="table-container">
   <table class="table is-fullwidth is-hoverable">
     <colgroup>

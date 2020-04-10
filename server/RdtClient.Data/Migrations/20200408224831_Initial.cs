@@ -66,6 +66,8 @@ namespace RdtClient.Data.Migrations
                     TorrentId = table.Column<Guid>(nullable: false),
                     Hash = table.Column<string>(nullable: true),
                     Category = table.Column<string>(nullable: true),
+                    AutoDownload = table.Column<bool>(nullable: false),
+                    AutoDelete = table.Column<bool>(nullable: false),
                     Status = table.Column<int>(nullable: false),
                     RdId = table.Column<string>(nullable: true),
                     RdName = table.Column<string>(nullable: true),
