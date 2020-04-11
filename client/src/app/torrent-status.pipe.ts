@@ -25,29 +25,36 @@ export class TorrentStatusPipe implements PipeTransform {
         (m) => m.status === DownloadStatus.Unpacking
       );
 
+      const allBytesDownloaded = torrent.downloads.sum(
+        (m) => m.bytesDownloaded
+      );
+      const allBytesSize = torrent.downloads.sum((m) => m.bytesSize);
+
+      let progress = 0;
+      let allSpeeds = 0;
+
+      if (allBytesSize > 0) {
+        progress = (allBytesDownloaded / allBytesSize) * 100;
+        allSpeeds = downloading.sum((m) => m.speed) / downloading.length;
+      }
+
+      console.log(allBytesDownloaded, allBytesSize, progress, allSpeeds);
+
+      let speed: string | string[] = '0';
+      if (allSpeeds > 0) {
+        speed = this.pipe.transform(allSpeeds, 'filesize');
+      }
+
       if (downloading.length > 0) {
-        const allBytesDownloaded = torrent.downloads.sum(
-          (m) => m.bytesDownloaded
-        );
-        const allBytesSize = torrent.downloads.sum((m) => m.bytesSize);
-
         if (allBytesSize > 0) {
-          const progress = ((allBytesDownloaded / allBytesSize) * 100).toFixed(
-            2
-          );
-
-          const allSpeeds =
-            downloading.sum((m) => m.speed) / downloading.length;
-          const speed = this.pipe.transform(allSpeeds, 'filesize');
-
-          return `Downloading (${progress || 0}% - ${speed}/s)`;
+          return `Downloading (${progress.toFixed(2)}% - ${speed}/s)`;
         }
 
         return `Preparing download`;
       }
 
       if (unpacking.length > 0) {
-        return `Unpacking`;
+        return `Unpacking (${progress.toFixed(2)}% - ${speed}/s)`;
       }
 
       return 'Pending download';
@@ -58,7 +65,7 @@ export class TorrentStatusPipe implements PipeTransform {
         const speed = this.pipe.transform(torrent.rdSpeed, 'filesize');
         return `Torrent downloading (${torrent.rdProgress}% - ${speed}/s)`;
       case TorrentStatus.WaitingForDownload:
-        return `Waiting to download`;
+        return `Ready to download, press the download icon to start`;
       case TorrentStatus.DownloadQueued:
         return `Download queued`;
       case TorrentStatus.Downloading:

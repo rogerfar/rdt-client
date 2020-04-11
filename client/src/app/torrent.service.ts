@@ -17,13 +17,26 @@ export class TorrentService {
     return this.http.get<Torrent>(`/Api/Torrents/${torrentId}`);
   }
 
-  public uploadMagnet(magnetLink: string): Observable<void> {
-    return this.http.post<void>(`/Api/Torrents/UploadMagnet`, { magnetLink });
+  public uploadMagnet(
+    magnetLink: string,
+    autoDownload: boolean,
+    autoDelete: boolean
+  ): Observable<void> {
+    return this.http.post<void>(`/Api/Torrents/UploadMagnet`, {
+      magnetLink,
+      autoDownload,
+      autoDelete,
+    });
   }
 
-  public uploadFile(file: File): Observable<void> {
+  public uploadFile(
+    file: File,
+    autoDownload: boolean,
+    autoDelete: boolean
+  ): Observable<void> {
     const formData: FormData = new FormData();
     formData.append('file', file);
+    formData.append('formData', JSON.stringify({ autoDownload, autoDelete }));
     return this.http.post<void>(`/Api/Torrents/UploadFile`, formData);
   }
 

@@ -43,6 +43,17 @@
           </label>
         </div>
       </div>
+      <hr />
+      <div class="field">
+        <label class="checkbox">
+          <input type="checkbox" [(ngModel)]="autoDownload" />
+          Download torrent to host when finished downloading on Real-Debrid
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" [(ngModel)]="autoDelete" />
+          Remove torrent when finished downloading on host
+        </label>
+      </div>
       <div class="notification is-danger is-light" *ngIf="error?.length > 0">
         Cannot add torrent: {{ error }}
       </div>

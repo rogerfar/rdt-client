@@ -4,7 +4,7 @@ import { TorrentService } from 'src/app/torrent.service';
 @Component({
   selector: 'app-add-new-torrent',
   templateUrl: './add-new-torrent.component.html',
-  styleUrls: ['./add-new-torrent.component.scss']
+  styleUrls: ['./add-new-torrent.component.scss'],
 })
 export class AddNewTorrentComponent implements OnInit {
   @Input()
@@ -24,6 +24,9 @@ export class AddNewTorrentComponent implements OnInit {
 
   public fileName: string;
   public magnetLink: string;
+  public autoDownload: boolean;
+  public autoDelete: boolean;
+
   public saving = false;
   public error: string;
 
@@ -36,6 +39,9 @@ export class AddNewTorrentComponent implements OnInit {
   public reset(): void {
     this.fileName = '';
     this.magnetLink = '';
+    this.autoDelete = false;
+    this.autoDownload = true;
+
     this.saving = false;
     this.selectedFile = null;
     this.error = null;
@@ -60,25 +66,29 @@ export class AddNewTorrentComponent implements OnInit {
     this.error = null;
 
     if (this.magnetLink) {
-      this.torrentService.uploadMagnet(this.magnetLink).subscribe(
-        () => {
-          this.cancel();
-        },
-        err => {
-          this.error = err.error;
-          this.saving = false;
-        }
-      );
+      this.torrentService
+        .uploadMagnet(this.magnetLink, this.autoDownload, this.autoDelete)
+        .subscribe(
+          () => {
+            this.cancel();
+          },
+          (err) => {
+            this.error = err.error;
+            this.saving = false;
+          }
+        );
     } else if (this.selectedFile) {
-      this.torrentService.uploadFile(this.selectedFile).subscribe(
-        () => {
-          this.cancel();
-        },
-        err => {
-          this.error = err.error;
-          this.saving = false;
-        }
-      );
+      this.torrentService
+        .uploadFile(this.selectedFile, this.autoDownload, this.autoDelete)
+        .subscribe(
+          () => {
+            this.cancel();
+          },
+          (err) => {
+            this.error = err.error;
+            this.saving = false;
+          }
+        );
     } else {
       this.cancel();
     }

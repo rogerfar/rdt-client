@@ -75,6 +75,8 @@ namespace RdtClient.Service.Services
                         return;
                     }
 
+                    await torrents.Update();
+
                     await ProcessAutoDownloads(downloads, settings, torrents);
                     await ProcessDownloads(downloads, settings, torrents);
                     await ProcessStatus(downloads, settings, torrents);
@@ -88,8 +90,6 @@ namespace RdtClient.Service.Services
 
         private async Task ProcessAutoDownloads(IDownloads downloads, ISettings settings, ITorrents torrents)
         {
-            await torrents.Update();
-
             var allTorrents = await torrents.Get();
 
             allTorrents = allTorrents.Where(m => m.Status == TorrentStatus.WaitingForDownload && m.AutoDownload && m.Downloads.Count == 0)
@@ -103,8 +103,6 @@ namespace RdtClient.Service.Services
 
         private async Task ProcessDownloads(IDownloads downloads, ISettings settings, ITorrents torrents)
         {
-            await torrents.Update();
-
             var allDownloads = await downloads.Get();
 
             allDownloads = allDownloads.Where(m => m.Status != DownloadStatus.Finished)
@@ -130,6 +128,8 @@ namespace RdtClient.Service.Services
                 // Prevent circular references
                 download.Torrent.Downloads = null;
 
+                await torrents.UpdateStatus(download.TorrentId, TorrentStatus.Downloading);
+
                 await Task.Factory.StartNew(async delegate
                 {
                     var downloadManager = new DownloadManager();
@@ -138,8 +138,6 @@ namespace RdtClient.Service.Services
                     {
                         downloadManager.Download = download;
                         await downloadManager.Start(destinationFolderPath);
-
-                        await torrents.UpdateStatus(download.TorrentId, TorrentStatus.Downloading);
                     }
                 });
             }

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RdtClient.Data.Models.Data;
+using RdtClient.Service.Helpers;
 using RdtClient.Service.Services;
 
 namespace RdtClient.Web.Controllers
@@ -59,7 +60,9 @@ namespace RdtClient.Web.Controllers
 
         [HttpPost]
         [Route("UploadFile")]
-        public async Task<ActionResult> UploadFile([FromForm] IFormFile file)
+        public async Task<ActionResult> UploadFile([FromForm] IFormFile file,
+                                                   [ModelBinder(BinderType = typeof(JsonModelBinder))]
+                                                   TorrentControllerUploadFileRequest formData)
         {
             try
             {
@@ -75,8 +78,8 @@ namespace RdtClient.Web.Controllers
                 fileStream.CopyTo(memoryStream);
 
                 var bytes = memoryStream.ToArray();
-                
-                await _torrents.UploadFile(bytes, false, false);
+
+                await _torrents.UploadFile(bytes, formData.AutoDownload, formData.AutoDelete);
 
                 return Ok();
             }
@@ -92,7 +95,7 @@ namespace RdtClient.Web.Controllers
         {
             try
             {
-                await _torrents.UploadMagnet(request.MagnetLink, false, false);
+                await _torrents.UploadMagnet(request.MagnetLink, request.AutoDownload, request.AutoDelete);
 
                 return Ok();
             }
@@ -112,12 +115,12 @@ namespace RdtClient.Web.Controllers
 
                 return Ok();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
         }
-        
+
         [HttpGet]
         [Route("Download/{id}")]
         public async Task<ActionResult> Download(Guid id)
@@ -128,15 +131,23 @@ namespace RdtClient.Web.Controllers
 
                 return Ok();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
         }
     }
 
+    public class TorrentControllerUploadFileRequest
+    {
+        public Boolean AutoDownload { get; set; }
+        public Boolean AutoDelete { get; set; }
+    }
+
     public class TorrentControllerUploadMagnetRequest
     {
         public String MagnetLink { get; set; }
+        public Boolean AutoDownload { get; set; }
+        public Boolean AutoDelete { get; set; }
     }
 }

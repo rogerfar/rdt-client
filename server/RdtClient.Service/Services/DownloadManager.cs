@@ -1,25 +1,25 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
+using SharpCompress.Archives;
+using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
-using SharpCompress.Readers;
 
 namespace RdtClient.Service.Services
 {
     public class DownloadManager
     {
-        public DownloadStatus? NewStatus { get; set; }
-        public Download Download { get; set; }
-        public Int64 Speed { get; private set; }
-        public Int64 BytesDownloaded { get; private set; }
-        public Int64 BytesSize { get; private set; }
+        private Int64 _bytesLastUpdate;
 
         private DateTime _nextUpdate;
-        private Int64 _bytesLastUpdate;
+
+        private RarArchiveEntry _rarCurrentEntry;
+        private Dictionary<String, Int64> _rarfileStatus;
 
         public DownloadManager()
         {
@@ -27,6 +27,12 @@ namespace RdtClient.Service.Services
             ServicePointManager.DefaultConnectionLimit = 100;
             ServicePointManager.MaxServicePointIdleTime = 1000;
         }
+
+        public DownloadStatus? NewStatus { get; set; }
+        public Download Download { get; set; }
+        public Int64 Speed { get; private set; }
+        public Int64 BytesDownloaded { get; private set; }
+        public Int64 BytesSize { get; private set; }
 
         private DownloadManager ActiveDownload => TaskRunner.ActiveDownloads[Download.DownloadId];
 
@@ -36,7 +42,7 @@ namespace RdtClient.Service.Services
             ActiveDownload.BytesDownloaded = 0;
             ActiveDownload.BytesSize = 0;
             ActiveDownload.Speed = 0;
-            
+
             _bytesLastUpdate = 0;
             _nextUpdate = DateTime.UtcNow.AddSeconds(1);
 
@@ -107,20 +113,27 @@ namespace RdtClient.Service.Services
 
                     await using (Stream stream = File.OpenRead(filePath))
                     {
-                        var reader = ReaderFactory.Open(stream);
-                        while (reader.MoveToNextEntry())
-                        {
-                            if (reader.Entry.IsDirectory)
-                            {
-                                continue;
-                            }
+                        using var archive = RarArchive.Open(stream);
 
-                            reader.WriteEntryToDirectory(destinationFolderPath,
-                                                         new ExtractionOptions
-                                                         {
-                                                             ExtractFullPath = true,
-                                                             Overwrite = true
-                                                         });
+                        ActiveDownload.BytesSize = archive.TotalSize;
+
+                        var entries = archive.Entries.Where(entry => !entry.IsDirectory)
+                                             .ToList();
+
+                        _rarfileStatus = entries.ToDictionary(entry => entry.Key, entry => 0L);
+                        _rarCurrentEntry = null;
+                        archive.CompressedBytesRead += ArchiveOnCompressedBytesRead;
+
+                        foreach (var entry in entries)
+                        {
+                            _rarCurrentEntry = entry;
+
+                            entry.WriteToDirectory(destinationFolderPath,
+                                                   new ExtractionOptions
+                                                   {
+                                                       ExtractFullPath = true,
+                                                       Overwrite = true
+                                                   });
                         }
                     }
 
@@ -145,7 +158,21 @@ namespace RdtClient.Service.Services
                 // ignored
             }
 
+            ActiveDownload.Speed = 0;
+            ActiveDownload.BytesDownloaded = ActiveDownload.BytesSize;
             ActiveDownload.NewStatus = DownloadStatus.Finished;
+        }
+
+        private void ArchiveOnCompressedBytesRead(Object sender, CompressedBytesReadEventArgs e)
+        {
+            if (_rarCurrentEntry == null)
+            {
+                return;
+            }
+
+            _rarfileStatus[_rarCurrentEntry.Key] = e.CompressedBytesRead;
+
+            ActiveDownload.BytesDownloaded = _rarfileStatus.Sum(m => m.Value);
         }
     }
 }

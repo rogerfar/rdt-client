@@ -13,7 +13,7 @@ namespace RdtClient.Data.Data
         Task<IList<Torrent>> Get();
         Task<Torrent> GetById(Guid id);
         Task<Torrent> GetByHash(String hash);
-        Task<Torrent> Add(String realDebridId, String hash);
+        Task<Torrent> Add(String realDebridId, String hash, Boolean autoDownload, Boolean autoDelete);
         Task UpdateRdData(Torrent torrent);
         Task UpdateStatus(Guid torrentId, TorrentStatus status);
         Task UpdateCategory(Guid torrentId, String category);
@@ -80,14 +80,16 @@ namespace RdtClient.Data.Data
             return results;
         }
 
-        public async Task<Torrent> Add(String realDebridId, String hash)
+        public async Task<Torrent> Add(String realDebridId, String hash, Boolean autoDownload, Boolean autoDelete)
         {
             var torrent = new Torrent
             {
                 TorrentId = Guid.NewGuid(),
                 RdId = realDebridId,
                 Hash = hash,
-                Status = TorrentStatus.RealDebrid
+                Status = TorrentStatus.RealDebrid,
+                AutoDownload = autoDownload,
+                AutoDelete = autoDelete
             };
 
             _dataContext.Torrents.Add(torrent);

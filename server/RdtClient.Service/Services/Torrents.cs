@@ -88,6 +88,11 @@ namespace RdtClient.Service.Services
                         download.Speed = activeDownload.Speed;
                         download.BytesSize = activeDownload.BytesSize;
                         download.BytesDownloaded = activeDownload.BytesDownloaded;
+
+                        if (activeDownload.NewStatus.HasValue)
+                        {
+                            download.Status = activeDownload.NewStatus.Value;
+                        }
                     }
                 }
             }
@@ -143,7 +148,7 @@ namespace RdtClient.Service.Services
 
                     if (torrent == null)
                     {
-                        var newTorrent = await _torrentData.Add(rdTorrent.Id, rdTorrent.Hash);
+                        var newTorrent = await _torrentData.Add(rdTorrent.Id, rdTorrent.Hash, false, false);
                         await GetById(newTorrent.TorrentId);
                     }
                     else
@@ -262,7 +267,7 @@ namespace RdtClient.Service.Services
 
         private async Task Add(String rdTorrentId, String infoHash, Boolean autoDownload, Boolean autoDelete)
         {
-            var newTorrent = await _torrentData.Add(rdTorrentId, infoHash);
+            var newTorrent = await _torrentData.Add(rdTorrentId, infoHash, autoDownload, autoDelete);
 
             var rdTorrent = await RdNetClient.GetTorrentInfoAsync(rdTorrentId);
 
