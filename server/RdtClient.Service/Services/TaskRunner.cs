@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,16 +11,12 @@ using RdtClient.Data.Enums;
 
 namespace RdtClient.Service.Services
 {
-    public class TaskRunner : IHostedService, IDisposable
+    public class TaskRunner : BackgroundService
     {
         public static readonly ConcurrentDictionary<Guid, DownloadManager> ActiveDownloads = new ConcurrentDictionary<Guid, DownloadManager>();
 
         private readonly ILogger<TaskRunner> _logger;
         private readonly IServiceProvider _services;
-
-        private Timer _timer;
-        
-        private readonly SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
 
         public TaskRunner(ILogger<TaskRunner> logger, IServiceProvider services)
         {
@@ -27,64 +24,47 @@ namespace RdtClient.Service.Services
             _services = services;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Timed Hosted Service running.");
+            await Task.Delay(TimeSpan.FromSeconds(15), stoppingToken);
 
-            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
+            _logger.LogInformation("TaskRunner started.");
 
-            return Task.CompletedTask;
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            _logger.LogInformation("Timed Hosted Service is stopping.");
-
-            _timer?.Change(Timeout.Infinite, 0);
-
-            return Task.CompletedTask;
-        }
-
-        public void Dispose()
-        {
-            _timer?.Dispose();
-        }
-
-        private async void DoWork(Object state)
-        {
-            // Make sure only 1 process enters the lock
-            var obtainLock = await _semaphoreSlim.WaitAsync(100);
-
-            if (!obtainLock)
+            while (!stoppingToken.IsCancellationRequested)
             {
-                return;
+                await DoWork();
+                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             }
 
+            _logger.LogInformation("TaskRunner stopped.");
+        }
+
+        private async Task DoWork()
+        {
             try
             {
-                using (var scope = _services.CreateScope())
+                using var scope = _services.CreateScope();
+
+                var downloads = scope.ServiceProvider.GetRequiredService<IDownloads>();
+                var settings = scope.ServiceProvider.GetRequiredService<ISettings>();
+                var torrents = scope.ServiceProvider.GetRequiredService<ITorrents>();
+
+                var rdKey = await settings.GetString("RealDebridApiKey");
+
+                if (String.IsNullOrWhiteSpace(rdKey))
                 {
-                    var downloads = scope.ServiceProvider.GetRequiredService<IDownloads>();
-                    var settings = scope.ServiceProvider.GetRequiredService<ISettings>();
-                    var torrents = scope.ServiceProvider.GetRequiredService<ITorrents>();
-
-                    var rdKey = await settings.GetString("RealDebridApiKey");
-
-                    if (String.IsNullOrWhiteSpace(rdKey))
-                    {
-                        return;
-                    }
-
-                    await torrents.Update();
-
-                    await ProcessAutoDownloads(downloads, settings, torrents);
-                    await ProcessDownloads(downloads, settings, torrents);
-                    await ProcessStatus(downloads, settings, torrents);
+                    return;
                 }
+
+                await torrents.Update();
+
+                await ProcessAutoDownloads(downloads, settings, torrents);
+                await ProcessDownloads(downloads, settings, torrents);
+                await ProcessStatus(downloads, settings, torrents);
             }
-            finally
+            catch(Exception ex)
             {
-                _semaphoreSlim.Release(1);
+                _logger.LogError(ex, ex.Message);
             }
         }
 
@@ -136,8 +116,10 @@ namespace RdtClient.Service.Services
 
                     if (ActiveDownloads.TryAdd(download.DownloadId, downloadManager))
                     {
+                        var folderPath = Path.Combine(destinationFolderPath, download.Torrent.RdName);
+
                         downloadManager.Download = download;
-                        await downloadManager.Start(destinationFolderPath);
+                        await downloadManager.Start(folderPath, destinationFolderPath);
                     }
                 });
             }

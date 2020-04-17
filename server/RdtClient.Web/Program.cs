@@ -1,18 +1,19 @@
 using System;
-using System.IO;
-using Microsoft.AspNetCore;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using RdtClient.Service.Services;
 
 namespace RdtClient.Web
 {
     public class Program
     {
-        public static void Main(String[] args)
+        public static async Task Main(String[] args)
         {
             var configuration = new ConfigurationBuilder()
-                                .SetBasePath(Directory.GetCurrentDirectory())
                                 .AddJsonFile("appsettings.json", true, false)
                                 .Build();
 
@@ -23,20 +24,47 @@ namespace RdtClient.Web
                 hostUrl = "http://0.0.0.0:6500";
             }
 
-            WebHost.CreateDefaultBuilder(args)
-                   .UseStartup<Startup>()
-                   .ConfigureLogging(logging =>
-                   {
-                       logging.ClearProviders();
-                       logging.AddConsole();
-                       logging.AddFile($"{AppContext.BaseDirectory}app.log");
-                   })
-                   .CaptureStartupErrors(false)
-                   .UseUrls(hostUrl)
-                   .UseKestrel()
-                   .UseIISIntegration()
-                   .Build()
-                   .Run();
+            await Host.CreateDefaultBuilder(args)
+                      .UseWindowsService()
+                      .ConfigureServices((hostContext, services) =>
+                      {
+                          services.AddHostedService<TaskRunner>();
+                      })
+                      .ConfigureWebHostDefaults(webBuilder =>
+                      {
+                          webBuilder.ConfigureLogging(logging =>
+                                    {
+                                        logging.ClearProviders();
+                                        logging.AddConsole();
+                                        logging.AddFile($"{AppContext.BaseDirectory}app.log");
+                                    })
+                                    .UseUrls(hostUrl)
+                                    .UseKestrel()
+                                    .UseStartup<Startup>();
+                      })
+                      .Build()
+                      .RunAsync();
         }
     }
+
+    /*public class Program
+    {
+        public static void Main(String[] args)
+        {
+
+
+
+
+            Host.CreateDefaultBuilder(args)
+                .UseWindowsService()
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder
+                              .CaptureStartupErrors(false)
+                              
+                              .UseStartup<Startup>()
+                              .UseKestrel();
+                });
+        }
+    }*/
 }

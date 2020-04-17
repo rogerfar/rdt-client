@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -114,7 +115,7 @@ namespace RdtClient.Web.Controllers
             return Ok();
         }
 
-        [Authorize]
+        [AllowAnonymous]
         [Route("app/preferences")]
         [HttpGet]
         [HttpPost]
@@ -288,7 +289,25 @@ namespace RdtClient.Web.Controllers
         [HttpPost]
         public async Task<ActionResult> TorrentsAddPost([FromForm] QBTorrentsAddRequest request)
         {
-            return await TorrentsAdd(request);
+            foreach (var file in Request.Form.Files)
+            {
+                if (file.Length > 0)
+                {
+                    await using var target = new MemoryStream();
+
+                    await file.CopyToAsync(target);
+                    var fileBytes = target.ToArray();
+
+                    await _qBittorrent.TorrentsAddFile(fileBytes, true, true);
+                }
+            }
+
+            if (request.Urls != null)
+            {
+                return await TorrentsAdd(request);
+            }
+
+            return Ok();
         }
         
         [Authorize]
@@ -401,16 +420,5 @@ namespace RdtClient.Web.Controllers
     {
         public String Hashes { get; set; }
         public String Category { get; set; }
-    }
-
-    public class QbTorrentsCreateCategoryRequest
-    {
-        public String Category { get; set; }
-        public String SavePath { get; set; }
-    }
-
-    public class QbTorrentsRemoveCategoryRequest
-    {
-        public String Categories { get; set; }
     }
 }

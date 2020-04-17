@@ -6,7 +6,7 @@ This is a web interface to manage your torrents on Real-Debrid. It supports the 
 -   Download all files from Real Debrid to your local machine automatically
 -   Unpack all files when finished downloading
 -   Implements a fake qBittorrent API so you can hook up other applications like Sonarr or Couchpotato.
--   Build with Angular 9 and .NET Core 3.1
+-   Built with Angular 9 and .NET Core 3.1
 
 **You will need a Premium service at Real-Debrid!**
 
@@ -14,18 +14,23 @@ This is a web interface to manage your torrents on Real-Debrid. It supports the 
 
 1. Unpack the latest release from the releases folder and run `startup.bat`. This will start the application on port 6500.
 2. Browse to http://127.0.0.1:6500
-3. The very first credentials you type in will be remembered for future logins.
+3. The very first credentials you enter in will be remembered for future logins.
 4. Click on Settings on the top and enter your Real-Debrid API key.
 5. Change your download path if needed.
 6. To install as service on Windows, exit the console and run `serviceinstall.bat` as administrator.
+7. To change the default port edit the `appsettings.json` file.
+
+## Removing
+
+1. Run `serviceremove.bat` to remove the service and firewall rules.
 
 ## Troubleshooting
 
 -   If you forgot your logins simply delete the `database.db` and restart the service.
 
-## Connecting Sonarr
+## Connecting Sonarr/Radarr
 
-1. Login to Sonarr and click Settings
+1. Login to Sonarr or Radarr and click Settings
 2. Go to the Download Client tab and click the plus to add
 3. Click "qBittorrent" in the list
 4. Enter the IP or hostname of the RealDebridClient in the Host field
@@ -35,7 +40,7 @@ This is a web interface to manage your torrents on Real-Debrid. It supports the 
 8. Hit Test and then Save if all is well.
 9. Sonarr will now think you have a regular Torrent client hooked up.
 
-Notice: the progress and ETA reported in Sonarr's Activity tab will not be very accurate, but it will report the torrent as completed so it can be processed by Sonarr when done downloading.
+Notice: the progress and ETA reported in Sonarr's Activity tab will not be accurate, but it will report the torrent as completed so it can be processed after it is done downloading.
 
 ## Build instructions
 

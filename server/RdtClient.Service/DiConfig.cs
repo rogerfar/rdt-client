@@ -12,8 +12,6 @@ namespace RdtClient.Service
             services.AddScoped<IQBittorrent, QBittorrent>();
             services.AddScoped<ISettings, Settings>();
             services.AddScoped<ITorrents, Torrents>();
-
-            services.AddHostedService<TaskRunner>();
         }
     }
 }

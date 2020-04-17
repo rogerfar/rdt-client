@@ -36,7 +36,7 @@ namespace RdtClient.Service.Services
 
         private DownloadManager ActiveDownload => TaskRunner.ActiveDownloads[Download.DownloadId];
 
-        public async Task Start(String destinationFolderPath)
+        public async Task Start(String destinationFolderPath, String rootfolderPath)
         {
             ActiveDownload.NewStatus = DownloadStatus.Downloading;
             ActiveDownload.BytesDownloaded = 0;
@@ -128,7 +128,7 @@ namespace RdtClient.Service.Services
                         {
                             _rarCurrentEntry = entry;
 
-                            entry.WriteToDirectory(destinationFolderPath,
+                            entry.WriteToDirectory(rootfolderPath,
                                                    new ExtractionOptions
                                                    {
                                                        ExtractFullPath = true,

@@ -132,7 +132,7 @@ namespace RdtClient.Service.Services
         {
             var torrents = await _torrentData.Get();
 
-            var w = await SemaphoreSlim.WaitAsync(10);
+            var w = await SemaphoreSlim.WaitAsync(1);
             if (!w)
             {
                 return torrents;
@@ -267,22 +267,31 @@ namespace RdtClient.Service.Services
 
         private async Task Add(String rdTorrentId, String infoHash, Boolean autoDownload, Boolean autoDelete)
         {
-            var newTorrent = await _torrentData.Add(rdTorrentId, infoHash, autoDownload, autoDelete);
-
-            var rdTorrent = await RdNetClient.GetTorrentInfoAsync(rdTorrentId);
-
-            if (rdTorrent.Files != null && rdTorrent.Files.Count > 0)
+            var w = await SemaphoreSlim.WaitAsync(1);
+            if (!w)
             {
-                if (!rdTorrent.Files.Any(m => m.Selected))
-                {
-                    var fileIds = rdTorrent.Files.Select(m => m.Id.ToString())
-                                           .ToArray();
-
-                    await RdNetClient.SelectTorrentFilesAsync(rdTorrentId, fileIds);
-                }
+                return;
             }
 
-            await Update(newTorrent, rdTorrent);
+            try
+            {
+                var torrent = await _torrentData.GetByHash(infoHash);
+
+                if (torrent != null)
+                {
+                    return;
+                }
+
+                var newTorrent = await _torrentData.Add(rdTorrentId, infoHash, autoDownload, autoDelete);
+
+                var rdTorrent = await RdNetClient.GetTorrentInfoAsync(rdTorrentId);
+
+                await Update(newTorrent, rdTorrent);
+            }
+            finally
+            {
+                SemaphoreSlim.Release();
+            }
         }
 
         private async Task Update(Torrent torrent, RDNET.Torrent rdTorrent)
@@ -340,6 +349,19 @@ namespace RdtClient.Service.Services
                     };
 
                     await _torrentData.UpdateStatus(torrent.TorrentId, torrent.Status);
+                }
+            }
+
+            if (rdTorrent.Files != null && rdTorrent.Files.Count > 0)
+            {
+                if (!rdTorrent.Files.Any(m => m.Selected))
+                {
+                    var fileIds = rdTorrent.Files
+                                           .Where(m => m.Bytes > 1024 * 10)
+                                           .Select(m => m.Id.ToString())
+                                           .ToArray();
+
+                    await RdNetClient.SelectTorrentFilesAsync(rdTorrent.Id, fileIds);
                 }
             }
         }

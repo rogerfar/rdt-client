@@ -19,6 +19,7 @@ namespace RdtClient.Service.Services
         Task<TorrentProperties> TorrentProperties(String hash);
         Task TorrentsDelete(String hash, Boolean deleteFiles);
         Task TorrentsAdd(String magnetLink, Boolean autoDownload, Boolean autoDelete);
+        Task TorrentsAddFile(Byte[] fileBytes, Boolean autoDownload, Boolean autoDelete);
         Task TorrentsSetCategory(String hash, String category);
         Task<IDictionary<String, TorrentCategory>> TorrentsCategories();
     }
@@ -201,7 +202,10 @@ namespace RdtClient.Service.Services
 
             var user = await _authentication.GetUser();
 
-            preferences.WebUiUsername = user.UserName;
+            if (user != null)
+            {
+                preferences.WebUiUsername = user.UserName;
+            }
 
             return preferences;
         }
@@ -366,6 +370,11 @@ namespace RdtClient.Service.Services
         public async Task TorrentsAdd(String magnetLink, Boolean autoDownload, Boolean autoDelete)
         {
             await _torrents.UploadMagnet(magnetLink, autoDownload, autoDelete);
+        }
+
+        public async Task TorrentsAddFile(Byte[] fileBytes, Boolean autoDownload, Boolean autoDelete)
+        {
+            await _torrents.UploadFile(fileBytes, autoDownload, autoDelete);
         }
 
         public async Task TorrentsSetCategory(String hash, String category)
