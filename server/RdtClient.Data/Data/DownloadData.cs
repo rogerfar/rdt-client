@@ -53,7 +53,7 @@ namespace RdtClient.Data.Data
                 Status = DownloadStatus.PendingDownload
             };
 
-            _dataContext.Downloads.Add(download);
+            await _dataContext.Downloads.AddAsync(download);
 
             await _dataContext.SaveChangesAsync();
 

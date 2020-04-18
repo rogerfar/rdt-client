@@ -26,37 +26,23 @@ namespace RdtClient.Web.Controllers
         [Route("")]
         public async Task<ActionResult<IList<Torrent>>> Get()
         {
-            try
-            {
-                var result = await _torrents.Get();
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var result = await _torrents.Get();
+            return Ok(result);
         }
 
         [HttpGet]
         [Route("{id}")]
         public async Task<ActionResult<Torrent>> Get(Guid id)
         {
-            try
-            {
-                var result = await _torrents.GetById(id);
+            var result = await _torrents.GetById(id);
 
-                if (result == null)
-                {
-                    throw new Exception("Torrent not found");
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
+            if (result == null)
             {
-                return BadRequest(ex.Message);
+                throw new Exception("Torrent not found");
             }
-        }
+
+            return Ok(result);
+            }
 
         [HttpPost]
         [Route("UploadFile")]
@@ -64,77 +50,49 @@ namespace RdtClient.Web.Controllers
                                                    [ModelBinder(BinderType = typeof(JsonModelBinder))]
                                                    TorrentControllerUploadFileRequest formData)
         {
-            try
+            if (file == null || file.Length <= 0)
             {
-                if (file == null || file.Length <= 0)
-                {
-                    throw new Exception("Invalid torrent file");
-                }
-
-                var fileStream = file.OpenReadStream();
-
-                await using var memoryStream = new MemoryStream();
-
-                fileStream.CopyTo(memoryStream);
-
-                var bytes = memoryStream.ToArray();
-
-                await _torrents.UploadFile(bytes, formData.AutoDownload, formData.AutoDelete);
-
-                return Ok();
+                throw new Exception("Invalid torrent file");
             }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+
+            var fileStream = file.OpenReadStream();
+
+            await using var memoryStream = new MemoryStream();
+
+            await fileStream.CopyToAsync(memoryStream);
+
+            var bytes = memoryStream.ToArray();
+
+            await _torrents.UploadFile(bytes, formData.AutoDownload, formData.AutoDelete);
+
+            return Ok();
         }
 
         [HttpPost]
         [Route("UploadMagnet")]
         public async Task<ActionResult> UploadMagnet([FromBody] TorrentControllerUploadMagnetRequest request)
         {
-            try
-            {
-                await _torrents.UploadMagnet(request.MagnetLink, request.AutoDownload, request.AutoDelete);
+            await _torrents.UploadMagnet(request.MagnetLink, request.AutoDownload, request.AutoDelete);
 
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            return Ok();
         }
 
         [HttpDelete]
         [Route("{id}")]
         public async Task<ActionResult> Delete(Guid id)
         {
-            try
-            {
-                await _torrents.Delete(id);
+            await _torrents.Delete(id);
 
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            return Ok();
         }
 
         [HttpGet]
         [Route("Download/{id}")]
         public async Task<ActionResult> Download(Guid id)
         {
-            try
-            {
-                await _torrents.Download(id);
+            await _torrents.Download(id);
 
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            return Ok();
         }
     }
 

@@ -31,21 +31,14 @@ namespace RdtClient.Web.Controllers
         [HttpGet]
         public async Task<ActionResult> AuthLogin([FromQuery] QBAuthLoginRequest request)
         {
-            try
-            {
-                var result = await _qBittorrent.AuthLogin(request.UserName, request.Password);
+            var result = await _qBittorrent.AuthLogin(request.UserName, request.Password);
 
-                if (result)
-                {
-                    return Ok("Ok.");
-                }
-
-                return Ok("Fails.");
-            }
-            catch (Exception ex)
+            if (result)
             {
-                return BadRequest(ex.Message);
+                return Ok("Ok.");
             }
+
+            return Ok("Fails.");
         }
         
         [AllowAnonymous]
@@ -62,15 +55,8 @@ namespace RdtClient.Web.Controllers
         [HttpPost]
         public async Task<ActionResult> AuthLogout()
         {
-            try
-            {
-                await _qBittorrent.AuthLogout();
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            await _qBittorrent.AuthLogout();
+            return Ok();
         }
 
         [Route("app/version")]
@@ -121,15 +107,8 @@ namespace RdtClient.Web.Controllers
         [HttpPost]
         public async Task<ActionResult<AppPreferences>> AppPreferences()
         {
-            try
-            {
-                var result = await _qBittorrent.AppPreferences();
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var result = await _qBittorrent.AppPreferences();
+            return Ok(result);
         }
 
         [Authorize]
@@ -147,15 +126,8 @@ namespace RdtClient.Web.Controllers
         [HttpPost]
         public async Task<ActionResult<AppPreferences>> AppDefaultSavePath()
         {
-            try
-            {
-                var result = await _qBittorrent.AppDefaultSavePath();
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var result = await _qBittorrent.AppDefaultSavePath();
+            return Ok(result);
         }
         
         [Authorize]
@@ -164,15 +136,8 @@ namespace RdtClient.Web.Controllers
         [HttpPost]
         public async Task<ActionResult<IList<TorrentInfo>>> TorrentsInfo()
         {
-            try
-            {
-                var result = await _qBittorrent.TorrentInfo();
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var result = await _qBittorrent.TorrentInfo();
+            return Ok(result);
         }
         
         [Authorize]
@@ -180,21 +145,14 @@ namespace RdtClient.Web.Controllers
         [HttpGet]
         public async Task<ActionResult<IList<TorrentInfo>>> TorrentsProperties([FromQuery] QBTorrentsHashRequest request)
         {
-            try
-            {
-                var result = await _qBittorrent.TorrentProperties(request.Hash);
+            var result = await _qBittorrent.TorrentProperties(request.Hash);
 
-                if (result == null)
-                {
-                    return NotFound();
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
+            if (result == null)
             {
-                return BadRequest(ex.Message);
+                return NotFound();
             }
+
+            return Ok(result);
         }
 
         [Authorize]
@@ -237,21 +195,14 @@ namespace RdtClient.Web.Controllers
         [HttpGet]
         public async Task<ActionResult> TorrentsDelete([FromQuery] QBTorrentsDeleteRequest request)
         {
-            try
-            {
-                var hashes = request.Hashes.Split("|");
+            var hashes = request.Hashes.Split("|");
 
-                foreach (var hash in hashes)
-                {
-                    await _qBittorrent.TorrentsDelete(hash, request.DeleteFiles);
-                }
-
-                return Ok();
-            }
-            catch (Exception ex)
+            foreach (var hash in hashes)
             {
-                return BadRequest(ex.Message);
+                await _qBittorrent.TorrentsDelete(hash, request.DeleteFiles);
             }
+
+            return Ok();
         }
 
         [Authorize]
@@ -267,21 +218,14 @@ namespace RdtClient.Web.Controllers
         [HttpGet]
         public async Task<ActionResult> TorrentsAdd([FromQuery] QBTorrentsAddRequest request)
         {
-            try
-            {
-                var urls = request.Urls.Split("\n");
+            var urls = request.Urls.Split("\n");
 
-                foreach (var url in urls)
-                {
-                    await _qBittorrent.TorrentsAdd(url.Trim(), true, true);
-                }
-
-                return Ok();
-            }
-            catch (Exception ex)
+            foreach (var url in urls)
             {
-                return BadRequest(ex.Message);
+                await _qBittorrent.TorrentsAdd(url.Trim(), true, true);
             }
+
+            return Ok();
         }
 
         [Authorize]
@@ -315,21 +259,14 @@ namespace RdtClient.Web.Controllers
         [HttpGet]
         public async Task<ActionResult> TorrentsSetCategory([FromQuery] QBTorrentsSetCategoryRequest request)
         {
-            try
-            {
-                var hashes = request.Hashes.Split("|");
+            var hashes = request.Hashes.Split("|");
 
-                foreach (var hash in hashes)
-                {
-                    await _qBittorrent.TorrentsSetCategory(hash, request.Category);
-                }
-
-                return Ok();
-            }
-            catch (Exception ex)
+            foreach (var hash in hashes)
             {
-                return BadRequest(ex.Message);
+                await _qBittorrent.TorrentsSetCategory(hash, request.Category);
             }
+
+            return Ok();
         }
 
         [Authorize]
@@ -346,15 +283,8 @@ namespace RdtClient.Web.Controllers
         [HttpPost]
         public async Task<ActionResult<IDictionary<String, TorrentCategory>>> TorrentsCategories()
         {
-            try
-            {
-                var categories = await _qBittorrent.TorrentsCategories();
-                return Ok(categories);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var categories = await _qBittorrent.TorrentsCategories();
+            return Ok(categories);
         }
 
         [Authorize]

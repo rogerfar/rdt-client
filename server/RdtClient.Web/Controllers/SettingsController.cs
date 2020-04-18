@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,47 +25,26 @@ namespace RdtClient.Web.Controllers
         [Route("")]
         public async Task<ActionResult<IList<Setting>>> Get()
         {
-            try
-            {
-                var result = await _settings.GetAll();
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var result = await _settings.GetAll();
+            return Ok(result);
         }
 
         [HttpPut]
         [Route("")]
         public async Task<ActionResult> Update([FromBody] SettingsControllerUpdateRequest request)
         {
-            try
-            {
-                await _settings.Update(request.Settings);
-                _torrents.Reset();
+            await _settings.Update(request.Settings);
+            _torrents.Reset();
 
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            return Ok();
         }
 
         [HttpGet]
         [Route("Profile")]
         public async Task<ActionResult<Profile>> Profile()
         {
-            try
-            {
-                var profile = await _torrents.GetProfile();
-                return Ok(profile);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var profile = await _torrents.GetProfile();
+            return Ok(profile);
         }
     }
 

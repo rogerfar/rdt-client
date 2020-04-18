@@ -33,8 +33,6 @@ namespace RdtClient.Service.Services
     {
         private static RdNetClient _rdtClient;
 
-        private static DateTime _rdtLastUpdate = DateTime.UtcNow;
-
         private static readonly SemaphoreSlim SemaphoreSlim = new SemaphoreSlim(1, 1);
         private readonly IDownloads _downloads;
         private readonly ISettings _settings;
@@ -71,14 +69,7 @@ namespace RdtClient.Service.Services
         public async Task<IList<Torrent>> Get()
         {
             var torrents = await _torrentData.Get();
-
-            if (DateTime.UtcNow > _rdtLastUpdate)
-            {
-                _rdtLastUpdate = DateTime.UtcNow.AddSeconds(10);
-
-                torrents = await Update();
-            }
-
+            
             foreach (var torrent in torrents)
             {
                 foreach (var download in torrent.Downloads)
@@ -204,7 +195,7 @@ namespace RdtClient.Service.Services
 
         public async Task UploadFile(Byte[] bytes, Boolean autoDownload, Boolean autoDelete)
         {
-            var torrent = MonoTorrent.Torrent.Load(bytes);
+            var torrent = await MonoTorrent.Torrent.LoadAsync(bytes);
 
             var rdTorrent = await RdNetClient.AddTorrentFileAsync(bytes);
 
@@ -233,9 +224,16 @@ namespace RdtClient.Service.Services
 
             var rdTorrent = await RdNetClient.GetTorrentInfoAsync(torrent.RdId);
 
+            var existingDownloads = await _downloads.GetForTorrent(id);
+
             foreach (var link in rdTorrent.Links)
             {
                 var unrestrictedLink = await RdNetClient.UnrestrictLinkAsync(link);
+
+                if (existingDownloads.Any(m => m.Link == unrestrictedLink.Download))
+                {
+                    continue;
+                }
 
                 await _downloads.Add(torrent.TorrentId, unrestrictedLink.Download);
             }
@@ -244,17 +242,16 @@ namespace RdtClient.Service.Services
         public void Reset()
         {
             _rdtClient = null;
-            _rdtLastUpdate = DateTime.UtcNow;
         }
 
         public async Task<Profile> GetProfile()
         {
-            if (_rdtClient == null)
+            if (RdNetClient == null)
             {
                 return new Profile();
             }
 
-            var user = await _rdtClient.GetUserAsync();
+            var user = await RdNetClient.GetUserAsync();
 
             var profile = new Profile
             {

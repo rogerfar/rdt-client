@@ -22,48 +22,34 @@ namespace RdtClient.Web.Controllers
         [HttpPost]
         public async Task<ActionResult> Login([FromBody] AuthControllerLoginRequest request)
         {
-            try
+            var user = await _authentication.GetUser();
+
+            if (user == null)
             {
-                var user = await _authentication.GetUser();
+                var registerResult = await _authentication.Register(request.UserName, request.Password);
 
-                if (user == null)
+                if (!registerResult.Succeeded)
                 {
-                    var registerResult = await _authentication.Register(request.UserName, request.Password);
-
-                    if (!registerResult.Succeeded)
-                    {
-                        return BadRequest(registerResult.Errors.First().Description);
-                    }
+                    return BadRequest(registerResult.Errors.First().Description);
                 }
-
-                var result = await _authentication.Login(request.UserName, request.Password);
-
-                if (!result.Succeeded)
-                {
-                    return BadRequest("Invalid credentials");
-                }
-
-                return Ok();
             }
-            catch(Exception ex)
+
+            var result = await _authentication.Login(request.UserName, request.Password);
+
+            if (!result.Succeeded)
             {
-                return BadRequest(ex.Message);
+                return BadRequest("Invalid credentials");
             }
+
+            return Ok();
         }
         
         [Route("Logout")]
         [HttpPost]
         public async Task<ActionResult> Logout()
         {
-            try
-            {
-                await _authentication.Logout();
-                return Ok();
-            }
-            catch(Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            await _authentication.Logout();
+            return Ok();
         }
     }
 

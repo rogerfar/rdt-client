@@ -92,7 +92,7 @@ namespace RdtClient.Data.Data
                 AutoDelete = autoDelete
             };
 
-            _dataContext.Torrents.Add(torrent);
+            await _dataContext.Torrents.AddAsync(torrent);
 
             await _dataContext.SaveChangesAsync();
 

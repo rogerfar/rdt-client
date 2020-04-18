@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using RdtClient.Data;
 using RdtClient.Data.Data;
 using RdtClient.Data.Models.Internal;
+using RdtClient.Service.Middleware;
 
 namespace RdtClient.Web
 {
@@ -89,8 +90,9 @@ namespace RdtClient.Web
             if (env.IsDevelopment())
             {
                 app.UseCors("Dev");
-                app.UseDeveloperExceptionPage();
             }
+
+            app.ConfigureExceptionHandler();
 
             app.Use(async (context, next) =>
             {

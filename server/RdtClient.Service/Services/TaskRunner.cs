@@ -72,7 +72,7 @@ namespace RdtClient.Service.Services
         {
             var allTorrents = await torrents.Get();
 
-            allTorrents = allTorrents.Where(m => m.Status == TorrentStatus.WaitingForDownload && m.AutoDownload && m.Downloads.Count == 0)
+            allTorrents = allTorrents.Where(m => (m.Status == TorrentStatus.WaitingForDownload && m.AutoDownload && m.Downloads.Count == 0) || m.Status == TorrentStatus.DownloadQueued)
                                      .ToList();
 
             foreach (var torrent in allTorrents)
