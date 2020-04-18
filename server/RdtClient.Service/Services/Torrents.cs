@@ -142,6 +142,12 @@ namespace RdtClient.Service.Services
                         var newTorrent = await _torrentData.Add(rdTorrent.Id, rdTorrent.Hash, false, false);
                         await GetById(newTorrent.TorrentId);
                     }
+
+                    if (rdTorrent.Files == null)
+                    {
+                        var rdTorrent2 = await _rdtClient.GetTorrentInfoAsync(rdTorrent.Id);
+                        await Update(torrent, rdTorrent2);
+                    }
                     else
                     {
                         await Update(torrent, rdTorrent);
