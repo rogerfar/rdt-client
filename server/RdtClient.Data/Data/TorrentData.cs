@@ -46,38 +46,42 @@ namespace RdtClient.Data.Data
 
         public async Task<Torrent> GetById(Guid id)
         {
-            var results = await _dataContext.Torrents
-                                            .AsNoTracking()
-                                            .Include(m => m.Downloads)
-                                            .FirstOrDefaultAsync(m => m.TorrentId == id);
+            var dbTorrent = await _dataContext.Torrents
+                                              .AsNoTracking()
+                                              .Include(m => m.Downloads)
+                                              .FirstOrDefaultAsync(m => m.TorrentId == id);
 
-            if (results != null)
+            if (dbTorrent == null)
             {
-                foreach (var file in results.Downloads)
-                {
-                    file.Torrent = null;
-                }
+                return null;
             }
 
-            return results;
+            foreach (var file in dbTorrent.Downloads)
+            {
+                file.Torrent = null;
+            }
+
+            return dbTorrent;
         }
 
         public async Task<Torrent> GetByHash(String hash)
         {
-            var results = await _dataContext.Torrents
-                                            .AsNoTracking()
-                                            .Include(m => m.Downloads)
-                                            .FirstOrDefaultAsync(m => m.Hash.ToLower() == hash.ToLower());
+            var dbTorrent = await _dataContext.Torrents
+                                              .AsNoTracking()
+                                              .Include(m => m.Downloads)
+                                              .FirstOrDefaultAsync(m => m.Hash.ToLower() == hash.ToLower());
 
-            if (results != null)
+            if (dbTorrent == null)
             {
-                foreach (var file in results.Downloads)
-                {
-                    file.Torrent = null;
-                }
+                return null;
             }
 
-            return results;
+            foreach (var file in dbTorrent.Downloads)
+            {
+                file.Torrent = null;
+            }
+
+            return dbTorrent;
         }
 
         public async Task<Torrent> Add(String realDebridId, String hash, Boolean autoDownload, Boolean autoDelete)
@@ -103,6 +107,11 @@ namespace RdtClient.Data.Data
         {
             var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrent.TorrentId);
 
+            if (dbTorrent == null)
+            {
+                return;
+            }
+
             dbTorrent.RdName = torrent.RdName;
             dbTorrent.RdSize = torrent.RdSize;
             dbTorrent.RdHost = torrent.RdHost;
@@ -126,6 +135,11 @@ namespace RdtClient.Data.Data
         {
             var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
 
+            if (dbTorrent == null)
+            {
+                return;
+            }
+
             dbTorrent.Status = status;
 
             await _dataContext.SaveChangesAsync();
@@ -135,6 +149,11 @@ namespace RdtClient.Data.Data
         {
             var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
 
+            if (dbTorrent == null)
+            {
+                return;
+            }
+
             dbTorrent.Category = category;
 
             await _dataContext.SaveChangesAsync();
@@ -143,6 +162,11 @@ namespace RdtClient.Data.Data
         public async Task Delete(Guid id)
         {
             var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == id);
+
+            if (dbTorrent == null)
+            {
+                return;
+            }
 
             _dataContext.Torrents.Remove(dbTorrent);
 

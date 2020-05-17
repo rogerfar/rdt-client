@@ -140,15 +140,13 @@ namespace RdtClient.Service.Services
 
                         var extractPath = destinationFolderPath;
 
-                        if (!entries.Any(m => m.Key.StartsWith(torrentName)))
+                        if (!entries.Any(m => m.Key.StartsWith(torrentName + @"\")) && !entries.Any(m => m.Key.StartsWith(torrentName + @"/")))
                         {
                             extractPath = Path.Combine(destinationFolderPath, torrentName);
                         }
 
                         foreach (var entry in entries)
                         {
-                            
-
                             _rarCurrentEntry = entry;
 
                             entry.WriteToDirectory(extractPath,
