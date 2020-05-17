@@ -67,7 +67,7 @@ namespace RdtClient.Data.Data
             var results = await _dataContext.Torrents
                                             .AsNoTracking()
                                             .Include(m => m.Downloads)
-                                            .FirstOrDefaultAsync(m => m.Hash == hash);
+                                            .FirstOrDefaultAsync(m => m.Hash.ToLower() == hash.ToLower());
 
             if (results != null)
             {
@@ -86,7 +86,7 @@ namespace RdtClient.Data.Data
             {
                 TorrentId = Guid.NewGuid(),
                 RdId = realDebridId,
-                Hash = hash,
+                Hash = hash.ToLower(),
                 Status = TorrentStatus.RealDebrid,
                 AutoDownload = autoDownload,
                 AutoDelete = autoDelete

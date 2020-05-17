@@ -142,10 +142,9 @@ namespace RdtClient.Service.Services
                         var newTorrent = await _torrentData.Add(rdTorrent.Id, rdTorrent.Hash, false, false);
                         await GetById(newTorrent.TorrentId);
                     }
-
-                    if (rdTorrent.Files == null)
+                    else if (rdTorrent.Files == null)
                     {
-                        var rdTorrent2 = await _rdtClient.GetTorrentInfoAsync(rdTorrent.Id);
+                        var rdTorrent2 = await RdNetClient.GetTorrentInfoAsync(rdTorrent.Id);
                         await Update(torrent, rdTorrent2);
                     }
                     else
@@ -360,7 +359,6 @@ namespace RdtClient.Service.Services
                 if (!rdTorrent.Files.Any(m => m.Selected))
                 {
                     var fileIds = rdTorrent.Files
-                                           .Where(m => m.Bytes > 1024 * 10)
                                            .Select(m => m.Id.ToString())
                                            .ToArray();
 
