@@ -94,6 +94,8 @@ namespace RdtClient.Web
 
             app.ConfigureExceptionHandler();
 
+            app.UseMiddleware<AuthorizeMiddleware>();
+
             app.Use(async (context, next) =>
             {
                 await next.Invoke();
