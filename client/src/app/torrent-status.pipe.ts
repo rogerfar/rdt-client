@@ -1,7 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { Torrent, TorrentStatus } from './models/torrent.model';
 import { FileSizePipe } from 'ngx-filesize';
 import { DownloadStatus } from './models/download.model';
+import { Torrent, TorrentStatus } from './models/torrent.model';
 
 @Pipe({
   name: 'status',
@@ -37,8 +37,6 @@ export class TorrentStatusPipe implements PipeTransform {
         progress = (allBytesDownloaded / allBytesSize) * 100;
         allSpeeds = downloading.sum((m) => m.speed) / downloading.length;
       }
-
-      console.log(allBytesDownloaded, allBytesSize, progress, allSpeeds);
 
       let speed: string | string[] = '0';
       if (allSpeeds > 0) {
