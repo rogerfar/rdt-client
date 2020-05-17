@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -116,10 +115,8 @@ namespace RdtClient.Service.Services
 
                     if (ActiveDownloads.TryAdd(download.DownloadId, downloadManager))
                     {
-                        var folderPath = Path.Combine(destinationFolderPath, download.Torrent.RdName);
-
                         downloadManager.Download = download;
-                        await downloadManager.Start(folderPath, destinationFolderPath);
+                        await downloadManager.Start(destinationFolderPath, download.Torrent.RdName, download.Status);
                     }
                 });
             }

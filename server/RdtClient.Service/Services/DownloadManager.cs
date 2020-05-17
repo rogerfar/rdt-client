@@ -36,24 +36,33 @@ namespace RdtClient.Service.Services
 
         private DownloadManager ActiveDownload => TaskRunner.ActiveDownloads[Download.DownloadId];
 
-        public async Task Start(String destinationFolderPath, String rootfolderPath)
+        public async Task Start(String destinationFolderPath, String torrentName, DownloadStatus status)
         {
-            ActiveDownload.NewStatus = DownloadStatus.Downloading;
             ActiveDownload.BytesDownloaded = 0;
             ActiveDownload.BytesSize = 0;
             ActiveDownload.Speed = 0;
 
-            _bytesLastUpdate = 0;
-            _nextUpdate = DateTime.UtcNow.AddSeconds(1);
-
             var fileUrl = Download.Link;
 
             var uri = new Uri(fileUrl);
-            var filePath = Path.Combine(destinationFolderPath, uri.Segments.Last());
+            var torrentPath = Path.Combine(destinationFolderPath, torrentName);
+            var filePath = Path.Combine(torrentPath, uri.Segments.Last());
 
-            if (!Directory.Exists(destinationFolderPath))
+            if (status == DownloadStatus.Unpacking)
             {
-                Directory.CreateDirectory(destinationFolderPath);
+                await Extract(filePath, destinationFolderPath, torrentName);
+
+                return;
+            }
+
+            ActiveDownload.NewStatus = DownloadStatus.Downloading;
+
+            _bytesLastUpdate = 0;
+            _nextUpdate = DateTime.UtcNow.AddSeconds(1);
+
+            if (!Directory.Exists(torrentPath))
+            {
+                Directory.CreateDirectory(torrentPath);
             }
 
             var webRequest = WebRequest.Create(fileUrl);
@@ -105,6 +114,11 @@ namespace RdtClient.Service.Services
             ActiveDownload.Speed = 0;
             ActiveDownload.BytesDownloaded = ActiveDownload.BytesSize;
 
+            await Extract(filePath, destinationFolderPath, torrentName);
+        }
+
+        private async Task Extract(String filePath, String destinationFolderPath, String torrentName)
+        {
             try
             {
                 if (filePath.EndsWith(".rar"))
@@ -124,11 +138,20 @@ namespace RdtClient.Service.Services
                         _rarCurrentEntry = null;
                         archive.CompressedBytesRead += ArchiveOnCompressedBytesRead;
 
+                        var extractPath = destinationFolderPath;
+
+                        if (!entries.Any(m => m.Key.StartsWith(torrentName)))
+                        {
+                            extractPath = Path.Combine(destinationFolderPath, torrentName);
+                        }
+
                         foreach (var entry in entries)
                         {
+                            
+
                             _rarCurrentEntry = entry;
 
-                            entry.WriteToDirectory(rootfolderPath,
+                            entry.WriteToDirectory(extractPath,
                                                    new ExtractionOptions
                                                    {
                                                        ExtractFullPath = true,
