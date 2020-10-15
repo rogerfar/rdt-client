@@ -145,6 +145,11 @@ namespace RdtClient.Service.Services
                             extractPath = Path.Combine(destinationFolderPath, torrentName);
                         }
 
+                        if (entries.Any(m => m.Key.Contains(".r00")))
+                        {
+                            extractPath = Path.Combine(extractPath, "Temp");
+                        }
+
                         foreach (var entry in entries)
                         {
                             _rarCurrentEntry = entry;
@@ -172,6 +177,8 @@ namespace RdtClient.Service.Services
                             await Task.Delay(1000);
                         }
                     }
+
+
                 }
             }
             catch
