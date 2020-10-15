@@ -121,13 +121,14 @@ namespace RdtClient.Service.Services
 
         public async Task<IList<Torrent>> Update()
         {
-            var torrents = await _torrentData.Get();
-
             var w = await SemaphoreSlim.WaitAsync(1);
+
             if (!w)
             {
-                return torrents;
+                return await _torrentData.Get();
             }
+
+            var torrents = await _torrentData.Get();
 
             try
             {
@@ -269,10 +270,10 @@ namespace RdtClient.Service.Services
 
         private async Task Add(String rdTorrentId, String infoHash, Boolean autoDownload, Boolean autoDelete)
         {
-            var w = await SemaphoreSlim.WaitAsync(1);
+            var w = await SemaphoreSlim.WaitAsync(60000);
             if (!w)
             {
-                return;
+                throw new Exception("Unable to add torrent, could not obtain lock");
             }
 
             try

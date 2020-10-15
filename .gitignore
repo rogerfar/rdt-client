@@ -37,3 +37,4 @@ server/**/*.user
 server/**/.vs
 server/RdtClient.Web/wwwroot/
 
+build/
