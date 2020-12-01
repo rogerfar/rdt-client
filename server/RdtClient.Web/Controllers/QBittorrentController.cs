@@ -139,7 +139,30 @@ namespace RdtClient.Web.Controllers
             var result = await _qBittorrent.TorrentInfo();
             return Ok(result);
         }
-        
+
+        [Authorize]
+        [Route("torrents/files")]
+        [HttpGet]
+        public async Task<ActionResult<IList<TorrentFileItem>>> TorrentsFiles([FromQuery] QBTorrentsHashRequest request)
+        {
+            var result = await _qBittorrent.TorrentFileContents(request.Hash);
+
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(result);
+        }
+
+        [Authorize]
+        [Route("torrents/files")]
+        [HttpPost]
+        public async Task<ActionResult<IList<TorrentFileItem>>> TorrentsFilesPost([FromForm] QBTorrentsHashRequest request)
+        {
+            return await TorrentsFiles(request);
+        }
+
         [Authorize]
         [Route("torrents/properties")]
         [HttpGet]
