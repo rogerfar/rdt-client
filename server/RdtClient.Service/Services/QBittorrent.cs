@@ -16,6 +16,7 @@ namespace RdtClient.Service.Services
         Task<AppPreferences> AppPreferences();
         Task<String> AppDefaultSavePath();
         Task<IList<TorrentInfo>> TorrentInfo();
+        Task<IList<TorrentFileItem>> TorrentFileContents(String hash);
         Task<TorrentProperties> TorrentProperties(String hash);
         Task TorrentsDelete(String hash, Boolean deleteFiles);
         Task TorrentsAdd(String magnetLink, Boolean autoDownload, Boolean autoDelete);
@@ -285,6 +286,26 @@ namespace RdtClient.Service.Services
                     _ => throw new ArgumentOutOfRangeException()
                 };
 
+                results.Add(result);
+            }
+
+            return results;
+        }
+        public async Task<IList<TorrentFileItem>> TorrentFileContents(String hash)
+        {
+            var results = new List<TorrentFileItem>();
+
+            var torrent = await _torrents.GetByHash(hash);
+
+            if (torrent == null)
+            {
+                return null;
+            }
+
+            foreach (var file in torrent.Files)
+            {
+                var result = new TorrentFileItem();
+                result.Name = file.Path;
                 results.Add(result);
             }
 
