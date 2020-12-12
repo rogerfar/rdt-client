@@ -1,4 +1,3 @@
-
 ### Angular ###
 # compiled output
 client/dist/
@@ -38,3 +37,4 @@ server/**/.vs
 server/RdtClient.Web/wwwroot/
 
 build/
+publish/
