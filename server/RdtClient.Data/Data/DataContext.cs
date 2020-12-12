@@ -11,47 +11,22 @@ namespace RdtClient.Data.Data
         public DataContext(DbContextOptions options) : base(options)
         {
         }
-
-        public DataContext()
-        {
-        }
-
+        
         public static String ConnectionString => $"Data Source={AppContext.BaseDirectory}database.db";
 
         public DbSet<Download> Downloads { get; set; }
         public DbSet<Setting> Settings { get; set; }
         public DbSet<Torrent> Torrents { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder options) => options.UseSqlite(ConnectionString);
+        protected override void OnConfiguring(DbContextOptionsBuilder options)
+        {
+            options.UseSqlite(ConnectionString);
+        }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-
-            builder.Entity<Setting>()
-                   .HasData(new Setting
-                   {
-                       SettingId = "RealDebridApiKey",
-                       Type = "String",
-                       Value = ""
-                   });
-
-            builder.Entity<Setting>()
-                   .HasData(new Setting
-                   {
-                       SettingId = "DownloadFolder",
-                       Type = "String",
-                       Value = @"C:\Downloads"
-                   });
-
-            builder.Entity<Setting>()
-                   .HasData(new Setting
-                   {
-                       SettingId = "DownloadLimit",
-                       Type = "Int32",
-                       Value = "10"
-                   });
-
+            
             var cascadeFKs = builder.Model.GetEntityTypes()
                                     .SelectMany(t => t.GetForeignKeys())
                                     .Where(fk => !fk.IsOwnership && fk.DeleteBehavior == DeleteBehavior.Cascade);
@@ -60,11 +35,6 @@ namespace RdtClient.Data.Data
             {
                 fk.DeleteBehavior = DeleteBehavior.Restrict;
             }
-        }
-
-        public void Migrate()
-        {
-            Database.Migrate();
         }
     }
 }

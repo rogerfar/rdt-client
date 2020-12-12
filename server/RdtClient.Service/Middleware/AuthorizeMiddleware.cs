@@ -7,7 +7,7 @@ namespace RdtClient.Service.Middleware
 {
     public class AuthorizeMiddleware
     {
-        readonly RequestDelegate _next;
+        private readonly RequestDelegate _next;
 
         public AuthorizeMiddleware(RequestDelegate next)
         {
