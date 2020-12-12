@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -46,10 +47,24 @@ namespace RdtClient.Web.Controllers
             var profile = await _torrents.GetProfile();
             return Ok(profile);
         }
+        
+        [HttpPost]
+        [Route("TestFolder")]
+        public async Task<ActionResult<Profile>> TestFolder([FromBody] SettingsControllerTestFolderRequest request)
+        {
+            await _settings.TestFolder(request.Folder);
+
+            return Ok();
+        }
     }
 
     public class SettingsControllerUpdateRequest
     {
         public IList<Setting> Settings { get; set; }
+    }
+
+    public class SettingsControllerTestFolderRequest
+    {
+        public String Folder { get; set; }
     }
 }

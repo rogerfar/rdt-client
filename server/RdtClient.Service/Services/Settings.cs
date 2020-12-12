@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using RdtClient.Data.Data;
 using RdtClient.Data.Models.Data;
@@ -12,6 +13,7 @@ namespace RdtClient.Service.Services
         Task Update(IList<Setting> settings);
         Task<String> GetString(String key);
         Task<Int32> GetNumber(String key);
+        Task TestFolder(String folder);
     }
 
     public class Settings : ISettings
@@ -55,6 +57,26 @@ namespace RdtClient.Service.Services
             }
             
             return Int32.Parse(setting.Value);
+        }
+
+        public async Task TestFolder(String folder)
+        {
+            if (String.IsNullOrWhiteSpace(folder))
+            {
+                throw new Exception("Folder path is not set");
+            }
+
+            folder = folder.TrimEnd('/').TrimEnd('\\');
+
+            if (!Directory.Exists(folder))
+            {
+                throw new Exception($"Folder {folder} does not exist");
+            }
+
+            var testFile = $"{folder}/test.txt";
+
+            await File.WriteAllTextAsync(testFile, "RealDebridClient Test File, you can remove this file.");
+            File.Delete(testFile);
         }
     }
 }

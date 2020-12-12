@@ -1,0 +1,14 @@
+version: '3.3'
+services:
+    rdtclient:
+        container_name: rogerfar/rdtclient
+        volumes:
+            - 'C:/Downloads/:/data/downloads'
+        image: rdtclient
+        restart: always
+        logging:
+            driver: json-file
+            options:
+                max-size: 10m
+        ports:
+            - '6500:6500'

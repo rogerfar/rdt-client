@@ -40,17 +40,7 @@
               <button
                 class="button is-success"
                 (click)="login()"
-                *ngIf="loggingIn"
-              >
-                <span class="icon">
-                  <i class="fas fa-spinner fa-pulse"></i>
-                </span>
-                Login
-              </button>
-              <button
-                class="button is-success"
-                (click)="login()"
-                *ngIf="!loggingIn"
+                 [ngClass]="{ 'is-loading': loggingIn }"
               >
                 Login
               </button>

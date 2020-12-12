@@ -33,9 +33,7 @@
               <span class="file-icon">
                 <i class="fas fa-upload"></i>
               </span>
-              <span class="file-label">
-                Pick a torrent file...
-              </span>
+              <span class="file-label"> Pick a torrent file... </span>
             </span>
             <span class="file-name">
               {{ fileName }}
@@ -59,15 +57,12 @@
       </div>
     </section>
     <footer class="modal-card-foot">
-      <button class="button is-success" *ngIf="saving">
-        <span class="icon">
-          <i class="fas fa-spinner fa-pulse"></i>
-        </span>
+      <button
+        class="button is-success"
+        [disabled]="saving"
+        [ngClass]="{ 'is-loading': saving }"
+      >
         <span>Add Torrent</span>
-      </button>
-
-      <button class="button is-success" (click)="ok()" *ngIf="!saving">
-        Add Torrent
       </button>
       <button class="button" (click)="cancel()" [disabled]="saving">
         Cancel

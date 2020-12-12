@@ -11,10 +11,10 @@ namespace RdtClient.Data.Migrations
                 name: "AspNetRoles",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false),
-                    Name = table.Column<string>(maxLength: 256, nullable: true),
-                    NormalizedName = table.Column<string>(maxLength: 256, nullable: true),
-                    ConcurrencyStamp = table.Column<string>(nullable: true)
+                    Id = table.Column<string>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
+                    NormalizedName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -25,21 +25,21 @@ namespace RdtClient.Data.Migrations
                 name: "AspNetUsers",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false),
-                    UserName = table.Column<string>(maxLength: 256, nullable: true),
-                    NormalizedUserName = table.Column<string>(maxLength: 256, nullable: true),
-                    Email = table.Column<string>(maxLength: 256, nullable: true),
-                    NormalizedEmail = table.Column<string>(maxLength: 256, nullable: true),
-                    EmailConfirmed = table.Column<bool>(nullable: false),
-                    PasswordHash = table.Column<string>(nullable: true),
-                    SecurityStamp = table.Column<string>(nullable: true),
-                    ConcurrencyStamp = table.Column<string>(nullable: true),
-                    PhoneNumber = table.Column<string>(nullable: true),
-                    PhoneNumberConfirmed = table.Column<bool>(nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(nullable: true),
-                    LockoutEnabled = table.Column<bool>(nullable: false),
-                    AccessFailedCount = table.Column<int>(nullable: false)
+                    Id = table.Column<string>(type: "TEXT", nullable: false),
+                    UserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
+                    NormalizedUserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
+                    Email = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
+                    NormalizedEmail = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
+                    EmailConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
+                    PasswordHash = table.Column<string>(type: "TEXT", nullable: true),
+                    SecurityStamp = table.Column<string>(type: "TEXT", nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "TEXT", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "TEXT", nullable: true),
+                    PhoneNumberConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
+                    LockoutEnd = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
+                    LockoutEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
+                    AccessFailedCount = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -50,9 +50,9 @@ namespace RdtClient.Data.Migrations
                 name: "Settings",
                 columns: table => new
                 {
-                    SettingId = table.Column<string>(nullable: false),
-                    Value = table.Column<string>(nullable: true),
-                    Type = table.Column<string>(nullable: true)
+                    SettingId = table.Column<string>(type: "TEXT", nullable: false),
+                    Value = table.Column<string>(type: "TEXT", nullable: true),
+                    Type = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -63,24 +63,24 @@ namespace RdtClient.Data.Migrations
                 name: "Torrents",
                 columns: table => new
                 {
-                    TorrentId = table.Column<Guid>(nullable: false),
-                    Hash = table.Column<string>(nullable: true),
-                    Category = table.Column<string>(nullable: true),
-                    AutoDownload = table.Column<bool>(nullable: false),
-                    AutoDelete = table.Column<bool>(nullable: false),
-                    Status = table.Column<int>(nullable: false),
-                    RdId = table.Column<string>(nullable: true),
-                    RdName = table.Column<string>(nullable: true),
-                    RdSize = table.Column<long>(nullable: false),
-                    RdHost = table.Column<string>(nullable: true),
-                    RdSplit = table.Column<long>(nullable: false),
-                    RdProgress = table.Column<long>(nullable: false),
-                    RdStatus = table.Column<string>(nullable: true),
-                    RdAdded = table.Column<DateTimeOffset>(nullable: false),
-                    RdEnded = table.Column<DateTimeOffset>(nullable: true),
-                    RdSpeed = table.Column<long>(nullable: true),
-                    RdSeeders = table.Column<long>(nullable: true),
-                    RdFiles = table.Column<string>(nullable: true)
+                    TorrentId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Hash = table.Column<string>(type: "TEXT", nullable: true),
+                    Category = table.Column<string>(type: "TEXT", nullable: true),
+                    AutoDownload = table.Column<bool>(type: "INTEGER", nullable: false),
+                    AutoDelete = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Status = table.Column<int>(type: "INTEGER", nullable: false),
+                    RdId = table.Column<string>(type: "TEXT", nullable: true),
+                    RdName = table.Column<string>(type: "TEXT", nullable: true),
+                    RdSize = table.Column<long>(type: "INTEGER", nullable: false),
+                    RdHost = table.Column<string>(type: "TEXT", nullable: true),
+                    RdSplit = table.Column<long>(type: "INTEGER", nullable: false),
+                    RdProgress = table.Column<long>(type: "INTEGER", nullable: false),
+                    RdStatus = table.Column<string>(type: "TEXT", nullable: true),
+                    RdAdded = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
+                    RdEnded = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
+                    RdSpeed = table.Column<long>(type: "INTEGER", nullable: true),
+                    RdSeeders = table.Column<long>(type: "INTEGER", nullable: true),
+                    RdFiles = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -91,11 +91,11 @@ namespace RdtClient.Data.Migrations
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    RoleId = table.Column<string>(nullable: false),
-                    ClaimType = table.Column<string>(nullable: true),
-                    ClaimValue = table.Column<string>(nullable: true)
+                    RoleId = table.Column<string>(type: "TEXT", nullable: false),
+                    ClaimType = table.Column<string>(type: "TEXT", nullable: true),
+                    ClaimValue = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -112,11 +112,11 @@ namespace RdtClient.Data.Migrations
                 name: "AspNetUserClaims",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    UserId = table.Column<string>(nullable: false),
-                    ClaimType = table.Column<string>(nullable: true),
-                    ClaimValue = table.Column<string>(nullable: true)
+                    UserId = table.Column<string>(type: "TEXT", nullable: false),
+                    ClaimType = table.Column<string>(type: "TEXT", nullable: true),
+                    ClaimValue = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -133,10 +133,10 @@ namespace RdtClient.Data.Migrations
                 name: "AspNetUserLogins",
                 columns: table => new
                 {
-                    LoginProvider = table.Column<string>(nullable: false),
-                    ProviderKey = table.Column<string>(nullable: false),
-                    ProviderDisplayName = table.Column<string>(nullable: true),
-                    UserId = table.Column<string>(nullable: false)
+                    LoginProvider = table.Column<string>(type: "TEXT", nullable: false),
+                    ProviderKey = table.Column<string>(type: "TEXT", nullable: false),
+                    ProviderDisplayName = table.Column<string>(type: "TEXT", nullable: true),
+                    UserId = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -153,8 +153,8 @@ namespace RdtClient.Data.Migrations
                 name: "AspNetUserRoles",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(nullable: false),
-                    RoleId = table.Column<string>(nullable: false)
+                    UserId = table.Column<string>(type: "TEXT", nullable: false),
+                    RoleId = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -177,10 +177,10 @@ namespace RdtClient.Data.Migrations
                 name: "AspNetUserTokens",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(nullable: false),
-                    LoginProvider = table.Column<string>(nullable: false),
-                    Name = table.Column<string>(nullable: false),
-                    Value = table.Column<string>(nullable: true)
+                    UserId = table.Column<string>(type: "TEXT", nullable: false),
+                    LoginProvider = table.Column<string>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    Value = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -197,11 +197,11 @@ namespace RdtClient.Data.Migrations
                 name: "Downloads",
                 columns: table => new
                 {
-                    DownloadId = table.Column<Guid>(nullable: false),
-                    TorrentId = table.Column<Guid>(nullable: false),
-                    Link = table.Column<string>(nullable: true),
-                    Added = table.Column<DateTimeOffset>(nullable: false),
-                    Status = table.Column<int>(nullable: false)
+                    DownloadId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    TorrentId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Link = table.Column<string>(type: "TEXT", nullable: true),
+                    Added = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
+                    Status = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -213,21 +213,6 @@ namespace RdtClient.Data.Migrations
                         principalColumn: "TorrentId",
                         onDelete: ReferentialAction.Restrict);
                 });
-
-            migrationBuilder.InsertData(
-                table: "Settings",
-                columns: new[] { "SettingId", "Type", "Value" },
-                values: new object[] { "RealDebridApiKey", "String", "" });
-
-            migrationBuilder.InsertData(
-                table: "Settings",
-                columns: new[] { "SettingId", "Type", "Value" },
-                values: new object[] { "DownloadFolder", "String", "C:\\Downloads" });
-
-            migrationBuilder.InsertData(
-                table: "Settings",
-                columns: new[] { "SettingId", "Type", "Value" },
-                values: new object[] { "DownloadLimit", "Int32", "10" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",

@@ -1,6 +1,6 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { SettingsService } from 'src/app/settings.service';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Setting } from 'src/app/models/setting.model';
+import { SettingsService } from 'src/app/settings.service';
 
 @Component({
   selector: 'app-settings',
@@ -25,6 +25,8 @@ export class SettingsComponent implements OnInit {
 
   public saving = false;
   public error: string;
+  public testFolderError: string;
+  public testFolderSuccess: boolean;
 
   public settingRealDebridApiKey: string;
   public settingDownloadFolder: string;
@@ -82,6 +84,24 @@ export class SettingsComponent implements OnInit {
       },
       (err) => {
         this.error = err;
+      }
+    );
+  }
+
+  public test(): void {
+    this.saving = true;
+    this.testFolderError = null;
+    this.testFolderSuccess = false;
+
+    this.settingsService.testFolder(this.settingDownloadFolder).subscribe(
+      () => {
+        this.saving = false;
+        this.testFolderSuccess = true;
+      },
+      (err) => {
+        console.log(err);
+        this.testFolderError = err.error;
+        this.saving = false;
       }
     );
   }

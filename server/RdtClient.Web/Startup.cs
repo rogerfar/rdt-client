@@ -123,8 +123,6 @@ namespace RdtClient.Web
                     spa.Options.DefaultPage = "/index.html";
                 });
             });
-            
-            dataContext.Migrate();
         }
     }
 }

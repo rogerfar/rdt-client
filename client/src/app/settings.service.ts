@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Setting } from './models/setting.model';
 import { Profile } from './models/profile.model';
+import { Setting } from './models/setting.model';
 
 @Injectable({
   providedIn: 'root',
@@ -20,5 +20,9 @@ export class SettingsService {
 
   public getProfile(): Observable<Profile> {
     return this.http.get<Profile>(`/Api/Settings/Profile`);
+  }
+
+  public testFolder(folder: string): Observable<void> {
+    return this.http.post<void>(`/Api/Settings/TestFolder`, { folder });
   }
 }
