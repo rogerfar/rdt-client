@@ -85,3 +85,4 @@ Notice: the progress and ETA reported in Sonarr's Activity tab will not be accur
 1. To create the docker container run `docker run --publish 6500:6500 --detach --name rdtclientdev rdtclient:latest`
 1. To stop: `docker stop rdtclient`
 1. To remove: `docker rm rdtclient`
+1. Or use `docker-build.bat`
