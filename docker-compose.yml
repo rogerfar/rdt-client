@@ -1,10 +1,10 @@
 version: '3.3'
 services:
     rdtclient:
-        container_name: rogerfar/rdtclient
+        image: rogerfar/rdtclient
         volumes:
             - 'C:/Downloads/:/data/downloads'
-        image: rdtclient
+        container_name: rdtclient
         restart: always
         logging:
             driver: json-file
