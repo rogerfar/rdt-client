@@ -9,7 +9,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using RdtClient.Data;
 using RdtClient.Data.Data;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Middleware;
@@ -32,7 +31,8 @@ namespace RdtClient.Web
 
             services.AddSingleton(appSettings);
 
-            services.AddDbContext<DataContext>(options => options.UseSqlite(DataContext.ConnectionString));
+            var connectionString = $"Data Source={appSettings.Database.Path}";
+            services.AddDbContext<DataContext>(options => options.UseSqlite(connectionString));
 
             services.AddControllers()
                     .AddNewtonsoftJson();
@@ -81,7 +81,7 @@ namespace RdtClient.Web
                 options.Cookie.Name = "SID";
             });
 
-            DiConfig.Config(services);
+            Data.DiConfig.Config(services);
             Service.DiConfig.Config(services);
         }
 

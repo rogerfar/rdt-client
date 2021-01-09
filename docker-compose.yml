@@ -4,6 +4,7 @@ services:
         image: rogerfar/rdtclient
         volumes:
             - 'C:/Downloads/:/data/downloads'
+            - 'C:/Docker/rdtclient/:/data/db'
         container_name: rdtclient
         restart: always
         logging:

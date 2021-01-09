@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using RdtClient.Data.Models.Data;
@@ -11,8 +10,6 @@ namespace RdtClient.Data.Data
         public DataContext(DbContextOptions options) : base(options)
         {
         }
-        
-        public static String ConnectionString => $"Data Source={AppContext.BaseDirectory}database.db";
 
         public DbSet<Download> Downloads { get; set; }
         public DbSet<Setting> Settings { get; set; }
@@ -20,7 +17,7 @@ namespace RdtClient.Data.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-            options.UseSqlite(ConnectionString);
+            
         }
 
         protected override void OnModelCreating(ModelBuilder builder)
