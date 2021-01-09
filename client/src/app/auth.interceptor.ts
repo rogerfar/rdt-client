@@ -3,7 +3,7 @@ import {
   HttpEvent,
   HttpHandler,
   HttpInterceptor,
-  HttpRequest,
+  HttpRequest
 } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
@@ -20,7 +20,9 @@ export class AuthInterceptor implements HttpInterceptor {
   ): Observable<HttpEvent<any>> {
     return next.handle(req).pipe(
       catchError((error: HttpErrorResponse) => {
-        if (error && (error.status === 401 || error.status === 403)) {
+        if (error && error.status === 402) {
+          this.router.navigate(['/setup']);
+        } else if (error && (error.status === 401 || error.status === 403)) {
           this.router.navigate(['/login']);
         }
         return throwError(error);

@@ -1,1 +1,0 @@
-dotnet RdtClient.Web.dll

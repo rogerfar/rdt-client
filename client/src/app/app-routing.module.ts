@@ -1,7 +1,9 @@
 import { NgModule } from '@angular/core';
-import { Routes, RouterModule } from '@angular/router';
-import { MainLayoutComponent } from './main-layout/main-layout.component';
+import { RouterModule, Routes } from '@angular/router';
+import { AuthResolverService } from './auth-resolver.service';
 import { LoginComponent } from './login/login.component';
+import { MainLayoutComponent } from './main-layout/main-layout.component';
+import { SetupComponent } from './setup/setup.component';
 
 const routes: Routes = [
   {
@@ -9,14 +11,20 @@ const routes: Routes = [
     component: LoginComponent,
   },
   {
+    path: 'setup',
+    component: SetupComponent,
+  },
+  {
     path: '',
     component: MainLayoutComponent,
-    canActivate: [],
+    resolve: {
+      isLoggedIn: AuthResolverService,
+    },
   },
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes, { relativeLinkResolution: 'legacy' })],
+  imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule],
 })
 export class AppRoutingModule {}

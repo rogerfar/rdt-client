@@ -18,6 +18,7 @@ import { FileStatusPipe } from './file-status.pipe';
 import { LoginComponent } from './login/login.component';
 import { AuthInterceptor } from './auth.interceptor';
 import { curray } from 'curray';
+import { SetupComponent } from './setup/setup.component';
 
 curray();
 
@@ -34,6 +35,7 @@ curray();
     TorrentStatusPipe,
     FileStatusPipe,
     LoginComponent,
+    SetupComponent,
   ],
   imports: [
     BrowserModule,

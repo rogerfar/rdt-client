@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using RdtClient.Data.Models.Data;
@@ -31,6 +33,43 @@ namespace RdtClient.Data.Data
             foreach (var fk in cascadeFKs)
             {
                 fk.DeleteBehavior = DeleteBehavior.Restrict;
+            }
+        }
+
+        public async Task Seed()
+        {
+            var seedSettings = new List<Setting>
+            {
+                new Setting
+                {
+                    SettingId = "RealDebridApiKey",
+                    Type = "String",
+                    Value = ""
+                },
+                new Setting
+                {
+                    SettingId = "DownloadFolder",
+                    Type = "String",
+                    Value = "/data/downloads"
+                },
+                new Setting
+                {
+                    SettingId = "DownloadLimit",
+                    Type = "Int32",
+                    Value = "10"
+                }
+            };
+
+            var dbSettings = await Settings.ToListAsync();
+            foreach (var seedSetting in seedSettings)
+            {
+                var dbSetting = dbSettings.FirstOrDefault(m => m.SettingId == seedSetting.SettingId);
+
+                if (dbSetting == null)
+                {
+                    await Settings.AddAsync(seedSetting);
+                    await SaveChangesAsync();
+                }
             }
         }
     }

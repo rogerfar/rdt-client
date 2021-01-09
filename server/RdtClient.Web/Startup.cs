@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
@@ -85,7 +86,7 @@ namespace RdtClient.Web
             Service.DiConfig.Config(services);
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger, DataContext dataContext)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
             if (env.IsDevelopment())
             {

@@ -28,6 +28,7 @@ namespace RdtClient.Web
                 {
                     var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
                     await dbContext.Database.MigrateAsync();
+                    await dbContext.Seed();
                 }
                 
                 await host.RunAsync();
