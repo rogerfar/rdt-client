@@ -2,35 +2,68 @@
 
 This is a web interface to manage your torrents on Real-Debrid. It supports the following features:
 
-- Add new torrents through magnet or files
+- Add new torrents through magnets or files
 - Download all files from Real Debrid to your local machine automatically
 - Unpack all files when finished downloading
 - Implements a fake qBittorrent API so you can hook up other applications like Sonarr or Couchpotato.
-- Built with Angular 9 and .NET 5
+- Built with Angular 11 and .NET 5
 
 **You will need a Premium service at Real-Debrid!**
 
-## Docker Run
+[Click here to sign up (referal link so I can get a few free premium days).](https://real-debrid.com/?id=1348683)
+
+## Docker Setup
+
+You can run the docker container on Windows, Linux. To get started either use *Docker Run* or *Docker Compose*.
+
+### Docker Run
 
 ```console
 docker run --cap-add=NET_ADMIN -d \
-              -v /your/storage/path/:/data/downloads \
+              -v /your/download/path/:/data/downloads \
+              -v /your/storage/path/:/data/db \
               --log-driver json-file \
               --log-opt max-size=10m \
               -p 6500:6500 \
               rogerfar/rdtclient
 ```
 
-Replace `/your/storage/path/` with your local path to download files to. For Windows i.e. `C:/Downloads`.
+Replace `/your/download/path/` with your local path to download files to. For Windows i.e. `C:/Downloads`.
+Replace `/your/storage/path/` with your local path to store persistent database and log files in. For Windows i.e. `C:/Docker/rdt-client`.
 
-## Windows Service Installation
+### Docker Compose
 
-1. Make sure you have the .NET 5.0.1+ runtime installed from [here](https://dotnet.microsoft.com/download).
-1. Unpack the latest release from the releases folder and run `startup.bat`. This will start the application on port 6500.
-1. To install as service on Windows, exit the console and run `serviceinstall.bat` as administrator.
-1. To change the default port edit the `appsettings.json` file.
+You can use the provided docker compose to run:
+
+```yaml
+version: '3.3'
+services:
+    rdtclient:
+        container_name: rdtclient
+        volumes:
+            - 'D:/Downloads/:/data/downloads'
+            - 'D:/Docker/rdt-client/:/data/db'
+        image: rogerfar/rdtclient
+        restart: always
+        logging:
+            driver: json-file
+            options:
+                max-size: 10m
+        ports:
+            - '6500:6500'
+```
+
+And to run:
+
+```console
+docker-compose up -d
+```
+
+Replace the paths in `volumes` as in the above step.
 
 ## Setup
+
+### First Login
 
 1. Browse to [http://127.0.0.1:6500](http://127.0.0.1:6500) (or the path of your server).
 1. The very first credentials you enter in will be remembered for future logins.
@@ -38,15 +71,12 @@ Replace `/your/storage/path/` with your local path to download files to. For Win
 1. Change your download path if needed. When using Docker, this path will be the path on your local machine.
 1. Save your settings.
 
-## Removing
+### Troubleshooting
 
-1. Run `serviceremove.bat` to remove the service and firewall rules.
+- If you forgot your logins simply delete the `rdtclient.db` and restart the service.
+- A log file is written to your persistent path as `rdtclient.log`. When you run into issues please change the loglevel in your docker script to `Debug`.
 
-## Troubleshooting
-
-- If you forgot your logins simply delete the `database.db` and restart the service.
-
-## Connecting Sonarr/Radarr
+### Connecting Sonarr/Radarr
 
 RdtClient emulates the qBittorrent web protocol and allow applications to use those APIs. This way you can use Sonarr and Radarr to download directly from RealDebrid.
 
@@ -68,7 +98,7 @@ Notice: the progress and ETA reported in Sonarr's Activity tab will not be accur
 
 - NodeJS
 - NPM
-- (optional) Angular CLI
+- Angular CLI
 - .NET 5
 - Visual Studio 2019
 - (optional) Resharper
