@@ -16,13 +16,14 @@ namespace RdtClient.Data.Models.Data
         public String Hash { get; set; }
 
         public String Category { get; set; }
+        
+        public DateTimeOffset Added { get; set; }
+        public DateTimeOffset? Completed { get; set; }
 
         public Boolean AutoDownload { get; set; }
-
+        public Boolean AutoUnpack { get; set; }
         public Boolean AutoDelete { get; set; }
-
-        public TorrentStatus Status { get; set; }
-
+        
         [InverseProperty("Torrent")]
         public IList<Download> Downloads { get; set; }
 
@@ -32,7 +33,8 @@ namespace RdtClient.Data.Models.Data
         public String RdHost { get; set; }
         public Int64 RdSplit { get; set; }
         public Int64 RdProgress { get; set; }
-        public String RdStatus { get; set; }
+        public RealDebridStatus RdStatus { get; set; }
+        public String RdStatusRaw { get; set; }
         public DateTimeOffset RdAdded { get; set; }
         public DateTimeOffset? RdEnded { get; set; }
         public Int64? RdSpeed { get; set; }

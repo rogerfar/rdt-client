@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 
 namespace RdtClient.Data.Data
@@ -11,13 +9,13 @@ namespace RdtClient.Data.Data
     public interface ITorrentData
     {
         Task<IList<Torrent>> Get();
-        Task<Torrent> GetById(Guid id);
+        Task<Torrent> GetById(Guid torrentId);
         Task<Torrent> GetByHash(String hash);
-        Task<Torrent> Add(String realDebridId, String hash, Boolean autoDownload, Boolean autoDelete);
+        Task<Torrent> Add(String realDebridId, String hash, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete);
         Task UpdateRdData(Torrent torrent);
-        Task UpdateStatus(Guid torrentId, TorrentStatus status);
         Task UpdateCategory(Guid torrentId, String category);
-        Task Delete(Guid id);
+        Task UpdateComplete(Guid torrentId, DateTimeOffset datetime);
+        Task Delete(Guid torrentId);
     }
 
     public class TorrentData : ITorrentData
@@ -36,20 +34,15 @@ namespace RdtClient.Data.Data
                                             .Include(m => m.Downloads)
                                             .ToListAsync();
 
-            foreach (var file in results.SelectMany(torrent => torrent.Downloads))
-            {
-                file.Torrent = null;
-            }
-
             return results;
         }
 
-        public async Task<Torrent> GetById(Guid id)
+        public async Task<Torrent> GetById(Guid torrentId)
         {
             var dbTorrent = await _dataContext.Torrents
                                               .AsNoTracking()
                                               .Include(m => m.Downloads)
-                                              .FirstOrDefaultAsync(m => m.TorrentId == id);
+                                              .FirstOrDefaultAsync(m => m.TorrentId == torrentId);
 
             if (dbTorrent == null)
             {
@@ -84,15 +77,16 @@ namespace RdtClient.Data.Data
             return dbTorrent;
         }
 
-        public async Task<Torrent> Add(String realDebridId, String hash, Boolean autoDownload, Boolean autoDelete)
+        public async Task<Torrent> Add(String realDebridId, String hash, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete)
         {
             var torrent = new Torrent
             {
                 TorrentId = Guid.NewGuid(),
+                Added = DateTimeOffset.UtcNow,
                 RdId = realDebridId,
                 Hash = hash.ToLower(),
-                Status = TorrentStatus.RealDebrid,
                 AutoDownload = autoDownload,
+                AutoUnpack = autoUnpack,
                 AutoDelete = autoDelete
             };
 
@@ -118,6 +112,7 @@ namespace RdtClient.Data.Data
             dbTorrent.RdSplit = torrent.RdSplit;
             dbTorrent.RdProgress = torrent.RdProgress;
             dbTorrent.RdStatus = torrent.RdStatus;
+            dbTorrent.RdStatusRaw = torrent.RdStatusRaw;
             dbTorrent.RdAdded = torrent.RdAdded;
             dbTorrent.RdEnded = torrent.RdEnded;
             dbTorrent.RdSpeed = torrent.RdSpeed;
@@ -130,21 +125,7 @@ namespace RdtClient.Data.Data
 
             await _dataContext.SaveChangesAsync();
         }
-
-        public async Task UpdateStatus(Guid torrentId, TorrentStatus status)
-        {
-            var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
-
-            if (dbTorrent == null)
-            {
-                return;
-            }
-
-            dbTorrent.Status = status;
-
-            await _dataContext.SaveChangesAsync();
-        }
-
+        
         public async Task UpdateCategory(Guid torrentId, String category)
         {
             var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
@@ -159,9 +140,18 @@ namespace RdtClient.Data.Data
             await _dataContext.SaveChangesAsync();
         }
 
-        public async Task Delete(Guid id)
+        public async Task UpdateComplete(Guid torrentId, DateTimeOffset datetime)
         {
-            var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == id);
+            var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
+            
+            dbTorrent.Completed = datetime;
+
+            await _dataContext.SaveChangesAsync();
+        }
+
+        public async Task Delete(Guid torrentId)
+        {
+            var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
 
             if (dbTorrent == null)
             {

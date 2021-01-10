@@ -48,6 +48,10 @@
           Download torrent to host when finished downloading on Real-Debrid
         </label>
         <label class="checkbox">
+          <input type="checkbox" [(ngModel)]="autoUnpack" />
+          Unpack files after downloading to host
+        </label>
+        <label class="checkbox">
           <input type="checkbox" [(ngModel)]="autoDelete" />
           Remove torrent when finished downloading on host
         </label>
@@ -61,6 +65,7 @@
         class="button is-success"
         [disabled]="saving"
         [ngClass]="{ 'is-loading': saving }"
+        (click)="ok()"
       >
         <span>Add Torrent</span>
       </button>

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 
 namespace RdtClient.Data.Data
@@ -12,8 +11,14 @@ namespace RdtClient.Data.Data
     {
         Task<IList<Download>> Get();
         Task<IList<Download>> GetForTorrent(Guid torrentId);
+        Task<Download> GetById(Guid downloadId);
         Task<Download> Add(Guid torrentId, String link);
-        Task UpdateStatus(Guid downloadId, DownloadStatus status);
+        Task UpdateDownloadStarted(Guid downloadId, DateTimeOffset? dateTime);
+        Task UpdateDownloadFinished(Guid downloadId, DateTimeOffset? dateTime);
+        Task UpdateUnpackingQueued(Guid downloadId, DateTimeOffset? dateTime);
+        Task UpdateUnpackingStarted(Guid downloadId, DateTimeOffset? dateTime);
+        Task UpdateUnpackingFinished(Guid downloadId, DateTimeOffset? dateTime);
+        Task UpdateError(Guid downloadId, String error);
         Task DeleteForTorrent(Guid torrentId);
     }
 
@@ -42,6 +47,14 @@ namespace RdtClient.Data.Data
                                      .ToListAsync();
         }
 
+        public async Task<Download> GetById(Guid downloadId)
+        {
+            return await _dataContext.Downloads
+                                     .Include(m => m.Torrent)
+                                     .AsNoTracking()
+                                     .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+        }
+
         public async Task<Download> Add(Guid torrentId, String link)
         {
             var download = new Download
@@ -50,7 +63,7 @@ namespace RdtClient.Data.Data
                 TorrentId = torrentId,
                 Link = link,
                 Added = DateTimeOffset.UtcNow,
-                Status = DownloadStatus.PendingDownload
+                DownloadQueued = DateTimeOffset.UtcNow
             };
 
             await _dataContext.Downloads.AddAsync(download);
@@ -59,12 +72,64 @@ namespace RdtClient.Data.Data
 
             return download;
         }
-
-        public async Task UpdateStatus(Guid downloadId, DownloadStatus status)
+        
+        public async Task UpdateDownloadStarted(Guid downloadId, DateTimeOffset? dateTime)
         {
-            var download = await _dataContext.Downloads.FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+            var dbDownload = await _dataContext.Downloads
+                                               .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
-            download.Status = status;
+            dbDownload.DownloadStarted = dateTime;
+
+            await _dataContext.SaveChangesAsync();
+        }
+
+        public async Task UpdateDownloadFinished(Guid downloadId, DateTimeOffset? dateTime)
+        {
+            var dbDownload = await _dataContext.Downloads
+                                               .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+            dbDownload.DownloadFinished = dateTime;
+
+            await _dataContext.SaveChangesAsync();
+        }
+
+        public async Task UpdateUnpackingQueued(Guid downloadId, DateTimeOffset? dateTime)
+        {
+            var dbDownload = await _dataContext.Downloads
+                                               .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+            dbDownload.UnpackingQueued = dateTime;
+
+            await _dataContext.SaveChangesAsync();
+        }
+
+        public async Task UpdateUnpackingStarted(Guid downloadId, DateTimeOffset? dateTime)
+        {
+            var dbDownload = await _dataContext.Downloads
+                                               .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+            dbDownload.UnpackingStarted = dateTime;
+
+            await _dataContext.SaveChangesAsync();
+        }
+
+        public async Task UpdateUnpackingFinished(Guid downloadId, DateTimeOffset? dateTime)
+        {
+            var dbDownload = await _dataContext.Downloads
+                                               .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+            dbDownload.UnpackingFinished = dateTime;
+
+            await _dataContext.SaveChangesAsync();
+        }
+
+        public async Task UpdateError(Guid downloadId, String error)
+        {
+            var dbDownload = await _dataContext.Downloads
+                                               .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+            dbDownload.Completed = DateTimeOffset.UtcNow;
+            dbDownload.Error = error;
 
             await _dataContext.SaveChangesAsync();
         }

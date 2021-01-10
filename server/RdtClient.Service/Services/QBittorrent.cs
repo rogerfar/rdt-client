@@ -19,8 +19,8 @@ namespace RdtClient.Service.Services
         Task<IList<TorrentFileItem>> TorrentFileContents(String hash);
         Task<TorrentProperties> TorrentProperties(String hash);
         Task TorrentsDelete(String hash, Boolean deleteFiles);
-        Task TorrentsAdd(String magnetLink, Boolean autoDownload, Boolean autoDelete);
-        Task TorrentsAddFile(Byte[] fileBytes, Boolean autoDownload, Boolean autoDelete);
+        Task TorrentsAdd(String magnetLink, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete);
+        Task TorrentsAddFile(Byte[] fileBytes, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete);
         Task TorrentsSetCategory(String hash, String category);
         Task<IDictionary<String, TorrentCategory>> TorrentsCategories();
     }
@@ -275,14 +275,13 @@ namespace RdtClient.Service.Services
                 result.Uploaded = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0));
                 result.UploadedSession = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0));
                 result.Upspeed = torrent.RdSpeed ?? 0;
-                result.State = torrent.Status switch
+                result.State = torrent.RdStatus switch
                 {
-                    TorrentStatus.RealDebrid => "downloading",
-                    TorrentStatus.WaitingForDownload => "downloading",
-                    TorrentStatus.DownloadQueued => "downloading",
-                    TorrentStatus.Downloading => "downloading",
-                    TorrentStatus.Finished => "pausedUP",
-                    TorrentStatus.Error => "error",
+                    RealDebridStatus.Processing => "downloading",
+                    RealDebridStatus.WaitingForFileSelection => "downloading",
+                    RealDebridStatus.Downloading => "downloading",
+                    RealDebridStatus.Finished => "pausedUP",
+                    RealDebridStatus.Error => "error",
                     _ => throw new ArgumentOutOfRangeException()
                 };
 
@@ -304,8 +303,11 @@ namespace RdtClient.Service.Services
 
             foreach (var file in torrent.Files)
             {
-                var result = new TorrentFileItem();
-                result.Name = file.Path;
+                var result = new TorrentFileItem
+                {
+                    Name = file.Path
+                };
+
                 results.Add(result);
             }
 
@@ -340,7 +342,7 @@ namespace RdtClient.Service.Services
                 Peers = 0,
                 PeersTotal = 2,
                 PieceSize = torrent.Files.Count > 0 ? torrent.RdSize / torrent.Files.Count : 0,
-                PiecesHave = torrent.Downloads.Count(m => m.Status == DownloadStatus.Finished),
+                PiecesHave = torrent.Downloads.Count(m => m.Completed.HasValue),
                 PiecesNum = torrent.Files.Count,
                 Reannounce = 0,
                 SavePath = savePath,
@@ -372,7 +374,7 @@ namespace RdtClient.Service.Services
                 return;
             }
 
-            await _torrents.Delete(torrent.TorrentId);
+            await _torrents.Delete(torrent.TorrentId, true, true, true);
 
             if (deleteFiles)
             {
@@ -387,14 +389,14 @@ namespace RdtClient.Service.Services
             }
         }
 
-        public async Task TorrentsAdd(String magnetLink, Boolean autoDownload, Boolean autoDelete)
+        public async Task TorrentsAdd(String magnetLink, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete)
         {
-            await _torrents.UploadMagnet(magnetLink, autoDownload, autoDelete);
+            await _torrents.UploadMagnet(magnetLink, autoDownload, autoUnpack, autoDelete);
         }
 
-        public async Task TorrentsAddFile(Byte[] fileBytes, Boolean autoDownload, Boolean autoDelete)
+        public async Task TorrentsAddFile(Byte[] fileBytes, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete)
         {
-            await _torrents.UploadFile(fileBytes, autoDownload, autoDelete);
+            await _torrents.UploadFile(fileBytes, autoDownload, autoUnpack, autoDelete);
         }
 
         public async Task TorrentsSetCategory(String hash, String category)

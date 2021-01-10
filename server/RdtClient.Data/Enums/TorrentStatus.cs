@@ -1,12 +1,11 @@
 ﻿namespace RdtClient.Data.Enums
 {
-    public enum TorrentStatus
+    public enum RealDebridStatus
     {
-        RealDebrid = 0,
-        WaitingForDownload = 1,
-        DownloadQueued = 2,
-        Downloading = 3,
-        Finished = 4,
+        Processing = 0,
+        WaitingForFileSelection = 1,
+        Downloading = 2,
+        Finished = 3,
 
         Error = 99
     }

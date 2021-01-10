@@ -245,7 +245,7 @@ namespace RdtClient.Web.Controllers
 
             foreach (var url in urls)
             {
-                await _qBittorrent.TorrentsAdd(url.Trim(), true, false);
+                await _qBittorrent.TorrentsAdd(url.Trim(), true, true, false);
             }
 
             return Ok();
@@ -265,7 +265,7 @@ namespace RdtClient.Web.Controllers
                     await file.CopyToAsync(target);
                     var fileBytes = target.ToArray();
 
-                    await _qBittorrent.TorrentsAddFile(fileBytes, true, false);
+                    await _qBittorrent.TorrentsAddFile(fileBytes, true, true, false);
                 }
             }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -26,8 +27,15 @@ namespace RdtClient.Web.Controllers
         [Route("")]
         public async Task<ActionResult<IList<Torrent>>> Get()
         {
-            var result = await _torrents.Get();
-            return Ok(result);
+            var results = await _torrents.Get();
+            
+            // Prevent infinite recursion when serializing
+            foreach (var file in results.SelectMany(torrent => torrent.Downloads))
+            {
+                file.Torrent = null;
+            }
+            
+            return Ok(results);
         }
 
         [HttpGet]
@@ -63,7 +71,7 @@ namespace RdtClient.Web.Controllers
 
             var bytes = memoryStream.ToArray();
 
-            await _torrents.UploadFile(bytes, formData.AutoDownload, formData.AutoDelete);
+            await _torrents.UploadFile(bytes, formData.AutoDownload, formData.AutoUnpack, formData.AutoDelete);
 
             return Ok();
         }
@@ -72,16 +80,16 @@ namespace RdtClient.Web.Controllers
         [Route("UploadMagnet")]
         public async Task<ActionResult> UploadMagnet([FromBody] TorrentControllerUploadMagnetRequest request)
         {
-            await _torrents.UploadMagnet(request.MagnetLink, request.AutoDownload, request.AutoDelete);
+            await _torrents.UploadMagnet(request.MagnetLink, request.AutoDownload, request.AutoUnpack, request.AutoDelete);
 
             return Ok();
         }
 
-        [HttpDelete]
-        [Route("{id}")]
-        public async Task<ActionResult> Delete(Guid id)
+        [HttpPost]
+        [Route("Delete/{id}")]
+        public async Task<ActionResult> Delete(Guid id, [FromBody] TorrentControllerDeleteRequest request)
         {
-            await _torrents.Delete(id);
+            await _torrents.Delete(id, request.DeleteData, request.DeleteRdTorrent, request.DeleteLocalFiles);
 
             return Ok();
         }
@@ -90,7 +98,7 @@ namespace RdtClient.Web.Controllers
         [Route("Download/{id}")]
         public async Task<ActionResult> Download(Guid id)
         {
-            await _torrents.Download(id);
+            await _torrents.Unrestrict(id);
 
             return Ok();
         }
@@ -99,6 +107,7 @@ namespace RdtClient.Web.Controllers
     public class TorrentControllerUploadFileRequest
     {
         public Boolean AutoDownload { get; set; }
+        public Boolean AutoUnpack { get; set; }
         public Boolean AutoDelete { get; set; }
     }
 
@@ -106,6 +115,14 @@ namespace RdtClient.Web.Controllers
     {
         public String MagnetLink { get; set; }
         public Boolean AutoDownload { get; set; }
+        public Boolean AutoUnpack { get; set; }
         public Boolean AutoDelete { get; set; }
+    }
+
+    public class TorrentControllerDeleteRequest
+    {
+        public Boolean DeleteData { get; set; }
+        public Boolean DeleteRdTorrent { get; set; }
+        public Boolean DeleteLocalFiles { get; set; }
     }
 }

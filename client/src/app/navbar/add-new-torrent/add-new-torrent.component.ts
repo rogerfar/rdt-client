@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { TorrentService } from 'src/app/torrent.service';
 
 @Component({
@@ -25,6 +25,7 @@ export class AddNewTorrentComponent implements OnInit {
   public fileName: string;
   public magnetLink: string;
   public autoDownload: boolean;
+  public autoUnpack: boolean;
   public autoDelete: boolean;
 
   public saving = false;
@@ -67,7 +68,12 @@ export class AddNewTorrentComponent implements OnInit {
 
     if (this.magnetLink) {
       this.torrentService
-        .uploadMagnet(this.magnetLink, this.autoDownload, this.autoDelete)
+        .uploadMagnet(
+          this.magnetLink,
+          this.autoDownload,
+          this.autoUnpack,
+          this.autoDelete
+        )
         .subscribe(
           () => {
             this.cancel();
@@ -79,7 +85,12 @@ export class AddNewTorrentComponent implements OnInit {
         );
     } else if (this.selectedFile) {
       this.torrentService
-        .uploadFile(this.selectedFile, this.autoDownload, this.autoDelete)
+        .uploadFile(
+          this.selectedFile,
+          this.autoDownload,
+          this.autoUnpack,
+          this.autoDelete
+        )
         .subscribe(
           () => {
             this.cancel();

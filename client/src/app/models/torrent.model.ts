@@ -1,41 +1,47 @@
 import { Download } from './download.model';
 
 export class Torrent {
-  torrentId: string;
-  hash: string;
-  status: TorrentStatus;
-  rdId: string;
-  rdName: string;
-  rdSize: number;
-  rdHost: string;
-  rdSplit: number;
-  rdProgress: number;
-  rdStatus: string;
-  rdAdded: Date;
-  rdEnded: Date;
-  rdSpeed: number;
-  rdSeeders: number;
-  rdFiles: string;
+  public torrentId: string;
+  public hash: string;
+  public category: string;
+  public added: Date;
+  public completed: Date;
+  public autoDownload: boolean;
+  public autoUnpack: boolean;
+  public autoDelete: boolean;
 
-  files: TorrentFile[];
-  downloads: Download[];
+  public rdId: string;
+  public rdName: string;
+  public rdSize: number;
+  public rdHost: string;
+  public rdSplit: number;
+  public rdProgress: number;
+  public rdStatus: RealDebridStatus;
+  public rdStatusRaw: string;
+  public rdAdded: Date;
+  public rdEnded: Date;
+  public rdSpeed: number;
+  public rdSeeders: number;
+  public rdFiles: string;
+
+  public files: TorrentFile[];
+  public downloads: Download[];
 }
 
 export class TorrentFile {
-  id: string;
-  path: string;
-  bytes: number;
-  selected: boolean;
+  public id: string;
+  public path: string;
+  public bytes: number;
+  public selected: boolean;
 
-  download: Download;
+  public download: Download;
 }
 
-export enum TorrentStatus {
-  RealDebrid = 0,
-  WaitingForDownload = 1,
-  DownloadQueued = 2,
-  Downloading = 3,
-  Finished = 4,
+export enum RealDebridStatus {
+  Processing = 0,
+  WaitingForFileSelection = 1,
+  Downloading = 2,
+  Finished = 3,
 
   Error = 99,
 }

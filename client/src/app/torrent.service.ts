@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, Subject } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 import { Torrent } from './models/torrent.model';
 
 @Injectable({
@@ -20,23 +20,21 @@ export class TorrentService {
   public uploadMagnet(
     magnetLink: string,
     autoDownload: boolean,
+    autoUnpack: boolean,
     autoDelete: boolean
   ): Observable<void> {
     return this.http.post<void>(`/Api/Torrents/UploadMagnet`, {
       magnetLink,
       autoDownload,
+      autoUnpack,
       autoDelete,
     });
   }
 
-  public uploadFile(
-    file: File,
-    autoDownload: boolean,
-    autoDelete: boolean
-  ): Observable<void> {
+  public uploadFile(file: File, autoDownload: boolean, autoUnpack: boolean, autoDelete: boolean): Observable<void> {
     const formData: FormData = new FormData();
     formData.append('file', file);
-    formData.append('formData', JSON.stringify({ autoDownload, autoDelete }));
+    formData.append('formData', JSON.stringify({ autoDownload, autoUnpack, autoDelete }));
     return this.http.post<void>(`/Api/Torrents/UploadFile`, formData);
   }
 
@@ -44,7 +42,16 @@ export class TorrentService {
     return this.http.get<void>(`/Api/Torrents/Download/${torrentId}`);
   }
 
-  public delete(torrentId: string): Observable<void> {
-    return this.http.delete<void>(`/Api/Torrents/${torrentId}`);
+  public delete(
+    torrentId: string,
+    deleteData: boolean,
+    deleteRdTorrent: boolean,
+    deleteLocalFiles: boolean
+  ): Observable<void> {
+    return this.http.post<void>(`/Api/Torrents/Delete/${torrentId}`, {
+      deleteData,
+      deleteRdTorrent,
+      deleteLocalFiles,
+    });
   }
 }

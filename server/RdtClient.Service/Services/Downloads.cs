@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using RdtClient.Data.Data;
-using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 
 namespace RdtClient.Service.Services
@@ -11,8 +10,14 @@ namespace RdtClient.Service.Services
     {
         Task<IList<Download>> Get();
         Task<IList<Download>> GetForTorrent(Guid torrentId);
+        Task<Download> GetById(Guid downloadId);
         Task<Download> Add(Guid torrentId, String link);
-        Task UpdateStatus(Guid downloadId, DownloadStatus status);
+        Task UpdateDownloadStarted(Guid downloadId, DateTimeOffset? dateTime);
+        Task UpdateDownloadFinished(Guid downloadId, DateTimeOffset? dateTime);
+        Task UpdateUnpackingQueued(Guid downloadId, DateTimeOffset? dateTime);
+        Task UpdateUnpackingStarted(Guid downloadId, DateTimeOffset? dateTime);
+        Task UpdateUnpackingFinished(Guid downloadId, DateTimeOffset? dateTime);
+        Task UpdateError(Guid downloadId, String error);
         Task DeleteForTorrent(Guid torrentId);
     }
 
@@ -35,14 +40,44 @@ namespace RdtClient.Service.Services
             return await _downloadData.GetForTorrent(torrentId);
         }
 
+        public async Task<Download> GetById(Guid downloadId)
+        {
+            return await _downloadData.GetById(downloadId);
+        }
+
         public async Task<Download> Add(Guid torrentId, String link)
         {
             return await _downloadData.Add(torrentId, link);
         }
 
-        public async Task UpdateStatus(Guid downloadId, DownloadStatus status)
+        public async Task UpdateDownloadStarted(Guid downloadId, DateTimeOffset? dateTime)
         {
-            await _downloadData.UpdateStatus(downloadId, status);
+            await _downloadData.UpdateDownloadStarted(downloadId, dateTime);
+        }
+
+        public async Task UpdateDownloadFinished(Guid downloadId, DateTimeOffset? dateTime)
+        {
+            await _downloadData.UpdateDownloadFinished(downloadId, dateTime);
+        }
+
+        public async Task UpdateUnpackingQueued(Guid downloadId, DateTimeOffset? dateTime)
+        {
+            await _downloadData.UpdateUnpackingQueued(downloadId, dateTime);
+        }
+
+        public async Task UpdateUnpackingStarted(Guid downloadId, DateTimeOffset? dateTime)
+        {
+            await _downloadData.UpdateUnpackingStarted(downloadId, dateTime);
+        }
+
+        public async Task UpdateUnpackingFinished(Guid downloadId, DateTimeOffset? dateTime)
+        {
+            await _downloadData.UpdateUnpackingFinished(downloadId, dateTime);
+        }
+
+        public async Task UpdateError(Guid downloadId, String error)
+        {
+            await _downloadData.UpdateError(downloadId, error);
         }
 
         public async Task DeleteForTorrent(Guid torrentId)

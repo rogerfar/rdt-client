@@ -42,15 +42,9 @@ export class SettingsComponent implements OnInit {
 
     this.settingsService.get().subscribe(
       (results) => {
-        this.settingRealDebridApiKey = this.getSetting(
-          results,
-          'RealDebridApiKey'
-        );
+        this.settingRealDebridApiKey = this.getSetting(results, 'RealDebridApiKey');
         this.settingDownloadFolder = this.getSetting(results, 'DownloadFolder');
-        this.settingDownloadLimit = parseInt(
-          this.getSetting(results, 'DownloadLimit'),
-          10
-        );
+        this.settingDownloadLimit = parseInt(this.getSetting(results, 'DownloadLimit'), 10);
       },
       (err) => {
         this.error = err.error;

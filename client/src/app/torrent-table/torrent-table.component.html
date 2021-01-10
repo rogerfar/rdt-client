@@ -5,11 +5,11 @@
 <div class="table-container">
   <table class="table is-fullwidth is-hoverable">
     <colgroup>
-      <col style="width: 50%;" />
-      <col style="width: 15%;" />
-      <col style="width: 35%;" />
-      <col style="width: 50px;" />
-      <col style="width: 50px;" />
+      <col style="width: 50%" />
+      <col style="width: 15%" />
+      <col style="width: 35%" />
+      <col style="width: 50px" />
+      <col style="width: 50px" />
     </colgroup>
     <thead>
       <tr>
@@ -26,27 +26,70 @@
           app-torrent-row
           [torrent]="torrent"
           (click)="selectTorrent(torrent)"
+          (delete)="showDeleteModal($event)"
         ></tr>
 
-        <ng-container
-          *ngIf="showFiles[torrent.torrentId] && torrent?.files.length === 0"
-        >
+        <ng-container *ngIf="showFiles[torrent.torrentId] && torrent?.files.length === 0">
           <tr>
             <td colspan="20">
               <i class="fas fa-spinner fa-pulse"></i>
             </td>
           </tr>
         </ng-container>
-        <ng-container
-          *ngIf="showFiles[torrent.torrentId] && torrent?.files.length > 0"
-        >
-          <tr
-            app-torrent-file
-            [file]="file"
-            *ngFor="let file of torrent.files"
-          ></tr>
+        <ng-container *ngIf="showFiles[torrent.torrentId] && torrent?.files.length > 0">
+          <tr app-torrent-file [file]="file" *ngFor="let file of torrent.files"></tr>
         </ng-container>
       </ng-container>
     </tbody>
   </table>
+</div>
+
+<div class="modal" [class.is-active]="isDeleteModalActive">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Delete torrent</p>
+      <button class="delete" aria-label="close" (click)="deleteCancel()"></button>
+    </header>
+    <section class="modal-card-body">
+      <div class="field">
+        <label class="label"></label>
+        <div class="control">
+          <label class="checkbox">
+            <input type="checkbox" [(ngModel)]="deleteData" />
+            Delete Torrent from local RealDebrid Client
+          </label>
+          <br />
+          <label class="checkbox">
+            <input type="checkbox" [(ngModel)]="deleteRdTorrent" />
+            Delete Torrent from RealDebrid
+          </label>
+          <br />
+          <label class="checkbox">
+            <input type="checkbox" [(ngModel)]="deleteLocalFiles" />
+            Delete local files
+          </label>
+        </div>
+      </div>
+      <div class="notification is-primary">
+        Deleting a torrent from RealDebrid will automatically delete it here too.
+      </div>
+      <div class="notification is-danger is-light" *ngIf="deleteError?.length > 0">
+        Error deleting torrent: {{ deleteError }}
+      </div>
+    </section>
+    <footer class="modal-card-foot">
+      <button
+        class="button is-success"
+        (click)="deleteOk()"
+        [disabled]="deleting"
+        [ngClass]="{ 'is-loading': deleting }"
+      >
+        Delete
+      </button>
+      <button class="button" (click)="deleteCancel()" [disabled]="deleting" [ngClass]="{ 'is-loading': deleting }">
+        Cancel
+      </button>
+    </footer>
+  </div>
 </div>

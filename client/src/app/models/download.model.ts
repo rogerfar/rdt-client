@@ -1,24 +1,17 @@
 export class Download {
   public downloadId: string;
-
   public torrentId: string;
-
   public link: string;
-
   public added: Date;
-
-  public status: DownloadStatus;
-
-  public bytesDownloaded: number;
-
-  public bytesSize: number;
-
+  public downloadQueued: Date;
+  public downloadStarted: Date;
+  public downloadFinished: Date;
+  public unpackingQueued: Date;
+  public unpackingStarted: Date;
+  public unpackingFinished: Date;
+  public completed: Date;
+  public error: string;
+  public bytesTotal: number;
+  public bytesDone: number;
   public speed: number;
-}
-
-export enum DownloadStatus {
-  PendingDownload = 0,
-  Downloading = 1,
-  Unpacking = 2,
-  Finished = 3,
 }

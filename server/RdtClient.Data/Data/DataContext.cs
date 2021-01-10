@@ -50,7 +50,11 @@ namespace RdtClient.Data.Data
                 {
                     SettingId = "DownloadFolder",
                     Type = "String",
+                    #if DEBUG
+                    Value = @"C:\Temp\rdtclient"
+                    #else 
                     Value = "/data/downloads"
+                    #endif
                 },
                 new Setting
                 {

@@ -1,4 +1,4 @@
 export class Profile {
-  userName: string;
-  expiration: Date;
+  public userName: string;
+  public expiration: Date;
 }

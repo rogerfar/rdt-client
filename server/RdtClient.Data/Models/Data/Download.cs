@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using RdtClient.Data.Enums;
 
 namespace RdtClient.Data.Models.Data
 {
@@ -15,17 +14,31 @@ namespace RdtClient.Data.Models.Data
         public String Link { get; set; }
 
         public DateTimeOffset Added { get; set; }
+        
+        public DateTimeOffset? DownloadQueued { get; set; }
 
-        public DownloadStatus Status { get; set; }
+        public DateTimeOffset? DownloadStarted { get; set; }
+
+        public DateTimeOffset? DownloadFinished { get; set; }
+        
+        public DateTimeOffset? UnpackingQueued { get; set; }
+        
+        public DateTimeOffset? UnpackingStarted { get; set; }
+        
+        public DateTimeOffset? UnpackingFinished { get; set; }
+        
+        public DateTimeOffset? Completed { get; set; }
+        
+        public String Error { get; set; }
 
         [ForeignKey("TorrentId")]
         public Torrent Torrent { get; set; }
 
         [NotMapped]
-        public Int64 BytesSize { get; set; }
+        public Int64 BytesTotal { get; set; }
 
         [NotMapped]
-        public Int64 BytesDownloaded { get; set; }
+        public Int64 BytesDone { get; set; }
 
         [NotMapped]
         public Int64 Speed { get; set; }

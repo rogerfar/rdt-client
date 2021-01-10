@@ -1,13 +1,6 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  HostListener,
-  ElementRef,
-} from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Torrent } from '../models/torrent.model';
 import { TorrentService } from '../torrent.service';
-import { DownloadStatus } from '../models/download.model';
 
 @Component({
   selector: 'app-torrent-table',
@@ -18,6 +11,14 @@ export class TorrentTableComponent implements OnInit, OnDestroy {
   public torrents: Torrent[] = [];
   public error: string;
   public showFiles: { [key: string]: boolean } = {};
+
+  public isDeleteModalActive: boolean;
+  public deleteError: string;
+  public deleting: boolean;
+  public deleteTorrentId: string;
+  public deleteData: boolean;
+  public deleteRdTorrent: boolean;
+  public deleteLocalFiles: boolean;
 
   private timer: any;
 
@@ -50,9 +51,7 @@ export class TorrentTableComponent implements OnInit, OnDestroy {
         torrent.downloads = result.downloads;
 
         torrent.files.forEach((file) => {
-          const downloads = torrent.downloads.filter(
-            (m) => m.link === file.path
-          );
+          const downloads = torrent.downloads.filter((m) => m.link === file.path);
 
           if (downloads.length > 0) {
             file.download = downloads[0];
@@ -64,5 +63,31 @@ export class TorrentTableComponent implements OnInit, OnDestroy {
 
   public trackByMethod(index: number, el: Torrent): string {
     return el.torrentId;
+  }
+
+  public showDeleteModal(torrentId: string): void {
+    this.deleteTorrentId = torrentId;
+    this.isDeleteModalActive = true;
+  }
+
+  public deleteCancel(): void {
+    this.isDeleteModalActive = false;
+  }
+
+  public deleteOk(): void {
+    this.deleting = true;
+
+    this.torrentService
+      .delete(this.deleteTorrentId, this.deleteData, this.deleteRdTorrent, this.deleteLocalFiles)
+      .subscribe(
+        () => {
+          this.isDeleteModalActive = false;
+          this.deleting = false;
+        },
+        (err) => {
+          this.deleteError = err.error;
+          this.deleting = false;
+        }
+      );
   }
 }

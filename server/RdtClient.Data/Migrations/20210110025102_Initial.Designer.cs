@@ -9,7 +9,7 @@ using RdtClient.Data.Data;
 namespace RdtClient.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20201212204128_Initial")]
+    [Migration("20210110025102_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -219,13 +219,34 @@ namespace RdtClient.Data.Migrations
                     b.Property<DateTimeOffset>("Added")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTimeOffset?>("Completed")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("DownloadFinished")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("DownloadQueued")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("DownloadStarted")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Link")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
-
                     b.Property<Guid>("TorrentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("UnpackingFinished")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("UnpackingQueued")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("UnpackingStarted")
                         .HasColumnType("TEXT");
 
                     b.HasKey("DownloadId");
@@ -257,13 +278,22 @@ namespace RdtClient.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTimeOffset>("Added")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("AutoDelete")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("AutoDownload")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("AutoUnpack")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Category")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("Completed")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Hash")
@@ -302,11 +332,11 @@ namespace RdtClient.Data.Migrations
                     b.Property<long>("RdSplit")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("RdStatus")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Status")
+                    b.Property<int>("RdStatus")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("RdStatusRaw")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("TorrentId");
 
