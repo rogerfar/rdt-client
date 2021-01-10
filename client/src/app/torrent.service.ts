@@ -42,6 +42,10 @@ export class TorrentService {
     return this.http.get<void>(`/Api/Torrents/Download/${torrentId}`);
   }
 
+  public unpack(torrentId: string): Observable<void> {
+    return this.http.get<void>(`/Api/Torrents/Unpack/${torrentId}`);
+  }
+
   public delete(
     torrentId: string,
     deleteData: boolean,

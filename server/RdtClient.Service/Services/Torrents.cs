@@ -163,6 +163,15 @@ namespace RdtClient.Service.Services
 
             if (torrent != null)
             {
+                if (deleteLocalFiles)
+                {
+                    var settingDownloadFolder = await _settings.GetString("DownloadFolder");
+                    
+                    var torrentPath = Path.Combine(settingDownloadFolder, torrent.RdName);
+
+                    Directory.Delete(torrentPath, true);
+                }
+                
                 if (deleteData)
                 {
                     await _downloads.DeleteForTorrent(torrent.TorrentId);
@@ -172,11 +181,6 @@ namespace RdtClient.Service.Services
                 if (deleteRdTorrent)
                 {
                     await GetRdNetClient().DeleteTorrentAsync(torrent.RdId);
-                }
-
-                if (deleteLocalFiles)
-                {
-                    // TODO
                 }
             }
         }

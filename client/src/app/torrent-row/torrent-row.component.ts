@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { Torrent } from 'src/app/models/torrent.model';
+import { RealDebridStatus, Torrent } from 'src/app/models/torrent.model';
 import { TorrentService } from 'src/app/torrent.service';
 
 @Component({
@@ -24,13 +24,42 @@ export class TorrentRowComponent implements OnInit {
     event.stopPropagation();
 
     this.loading = true;
-    this.torrentService.download(this.torrent.torrentId).subscribe(() => {
-      this.loading = false;
-    });
+    this.torrentService.download(this.torrent.torrentId).subscribe(
+      () => {
+        this.loading = false;
+      },
+      (err) => {
+        this.loading = false;
+      }
+    );
+  }
+
+  public unpack(event: Event): void {
+    event.stopPropagation();
+
+    this.loading = true;
+    this.torrentService.unpack(this.torrent.torrentId).subscribe(
+      () => {
+        this.loading = false;
+      },
+      (err) => {
+        this.loading = false;
+      }
+    );
   }
 
   public delete1(event: Event): void {
     event.stopPropagation();
     this.delete.emit(this.torrent.torrentId);
+  }
+
+  public canDownload(): boolean {
+    return this.torrent.rdStatus === RealDebridStatus.Finished && this.torrent.downloads.length === 0;
+  }
+
+  public canUnpack(): boolean {
+    const downloadsDone = this.torrent.downloads.any((m) => m.downloadFinished != null);
+    const downloadsUnpacked = this.torrent.downloads.any((m) => m.unpackingQueued != null);
+    return downloadsDone && !downloadsUnpacked;
   }
 }

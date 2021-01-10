@@ -3,14 +3,31 @@
   {{ torrent.rdSize | filesize }}
 </td>
 <td>
+  {{ torrent.files.length | number }}
+</td>
+<td>
+  {{ torrent.downloads.length | number }}
+</td>
+<td class="auto">
+  <i class="fas fa-download" *ngIf="!torrent.autoDownload" title="Auto download"></i>
+  <i class="fas fa-box-open" *ngIf="!torrent.autoUnpack" title="Auto unpack"></i>
+  <i class="fas fa-trash" *ngIf="!torrent.autoDelete" title="Auto delete"></i>
+</td>
+<td>
   {{ torrent | status }}
 </td>
 <td>
-  <span class="icon download-icon" (click)="download($event)" title="Download to disk" *ngIf="!loading">
+  <span
+    class="icon download-icon"
+    (click)="download($event)"
+    title="Download to disk"
+    *ngIf="!loading && canDownload()"
+  >
     <i class="fas fa-download"></i>
   </span>
-</td>
-<td>
+  <span class="icon download-icon" (click)="unpack($event)" title="Unpack" *ngIf="!loading && canUnpack()">
+    <i class="fas fa-box-open"></i>
+  </span>
   <span class="icon delete-icon" (click)="delete1($event)" title="Delete torrent" *ngIf="!loading">
     <i class="fas fa-times"></i>
   </span>

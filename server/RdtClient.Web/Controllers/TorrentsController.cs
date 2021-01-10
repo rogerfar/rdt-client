@@ -17,10 +17,12 @@ namespace RdtClient.Web.Controllers
     public class TorrentsController : Controller
     {
         private readonly ITorrents _torrents;
+        private readonly IDownloads _downloads;
 
-        public TorrentsController(ITorrents torrents)
+        public TorrentsController(ITorrents torrents, IDownloads downloads)
         {
             _torrents = torrents;
+            _downloads = downloads;
         }
 
         [HttpGet]
@@ -99,6 +101,20 @@ namespace RdtClient.Web.Controllers
         public async Task<ActionResult> Download(Guid id)
         {
             await _torrents.Unrestrict(id);
+
+            return Ok();
+        }
+        
+        [HttpGet]
+        [Route("Unpack/{id}")]
+        public async Task<ActionResult> Unpack(Guid id)
+        {
+            var downloads = await _downloads.GetForTorrent(id);
+
+            foreach (var download in downloads)
+            {
+                await _torrents.Unpack(download.DownloadId);
+            }
 
             return Ok();
         }

@@ -19,11 +19,16 @@ export class TorrentStatusPipe implements PipeTransform {
         return 'Finished';
       }
 
+      const errors = torrent.downloads.where((m) => m.error != null);
       const downloading = torrent.downloads.where((m) => m.downloadStarted && !m.downloadFinished);
+      const downloaded = torrent.downloads.where((m) => m.downloadFinished != null);
       const unpacking = torrent.downloads.where((m) => m.unpackingStarted && !m.unpackingFinished);
+      const queuedForDownload = torrent.downloads.where((m) => m.downloadQueued && !m.downloadStarted);
+      const queuedForUnpacking = torrent.downloads.where((m) => m.unpackingQueued && !m.unpackingStarted);
 
-      let downloadText = '';
-      let unpackText = '';
+      if (errors.length > 0) {
+        return 'Error';
+      }
 
       if (downloading.length > 0) {
         const bytesDone = downloading.sum((m) => m.bytesDone);
@@ -35,7 +40,7 @@ export class TorrentStatusPipe implements PipeTransform {
         if (allSpeeds > 0) {
           speed = this.pipe.transform(allSpeeds, 'filesize');
 
-          downloadText = `Downloading (${progress.toFixed(2)}% - ${speed}/s)`;
+          return `Downloading (${progress.toFixed(2)}% - ${speed}/s)`;
         }
       }
 
@@ -46,20 +51,20 @@ export class TorrentStatusPipe implements PipeTransform {
         let allSpeeds = unpacking.sum((m) => m.speed) / unpacking.length;
 
         if (allSpeeds > 0) {
-          downloadText = `Extracting (${progress.toFixed(2)}%)`;
+          return `Extracting (${progress.toFixed(2)}%)`;
         }
       }
 
-      let result: string[] = [];
-      if (downloadText) {
-        result.push(downloadText);
-      }
-      if (unpackText) {
-        result.push(unpackText);
+      if (queuedForUnpacking.length > 0) {
+        return `Queued for unpacking`;
       }
 
-      if (result.length > 0) {
-        return result.join('\r\n');
+      if (queuedForDownload.length > 0) {
+        return `Queued for downloading`;
+      }
+
+      if (downloaded.length > 0) {
+        return `Files downloaded to host`;
       }
     }
 

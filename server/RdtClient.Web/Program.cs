@@ -71,6 +71,7 @@ namespace RdtClient.Web
                          .Enrich.FromLogContext()
                          .Enrich.WithExceptionDetails()
                          .WriteTo.File(appSettings.Logging.File.Path, logLevel, rollOnFileSizeLimit: true, fileSizeLimitBytes: appSettings.Logging.File.FileSizeLimitBytes, retainedFileCountLimit: appSettings.Logging.File.MaxRollingFiles)
+                         .WriteTo.Console()
                          .MinimumLevel.Information()
                          .CreateLogger();
 

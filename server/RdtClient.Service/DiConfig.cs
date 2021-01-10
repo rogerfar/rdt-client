@@ -13,7 +13,6 @@ namespace RdtClient.Service
             services.AddScoped<ISettings, Settings>();
             services.AddScoped<ITorrents, Torrents>();
             services.AddScoped<ITorrentRunner, TorrentRunner>();
-            services.AddScoped<ITorrentDownloadManager, TorrentDownloadManager>();
         }
     }
 }
