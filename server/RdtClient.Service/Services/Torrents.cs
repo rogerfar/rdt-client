@@ -169,7 +169,10 @@ namespace RdtClient.Service.Services
                     
                     var torrentPath = Path.Combine(settingDownloadFolder, torrent.RdName);
 
-                    Directory.Delete(torrentPath, true);
+                    if (Directory.Exists(torrentPath))
+                    {
+                        Directory.Delete(torrentPath, true);
+                    }
                 }
                 
                 if (deleteData)

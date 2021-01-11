@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import * as signalR from '@microsoft/signalr';
+import { Observable, Subject } from 'rxjs';
 import { Torrent } from './models/torrent.model';
 
 @Injectable({
@@ -8,6 +9,23 @@ import { Torrent } from './models/torrent.model';
 })
 export class TorrentService {
   constructor(private http: HttpClient) {}
+
+  public update$: Subject<Torrent[]> = new Subject();
+
+  private connection: signalR.HubConnection;
+
+  public connect(): void {
+    this.connection = new signalR.HubConnectionBuilder().withUrl('/hub').withAutomaticReconnect().build();
+    this.connection.start().catch((err) => console.error(err));
+
+    this.connection.on('update', (torrents: Torrent[]) => {
+      this.update$.next(torrents);
+    });
+  }
+
+  public disconnect(): void {
+    this.connection?.stop();
+  }
 
   public getList(): Observable<Torrent[]> {
     return this.http.get<Torrent[]>(`/Api/Torrents`);

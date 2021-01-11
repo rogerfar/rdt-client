@@ -21,6 +21,7 @@
     "@angular/platform-browser-dynamic": "~11.0.5",
     "@angular/router": "~11.0.5",
     "@fortawesome/fontawesome-free": "^5.15.1",
+    "@microsoft/signalr": "^5.0.1",
     "bulma": "^0.9.1",
     "curray": "^1.0.8",
     "ngx-filesize": "^2.0.16",

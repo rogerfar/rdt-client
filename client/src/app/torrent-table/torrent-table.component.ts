@@ -20,26 +20,27 @@ export class TorrentTableComponent implements OnInit, OnDestroy {
   public deleteRdTorrent: boolean;
   public deleteLocalFiles: boolean;
 
-  private timer: any;
-
   constructor(private torrentService: TorrentService) {}
 
   ngOnInit(): void {
-    this.timer = setInterval(() => {
-      this.torrentService.getList().subscribe(
-        (result) => {
-          this.torrents = result;
-        },
-        (err) => {
-          this.error = err.error;
-          clearInterval(this.timer);
-        }
-      );
-    }, 1000);
+    this.torrentService.getList().subscribe(
+      (result) => {
+        this.torrents = result;
+
+        this.torrentService.connect();
+
+        this.torrentService.update$.subscribe((result2) => {
+          this.torrents = result2;
+        });
+      },
+      (err) => {
+        this.error = err.error;
+      }
+    );
   }
 
   ngOnDestroy(): void {
-    clearInterval(this.timer);
+    this.torrentService.disconnect();
   }
 
   public selectTorrent(torrent: Torrent): void {

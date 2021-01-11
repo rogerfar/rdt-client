@@ -18,23 +18,25 @@ namespace RdtClient.Service.Services
 
         public static readonly ConcurrentDictionary<Guid, DownloadClient> ActiveDownloadClients = new ConcurrentDictionary<Guid, DownloadClient>();
         public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new ConcurrentDictionary<Guid, UnpackClient>();
-        
+        private readonly IDownloads _downloads;
+        private readonly IRemoteService _remoteService;
+
         private readonly ISettings _settings;
         private readonly ITorrents _torrents;
-        private readonly IDownloads _downloads;
 
-        public TorrentRunner(ISettings settings, ITorrents torrents, IDownloads downloads)
+        public TorrentRunner(ISettings settings, ITorrents torrents, IDownloads downloads, IRemoteService remoteService)
         {
             _settings = settings;
             _torrents = torrents;
             _downloads = downloads;
+            _remoteService = remoteService;
         }
 
         public async Task Initialize()
         {
             // When starting up reset any pending downloads or unpackings so that they are restarted.
             var torrents = await _torrents.Get();
-            
+
             var downloads = torrents.SelectMany(m => m.Downloads)
                                     .Where(m => m.DownloadQueued != null && m.DownloadStarted != null && m.DownloadFinished == null)
                                     .OrderBy(m => m.DownloadQueued);
@@ -43,7 +45,7 @@ namespace RdtClient.Service.Services
             {
                 await _downloads.UpdateDownloadStarted(download.DownloadId, null);
             }
-            
+
             var unpacks = torrents.SelectMany(m => m.Downloads)
                                   .Where(m => m.UnpackingQueued != null && m.UnpackingStarted != null && m.UnpackingFinished == null)
                                   .OrderBy(m => m.DownloadQueued);
@@ -53,7 +55,7 @@ namespace RdtClient.Service.Services
                 await _downloads.UpdateUnpackingStarted(download.DownloadId, null);
             }
         }
-        
+
         public async Task Tick()
         {
             var settingApiKey = await _settings.GetString("RealDebridApiKey");
@@ -62,7 +64,7 @@ namespace RdtClient.Service.Services
             {
                 return;
             }
-            
+
             // Check if any torrents are finished downloading to the host, remove them from the active download list.
             var completedActiveDownloads = ActiveDownloadClients.Where(m => m.Value.Finished).ToList();
 
@@ -78,14 +80,14 @@ namespace RdtClient.Service.Services
                     {
                         await _downloads.UpdateDownloadFinished(downloadId, DateTimeOffset.UtcNow);
                     }
-                    
+
                     ActiveDownloadClients.TryRemove(downloadId, out _);
                 }
             }
-            
+
             // Check if any torrents are finished unpacking, remove them from the active unpack list.
             var completedUnpacks = ActiveUnpackClients.Where(m => m.Value.Finished).ToList();
-            
+
             if (completedUnpacks.Count > 0)
             {
                 foreach (var (downloadId, unpackClient) in completedUnpacks)
@@ -98,24 +100,30 @@ namespace RdtClient.Service.Services
                     {
                         await _downloads.UpdateUnpackingFinished(downloadId, DateTimeOffset.UtcNow);
                     }
-                    
+
                     ActiveUnpackClients.TryRemove(downloadId, out _);
                 }
             }
 
-            // Only poll RealDebrid every 30 seconds
-
+            // Only poll RealDebrid every 5 when a hub is connected, otherwise ever 30 seconds
             if (_nextUpdate < DateTime.UtcNow)
             {
-                _nextUpdate = DateTime.UtcNow.AddSeconds(5);
-                
+                var updateTime = 30;
+
+                if (RdtHub.HasConnections)
+                {
+                    updateTime = 5;
+                }
+
+                _nextUpdate = DateTime.UtcNow.AddSeconds(updateTime);
+
                 await _torrents.Update();
             }
 
             var torrents = await _torrents.Get();
 
             torrents = torrents.Where(m => m.Completed == null).ToList();
-            
+
             // Check if there are any downloads that are queued and can be started.
             var queuedDownloads = torrents.SelectMany(m => m.Downloads)
                                           .Where(m => m.DownloadQueued != null && m.DownloadStarted == null)
@@ -125,7 +133,7 @@ namespace RdtClient.Service.Services
             {
                 await _torrents.Download(download.DownloadId);
             }
-            
+
             // Check if there are any unpacks that are queued and can be started.
             var queuedUnpacks = torrents.SelectMany(m => m.Downloads)
                                         .Where(m => m.UnpackingQueued != null && m.UnpackingStarted == null)
@@ -167,22 +175,23 @@ namespace RdtClient.Service.Services
                     if (torrent.Downloads.Count == 0)
                     {
                         await _torrents.Unrestrict(torrent.TorrentId);
+
                         continue;
                     }
-                    
+
                     // If the torrent has any files that need starting to be downloaded, download them.
                     var downloadsPending = torrent.Downloads
-                                                  .Where(m => m.DownloadStarted == null && 
+                                                  .Where(m => m.DownloadStarted == null &&
                                                               m.DownloadFinished == null)
                                                   .ToList();
-                    
+
                     if (downloadsPending.Count > 0)
                     {
                         foreach (var download in downloadsPending)
                         {
                             await _torrents.Download(download.DownloadId);
                         }
-                        
+
                         continue;
                     }
                 }
@@ -191,22 +200,22 @@ namespace RdtClient.Service.Services
                 {
                     // If all files are finished downloading, move to the unpacking step.
                     var unpackingPending = torrent.Downloads
-                                                  .Where(m => m.DownloadFinished != null && 
-                                                              m.UnpackingStarted == null && 
+                                                  .Where(m => m.DownloadFinished != null &&
+                                                              m.UnpackingStarted == null &&
                                                               m.UnpackingFinished == null)
                                                   .ToList();
-                    
+
                     if (unpackingPending.Count > 0)
                     {
                         foreach (var download in unpackingPending)
                         {
                             await _torrents.Unpack(download.DownloadId);
                         }
-                        
+
                         continue;
                     }
                 }
-                
+
                 // Check if torrent is complete
                 if (torrent.Downloads.Count > 0)
                 {
@@ -224,6 +233,8 @@ namespace RdtClient.Service.Services
                     }
                 }
             }
+            
+            await _remoteService.Update();
         }
     }
 }

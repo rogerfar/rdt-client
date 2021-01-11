@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using RdtClient.Data.Data;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Middleware;
+using RdtClient.Service.Services;
 
 namespace RdtClient.Web
 {
@@ -39,6 +40,11 @@ namespace RdtClient.Web
 
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "wwwroot"; });
 
+            services.AddSignalR(options =>
+            {
+                options.EnableDetailedErrors = true;
+            });
+            
             services.AddHttpContextAccessor();
 
             services.AddCors(options =>
@@ -112,7 +118,11 @@ namespace RdtClient.Web
 
             app.UseAuthorization();
             
-            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHub<RdtHub>("/hub");
+                endpoints.MapControllers();
+            });
 
             app.MapWhen(x => !x.Request.Path.Value.StartsWith("/api"), builder =>
             {
