@@ -241,19 +241,30 @@ namespace RdtClient.Service.Services
 
                 var torrentPath = Path.Combine(downloadPath, torrent.RdName);
 
+                var bytesDone = torrent.RdProgress;
+                var bytesTotal = torrent.RdSize;
+                var speed = torrent.RdSpeed ?? 0;
+
+                if (torrent.Downloads.Count > 0)
+                {
+                    bytesDone = torrent.Downloads.Sum(m => m.BytesDone);
+                    bytesTotal = torrent.Downloads.Sum(m => m.BytesTotal);
+                    speed = (Int32) torrent.Downloads.Average(m => m.Speed);
+                }
+
                 var result = new TorrentInfo
                 {
-                    AddedOn = torrent.RdAdded.ToUnixTimeSeconds(),
-                    AmountLeft = (Int64) (torrent.RdSize * (100.0 - torrent.RdProgress) / 100.0),
+                    AddedOn = torrent.Added.ToUnixTimeSeconds(),
+                    AmountLeft = (Int64) (bytesDone * (100.0 - bytesTotal) / 100.0),
                     AutoTmm = false,
                     Availability = 2,
                     Category = torrent.Category ?? "",
-                    Completed = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0)),
-                    CompletionOn = torrent.RdEnded?.ToUnixTimeSeconds(),
+                    Completed = (Int64) (bytesTotal * (bytesDone / 100.0)),
+                    CompletionOn = torrent.Completed?.ToUnixTimeSeconds(),
                     DlLimit = -1,
-                    Dlspeed = torrent.RdSpeed ?? 0,
-                    Downloaded = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0)),
-                    DownloadedSession = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0)),
+                    Dlspeed = speed,
+                    Downloaded = (Int64) (bytesTotal * (bytesDone / 100.0)),
+                    DownloadedSession = (Int64) (bytesTotal * (bytesDone / 100.0)),
                     Eta = 0,
                     FlPiecePrio = false,
                     ForceStart = false,
@@ -268,7 +279,7 @@ namespace RdtClient.Service.Services
                     NumLeechs = 100,
                     NumSeeds = 100,
                     Priority = ++prio,
-                    Progress = (Int64) (torrent.RdProgress / 100.0),
+                    Progress = (Int64) (bytesDone / 100.0),
                     Ratio = 1,
                     RatioLimit = 1,
                     ContentPath = torrentPath,
@@ -277,16 +288,16 @@ namespace RdtClient.Service.Services
                     SeenComplete = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
                     SeqDl = false,
                     State = "downloading",
-                    Size = torrent.RdSize,
+                    Size = bytesTotal,
                     SuperSeeding = false,
                     Tags = "",
-                    TimeActive = (Int64) (torrent.RdAdded - DateTimeOffset.UtcNow).TotalMinutes,
-                    TotalSize = torrent.RdSize,
+                    TimeActive = (Int64) (torrent.Added - DateTimeOffset.UtcNow).TotalMinutes,
+                    TotalSize = bytesTotal,
                     Tracker = "udp://tracker.opentrackr.org:1337",
                     UpLimit = -1,
-                    Uploaded = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0)),
-                    UploadedSession = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0)),
-                    Upspeed = torrent.RdSpeed ?? 0
+                    Uploaded = (Int64) (bytesTotal * (bytesDone / 100.0)),
+                    UploadedSession = (Int64) (bytesTotal * (bytesDone / 100.0)),
+                    Upspeed = speed
                 };
 
                 if (torrent.Completed.HasValue)
@@ -349,24 +360,35 @@ namespace RdtClient.Service.Services
             {
                 savePath = Path.Combine(savePath, torrent.Category);
             }
+            
+            var bytesDone = torrent.RdProgress;
+            var bytesTotal = torrent.RdSize;
+            var speed = torrent.RdSpeed ?? 0;
+
+            if (torrent.Downloads.Count > 0)
+            {
+                bytesDone = torrent.Downloads.Sum(m => m.BytesDone);
+                bytesTotal = torrent.Downloads.Sum(m => m.BytesTotal);
+                speed = (Int32) torrent.Downloads.Average(m => m.Speed);
+            }
 
             var result = new TorrentProperties
             {
-                AdditionDate = torrent.RdAdded.ToUnixTimeSeconds(),
+                AdditionDate = torrent.Added.ToUnixTimeSeconds(),
                 Comment = "RealDebridClient <https://github.com/rogerfar/rdt-client>",
-                CompletionDate = torrent.RdEnded?.ToUnixTimeSeconds() ?? -1,
+                CompletionDate = torrent.Completed?.ToUnixTimeSeconds() ?? -1,
                 CreatedBy = "RealDebridClient <https://github.com/rogerfar/rdt-client>",
-                CreationDate = torrent.RdAdded.ToUnixTimeSeconds(),
+                CreationDate = torrent.Added.ToUnixTimeSeconds(),
                 DlLimit = -1,
-                DlSpeed = torrent.RdSpeed ?? 0,
-                DlSpeedAvg = torrent.RdSpeed ?? 0,
+                DlSpeed = speed,
+                DlSpeedAvg = speed,
                 Eta = 0,
                 LastSeen = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
                 NbConnections = 0,
                 NbConnectionsLimit = 100,
                 Peers = 0,
                 PeersTotal = 2,
-                PieceSize = torrent.Files.Count > 0 ? torrent.RdSize / torrent.Files.Count : 0,
+                PieceSize = torrent.Files.Count > 0 ? bytesTotal / torrent.Files.Count : 0,
                 PiecesHave = torrent.Downloads.Count(m => m.Completed.HasValue),
                 PiecesNum = torrent.Files.Count,
                 Reannounce = 0,
@@ -375,16 +397,16 @@ namespace RdtClient.Service.Services
                 Seeds = 100,
                 SeedsTotal = 100,
                 ShareRatio = 9999,
-                TimeElapsed = (Int64) (torrent.RdAdded - DateTimeOffset.UtcNow).TotalMinutes,
-                TotalDownloaded = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0)),
-                TotalDownloadedSession = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0)),
-                TotalSize = torrent.RdSize,
-                TotalUploaded = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0)),
-                TotalUploadedSession = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0)),
+                TimeElapsed = (Int64) (torrent.Added - DateTimeOffset.UtcNow).TotalMinutes,
+                TotalDownloaded = (Int64) (bytesTotal * (bytesDone / 100.0)),
+                TotalDownloadedSession = (Int64) (bytesTotal * (bytesDone / 100.0)),
+                TotalSize = bytesTotal,
+                TotalUploaded = (Int64) (bytesTotal * (bytesDone / 100.0)),
+                TotalUploadedSession = (Int64) (bytesTotal * (bytesDone / 100.0)),
                 TotalWasted = 0,
                 UpLimit = -1,
-                UpSpeed = torrent.RdSpeed ?? 0,
-                UpSpeedAvg = torrent.RdSpeed ?? 0
+                UpSpeed = speed,
+                UpSpeedAvg = speed
             };
 
             return result;
