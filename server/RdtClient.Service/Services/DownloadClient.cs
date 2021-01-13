@@ -113,7 +113,7 @@ namespace RdtClient.Service.Services
 
                         while (fileStream.Length < response.ContentLength)
                         {
-                            var read = await stream.ReadAsync(buffer, 0, buffer.Length);
+                            var read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length));
 
                             if (read > 0)
                             {

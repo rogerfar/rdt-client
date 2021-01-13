@@ -63,7 +63,7 @@ namespace RdtClient.Data.Data
 #if DEBUG
                     Value = @"C:\Temp\rdtclient"
 #else 
-                    Value = "D:\Downloads"
+                    Value = @"C:\Downloads"
 #endif
                 },
                 new Setting

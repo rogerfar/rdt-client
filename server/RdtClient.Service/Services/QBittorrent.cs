@@ -235,63 +235,65 @@ namespace RdtClient.Service.Services
             {
                 var downloadPath = savePath;
                 
-                if (!String.IsNullOrWhiteSpace(torrent?.Category))
+                if (!String.IsNullOrWhiteSpace(torrent.Category))
                 {
                     downloadPath = Path.Combine(downloadPath, torrent.Category);
                 }
-                
-                var result = new TorrentInfo();
-                result.AddedOn = torrent.RdAdded.ToUnixTimeSeconds();
-                result.AmountLeft = (Int64) (torrent.RdSize * (100.0 - torrent.RdProgress) / 100.0);
-                result.AutoTmm = false;
-                result.Availability = 2;
-                result.Category = torrent.Category ?? "";
-                result.Completed = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0));
-                result.CompletionOn = torrent.RdEnded?.ToUnixTimeSeconds();
-                result.DlLimit = -1;
-                result.Dlspeed = torrent.RdSpeed ?? 0;
-                result.Downloaded = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0));
-                result.DownloadedSession = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0));
-                result.Eta = 0;
-                result.FlPiecePrio = false;
-                result.ForceStart = false;
-                result.Hash = torrent.Hash;
-                result.LastActivity = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                result.MagnetUri = "";
-                result.MaxRatio = -1;
-                result.MaxSeedingTime = -1;
-                result.Name = torrent.RdName;
-                result.NumComplete = 10;
-                result.NumIncomplete = 0;
-                result.NumLeechs = 100;
-                result.NumSeeds = 100;
-                result.Priority = ++prio;
-                result.Progress = (Int64) (torrent.RdProgress / 100.0);
-                result.Ratio = 1;
-                result.RatioLimit = 1;
-                result.ContentPath = downloadPath;
-                result.SavePath = downloadPath;
-                result.SeedingTimeLimit = 1;
-                result.SeenComplete = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                result.SeqDl = false;
-                result.Size = torrent.RdSize;
-                result.SuperSeeding = false;
-                result.Tags = "";
-                result.TimeActive = (Int64) (torrent.RdAdded - DateTimeOffset.UtcNow).TotalMinutes;
-                result.TotalSize = torrent.RdSize;
-                result.Tracker = "udp://tracker.opentrackr.org:1337";
-                result.UpLimit = -1;
-                result.Uploaded = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0));
-                result.UploadedSession = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0));
-                result.Upspeed = torrent.RdSpeed ?? 0;
-                result.State = torrent.RdStatus switch
+
+                var result = new TorrentInfo
                 {
-                    RealDebridStatus.Processing => "downloading",
-                    RealDebridStatus.WaitingForFileSelection => "downloading",
-                    RealDebridStatus.Downloading => "downloading",
-                    RealDebridStatus.Finished => "pausedUP",
-                    RealDebridStatus.Error => "error",
-                    _ => throw new ArgumentOutOfRangeException()
+                    AddedOn = torrent.RdAdded.ToUnixTimeSeconds(),
+                    AmountLeft = (Int64) (torrent.RdSize * (100.0 - torrent.RdProgress) / 100.0),
+                    AutoTmm = false,
+                    Availability = 2,
+                    Category = torrent.Category ?? "",
+                    Completed = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0)),
+                    CompletionOn = torrent.RdEnded?.ToUnixTimeSeconds(),
+                    DlLimit = -1,
+                    Dlspeed = torrent.RdSpeed ?? 0,
+                    Downloaded = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0)),
+                    DownloadedSession = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0)),
+                    Eta = 0,
+                    FlPiecePrio = false,
+                    ForceStart = false,
+                    Hash = torrent.Hash,
+                    LastActivity = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                    MagnetUri = "",
+                    MaxRatio = -1,
+                    MaxSeedingTime = -1,
+                    Name = torrent.RdName,
+                    NumComplete = 10,
+                    NumIncomplete = 0,
+                    NumLeechs = 100,
+                    NumSeeds = 100,
+                    Priority = ++prio,
+                    Progress = (Int64) (torrent.RdProgress / 100.0),
+                    Ratio = 1,
+                    RatioLimit = 1,
+                    ContentPath = downloadPath,
+                    SavePath = downloadPath,
+                    SeedingTimeLimit = 1,
+                    SeenComplete = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                    SeqDl = false,
+                    Size = torrent.RdSize,
+                    SuperSeeding = false,
+                    Tags = "",
+                    TimeActive = (Int64) (torrent.RdAdded - DateTimeOffset.UtcNow).TotalMinutes,
+                    TotalSize = torrent.RdSize,
+                    Tracker = "udp://tracker.opentrackr.org:1337",
+                    UpLimit = -1,
+                    Uploaded = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0)),
+                    UploadedSession = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0)),
+                    Upspeed = torrent.RdSpeed ?? 0,
+                    State = torrent.RdStatus switch
+                    {
+                        RealDebridStatus.Processing => "downloading",
+                        RealDebridStatus.WaitingForFileSelection => "downloading",
+                        RealDebridStatus.Downloading => "downloading",
+                        RealDebridStatus.Finished => "pausedUP",
+                        RealDebridStatus.Error => "error",
+                        _ => throw new ArgumentOutOfRangeException()
+                    }
                 };
 
                 results.Add(result);

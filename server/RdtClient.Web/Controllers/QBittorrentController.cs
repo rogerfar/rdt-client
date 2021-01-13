@@ -341,7 +341,7 @@ namespace RdtClient.Web.Controllers
         [Route("torrents/setForcestart")]
         [HttpGet]
         [HttpPost]
-        public ActionResult TorrentsSetForceStart([FromQuery] QBTorrentsHashRequest request)
+        public ActionResult TorrentsSetForceStart()
         {
             return Ok();
         }
