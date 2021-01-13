@@ -31,6 +31,7 @@ export class SettingsComponent implements OnInit {
   public settingRealDebridApiKey: string;
   public settingDownloadFolder: string;
   public settingDownloadLimit: number;
+  public settingUnpackLimit: number;
 
   constructor(private settingsService: SettingsService) {}
 
@@ -45,6 +46,7 @@ export class SettingsComponent implements OnInit {
         this.settingRealDebridApiKey = this.getSetting(results, 'RealDebridApiKey');
         this.settingDownloadFolder = this.getSetting(results, 'DownloadFolder');
         this.settingDownloadLimit = parseInt(this.getSetting(results, 'DownloadLimit'), 10);
+        this.settingUnpackLimit = parseInt(this.getSetting(results, 'UnpackLimit'), 10);
       },
       (err) => {
         this.error = err.error;
@@ -68,6 +70,10 @@ export class SettingsComponent implements OnInit {
       {
         settingId: 'DownloadLimit',
         value: (this.settingDownloadLimit ?? 10).toString(),
+      },
+      {
+        settingId: 'UnpackLimit',
+        value: (this.settingUnpackLimit ?? 1).toString(),
       },
     ];
 

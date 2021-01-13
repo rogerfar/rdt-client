@@ -2,4 +2,11 @@ table {
   tr {
     cursor: pointer;
   }
+
+  tr.separator {
+    td {
+      font-size: smaller;
+      font-weight: bold;
+    }
+  }
 }

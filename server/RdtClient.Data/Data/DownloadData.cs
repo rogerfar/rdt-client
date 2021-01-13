@@ -18,6 +18,7 @@ namespace RdtClient.Data.Data
         Task UpdateUnpackingQueued(Guid downloadId, DateTimeOffset? dateTime);
         Task UpdateUnpackingStarted(Guid downloadId, DateTimeOffset? dateTime);
         Task UpdateUnpackingFinished(Guid downloadId, DateTimeOffset? dateTime);
+        Task UpdateCompleted(Guid downloadId, DateTimeOffset? dateTime);
         Task UpdateError(Guid downloadId, String error);
         Task DeleteForTorrent(Guid torrentId);
     }
@@ -122,13 +123,22 @@ namespace RdtClient.Data.Data
 
             await _dataContext.SaveChangesAsync();
         }
+        
+        public async Task UpdateCompleted(Guid downloadId, DateTimeOffset? dateTime)
+        {
+            var dbDownload = await _dataContext.Downloads
+                                               .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+            dbDownload.Completed = dateTime;
+
+            await _dataContext.SaveChangesAsync();
+        }
 
         public async Task UpdateError(Guid downloadId, String error)
         {
             var dbDownload = await _dataContext.Downloads
                                                .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
-            dbDownload.Completed = DateTimeOffset.UtcNow;
             dbDownload.Error = error;
 
             await _dataContext.SaveChangesAsync();

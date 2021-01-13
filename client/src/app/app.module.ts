@@ -1,24 +1,24 @@
-import { BrowserModule } from '@angular/platform-browser';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
-import { NgxFilesizeModule, FileSizePipe } from 'ngx-filesize';
-
+import { BrowserModule } from '@angular/platform-browser';
+import { curray } from 'curray';
+import { FileSizePipe, NgxFilesizeModule } from 'ngx-filesize';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { MainLayoutComponent } from './main-layout/main-layout.component';
-import { NavbarComponent } from './navbar/navbar.component';
-import { AddNewTorrentComponent } from './navbar/add-new-torrent/add-new-torrent.component';
-import { TorrentTableComponent } from './torrent-table/torrent-table.component';
-import { TorrentRowComponent } from './torrent-row/torrent-row.component';
-import { TorrentFileComponent } from './torrent-file/torrent-file.component';
-import { SettingsComponent } from './navbar/settings/settings.component';
-import { TorrentStatusPipe } from './torrent-status.pipe';
-import { FileStatusPipe } from './file-status.pipe';
-import { LoginComponent } from './login/login.component';
 import { AuthInterceptor } from './auth.interceptor';
-import { curray } from 'curray';
+import { DownloadStatusPipe } from './download-status.pipe';
+import { LoginComponent } from './login/login.component';
+import { MainLayoutComponent } from './main-layout/main-layout.component';
+import { AddNewTorrentComponent } from './navbar/add-new-torrent/add-new-torrent.component';
+import { NavbarComponent } from './navbar/navbar.component';
+import { SettingsComponent } from './navbar/settings/settings.component';
 import { SetupComponent } from './setup/setup.component';
+import { TorrentDownloadComponent } from './torrent-download/torrent-download.component';
+import { TorrentFileComponent } from './torrent-file/torrent-file.component';
+import { TorrentRowComponent } from './torrent-row/torrent-row.component';
+import { TorrentStatusPipe } from './torrent-status.pipe';
+import { TorrentTableComponent } from './torrent-table/torrent-table.component';
 
 curray();
 
@@ -33,21 +33,13 @@ curray();
     TorrentFileComponent,
     SettingsComponent,
     TorrentStatusPipe,
-    FileStatusPipe,
+    DownloadStatusPipe,
     LoginComponent,
     SetupComponent,
+    TorrentDownloadComponent,
   ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    FormsModule,
-    HttpClientModule,
-    NgxFilesizeModule,
-  ],
-  providers: [
-    FileSizePipe,
-    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
-  ],
+  imports: [BrowserModule, AppRoutingModule, FormsModule, HttpClientModule, NgxFilesizeModule],
+  providers: [FileSizePipe, { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

@@ -1,6 +1,5 @@
-import { Component, OnInit, Input } from '@angular/core';
-import { Torrent, TorrentFile } from '../models/torrent.model';
-import { TorrentService } from '../torrent.service';
+import { Component, Input, OnInit } from '@angular/core';
+import { TorrentFile } from '../models/torrent.model';
 
 @Component({
   selector: '[app-torrent-file]',
@@ -11,7 +10,7 @@ export class TorrentFileComponent implements OnInit {
   @Input()
   public file: TorrentFile;
 
-  constructor(private torrentService: TorrentService) {}
+  constructor() {}
 
   ngOnInit(): void {}
 }

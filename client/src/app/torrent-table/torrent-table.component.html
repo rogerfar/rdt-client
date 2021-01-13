@@ -5,8 +5,8 @@
 <div class="table-container">
   <table class="table is-fullwidth is-hoverable">
     <colgroup>
-      <col style="width: calc(40% - 550px)" />
-      <col style="width: 15%" />
+      <col style="width: calc(60% - 650px)" />
+      <col style="width: 100px" />
       <col style="width: 150px" />
       <col style="width: 150px" />
       <col style="width: 150px" />
@@ -16,10 +16,10 @@
     <thead>
       <tr>
         <th>Name</th>
-        <th>Size</th>
         <th>Files</th>
         <th>Downloads</th>
         <th>Auto</th>
+        <th>Size</th>
         <th>Status</th>
         <th>Action</th>
       </tr>
@@ -33,6 +33,13 @@
           (delete)="showDeleteModal($event)"
         ></tr>
         <ng-container *ngIf="showFiles[torrent.torrentId]">
+          <tr class="separator">
+            <td colspan="10">Downloads</td>
+          </tr>
+          <tr app-torrent-download [download]="download" *ngFor="let download of torrent.downloads"></tr>
+          <tr class="separator">
+            <td colspan="10">Files in torrent</td>
+          </tr>
           <tr app-torrent-file [file]="file" *ngFor="let file of torrent.files"></tr>
         </ng-container>
       </ng-container>

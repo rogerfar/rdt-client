@@ -45,21 +45,6 @@ export class TorrentTableComponent implements OnInit, OnDestroy {
 
   public selectTorrent(torrent: Torrent): void {
     this.showFiles[torrent.torrentId] = !this.showFiles[torrent.torrentId];
-
-    if (this.showFiles[torrent.torrentId]) {
-      this.torrentService.getDetails(torrent.torrentId).subscribe((result) => {
-        torrent.files = result.files;
-        torrent.downloads = result.downloads;
-
-        torrent.files.forEach((file) => {
-          const downloads = torrent.downloads.filter((m) => m.link === file.path);
-
-          if (downloads.length > 0) {
-            file.download = downloads[0];
-          }
-        });
-      });
-    }
   }
 
   public trackByMethod(index: number, el: Torrent): string {

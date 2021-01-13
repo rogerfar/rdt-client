@@ -17,6 +17,7 @@ namespace RdtClient.Service.Services
         Task UpdateUnpackingQueued(Guid downloadId, DateTimeOffset? dateTime);
         Task UpdateUnpackingStarted(Guid downloadId, DateTimeOffset? dateTime);
         Task UpdateUnpackingFinished(Guid downloadId, DateTimeOffset? dateTime);
+        Task UpdateCompleted(Guid downloadId, DateTimeOffset? dateTime);
         Task UpdateError(Guid downloadId, String error);
         Task DeleteForTorrent(Guid torrentId);
     }
@@ -73,6 +74,11 @@ namespace RdtClient.Service.Services
         public async Task UpdateUnpackingFinished(Guid downloadId, DateTimeOffset? dateTime)
         {
             await _downloadData.UpdateUnpackingFinished(downloadId, dateTime);
+        }
+
+        public async Task UpdateCompleted(Guid downloadId, DateTimeOffset? dateTime)
+        {
+            await _downloadData.UpdateCompleted(downloadId, dateTime);
         }
 
         public async Task UpdateError(Guid downloadId, String error)

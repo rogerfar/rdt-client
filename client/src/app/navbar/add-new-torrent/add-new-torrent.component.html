@@ -56,8 +56,8 @@
           Remove torrent when finished downloading on host
         </label>
       </div>
-      <div class="notification is-danger is-light" *ngIf="error?.length > 0">
-        Cannot add torrent: {{ error }}
+      <div class="notification is-danger is-light" *ngIf="error">
+        Cannot add torrent: {{ error | json }}
       </div>
     </section>
     <footer class="modal-card-foot">

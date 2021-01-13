@@ -46,7 +46,8 @@
         <span class="icon">
           <i class="fas fa-euro-sign" aria-hidden="true"></i>
         </span>
-        <span>Premium Status: {{ profile.expiration | date }}</span>
+        <span *ngIf="profile.expiration">Premium Status: {{ profile.expiration | date }}</span>
+        <span *ngIf="!profile.expiration" class="no-premium">Not premium</span>
       </a>
     </div>
 

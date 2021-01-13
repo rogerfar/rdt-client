@@ -31,10 +31,6 @@ export class TorrentService {
     return this.http.get<Torrent[]>(`/Api/Torrents`);
   }
 
-  public getDetails(torrentId: string): Observable<Torrent> {
-    return this.http.get<Torrent>(`/Api/Torrents/${torrentId}`);
-  }
-
   public uploadMagnet(
     magnetLink: string,
     autoDownload: boolean,

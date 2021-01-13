@@ -61,6 +61,12 @@ namespace RdtClient.Data.Data
                     SettingId = "DownloadLimit",
                     Type = "Int32",
                     Value = "10"
+                },
+                new Setting
+                {
+                    SettingId = "UnpackLimit",
+                    Type = "Int32",
+                    Value = "1"
                 }
             };
 

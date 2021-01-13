@@ -1,0 +1,11 @@
+<td colspan="4">
+  <i class="fas fa-download" aria-hidden="true"></i>
+  {{ download.link }}
+</td>
+<td>
+  {{ download.bytesTotal | filesize }}
+</td>
+<td>
+  {{ download | downloadStatus }}
+</td>
+<td></td>

@@ -234,8 +234,7 @@ namespace RdtClient.Service.Services
 
         public async Task Unpack(Guid downloadId)
         {
-            //var settingUnpackLimit = await _settings.GetNumber("UnpackLimit");
-            var settingUnpackLimit = 1;
+            var settingUnpackLimit = await _settings.GetNumber("UnpackLimit");
             var settingDownloadFolder = await _settings.GetString("DownloadFolder");
             
             var download = await _downloads.GetById(downloadId);

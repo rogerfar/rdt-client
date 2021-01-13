@@ -18,11 +18,13 @@ namespace RdtClient.Web.Controllers
     {
         private readonly ITorrents _torrents;
         private readonly IDownloads _downloads;
+        private readonly ITorrentRunner _torrentRunner;
 
-        public TorrentsController(ITorrents torrents, IDownloads downloads)
+        public TorrentsController(ITorrents torrents, IDownloads downloads, ITorrentRunner torrentRunner)
         {
             _torrents = torrents;
             _downloads = downloads;
+            _torrentRunner = torrentRunner;
         }
 
         [HttpGet]
@@ -40,19 +42,18 @@ namespace RdtClient.Web.Controllers
             return Ok(results);
         }
 
+        /// <summary>
+        /// Used for debugging only. Force a tick.
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
-        [Route("{id}")]
-        public async Task<ActionResult<Torrent>> Get(Guid id)
+        [Route("Tick")]
+        public async Task<ActionResult> Tick()
         {
-            var result = await _torrents.GetById(id);
+            await _torrentRunner.Tick();
 
-            if (result == null)
-            {
-                throw new Exception("Torrent not found");
-            }
-
-            return Ok(result);
-            }
+            return Ok();
+        }
 
         [HttpPost]
         [Route("UploadFile")]

@@ -9,59 +9,38 @@
       <div class="field">
         <label class="label">Real-Debrid API Key</label>
         <div class="control">
-          <input
-            class="input"
-            type="text"
-            maxlength="100"
-            [(ngModel)]="settingRealDebridApiKey"
-          />
+          <input class="input" type="text" maxlength="100" [(ngModel)]="settingRealDebridApiKey" />
         </div>
         <p class="help">
           You can find your API key here:
-          <a
-            href="https://real-debrid.com/apitoken"
-            target="_blank"
-            rel="noopener"
-            >https://real-debrid.com/apitoken</a
+          <a href="https://real-debrid.com/apitoken" target="_blank" rel="noopener">https://real-debrid.com/apitoken</a
           >.
         </p>
       </div>
       <div class="field">
         <label class="label">Download folder</label>
         <div class="control">
-          <input
-            class="input"
-            type="text"
-            maxlength="1000"
-            [(ngModel)]="settingDownloadFolder"
-          />
+          <input class="input" type="text" maxlength="1000" [(ngModel)]="settingDownloadFolder" />
         </div>
         <p class="help">Path on the host where RealDebrid Client is hosted.</p>
       </div>
       <div class="field">
         <label class="label">Maximum parallel downloads</label>
         <div class="control">
-          <input
-            class="input"
-            type="number"
-            max="100"
-            min="1"
-            [(ngModel)]="settingDownloadLimit"
-          />
+          <input class="input" type="number" max="100" min="1" [(ngModel)]="settingDownloadLimit" />
         </div>
-        <p class="help">
-          Maximum amount of torrents that get downloaded to your host at the
-          same time.
-        </p>
+        <p class="help">Maximum amount of torrents that get downloaded to your host at the same time.</p>
       </div>
-      <div class="notification is-danger is-light" *ngIf="error?.length > 0">
-        Error saving settings: {{ error }}
+      <div class="field">
+        <label class="label">Maximum unpack processes</label>
+        <div class="control">
+          <input class="input" type="number" max="100" min="1" [(ngModel)]="settingUnpackLimit" />
+        </div>
+        <p class="help">Maximum amount of downloads that get unpacked on your host at the same time.</p>
       </div>
+      <div class="notification is-danger is-light" *ngIf="error?.length > 0">Error saving settings: {{ error }}</div>
 
-      <div
-        class="notification is-danger is-light"
-        *ngIf="testFolderError?.length > 0"
-      >
+      <div class="notification is-danger is-light" *ngIf="testFolderError?.length > 0">
         Could not test your download folder<br />
         {{ testFolderError }}
       </div>
@@ -71,30 +50,13 @@
       </div>
     </section>
     <footer class="modal-card-foot">
-      <button
-        class="button is-success"
-        (click)="ok()"
-        [disabled]="saving"
-        [ngClass]="{ 'is-loading': saving }"
-      >
+      <button class="button is-success" (click)="ok()" [disabled]="saving" [ngClass]="{ 'is-loading': saving }">
         Save Settings
       </button>
-      <button
-        class="button is-warning"
-        (click)="test()"
-        [disabled]="saving"
-        [ngClass]="{ 'is-loading': saving }"
-      >
+      <button class="button is-warning" (click)="test()" [disabled]="saving" [ngClass]="{ 'is-loading': saving }">
         Test permissions
       </button>
-      <button
-        class="button"
-        (click)="cancel()"
-        [disabled]="saving"
-        [ngClass]="{ 'is-loading': saving }"
-      >
-        Cancel
-      </button>
+      <button class="button" (click)="cancel()" [disabled]="saving" [ngClass]="{ 'is-loading': saving }">Cancel</button>
     </footer>
   </div>
 </div>

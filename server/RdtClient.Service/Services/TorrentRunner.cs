@@ -36,7 +36,9 @@ namespace RdtClient.Service.Services
         {
             // When starting up reset any pending downloads or unpackings so that they are restarted.
             var torrents = await _torrents.Get();
-
+            
+            torrents = torrents.Where(m => m.Completed == null).ToList();
+            
             var downloads = torrents.SelectMany(m => m.Downloads)
                                     .Where(m => m.DownloadQueued != null && m.DownloadStarted != null && m.DownloadFinished == null)
                                     .OrderBy(m => m.DownloadQueued);
@@ -75,6 +77,7 @@ namespace RdtClient.Service.Services
                     if (downloadClient.Error != null)
                     {
                         await _downloads.UpdateError(downloadId, downloadClient.Error);
+                        await _downloads.UpdateCompleted(downloadId, DateTimeOffset.UtcNow);
                     }
                     else
                     {
@@ -95,10 +98,12 @@ namespace RdtClient.Service.Services
                     if (unpackClient.Error != null)
                     {
                         await _downloads.UpdateError(downloadId, unpackClient.Error);
+                        await _downloads.UpdateCompleted(downloadId, DateTimeOffset.UtcNow);
                     }
                     else
                     {
                         await _downloads.UpdateUnpackingFinished(downloadId, DateTimeOffset.UtcNow);
+                        await _downloads.UpdateCompleted(downloadId, DateTimeOffset.UtcNow);
                     }
 
                     ActiveUnpackClients.TryRemove(downloadId, out _);
