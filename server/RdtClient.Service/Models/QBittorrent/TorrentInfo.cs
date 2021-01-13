@@ -27,6 +27,9 @@ namespace RdtClient.Service.Models.QBittorrent
 
             [JsonProperty("completion_on")]
             public Int64? CompletionOn { get; set; }
+            
+            [JsonProperty(PropertyName = "content_path")]
+            public String ContentPath { get; set; }
 
             [JsonProperty("dl_limit")]
             public Int64 DlLimit { get; set; }
