@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using RdtClient.Data.Enums;
 using RdtClient.Service.Models.QBittorrent;
 using RdtClient.Service.Models.QBittorrent.QuickType;
 
