@@ -307,6 +307,31 @@ namespace RdtClient.Web.Controllers
         public async Task<ActionResult<IDictionary<String, TorrentCategory>>> TorrentsCategories()
         {
             var categories = await _qBittorrent.TorrentsCategories();
+
+            var savePath = await _qBittorrent.AppDefaultSavePath();
+            
+            if (!categories.ContainsKey("radarr"))
+            {
+                var radarrPath = Path.Combine(savePath, "radarr");
+                
+                categories.Add("radarr", new TorrentCategory
+                               {
+                                   Name = "radarr",
+                                   SavePath = radarrPath
+                               });
+            }
+            
+            if (!categories.ContainsKey("sonarr"))
+            {
+                var sonarrPath = Path.Combine(savePath, "sonarr");
+                
+                categories.Add("sonarr", new TorrentCategory
+                               {
+                                   Name = "sonarr",
+                                   SavePath = sonarrPath
+                               });
+            }
+            
             return Ok(categories);
         }
 
