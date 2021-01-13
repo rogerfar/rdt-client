@@ -277,6 +277,7 @@ namespace RdtClient.Service.Services
                     SeedingTimeLimit = 1,
                     SeenComplete = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
                     SeqDl = false,
+                    State = "downloading",
                     Size = torrent.RdSize,
                     SuperSeeding = false,
                     Tags = "",
@@ -286,18 +287,25 @@ namespace RdtClient.Service.Services
                     UpLimit = -1,
                     Uploaded = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0)),
                     UploadedSession = (Int64) (torrent.RdSize * (torrent.RdProgress / 100.0)),
-                    Upspeed = torrent.RdSpeed ?? 0,
-                    State = torrent.RdStatus switch
-                    {
-                        RealDebridStatus.Processing => "downloading",
-                        RealDebridStatus.WaitingForFileSelection => "downloading",
-                        RealDebridStatus.Downloading => "downloading",
-                        RealDebridStatus.Finished => "pausedUP",
-                        RealDebridStatus.Error => "error",
-                        _ => throw new ArgumentOutOfRangeException()
-                    }
+                    Upspeed = torrent.RdSpeed ?? 0
                 };
 
+                if (torrent.Completed.HasValue)
+                {
+                    // Indicates completed torrent and not seeding anymore.
+                    result.State = "pausedUP";
+
+                    if (torrent.Downloads.Count > 0)
+                    {
+                        var error = torrent.Downloads.FirstOrDefault(m => m.Error != null);
+
+                        if (error != null)
+                        {
+                            result.State = "error";
+                        }
+                    }
+                }
+                
                 results.Add(result);
             }
 
