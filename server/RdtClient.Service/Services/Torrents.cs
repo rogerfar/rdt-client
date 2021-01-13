@@ -165,13 +165,12 @@ namespace RdtClient.Service.Services
             {
                 if (deleteLocalFiles)
                 {
-                    var settingDownloadPath = await _settings.GetString("DownloadPath");
+                    var downloadPath = await DownloadPath(torrent);
+                    downloadPath = Path.Combine(downloadPath, torrent.RdName);
                     
-                    var torrentPath = Path.Combine(settingDownloadPath, torrent.RdName);
-
-                    if (Directory.Exists(torrentPath))
+                    if (Directory.Exists(downloadPath))
                     {
-                        Directory.Delete(torrentPath, true);
+                        Directory.Delete(downloadPath, true);
                     }
                 }
                 
@@ -210,9 +209,10 @@ namespace RdtClient.Service.Services
         public async Task Download(Guid downloadId)
         {
             var settingDownloadLimit = await _settings.GetNumber("DownloadLimit");
-            var settingDownloadPath = await _settings.GetString("DownloadPath");
             
             var download = await _downloads.GetById(downloadId);
+            
+            var downloadPath = await DownloadPath(download.Torrent);
             
             // Check if we have reached the download limit, if so queue the download, but don't start it.
             if (TorrentRunner.ActiveDownloadClients.Count >= settingDownloadLimit)
@@ -224,7 +224,7 @@ namespace RdtClient.Service.Services
             await _downloads.UpdateDownloadStarted(download.DownloadId, download.DownloadStarted);
             
             // Start the download process
-            var downloadClient = new DownloadClient(download, settingDownloadPath);
+            var downloadClient = new DownloadClient(download, downloadPath);
 
             if (TorrentRunner.ActiveDownloadClients.TryAdd(downloadId, downloadClient))
             {
@@ -235,9 +235,10 @@ namespace RdtClient.Service.Services
         public async Task Unpack(Guid downloadId)
         {
             var settingUnpackLimit = await _settings.GetNumber("UnpackLimit");
-            var settingDownloadPath = await _settings.GetString("DownloadPath");
             
             var download = await _downloads.GetById(downloadId);
+            
+            var downloadPath = await DownloadPath(download.Torrent);
             
             // Check if the file is even unpackable.
             var uri = new Uri(download.Link);
@@ -270,7 +271,7 @@ namespace RdtClient.Service.Services
             await _downloads.UpdateUnpackingStarted(download.DownloadId, download.UnpackingStarted);
             
             // Start the unpacking process
-            var unpackClient = new UnpackClient(download, settingDownloadPath);
+            var unpackClient = new UnpackClient(download, downloadPath);
 
             if (TorrentRunner.ActiveUnpackClients.TryAdd(downloadId, unpackClient))
             {
@@ -386,6 +387,18 @@ namespace RdtClient.Service.Services
         public async Task UpdateComplete(Guid torrentId, DateTimeOffset datetime)
         {
             await _torrentData.UpdateComplete(torrentId, datetime);
+        }
+
+        private async Task<String> DownloadPath(Torrent torrent)
+        {
+            var settingDownloadPath = await _settings.GetString("DownloadPath");
+            
+            if (!String.IsNullOrWhiteSpace(torrent.Category))
+            {
+                settingDownloadPath = Path.Combine(settingDownloadPath, torrent.Category);
+            }
+
+            return settingDownloadPath;
         }
 
         private async Task Update(Torrent torrent, RDNET.Torrent rdTorrent)

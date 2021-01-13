@@ -216,15 +216,16 @@ namespace RdtClient.Service.Services
             var downloadPath = await _settings.GetString("MappedPath");
             downloadPath = downloadPath.TrimEnd('\\')
                                        .TrimEnd('/');
+            
             downloadPath += Path.DirectorySeparatorChar;
-
+            
             return downloadPath;
         }
 
         public async Task<IList<TorrentInfo>> TorrentInfo()
         {
             var savePath = await AppDefaultSavePath();
-
+            
             var results = new List<TorrentInfo>();
 
             var torrents = await _torrents.Get();
@@ -232,6 +233,13 @@ namespace RdtClient.Service.Services
             var prio = 0;
             foreach (var torrent in torrents)
             {
+                var downloadPath = savePath;
+                
+                if (!String.IsNullOrWhiteSpace(torrent?.Category))
+                {
+                    downloadPath = Path.Combine(downloadPath, torrent.Category);
+                }
+                
                 var result = new TorrentInfo();
                 result.AddedOn = torrent.RdAdded.ToUnixTimeSeconds();
                 result.AmountLeft = (Int64) (torrent.RdSize * (100.0 - torrent.RdProgress) / 100.0);
@@ -261,7 +269,8 @@ namespace RdtClient.Service.Services
                 result.Progress = (Int64) (torrent.RdProgress / 100.0);
                 result.Ratio = 1;
                 result.RatioLimit = 1;
-                result.SavePath = savePath;
+                result.ContentPath = downloadPath;
+                result.SavePath = downloadPath;
                 result.SeedingTimeLimit = 1;
                 result.SeenComplete = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                 result.SeqDl = false;
@@ -317,12 +326,17 @@ namespace RdtClient.Service.Services
         public async Task<TorrentProperties> TorrentProperties(String hash)
         {
             var savePath = await AppDefaultSavePath();
-
+            
             var torrent = await _torrents.GetByHash(hash);
 
             if (torrent == null)
             {
                 return null;
+            }
+            
+            if (!String.IsNullOrWhiteSpace(torrent.Category))
+            {
+                savePath = Path.Combine(savePath, torrent.Category);
             }
 
             var result = new TorrentProperties
@@ -374,19 +388,7 @@ namespace RdtClient.Service.Services
                 return;
             }
 
-            await _torrents.Delete(torrent.TorrentId, true, true, true);
-
-            if (deleteFiles)
-            {
-                var savePath = await AppDefaultSavePath();
-
-                var torrentPath = Path.Combine(savePath, torrent.RdName);
-
-                if (Directory.Exists(torrentPath))
-                {
-                    Directory.Delete(torrentPath, true);
-                }
-            }
+            await _torrents.Delete(torrent.TorrentId, true, true, deleteFiles);
         }
 
         public async Task TorrentsAdd(String magnetLink, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete)
@@ -423,7 +425,7 @@ namespace RdtClient.Service.Services
                                                        m => new TorrentCategory
                                                        {
                                                            Name = m.Category,
-                                                           SavePath = savePath
+                                                           SavePath = Path.Combine(savePath, m.Category)
                                                        });
             }
 

@@ -68,7 +68,8 @@ Replace the paths in `volumes` as in the above step.
 1. Browse to [http://127.0.0.1:6500](http://127.0.0.1:6500) (or the path of your server).
 1. The very first credentials you enter in will be remembered for future logins.
 1. Click on `Settings` on the top and enter your Real-Debrid API key (found here: [https://real-debrid.com/apitoken](https://real-debrid.com/apitoken).
-1. Change your download path if needed. When using Docker, this path will be the path on your local machine.
+1. If you are using docker then the `Download path` setting needs to be the same as in your docker file mapping. By default this is `/data/downloads`
+1. Same goes for `Mapped path`, but this is the destination path from your docker mapping. This is a path on your host.
 1. Save your settings.
 
 ### Troubleshooting
@@ -89,6 +90,8 @@ RdtClient emulates the qBittorrent web protocol and allow applications to use th
 1. Leave the other settings as is.
 1. Hit `Test` and then `Save` if all is well.
 1. Sonarr will now think you have a regular Torrent client hooked up.
+
+When downloading files it will append the `category` setting in the Sonarr/Radarr Download Client setting. For example if your Remote Path setting is set to `C:\Downloads` and your Sonarr Download Client setting `category` is set to `sonarr` files will be downloaded to `C:\Downloads\sonarr`.
 
 Notice: the progress and ETA reported in Sonarr's Activity tab will not be accurate, but it will report the torrent as completed so it can be processed after it is done downloading.
 

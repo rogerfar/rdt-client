@@ -28,7 +28,7 @@ namespace RdtClient.Service.Services
             _logger.LogInformation("TaskRunner started.");
 
             await torrentRunner.Initialize();
-
+            
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
