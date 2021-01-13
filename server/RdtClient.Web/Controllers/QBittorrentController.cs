@@ -64,7 +64,7 @@ namespace RdtClient.Web.Controllers
         [HttpPost]
         public ActionResult AppVersion()
         {
-            return Ok("v4.2.3");
+            return Ok("v4.3.2");
         }
 
         [Route("app/webapiVersion")]
@@ -72,7 +72,7 @@ namespace RdtClient.Web.Controllers
         [HttpPost]
         public ActionResult AppWebVersion()
         {
-            return Ok("2.4.1");
+            return Ok("2.7");
         }
 
         [Route("app/buildInfo")]
@@ -83,10 +83,10 @@ namespace RdtClient.Web.Controllers
             var result = new AppBuildInfo
             {
                 Bitness = 64,
-                Boost = "1.72.0",
-                Libtorrent = "1.2.5.0",
-                Openssl = "1.1.1f",
-                Qt = "5.13.2",
+                Boost = "1.75.0",
+                Libtorrent = "1.2.11.0",
+                Openssl = "1.1.1i",
+                Qt = "5.15.2",
                 Zlib = "1.2.11"
             };
             return Ok(result);
@@ -308,27 +308,21 @@ namespace RdtClient.Web.Controllers
         {
             var categories = await _qBittorrent.TorrentsCategories();
 
-            var savePath = await _qBittorrent.AppDefaultSavePath();
-            
             if (!categories.ContainsKey("radarr"))
             {
-                var radarrPath = Path.Combine(savePath, "radarr");
-                
                 categories.Add("radarr", new TorrentCategory
                                {
                                    Name = "radarr",
-                                   SavePath = radarrPath
+                                   SavePath = ""
                                });
             }
             
             if (!categories.ContainsKey("sonarr"))
             {
-                var sonarrPath = Path.Combine(savePath, "sonarr");
-                
                 categories.Add("sonarr", new TorrentCategory
                                {
                                    Name = "sonarr",
-                                   SavePath = sonarrPath
+                                   SavePath = ""
                                });
             }
             

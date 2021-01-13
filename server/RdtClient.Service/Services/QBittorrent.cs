@@ -458,7 +458,7 @@ namespace RdtClient.Service.Services
                                                        m => new TorrentCategory
                                                        {
                                                            Name = m.Category,
-                                                           SavePath = Path.Combine(savePath, m.Category)
+                                                           SavePath = ""
                                                        });
             }
 
