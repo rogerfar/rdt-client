@@ -86,7 +86,7 @@ namespace RdtClient.Service.Models.QBittorrent
             public Int64 Priority { get; set; }
 
             [JsonProperty("progress")]
-            public Decimal Progress { get; set; }
+            public Single Progress { get; set; }
 
             [JsonProperty("ratio")]
             public Int64 Ratio { get; set; }
