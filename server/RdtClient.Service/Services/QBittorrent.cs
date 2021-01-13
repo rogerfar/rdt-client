@@ -213,7 +213,7 @@ namespace RdtClient.Service.Services
 
         public async Task<String> AppDefaultSavePath()
         {
-            var downloadPath = await _settings.GetString("DownloadFolder");
+            var downloadPath = await _settings.GetString("MappedPath");
             downloadPath = downloadPath.TrimEnd('\\')
                                        .TrimEnd('/');
             downloadPath += Path.DirectorySeparatorChar;

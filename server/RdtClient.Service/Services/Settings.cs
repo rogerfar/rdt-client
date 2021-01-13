@@ -13,7 +13,7 @@ namespace RdtClient.Service.Services
         Task Update(IList<Setting> settings);
         Task<String> GetString(String key);
         Task<Int32> GetNumber(String key);
-        Task TestFolder(String folder);
+        Task TestPath(String path);
     }
 
     public class Settings : ISettings
@@ -59,21 +59,21 @@ namespace RdtClient.Service.Services
             return Int32.Parse(setting.Value);
         }
 
-        public async Task TestFolder(String folder)
+        public async Task TestPath(String path)
         {
-            if (String.IsNullOrWhiteSpace(folder))
+            if (String.IsNullOrWhiteSpace(path))
             {
-                throw new Exception("Folder path is not set");
+                throw new Exception("Path is not set");
             }
 
-            folder = folder.TrimEnd('/').TrimEnd('\\');
+            path = path.TrimEnd('/').TrimEnd('\\');
 
-            if (!Directory.Exists(folder))
+            if (!Directory.Exists(path))
             {
-                throw new Exception($"Folder {folder} does not exist");
+                throw new Exception($"Path {path} does not exist");
             }
 
-            var testFile = $"{folder}/test.txt";
+            var testFile = $"{path}/test.txt";
 
             await File.WriteAllTextAsync(testFile, "RealDebridClient Test File, you can remove this file.");
             File.Delete(testFile);

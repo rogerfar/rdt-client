@@ -48,13 +48,23 @@ namespace RdtClient.Data.Data
                 },
                 new Setting
                 {
-                    SettingId = "DownloadFolder",
+                    SettingId = "DownloadPath",
                     Type = "String",
                     #if DEBUG
                     Value = @"C:\Temp\rdtclient"
                     #else 
                     Value = "/data/downloads"
                     #endif
+                },
+                new Setting
+                {
+                    SettingId = "MappedPath",
+                    Type = "String",
+#if DEBUG
+                    Value = @"C:\Temp\rdtclient"
+#else 
+                    Value = "D:\Downloads"
+#endif
                 },
                 new Setting
                 {
@@ -67,6 +77,12 @@ namespace RdtClient.Data.Data
                     SettingId = "UnpackLimit",
                     Type = "Int32",
                     Value = "1"
+                },
+                new Setting
+                {
+                    SettingId = "MinFileSize",
+                    Type = "Int32",
+                    Value = "0"
                 }
             };
 

@@ -49,10 +49,10 @@ namespace RdtClient.Web.Controllers
         }
         
         [HttpPost]
-        [Route("TestFolder")]
-        public async Task<ActionResult<Profile>> TestFolder([FromBody] SettingsControllerTestFolderRequest request)
+        [Route("TestPath")]
+        public async Task<ActionResult<Profile>> TestPath([FromBody] SettingsControllerTestPathRequest request)
         {
-            await _settings.TestFolder(request.Folder);
+            await _settings.TestPath(request.Path);
 
             return Ok();
         }
@@ -63,8 +63,8 @@ namespace RdtClient.Web.Controllers
         public IList<Setting> Settings { get; set; }
     }
 
-    public class SettingsControllerTestFolderRequest
+    public class SettingsControllerTestPathRequest
     {
-        public String Folder { get; set; }
+        public String Path { get; set; }
     }
 }

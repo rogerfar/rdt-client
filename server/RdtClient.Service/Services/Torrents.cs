@@ -165,9 +165,9 @@ namespace RdtClient.Service.Services
             {
                 if (deleteLocalFiles)
                 {
-                    var settingDownloadFolder = await _settings.GetString("DownloadFolder");
+                    var settingDownloadPath = await _settings.GetString("DownloadPath");
                     
-                    var torrentPath = Path.Combine(settingDownloadFolder, torrent.RdName);
+                    var torrentPath = Path.Combine(settingDownloadPath, torrent.RdName);
 
                     if (Directory.Exists(torrentPath))
                     {
@@ -210,7 +210,7 @@ namespace RdtClient.Service.Services
         public async Task Download(Guid downloadId)
         {
             var settingDownloadLimit = await _settings.GetNumber("DownloadLimit");
-            var settingDownloadFolder = await _settings.GetString("DownloadFolder");
+            var settingDownloadPath = await _settings.GetString("DownloadPath");
             
             var download = await _downloads.GetById(downloadId);
             
@@ -224,7 +224,7 @@ namespace RdtClient.Service.Services
             await _downloads.UpdateDownloadStarted(download.DownloadId, download.DownloadStarted);
             
             // Start the download process
-            var downloadClient = new DownloadClient(download, settingDownloadFolder);
+            var downloadClient = new DownloadClient(download, settingDownloadPath);
 
             if (TorrentRunner.ActiveDownloadClients.TryAdd(downloadId, downloadClient))
             {
@@ -235,7 +235,7 @@ namespace RdtClient.Service.Services
         public async Task Unpack(Guid downloadId)
         {
             var settingUnpackLimit = await _settings.GetNumber("UnpackLimit");
-            var settingDownloadFolder = await _settings.GetString("DownloadFolder");
+            var settingDownloadPath = await _settings.GetString("DownloadPath");
             
             var download = await _downloads.GetById(downloadId);
             
@@ -270,7 +270,7 @@ namespace RdtClient.Service.Services
             await _downloads.UpdateUnpackingStarted(download.DownloadId, download.UnpackingStarted);
             
             // Start the unpacking process
-            var unpackClient = new UnpackClient(download, settingDownloadFolder);
+            var unpackClient = new UnpackClient(download, settingDownloadPath);
 
             if (TorrentRunner.ActiveUnpackClients.TryAdd(downloadId, unpackClient))
             {

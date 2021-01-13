@@ -61,6 +61,7 @@ namespace RdtClient.Service.Services
         public async Task Tick()
         {
             var settingApiKey = await _settings.GetString("RealDebridApiKey");
+            var minFileSizeSetting = await _settings.GetNumber("MinFileSize");
 
             if (String.IsNullOrWhiteSpace(settingApiKey))
             {
@@ -163,6 +164,14 @@ namespace RdtClient.Service.Services
                     var fileIds = torrent.Files
                                          .Select(m => m.Id.ToString())
                                          .ToArray();
+
+                    if (minFileSizeSetting > 0)
+                    {
+                        fileIds = torrent.Files
+                                         .Where(m => m.Bytes * 1024 * 1024 > minFileSizeSetting)
+                                         .Select(m => m.Id.ToString())
+                                         .ToArray();
+                    }
 
                     await _torrents.SelectFiles(torrent.RdId, fileIds);
                 }

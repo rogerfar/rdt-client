@@ -25,13 +25,15 @@ export class SettingsComponent implements OnInit {
 
   public saving = false;
   public error: string;
-  public testFolderError: string;
-  public testFolderSuccess: boolean;
+  public testPathError: string;
+  public testPathSuccess: boolean;
 
   public settingRealDebridApiKey: string;
-  public settingDownloadFolder: string;
+  public settingDownloadPath: string;
+  public settingMappedPath: string;
   public settingDownloadLimit: number;
   public settingUnpackLimit: number;
+  public settingMinFileSize: number;
 
   constructor(private settingsService: SettingsService) {}
 
@@ -44,9 +46,11 @@ export class SettingsComponent implements OnInit {
     this.settingsService.get().subscribe(
       (results) => {
         this.settingRealDebridApiKey = this.getSetting(results, 'RealDebridApiKey');
-        this.settingDownloadFolder = this.getSetting(results, 'DownloadFolder');
+        this.settingDownloadPath = this.getSetting(results, 'DownloadPath');
+        this.settingMappedPath = this.getSetting(results, 'MappedPath');
         this.settingDownloadLimit = parseInt(this.getSetting(results, 'DownloadLimit'), 10);
         this.settingUnpackLimit = parseInt(this.getSetting(results, 'UnpackLimit'), 10);
+        this.settingMinFileSize = parseInt(this.getSetting(results, 'MinFileSize'), 10);
       },
       (err) => {
         this.error = err.error;
@@ -64,8 +68,12 @@ export class SettingsComponent implements OnInit {
         value: this.settingRealDebridApiKey,
       },
       {
-        settingId: 'DownloadFolder',
-        value: this.settingDownloadFolder,
+        settingId: 'DownloadPath',
+        value: this.settingDownloadPath,
+      },
+      {
+        settingId: 'MappedPath',
+        value: this.settingMappedPath,
       },
       {
         settingId: 'DownloadLimit',
@@ -74,6 +82,10 @@ export class SettingsComponent implements OnInit {
       {
         settingId: 'UnpackLimit',
         value: (this.settingUnpackLimit ?? 1).toString(),
+      },
+      {
+        settingId: 'MinFileSize',
+        value: (this.settingMinFileSize ?? 0).toString(),
       },
     ];
 
@@ -90,17 +102,17 @@ export class SettingsComponent implements OnInit {
 
   public test(): void {
     this.saving = true;
-    this.testFolderError = null;
-    this.testFolderSuccess = false;
+    this.testPathError = null;
+    this.testPathSuccess = false;
 
-    this.settingsService.testFolder(this.settingDownloadFolder).subscribe(
+    this.settingsService.testPath(this.settingDownloadPath).subscribe(
       () => {
         this.saving = false;
-        this.testFolderSuccess = true;
+        this.testPathSuccess = true;
       },
       (err) => {
         console.log(err);
-        this.testFolderError = err.error;
+        this.testPathError = err.error;
         this.saving = false;
       }
     );

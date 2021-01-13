@@ -22,7 +22,7 @@ export class SettingsService {
     return this.http.get<Profile>(`/Api/Settings/Profile`);
   }
 
-  public testFolder(folder: string): Observable<void> {
-    return this.http.post<void>(`/Api/Settings/TestFolder`, { folder });
+  public testPath(path: string): Observable<void> {
+    return this.http.post<void>(`/Api/Settings/TestPath`, { path });
   }
 }

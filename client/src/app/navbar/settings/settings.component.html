@@ -18,11 +18,21 @@
         </p>
       </div>
       <div class="field">
-        <label class="label">Download folder</label>
+        <label class="label">Download path</label>
         <div class="control">
-          <input class="input" type="text" maxlength="1000" [(ngModel)]="settingDownloadFolder" />
+          <input class="input" type="text" maxlength="1000" [(ngModel)]="settingDownloadPath" />
         </div>
-        <p class="help">Path on the host where RealDebrid Client is hosted.</p>
+        <p class="help">Path in the docker container to download files to (i.e. /data/downloads).</p>
+      </div>
+      <div class="field">
+        <label class="label">Mapped path</label>
+        <div class="control">
+          <input class="input" type="text" maxlength="1000" [(ngModel)]="settingMappedPath" />
+        </div>
+        <p class="help">
+          Path where files are downloaded to on your host (i.e. D:\Downloads). This path is used for Radarr and Sonarr
+          to find your downloads.
+        </p>
       </div>
       <div class="field">
         <label class="label">Maximum parallel downloads</label>
@@ -38,16 +48,30 @@
         </div>
         <p class="help">Maximum amount of downloads that get unpacked on your host at the same time.</p>
       </div>
+
+      <div class="field">
+        <label class="label">Minimum file size to download</label>
+        <div class="control">
+          <div class="field has-addons" style="margin-bottom: 0">
+            <div class="control is-expanded">
+              <input class="input" type="number" max="100" min="1" [(ngModel)]="settingMinFileSize" />
+            </div>
+            <div class="control">
+              <a class="button is-static">MB</a>
+            </div>
+          </div>
+          <div class="help">When selecting files in the torrent, skip files smaller than this setting.</div>
+        </div>
+      </div>
+
       <div class="notification is-danger is-light" *ngIf="error?.length > 0">Error saving settings: {{ error }}</div>
 
-      <div class="notification is-danger is-light" *ngIf="testFolderError?.length > 0">
-        Could not test your download folder<br />
-        {{ testFolderError }}
+      <div class="notification is-danger is-light" *ngIf="testPathError?.length > 0">
+        Could not test your download path<br />
+        {{ testPathError }}
       </div>
 
-      <div class="notification is-success is-light" *ngIf="testFolderSuccess">
-        Successfully tested your download folder
-      </div>
+      <div class="notification is-success is-light" *ngIf="testPathSuccess">Successfully tested your download path</div>
     </section>
     <footer class="modal-card-foot">
       <button class="button is-success" (click)="ok()" [disabled]="saving" [ngClass]="{ 'is-loading': saving }">

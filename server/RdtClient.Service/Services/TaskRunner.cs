@@ -20,12 +20,8 @@ namespace RdtClient.Service.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-#if DEBUG
-            await Task.Delay(TimeSpan.FromSeconds(3), stoppingToken);
-#else
-            await Task.Delay(TimeSpan.FromSeconds(15), stoppingToken);
-#endif
-            
+            await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+
             using var scope = _serviceProvider.CreateScope();
             var torrentRunner = scope.ServiceProvider.GetRequiredService<ITorrentRunner>();
             
@@ -44,7 +40,7 @@ namespace RdtClient.Service.Services
                     _logger.LogError(ex, "Unexpected error occurred in TorrentDownloadManager.Tick");
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
             }
 
             _logger.LogInformation("TaskRunner stopped.");
