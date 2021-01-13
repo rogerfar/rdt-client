@@ -240,6 +240,8 @@ namespace RdtClient.Service.Services
                     downloadPath = Path.Combine(downloadPath, torrent.Category);
                 }
 
+                var torrentPath = Path.Combine(downloadPath, torrent.RdName);
+
                 var result = new TorrentInfo
                 {
                     AddedOn = torrent.RdAdded.ToUnixTimeSeconds(),
@@ -270,7 +272,7 @@ namespace RdtClient.Service.Services
                     Progress = (Int64) (torrent.RdProgress / 100.0),
                     Ratio = 1,
                     RatioLimit = 1,
-                    ContentPath = downloadPath,
+                    ContentPath = torrentPath,
                     SavePath = downloadPath,
                     SeedingTimeLimit = 1,
                     SeenComplete = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
