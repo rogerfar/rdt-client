@@ -67,39 +67,25 @@ export class AddNewTorrentComponent implements OnInit {
     this.error = null;
 
     if (this.magnetLink) {
-      this.torrentService
-        .uploadMagnet(
-          this.magnetLink,
-          this.autoDownload,
-          this.autoUnpack,
-          this.autoDelete
-        )
-        .subscribe(
-          () => {
-            this.cancel();
-          },
-          (err) => {
-            this.error = err.error;
-            this.saving = false;
-          }
-        );
+      this.torrentService.uploadMagnet(this.magnetLink, this.autoDownload, this.autoUnpack, this.autoDelete).subscribe(
+        () => {
+          this.cancel();
+        },
+        (err) => {
+          this.error = err.error;
+          this.saving = false;
+        }
+      );
     } else if (this.selectedFile) {
-      this.torrentService
-        .uploadFile(
-          this.selectedFile,
-          this.autoDownload,
-          this.autoUnpack,
-          this.autoDelete
-        )
-        .subscribe(
-          () => {
-            this.cancel();
-          },
-          (err) => {
-            this.error = err.error;
-            this.saving = false;
-          }
-        );
+      this.torrentService.uploadFile(this.selectedFile, this.autoDownload, this.autoUnpack, this.autoDelete).subscribe(
+        () => {
+          this.cancel();
+        },
+        (err) => {
+          this.error = err.error;
+          this.saving = false;
+        }
+      );
     } else {
       this.cancel();
     }

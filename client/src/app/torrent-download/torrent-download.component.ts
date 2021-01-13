@@ -12,7 +12,5 @@ export class TorrentDownloadComponent implements OnInit {
 
   constructor() {}
 
-  ngOnInit(): void {
-
-  }
+  ngOnInit(): void {}
 }

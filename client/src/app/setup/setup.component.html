@@ -6,20 +6,12 @@
           <img src="../../assets/logo.png" />
           <div class="box" *ngIf="step === 1">
             <div class="notification is-primary">
-              Welcome to RealDebrid Client. Please create your account by
-              entering a username and password.
+              Welcome to RealDebrid Client. Please create your account by entering a username and password.
             </div>
             <div class="field">
               <label for="" class="label">Username</label>
               <div class="control has-icons-left">
-                <input
-                  type="text"
-                  placeholder=""
-                  class="input"
-                  name="userName"
-                  [(ngModel)]="userName"
-                  required
-                />
+                <input type="text" placeholder="" class="input" name="userName" [(ngModel)]="userName" required />
                 <span class="icon is-small is-left">
                   <i class="fa fa-envelope"></i>
                 </span>
@@ -28,13 +20,7 @@
             <div class="field">
               <label for="" class="label" name="password">Password</label>
               <div class="control has-icons-left">
-                <input
-                  type="password"
-                  class="input"
-                  required
-                  name="password"
-                  [(ngModel)]="password"
-                />
+                <input type="password" class="input" required name="password" [(ngModel)]="password" />
                 <span class="icon is-small is-left">
                   <i class="fa fa-lock"></i>
                 </span>
@@ -50,47 +36,29 @@
                 Setup
               </button>
             </div>
-            <div
-              class="notification is-danger is-light"
-              *ngIf="error?.length > 0"
-            >
+            <div class="notification is-danger is-light" *ngIf="error?.length > 0">
               {{ error }}
             </div>
           </div>
 
           <div class="box" *ngIf="step === 2">
             <div class="notification is-primary">
-              To be able to use the RealDebrid Client you need a premium
-              subscription to download torrents.
+              To be able to use the RealDebrid Client you need a premium subscription to download torrents.
               <br /><br />
               Not premium yet?
-              <a
-                href="https://real-debrid.com/?id=1348683"
-                target="_blank"
-                rel="noopener"
+              <a href="https://real-debrid.com/?id=1348683" target="_blank" rel="noopener"
                 >Use this link to sign up to RealDebrid.</a
               >
               <br /><br />
-              To connect to RealDebrid please enter your Personal Prive API
-              Token found here:
-              <a
-                href="https://real-debrid.com/apitoken"
-                target="_blank"
-                rel="noopener"
+              To connect to RealDebrid please enter your Personal Prive API Token found here:
+              <a href="https://real-debrid.com/apitoken" target="_blank" rel="noopener"
                 >https://real-debrid.com/apitoken</a
               >.
             </div>
             <div class="field">
               <label for="" class="label">API Private Token</label>
               <div class="control has-icons-left">
-                <input
-                  type="text"
-                  placeholder=""
-                  class="input"
-                  name="token"
-                  [(ngModel)]="token"
-                  required
-                />
+                <input type="text" placeholder="" class="input" name="token" [(ngModel)]="token" required />
                 <span class="icon is-small is-left">
                   <i class="fa fa-envelope"></i>
                 </span>
@@ -106,22 +74,15 @@
                 Setup
               </button>
             </div>
-            <div
-              class="notification is-danger is-light"
-              *ngIf="error?.length > 0"
-            >
+            <div class="notification is-danger is-light" *ngIf="error?.length > 0">
               {{ error }}
             </div>
           </div>
 
           <div class="box" *ngIf="step === 3">
             <div class="notification is-primary">
-              You are now connected to RealDebrid! To setup Radarr or Sonarr,
-              please following the instructions here:
-              <a
-                href="https://github.com/rogerfar/rdt-client/"
-                target="_blank"
-                rel="noopener"
+              You are now connected to RealDebrid! To setup Radarr or Sonarr, please following the instructions here:
+              <a href="https://github.com/rogerfar/rdt-client/" target="_blank" rel="noopener"
                 >https://github.com/rogerfar/rdt-client/</a
               >.
             </div>

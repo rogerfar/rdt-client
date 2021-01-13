@@ -19,11 +19,7 @@ export class SetupComponent implements OnInit {
 
   public step: number = 1;
 
-  constructor(
-    private authService: AuthService,
-    private settingsService: SettingsService,
-    private router: Router
-  ) {}
+  constructor(private authService: AuthService, private settingsService: SettingsService, private router: Router) {}
 
   ngOnInit(): void {}
 

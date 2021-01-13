@@ -18,11 +18,7 @@ export class NavbarComponent implements OnInit {
 
   public profile: Profile;
 
-  constructor(
-    private settingsService: SettingsService,
-    private authService: AuthService,
-    private router: Router
-  ) {}
+  constructor(private settingsService: SettingsService, private authService: AuthService, private router: Router) {}
 
   ngOnInit(): void {
     this.settingsService.getProfile().subscribe((result) => {

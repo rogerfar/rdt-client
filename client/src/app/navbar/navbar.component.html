@@ -1,8 +1,4 @@
-<nav
-  class="navbar is-dark is-fixed-top"
-  role="navigation"
-  aria-label="main navigation"
->
+<nav class="navbar is-dark is-fixed-top" role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
     <a class="navbar-item">
       <img src="../../assets/logo.png" />
@@ -36,13 +32,7 @@
         </span>
         <span>Settings</span>
       </a>
-      <a
-        class="navbar-item"
-        *ngIf="profile"
-        href="https://real-debrid.com/?id=1348683"
-        target="_blank"
-        rel="noopener"
-      >
+      <a class="navbar-item" *ngIf="profile" href="https://real-debrid.com/?id=1348683" target="_blank" rel="noopener">
         <span class="icon">
           <i class="fas fa-euro-sign" aria-hidden="true"></i>
         </span>
@@ -53,21 +43,13 @@
 
     <div class="navbar-end">
       <div class="navbar-item has-dropdown is-hoverable">
-        <span class="navbar-link">
-          Account
-        </span>
+        <span class="navbar-link"> Account </span>
 
         <div class="navbar-dropdown is-right">
-          <a class="navbar-item">
-            Profile
-          </a>
-          <a class="navbar-item" (click)="logout()">
-            Logout
-          </a>
+          <a class="navbar-item"> Profile </a>
+          <a class="navbar-item" (click)="logout()"> Logout </a>
           <hr class="navbar-divider" />
-          <div class="navbar-item">
-            Version 0.8.0
-          </div>
+          <div class="navbar-item">Version 0.8.0</div>
         </div>
       </div>
     </div>

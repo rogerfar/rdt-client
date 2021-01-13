@@ -22,13 +22,7 @@
         <label class="label">Torrent file</label>
         <div class="file has-name">
           <label class="file-label">
-            <input
-              class="file-input"
-              type="file"
-              name="resume"
-              (change)="pickFile($event)"
-              [disabled]="saving"
-            />
+            <input class="file-input" type="file" name="resume" (change)="pickFile($event)" [disabled]="saving" />
             <span class="file-cta">
               <span class="file-icon">
                 <i class="fas fa-upload"></i>
@@ -56,22 +50,13 @@
           Remove torrent when finished downloading on host
         </label>
       </div>
-      <div class="notification is-danger is-light" *ngIf="error">
-        Cannot add torrent: {{ error | json }}
-      </div>
+      <div class="notification is-danger is-light" *ngIf="error">Cannot add torrent: {{ error | json }}</div>
     </section>
     <footer class="modal-card-foot">
-      <button
-        class="button is-success"
-        [disabled]="saving"
-        [ngClass]="{ 'is-loading': saving }"
-        (click)="ok()"
-      >
+      <button class="button is-success" [disabled]="saving" [ngClass]="{ 'is-loading': saving }" (click)="ok()">
         <span>Add Torrent</span>
       </button>
-      <button class="button" (click)="cancel()" [disabled]="saving">
-        Cancel
-      </button>
+      <button class="button" (click)="cancel()" [disabled]="saving">Cancel</button>
     </footer>
   </div>
 </div>
