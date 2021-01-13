@@ -280,7 +280,7 @@ namespace RdtClient.Service.Services
                     NumLeechs = 100,
                     NumSeeds = 100,
                     Priority = ++prio,
-                    Progress = bytesTotal * (bytesDone / 100.0f) / 100.0f,
+                    Progress = bytesDone / (Single) bytesTotal,
                     Ratio = 1,
                     RatioLimit = 1,
                     SavePath = downloadPath,
