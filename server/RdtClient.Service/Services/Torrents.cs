@@ -214,6 +214,15 @@ namespace RdtClient.Service.Services
             
             var downloadPath = await DownloadPath(download.Torrent);
             
+            download.DownloadFinished = null;
+            await _downloads.UpdateDownloadStarted(download.DownloadId, null);
+
+            download.Completed = null;
+            await _downloads.UpdateCompleted(download.DownloadId, null);
+            
+            download.Error = null;
+            await _downloads.UpdateError(download.DownloadId, null);
+            
             // Check if we have reached the download limit, if so queue the download, but don't start it.
             if (TorrentRunner.ActiveDownloadClients.Count >= settingDownloadLimit)
             {

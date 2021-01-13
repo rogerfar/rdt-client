@@ -54,7 +54,10 @@ export class TorrentRowComponent implements OnInit {
   }
 
   public canDownload(): boolean {
-    return this.torrent.rdStatus === RealDebridStatus.Finished && this.torrent.downloads.length === 0;
+    return (
+      (this.torrent.rdStatus === RealDebridStatus.Finished && this.torrent.downloads.length === 0) ||
+      (this.torrent.downloads.length > 0 && this.torrent.downloads.any((m) => m.error != null))
+    );
   }
 
   public canUnpack(): boolean {

@@ -134,7 +134,7 @@ namespace RdtClient.Service.Services
 
             // Check if there are any downloads that are queued and can be started.
             var queuedDownloads = torrents.SelectMany(m => m.Downloads)
-                                          .Where(m => m.DownloadQueued != null && m.DownloadStarted == null)
+                                          .Where(m => m.Completed == null && m.DownloadQueued != null && m.DownloadStarted == null)
                                           .OrderBy(m => m.DownloadQueued);
 
             foreach (var download in queuedDownloads)
@@ -144,7 +144,7 @@ namespace RdtClient.Service.Services
 
             // Check if there are any unpacks that are queued and can be started.
             var queuedUnpacks = torrents.SelectMany(m => m.Downloads)
-                                        .Where(m => m.UnpackingQueued != null && m.UnpackingStarted == null)
+                                        .Where(m => m.Completed == null && m.UnpackingQueued != null && m.UnpackingStarted == null)
                                         .OrderBy(m => m.DownloadQueued);
 
             foreach (var download in queuedUnpacks)
@@ -197,7 +197,8 @@ namespace RdtClient.Service.Services
 
                     // If the torrent has any files that need starting to be downloaded, download them.
                     var downloadsPending = torrent.Downloads
-                                                  .Where(m => m.DownloadStarted == null &&
+                                                  .Where(m => m.Completed == null &&
+                                                              m.DownloadStarted == null &&
                                                               m.DownloadFinished == null)
                                                   .ToList();
 
@@ -216,7 +217,8 @@ namespace RdtClient.Service.Services
                 {
                     // If all files are finished downloading, move to the unpacking step.
                     var unpackingPending = torrent.Downloads
-                                                  .Where(m => m.DownloadFinished != null &&
+                                                  .Where(m => m.Completed == null &&
+                                                              m.DownloadFinished != null &&
                                                               m.UnpackingStarted == null &&
                                                               m.UnpackingFinished == null)
                                                   .ToList();

@@ -9,21 +9,17 @@ export class TorrentStatusPipe implements PipeTransform {
   constructor(private pipe: FileSizePipe) {}
 
   transform(torrent: Torrent): string {
-    if (torrent.completed) {
-      return 'Finished';
-    }
-
     if (torrent.downloads.length > 0) {
-      const allFinished = torrent.downloads.all((m) => m.completed != null);
-
-      if (allFinished) {
-        return 'Finished';
-      }
-
       const errors = torrent.downloads.where((m) => m.error != null);
 
       if (errors.length > 0) {
         return 'Error';
+      }
+
+      const allFinished = torrent.downloads.all((m) => m.completed != null);
+
+      if (allFinished) {
+        return 'Finished';
       }
 
       const downloading = torrent.downloads.where((m) => m.downloadStarted && !m.downloadFinished);
@@ -78,6 +74,10 @@ export class TorrentStatusPipe implements PipeTransform {
       if (downloaded.length > 0) {
         return `Files downloaded to host`;
       }
+    }
+
+    if (torrent.completed) {
+      return 'Finished';
     }
 
     switch (torrent.rdStatus) {

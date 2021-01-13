@@ -89,6 +89,11 @@ namespace RdtClient.Data.Data
             var dbDownload = await _dataContext.Downloads
                                                .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
+            if (dbDownload == null)
+            {
+                return;
+            }
+            
             dbDownload.DownloadFinished = dateTime;
 
             await _dataContext.SaveChangesAsync();

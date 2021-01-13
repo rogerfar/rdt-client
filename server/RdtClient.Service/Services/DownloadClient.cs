@@ -84,6 +84,7 @@ namespace RdtClient.Service.Services
                 // Determine the file size
                 var webRequest = WebRequest.Create(uri);
                 webRequest.Method = "HEAD";
+                webRequest.Timeout = 5000;
                 Int64 responseLength;
 
                 using (var webResponse = await webRequest.GetResponseAsync())
@@ -91,36 +92,67 @@ namespace RdtClient.Service.Services
                     responseLength = Int64.Parse(webResponse.Headers.Get("Content-Length"));
                 }
 
-                var request = WebRequest.Create(uri);
-                using var response = await request.GetResponseAsync();
+                var timeout = DateTimeOffset.UtcNow.AddHours(1);
 
-                await using var stream = response.GetResponseStream();
-                await using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.Write);
-                var buffer = new Byte[4096];
-
-                while (fileStream.Length < response.ContentLength)
+                while (timeout > DateTimeOffset.UtcNow)
                 {
-                    var read = await stream.ReadAsync(buffer, 0, buffer.Length);
-
-                    if (read > 0)
+                    try
                     {
-                        fileStream.Write(buffer, 0, read);
+                        var request = WebRequest.Create(uri);
+                        using var response = await request.GetResponseAsync();
 
-                        BytesDone = fileStream.Length;
-                        BytesTotal = responseLength;
+                        await using var stream = response.GetResponseStream();
 
-                        if (DateTime.UtcNow > _nextUpdate)
+                        if (stream == null)
                         {
-                            Speed = fileStream.Length - _bytesLastUpdate;
-
-                            _nextUpdate = DateTime.UtcNow.AddSeconds(1);
-                            _bytesLastUpdate = fileStream.Length;
+                            throw new IOException("No stream");
                         }
-                    }
-                    else
-                    {
+
+                        await using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.Write);
+                        var buffer = new Byte[4096];
+
+                        while (fileStream.Length < response.ContentLength)
+                        {
+                            var read = await stream.ReadAsync(buffer, 0, buffer.Length);
+
+                            if (read > 0)
+                            {
+                                fileStream.Write(buffer, 0, read);
+
+                                BytesDone = fileStream.Length;
+                                BytesTotal = responseLength;
+
+                                if (DateTime.UtcNow > _nextUpdate)
+                                {
+                                    Speed = fileStream.Length - _bytesLastUpdate;
+
+                                    _nextUpdate = DateTime.UtcNow.AddSeconds(1);
+                                    _bytesLastUpdate = fileStream.Length;
+                                    
+                                    timeout = DateTimeOffset.UtcNow.AddHours(1);
+                                }
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+
                         break;
                     }
+                    catch (IOException)
+                    {
+                        await Task.Delay(1000);
+                    }
+                    catch (WebException)
+                    {
+                        await Task.Delay(1000);
+                    }
+                }
+
+                if (timeout <= DateTimeOffset.UtcNow)
+                {
+                    throw new Exception($"Download timed out");
                 }
 
                 Speed = 0;
