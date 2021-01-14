@@ -237,7 +237,7 @@ namespace RdtClient.Service.Services
                 // Check if torrent is complete
                 if (torrent.Downloads.Count > 0)
                 {
-                    var allComplete = torrent.Downloads.All(m => m.UnpackingFinished != null);
+                    var allComplete = torrent.Downloads.All(m => m.Completed != null);
 
                     if (allComplete)
                     {

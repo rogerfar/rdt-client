@@ -228,7 +228,7 @@ namespace RdtClient.Service.Services
             var downloadPath = await DownloadPath(download.Torrent);
             
             download.DownloadFinished = null;
-            await _downloads.UpdateDownloadStarted(download.DownloadId, null);
+            await _downloads.UpdateDownloadFinished(download.DownloadId, null);
 
             download.Completed = null;
             await _downloads.UpdateCompleted(download.DownloadId, null);
