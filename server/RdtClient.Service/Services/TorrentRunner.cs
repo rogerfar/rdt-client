@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using RdtClient.Data.Enums;
@@ -61,9 +62,12 @@ namespace RdtClient.Service.Services
         public async Task Tick()
         {
             var settingApiKey = await _settings.GetString("RealDebridApiKey");
-            var minFileSizeSetting = await _settings.GetNumber("MinFileSize");
-
-            minFileSizeSetting = minFileSizeSetting * 1024 * 1024;
+            var settingMinFileSize = await _settings.GetNumber("MinFileSize");
+            var settingDownloadLimit = await _settings.GetNumber("DownloadLimit");
+            var settingUnpackLimit = await _settings.GetNumber("UnpackLimit");
+            var settingDownloadPath = await _settings.GetString("DownloadPath");
+            
+            settingMinFileSize = settingMinFileSize * 1024 * 1024;
 
             if (String.IsNullOrWhiteSpace(settingApiKey))
             {
@@ -85,6 +89,7 @@ namespace RdtClient.Service.Services
                     else
                     {
                         await _downloads.UpdateDownloadFinished(downloadId, DateTimeOffset.UtcNow);
+                        await _downloads.UpdateUnpackingQueued(downloadId, DateTimeOffset.UtcNow);
                     }
 
                     ActiveDownloadClients.TryRemove(downloadId, out _);
@@ -139,7 +144,32 @@ namespace RdtClient.Service.Services
 
             foreach (var download in queuedDownloads)
             {
-                await _torrents.Download(download.DownloadId);
+                if (TorrentRunner.ActiveDownloadClients.Count >= settingDownloadLimit)
+                {
+                    return;
+                }
+
+                if (TorrentRunner.ActiveDownloadClients.ContainsKey(download.DownloadId))
+                {
+                    return;
+                }
+            
+                await _downloads.UpdateDownloadStarted(download.DownloadId, download.DownloadStarted);
+
+                var downloadPath = settingDownloadPath;
+                
+                if (!String.IsNullOrWhiteSpace(download.Torrent.Category))
+                {
+                    downloadPath = Path.Combine(downloadPath, download.Torrent.Category);
+                }
+
+                // Start the download process
+                var downloadClient = new DownloadClient(download, downloadPath);
+                
+                if (TorrentRunner.ActiveDownloadClients.TryAdd(download.DownloadId, downloadClient))
+                {
+                    await downloadClient.Start();
+                }
             }
 
             // Check if there are any unpacks that are queued and can be started.
@@ -149,7 +179,47 @@ namespace RdtClient.Service.Services
 
             foreach (var download in queuedUnpacks)
             {
-                await _torrents.Unpack(download.DownloadId);
+                // Check if the unpacking process is even needed
+                var uri = new Uri(download.Link);
+                var fileName = uri.Segments.Last();
+                var extension = Path.GetExtension(fileName);
+                        
+                if (extension != ".rar")
+                {
+                    await _downloads.UpdateUnpackingStarted(download.DownloadId, DateTimeOffset.UtcNow);
+                    await _downloads.UpdateUnpackingFinished(download.DownloadId, DateTimeOffset.UtcNow);
+                    await _downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
+                    
+                    continue;
+                }
+                
+                // Check if we have reached the download limit, if so queue the download, but don't start it.
+                if (TorrentRunner.ActiveUnpackClients.Count >= settingUnpackLimit)
+                {
+                    return;
+                }
+            
+                if (TorrentRunner.ActiveUnpackClients.ContainsKey(download.DownloadId))
+                {
+                    return;
+                }
+                
+                await _downloads.UpdateUnpackingStarted(download.DownloadId, download.UnpackingStarted);
+                
+                var downloadPath = settingDownloadPath;
+                
+                if (!String.IsNullOrWhiteSpace(download.Torrent.Category))
+                {
+                    downloadPath = Path.Combine(downloadPath, download.Torrent.Category);
+                }
+
+                // Start the unpacking process
+                var unpackClient = new UnpackClient(download, downloadPath);
+
+                if (TorrentRunner.ActiveUnpackClients.TryAdd(download.DownloadId, unpackClient))
+                {
+                    await unpackClient.Start();
+                }
             }
 
             foreach (var torrent in torrents)
@@ -167,10 +237,10 @@ namespace RdtClient.Service.Services
                                          .Select(m => m.Id.ToString())
                                          .ToArray();
 
-                    if (minFileSizeSetting > 0)
+                    if (settingMinFileSize > 0)
                     {
                         fileIds = torrent.Files
-                                         .Where(m => m.Bytes > minFileSizeSetting)
+                                         .Where(m => m.Bytes > settingMinFileSize)
                                          .Select(m => m.Id.ToString())
                                          .ToArray();
                     }

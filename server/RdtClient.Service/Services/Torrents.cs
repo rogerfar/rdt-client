@@ -221,94 +221,22 @@ namespace RdtClient.Service.Services
 
         public async Task Download(Guid downloadId)
         {
-            var settingDownloadLimit = await _settings.GetNumber("DownloadLimit");
-            
-            var download = await _downloads.GetById(downloadId);
-            
-            var downloadPath = await DownloadPath(download.Torrent);
-            
-            download.DownloadFinished = null;
-            await _downloads.UpdateDownloadFinished(download.DownloadId, null);
-
-            download.Completed = null;
-            await _downloads.UpdateCompleted(download.DownloadId, null);
-            
-            download.Error = null;
-            await _downloads.UpdateError(download.DownloadId, null);
-            
-            // Check if we have reached the download limit, if so queue the download, but don't start it.
-            if (TorrentRunner.ActiveDownloadClients.Count >= settingDownloadLimit)
-            {
-                return;
-            }
-
-            if (TorrentRunner.ActiveDownloadClients.ContainsKey(downloadId))
-            {
-                return;
-            }
-            
-            download.DownloadStarted = DateTimeOffset.UtcNow;
-            await _downloads.UpdateDownloadStarted(download.DownloadId, download.DownloadStarted);
-            
-            // Start the download process
-            var downloadClient = new DownloadClient(download, downloadPath);
-
-            if (TorrentRunner.ActiveDownloadClients.TryAdd(downloadId, downloadClient))
-            {
-                await downloadClient.Start();
-            }
+            await _downloads.UpdateDownloadStarted(downloadId, null);
+            await _downloads.UpdateDownloadFinished(downloadId, null);
+            await _downloads.UpdateUnpackingQueued(downloadId, null);
+            await _downloads.UpdateUnpackingStarted(downloadId, null);
+            await _downloads.UpdateUnpackingFinished(downloadId, null);
+            await _downloads.UpdateCompleted(downloadId, null);
+            await _downloads.UpdateError(downloadId, null);
         }
 
         public async Task Unpack(Guid downloadId)
         {
-            var settingUnpackLimit = await _settings.GetNumber("UnpackLimit");
-            
-            var download = await _downloads.GetById(downloadId);
-            
-            var downloadPath = await DownloadPath(download.Torrent);
-            
-            // Check if the file is even unpackable.
-            var uri = new Uri(download.Link);
-            var fileName = uri.Segments.Last();
-            var extension = Path.GetExtension(fileName);
-
-            if (extension != ".rar")
-            {
-                await _downloads.UpdateUnpackingQueued(downloadId, DateTimeOffset.UtcNow);
-                await _downloads.UpdateUnpackingStarted(downloadId, DateTimeOffset.UtcNow);
-                await _downloads.UpdateUnpackingFinished(downloadId, DateTimeOffset.UtcNow);
-                
-                return;
-            }
-            
-            // This property can have a value when it is a retry.
-            if (download.UnpackingQueued == null)
-            {
-                download.UnpackingQueued = DateTimeOffset.UtcNow;
-                await _downloads.UpdateUnpackingQueued(download.DownloadId, download.UnpackingQueued);
-            }
-
-            // Check if we have reached the download limit, if so queue the download, but don't start it.
-            if (TorrentRunner.ActiveUnpackClients.Count >= settingUnpackLimit)
-            {
-                return;
-            }
-            
-            if (TorrentRunner.ActiveUnpackClients.ContainsKey(downloadId))
-            {
-                return;
-            }
-            
-            download.UnpackingStarted = DateTimeOffset.UtcNow;
-            await _downloads.UpdateUnpackingStarted(download.DownloadId, download.UnpackingStarted);
-            
-            // Start the unpacking process
-            var unpackClient = new UnpackClient(download, downloadPath);
-
-            if (TorrentRunner.ActiveUnpackClients.TryAdd(downloadId, unpackClient))
-            {
-                await unpackClient.Start();
-            }
+            await _downloads.UpdateUnpackingQueued(downloadId, DateTimeOffset.UtcNow);
+            await _downloads.UpdateUnpackingStarted(downloadId, null);
+            await _downloads.UpdateUnpackingFinished(downloadId, null);
+            await _downloads.UpdateCompleted(downloadId, null);
+            await _downloads.UpdateError(downloadId, null);
         }
 
         public void Reset()
