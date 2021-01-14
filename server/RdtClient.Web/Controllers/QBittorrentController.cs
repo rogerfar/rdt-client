@@ -245,7 +245,7 @@ namespace RdtClient.Web.Controllers
 
             foreach (var url in urls)
             {
-                await _qBittorrent.TorrentsAdd(url.Trim(), true, true, false);
+                await _qBittorrent.TorrentsAddMagnet(url.Trim(), request.Category, true, true, false);
             }
 
             return Ok();
@@ -265,10 +265,10 @@ namespace RdtClient.Web.Controllers
                     await file.CopyToAsync(target);
                     var fileBytes = target.ToArray();
 
-                    await _qBittorrent.TorrentsAddFile(fileBytes, true, true, false);
+                    await _qBittorrent.TorrentsAddFile(fileBytes, request.Category, true, true, false);
                 }
             }
-
+            
             if (request.Urls != null)
             {
                 return await TorrentsAdd(request);
@@ -386,6 +386,7 @@ namespace RdtClient.Web.Controllers
     public class QBTorrentsAddRequest
     {
         public String Urls { get; set; }
+        public String Category { get; set; }
     }
 
     public class QBTorrentsSetCategoryRequest

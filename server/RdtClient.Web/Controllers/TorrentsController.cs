@@ -74,7 +74,7 @@ namespace RdtClient.Web.Controllers
 
             var bytes = memoryStream.ToArray();
 
-            await _torrents.UploadFile(bytes, formData.AutoDownload, formData.AutoUnpack, formData.AutoDelete);
+            await _torrents.UploadFile(bytes, null, formData.AutoDownload, formData.AutoUnpack, formData.AutoDelete);
 
             return Ok();
         }
@@ -83,7 +83,7 @@ namespace RdtClient.Web.Controllers
         [Route("UploadMagnet")]
         public async Task<ActionResult> UploadMagnet([FromBody] TorrentControllerUploadMagnetRequest request)
         {
-            await _torrents.UploadMagnet(request.MagnetLink, request.AutoDownload, request.AutoUnpack, request.AutoDelete);
+            await _torrents.UploadMagnet(request.MagnetLink, null, request.AutoDownload, request.AutoUnpack, request.AutoDelete);
 
             return Ok();
         }

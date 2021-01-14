@@ -22,6 +22,8 @@ namespace RdtClient.Service.Services
         private readonly Download _download;
         private readonly String _destinationPath;
         private readonly Torrent _torrent;
+
+        private Boolean _cancelled = false;
         
         private RarArchiveEntry _rarCurrentEntry;
         private Dictionary<String, Int64> _rarfileStatus;
@@ -60,7 +62,10 @@ namespace RdtClient.Service.Services
 
                 await Task.Factory.StartNew(async delegate
                 {
-                    await Unpack(filePath);
+                    if (!_cancelled)
+                    {
+                        await Unpack(filePath);
+                    }
                 });
             }
             catch (Exception ex)
@@ -68,6 +73,11 @@ namespace RdtClient.Service.Services
                 Error = $"An unexpected error occurred preparing download {_download.Link} for torrent {_torrent.RdName}: {ex.Message}";
                 Finished = true;
             }
+        }
+
+        public void Cancel()
+        {
+            _cancelled = true;
         }
 
         private async Task Unpack(String filePath)
@@ -101,6 +111,11 @@ namespace RdtClient.Service.Services
 
                     foreach (var entry in entries)
                     {
+                        if (_cancelled)
+                        {
+                            return;
+                        }
+                        
                         _rarCurrentEntry = entry;
 
                         entry.WriteToDirectory(extractPath,
@@ -136,7 +151,7 @@ namespace RdtClient.Service.Services
                 Finished = true;
             }
         }
-        
+
         private void ArchiveOnCompressedBytesRead(Object sender, CompressedBytesReadEventArgs e)
         {
             if (_rarCurrentEntry == null)

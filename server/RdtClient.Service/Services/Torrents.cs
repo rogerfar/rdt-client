@@ -20,8 +20,8 @@ namespace RdtClient.Service.Services
         Task<Torrent> GetById(Guid torrentId);
         Task<Torrent> GetByHash(String hash);
         Task UpdateCategory(String hash, String category);
-        Task UploadMagnet(String magnetLink, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete);
-        Task UploadFile(Byte[] bytes, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete);
+        Task UploadMagnet(String magnetLink, String category, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete);
+        Task UploadFile(Byte[] bytes, String category, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete);
         Task SelectFiles(String torrentId, IList<String> fileIds);
         Task Delete(Guid torrentId, Boolean deleteData, Boolean deleteRdTorrent, Boolean deleteLocalFiles);
         Task Unrestrict(Guid torrentId);
@@ -134,22 +134,22 @@ namespace RdtClient.Service.Services
             await _torrentData.UpdateCategory(torrent.TorrentId, category);
         }
 
-        public async Task UploadMagnet(String magnetLink, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete)
+        public async Task UploadMagnet(String magnetLink, String category, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete)
         {
             var magnet = MagnetLink.Parse(magnetLink);
 
             var rdTorrent = await GetRdNetClient().AddTorrentMagnetAsync(magnetLink);
 
-            await Add(rdTorrent.Id, magnet.InfoHash.ToHex(), autoDownload, autoUnpack, autoDelete);
+            await Add(rdTorrent.Id, magnet.InfoHash.ToHex(), category, autoDownload, autoUnpack, autoDelete);
         }
 
-        public async Task UploadFile(Byte[] bytes, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete)
+        public async Task UploadFile(Byte[] bytes, String category, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete)
         {
             var torrent = await MonoTorrent.Torrent.LoadAsync(bytes);
 
             var rdTorrent = await GetRdNetClient().AddTorrentFileAsync(bytes);
 
-            await Add(rdTorrent.Id, torrent.InfoHash.ToHex(), autoDownload, autoUnpack, autoDelete);
+            await Add(rdTorrent.Id, torrent.InfoHash.ToHex(), category, autoDownload, autoUnpack, autoDelete);
         }
 
         public async Task SelectFiles(String torrentId, IList<String> fileIds)
@@ -163,6 +163,19 @@ namespace RdtClient.Service.Services
 
             if (torrent != null)
             {
+                foreach (var download in torrent.Downloads)
+                {
+                    if (TorrentRunner.ActiveUnpackClients.TryRemove(download.DownloadId, out var activeUnpack))
+                    {
+                        activeUnpack.Cancel();
+                    }
+
+                    if (TorrentRunner.ActiveDownloadClients.TryRemove(download.DownloadId, out var activeDownload))
+                    {
+                        activeDownload.Cancel();
+                    }
+                }
+
                 if (deleteLocalFiles)
                 {
                     var downloadPath = await DownloadPath(torrent);
@@ -228,6 +241,11 @@ namespace RdtClient.Service.Services
             {
                 return;
             }
+
+            if (TorrentRunner.ActiveDownloadClients.ContainsKey(downloadId))
+            {
+                return;
+            }
             
             download.DownloadStarted = DateTimeOffset.UtcNow;
             await _downloads.UpdateDownloadStarted(download.DownloadId, download.DownloadStarted);
@@ -276,6 +294,11 @@ namespace RdtClient.Service.Services
                 return;
             }
             
+            if (TorrentRunner.ActiveUnpackClients.ContainsKey(downloadId))
+            {
+                return;
+            }
+            
             download.UnpackingStarted = DateTimeOffset.UtcNow;
             await _downloads.UpdateUnpackingStarted(download.DownloadId, download.UnpackingStarted);
             
@@ -311,7 +334,7 @@ namespace RdtClient.Service.Services
             return profile;
         }
 
-        private async Task Add(String rdTorrentId, String infoHash, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete)
+        private async Task Add(String rdTorrentId, String infoHash, String category, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete)
         {
             var w = await SemaphoreSlim.WaitAsync(60000);
             if (!w)
@@ -328,7 +351,7 @@ namespace RdtClient.Service.Services
                     return;
                 }
 
-                var newTorrent = await _torrentData.Add(rdTorrentId, infoHash, autoDownload, autoUnpack, autoDelete);
+                var newTorrent = await _torrentData.Add(rdTorrentId, infoHash, category, autoDownload, autoUnpack, autoDelete);
 
                 var rdTorrent = await GetRdNetClient().GetTorrentInfoAsync(rdTorrentId);
 

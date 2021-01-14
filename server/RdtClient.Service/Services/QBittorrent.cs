@@ -18,8 +18,8 @@ namespace RdtClient.Service.Services
         Task<IList<TorrentFileItem>> TorrentFileContents(String hash);
         Task<TorrentProperties> TorrentProperties(String hash);
         Task TorrentsDelete(String hash, Boolean deleteFiles);
-        Task TorrentsAdd(String magnetLink, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete);
-        Task TorrentsAddFile(Byte[] fileBytes, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete);
+        Task TorrentsAddMagnet(String magnetLink, String category, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete);
+        Task TorrentsAddFile(Byte[] fileBytes, String category, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete);
         Task TorrentsSetCategory(String hash, String category);
         Task<IDictionary<String, TorrentCategory>> TorrentsCategories();
     }
@@ -424,14 +424,14 @@ namespace RdtClient.Service.Services
             await _torrents.Delete(torrent.TorrentId, true, true, deleteFiles);
         }
 
-        public async Task TorrentsAdd(String magnetLink, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete)
+        public async Task TorrentsAddMagnet(String magnetLink, String category, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete)
         {
-            await _torrents.UploadMagnet(magnetLink, autoDownload, autoUnpack, autoDelete);
+            await _torrents.UploadMagnet(magnetLink, category, autoDownload, autoUnpack, autoDelete);
         }
 
-        public async Task TorrentsAddFile(Byte[] fileBytes, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete)
+        public async Task TorrentsAddFile(Byte[] fileBytes, String category,Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete)
         {
-            await _torrents.UploadFile(fileBytes, autoDownload, autoUnpack, autoDelete);
+            await _torrents.UploadFile(fileBytes, category, autoDownload, autoUnpack, autoDelete);
         }
 
         public async Task TorrentsSetCategory(String hash, String category)

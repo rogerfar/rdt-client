@@ -20,6 +20,8 @@ namespace RdtClient.Service.Services
         private readonly Download _download;
         private readonly String _destinationPath;
         private readonly Torrent _torrent;
+
+        private Boolean _cancelled = false;
         
         private Int64 _bytesLastUpdate;
         private DateTime _nextUpdate;
@@ -64,7 +66,10 @@ namespace RdtClient.Service.Services
 
                 await Task.Factory.StartNew(async delegate
                 {
-                    await Download(uri, filePath);
+                    if (!_cancelled)
+                    {
+                        await Download(uri, filePath);
+                    }
                 });
             }
             catch (Exception ex)
@@ -72,6 +77,11 @@ namespace RdtClient.Service.Services
                 Error = $"An unexpected error occurred preparing download {_download.Link} for torrent {_torrent.RdName}: {ex.Message}";
                 Finished = true;
             }
+        }
+
+        public void Cancel()
+        {
+            _cancelled = true;
         }
 
         private async Task Download(Uri uri, String filePath)
@@ -94,7 +104,7 @@ namespace RdtClient.Service.Services
 
                 var timeout = DateTimeOffset.UtcNow.AddHours(1);
 
-                while (timeout > DateTimeOffset.UtcNow)
+                while (timeout > DateTimeOffset.UtcNow && !_cancelled)
                 {
                     try
                     {
@@ -111,7 +121,7 @@ namespace RdtClient.Service.Services
                         await using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.Write);
                         var buffer = new Byte[4096];
 
-                        while (fileStream.Length < response.ContentLength)
+                        while (fileStream.Length < response.ContentLength && !_cancelled)
                         {
                             var read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length));
 
