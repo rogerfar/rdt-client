@@ -153,7 +153,8 @@ namespace RdtClient.Service.Services
                 {
                     return;
                 }
-            
+
+                download.DownloadStarted = DateTime.UtcNow;
                 await _downloads.UpdateDownloadStarted(download.DownloadId, download.DownloadStarted);
 
                 var downloadPath = settingDownloadPath;
@@ -186,9 +187,13 @@ namespace RdtClient.Service.Services
                         
                 if (extension != ".rar")
                 {
-                    await _downloads.UpdateUnpackingStarted(download.DownloadId, DateTimeOffset.UtcNow);
-                    await _downloads.UpdateUnpackingFinished(download.DownloadId, DateTimeOffset.UtcNow);
-                    await _downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
+                    download.UnpackingStarted = DateTimeOffset.UtcNow;
+                    download.UnpackingFinished = DateTimeOffset.UtcNow;
+                    download.Completed = DateTimeOffset.UtcNow;
+
+                    await _downloads.UpdateUnpackingStarted(download.DownloadId, download.UnpackingStarted);
+                    await _downloads.UpdateUnpackingFinished(download.DownloadId, download.UnpackingFinished);
+                    await _downloads.UpdateCompleted(download.DownloadId, download.Completed);
                     
                     continue;
                 }
@@ -203,7 +208,8 @@ namespace RdtClient.Service.Services
                 {
                     return;
                 }
-                
+
+                download.UnpackingStarted = DateTimeOffset.UtcNow;
                 await _downloads.UpdateUnpackingStarted(download.DownloadId, download.UnpackingStarted);
                 
                 var downloadPath = settingDownloadPath;
