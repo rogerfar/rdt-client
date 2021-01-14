@@ -86,7 +86,8 @@ RdtClient emulates the qBittorrent web protocol and allow applications to use th
 1. Click `qBittorrent` in the list.
 1. Enter the IP or hostname of the RealDebridClient in the `Host` field.
 1. Enter the 6500 in the `Port` field.
-1. Enter your Username/Password you setup in step 3 above in the Username/Password field.
+1. Enter your Username/Password you setup above in the Username/Password field.
+1. Set the category to `sonarr` for Sonarr or `radarr` for Radarr.
 1. Leave the other settings as is.
 1. Hit `Test` and then `Save` if all is well.
 1. Sonarr will now think you have a regular Torrent client hooked up.
