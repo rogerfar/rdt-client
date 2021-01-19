@@ -50,11 +50,32 @@ namespace RdtClient.Web.Controllers
         
         [HttpPost]
         [Route("TestPath")]
-        public async Task<ActionResult<Profile>> TestPath([FromBody] SettingsControllerTestPathRequest request)
+        public async Task<ActionResult> TestPath([FromBody] SettingsControllerTestPathRequest request)
         {
             await _settings.TestPath(request.Path);
 
             return Ok();
+        }
+        
+        [HttpGet]
+        [Route("TestSpeed")]
+        public async Task<ActionResult> TestSpeed()
+        {
+            var downloadPath = await _settings.GetString("DownloadPath");
+            var mappedPath = await _settings.GetString("MappedPath");
+            
+            var downloadSpeed = await _settings.TestDownloadSpeed();
+            var containerWriteSpeed = await _settings.TestWriteSpeed(downloadPath);
+            var remoteWriteSpeed = await _settings.TestWriteSpeed(mappedPath);
+
+            var result = new
+            {
+                downloadSpeed,
+                containerWriteSpeed,
+                remoteWriteSpeed
+            };
+
+            return Ok(result);
         }
     }
 

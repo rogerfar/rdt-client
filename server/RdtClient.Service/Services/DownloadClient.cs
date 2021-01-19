@@ -119,7 +119,7 @@ namespace RdtClient.Service.Services
                         }
 
                         await using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.Write);
-                        var buffer = new Byte[4096];
+                        var buffer = new Byte[64 * 1024];
 
                         while (fileStream.Length < response.ContentLength && !_cancelled)
                         {

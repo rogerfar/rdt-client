@@ -117,9 +117,11 @@ namespace RdtClient.Service.Services
                     ActiveUnpackClients.TryRemove(downloadId, out _);
                 }
             }
+            
+            var torrents = await _torrents.Get();
 
             // Only poll RealDebrid every 5 when a hub is connected, otherwise ever 30 seconds
-            if (_nextUpdate < DateTime.UtcNow)
+            if (_nextUpdate < DateTime.UtcNow && torrents.Count > 0)
             {
                 var updateTime = 30;
 
@@ -131,9 +133,10 @@ namespace RdtClient.Service.Services
                 _nextUpdate = DateTime.UtcNow.AddSeconds(updateTime);
 
                 await _torrents.Update();
+                
+                // Re-get torrents to account for updated info
+                torrents = await _torrents.Get();
             }
-
-            var torrents = await _torrents.Get();
 
             torrents = torrents.Where(m => m.Completed == null).ToList();
 
