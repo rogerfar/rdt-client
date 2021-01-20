@@ -1,30 +1,22 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Downloader;
 using RdtClient.Data.Models.Data;
 
 namespace RdtClient.Service.Services
 {
     public class DownloadClient
     {
-        public Boolean Finished { get; private set; }
-        
-        public String Error { get; private set; }
-        
-        public Int64 Speed { get; private set; }
-        public Int64 BytesTotal { get; private set; }
-        public Int64 BytesDone { get; private set; }
+        private readonly String _destinationPath;
 
         private readonly Download _download;
-        private readonly String _destinationPath;
         private readonly Torrent _torrent;
 
-        private Boolean _cancelled = false;
-        
-        private Int64 _bytesLastUpdate;
-        private DateTime _nextUpdate;
+        private DownloadService _downloader;
 
         public DownloadClient(Download download, String destinationPath)
         {
@@ -33,7 +25,18 @@ namespace RdtClient.Service.Services
             _torrent = download.Torrent;
         }
 
-        public async Task Start()
+        public Boolean Finished { get; private set; }
+
+        public String Error { get; private set; }
+
+        public Int64 Speed { get; private set; }
+        public Int64 BytesTotal { get; private set; }
+        public Int64 BytesDone { get; private set; }
+
+        private static Int64 LastTick { get; set; }
+        private static ConcurrentBag<Int64> AverageSpeed { get; } = new ConcurrentBag<Int64>();
+
+        public async Task Start(Boolean writeToMemory)
         {
             BytesDone = 0;
             BytesTotal = 0;
@@ -58,7 +61,7 @@ namespace RdtClient.Service.Services
 
                 var fileName = uri.Segments.Last();
                 var filePath = Path.Combine(torrentPath, fileName);
-                
+
                 if (File.Exists(filePath))
                 {
                     File.Delete(filePath);
@@ -66,10 +69,7 @@ namespace RdtClient.Service.Services
 
                 await Task.Factory.StartNew(async delegate
                 {
-                    if (!_cancelled)
-                    {
-                        await Download(uri, filePath);
-                    }
+                    await Download(filePath, writeToMemory);
                 });
             }
             catch (Exception ex)
@@ -81,98 +81,80 @@ namespace RdtClient.Service.Services
 
         public void Cancel()
         {
-            _cancelled = true;
+            _downloader?.CancelAsync();
         }
 
-        private async Task Download(Uri uri, String filePath)
+        private async Task Download(String filePath, Boolean writeToMemory)
         {
             try
             {
-                _bytesLastUpdate = 0;
-                _nextUpdate = DateTime.UtcNow.AddSeconds(1);
+                LastTick = 0;
 
-                // Determine the file size
-                var webRequest = WebRequest.Create(uri);
-                webRequest.Method = "HEAD";
-                webRequest.Timeout = 5000;
-                Int64 responseLength;
-
-                using (var webResponse = await webRequest.GetResponseAsync())
+                var downloadOpt = new DownloadConfiguration
                 {
-                    responseLength = Int64.Parse(webResponse.Headers.Get("Content-Length"));
-                }
+                    MaxTryAgainOnFailover = Int32.MaxValue,
+                    ParallelDownload = true,
+                    ChunkCount = 8,
+                    Timeout = 100,
+                    OnTheFlyDownload = writeToMemory,
+                    BufferBlockSize = 1024 * 8,
+                    MaximumBytesPerSecond = 100 * 1024 * 1024,
+                    TempDirectory = @"C:\temp",
+                    RequestConfiguration =
+                    {
+                        Accept = "*/*",
+                        UserAgent = $"rdt-client",
+                        ProtocolVersion = HttpVersion.Version11,
+                        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+                        KeepAlive = true,
+                        UseDefaultCredentials = false
+                    }
+                };
 
-                var timeout = DateTimeOffset.UtcNow.AddHours(1);
+                _downloader = new DownloadService(downloadOpt);
 
-                while (timeout > DateTimeOffset.UtcNow && !_cancelled)
+                _downloader.DownloadProgressChanged += (_, args) =>
                 {
-                    try
+                    var isElapsedTimeMoreThanOneSecond = Environment.TickCount - LastTick >= 1000;
+
+                    if (isElapsedTimeMoreThanOneSecond)
                     {
-                        var request = WebRequest.Create(uri);
-                        using var response = await request.GetResponseAsync();
-
-                        await using var stream = response.GetResponseStream();
-
-                        if (stream == null)
-                        {
-                            throw new IOException("No stream");
-                        }
-
-                        await using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.Write);
-                        var buffer = new Byte[64 * 1024];
-
-                        while (fileStream.Length < response.ContentLength && !_cancelled)
-                        {
-                            var read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length));
-
-                            if (read > 0)
-                            {
-                                fileStream.Write(buffer, 0, read);
-
-                                BytesDone = fileStream.Length;
-                                BytesTotal = responseLength;
-
-                                if (DateTime.UtcNow > _nextUpdate)
-                                {
-                                    Speed = fileStream.Length - _bytesLastUpdate;
-
-                                    _nextUpdate = DateTime.UtcNow.AddSeconds(1);
-                                    _bytesLastUpdate = fileStream.Length;
-                                    
-                                    timeout = DateTimeOffset.UtcNow.AddHours(1);
-                                }
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
-
-                        break;
+                        AverageSpeed.Add(args.BytesPerSecondSpeed);
+                        LastTick = Environment.TickCount;
                     }
-                    catch (IOException)
-                    {
-                        await Task.Delay(1000);
-                    }
-                    catch (WebException)
-                    {
-                        await Task.Delay(1000);
-                    }
-                }
 
-                if (timeout <= DateTimeOffset.UtcNow)
+                    Speed = (Int64) AverageSpeed.Average();
+                    BytesDone = args.BytesReceived;
+                    BytesTotal = args.TotalBytesToReceive;
+                };
+
+                _downloader.DownloadStarted += (_, args) =>
                 {
-                    throw new Exception($"Download timed out");
-                }
+                    AverageSpeed?.Clear();
+                    Speed = 0;
+                    BytesDone = 0;
+                    BytesTotal = args.TotalBytesToReceive;
+                };
 
-                Speed = 0;
+                _downloader.DownloadFileCompleted += (_, args) =>
+                {
+                    if (args.Cancelled)
+                    {
+                        Error = $"The download was cancelled";
+                    }
+                    else if (args.Error != null)
+                    {
+                        Error = args.Error.Message;
+                    }
+
+                    Finished = true;
+                };
+
+                await _downloader.DownloadFileAsync(_download.Link, filePath);
             }
             catch (Exception ex)
             {
                 Error = $"An unexpected error occurred downloading {_download.Link} for torrent {_torrent.RdName}: {ex.Message}";
-            }
-            finally
-            {
                 Finished = true;
             }
         }

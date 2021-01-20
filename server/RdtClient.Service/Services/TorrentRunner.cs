@@ -172,7 +172,7 @@ namespace RdtClient.Service.Services
                 
                 if (TorrentRunner.ActiveDownloadClients.TryAdd(download.DownloadId, downloadClient))
                 {
-                    await downloadClient.Start();
+                    await downloadClient.Start(false);
                 }
             }
 

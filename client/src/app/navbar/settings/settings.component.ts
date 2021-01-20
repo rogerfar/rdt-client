@@ -25,8 +25,15 @@ export class SettingsComponent implements OnInit {
 
   public saving = false;
   public error: string;
+
   public testPathError: string;
   public testPathSuccess: boolean;
+
+  public testDownloadSpeedError: string;
+  public testDownloadSpeedSuccess: number;
+
+  public testWriteSpeedError: string;
+  public testWriteSpeedSuccess: number;
 
   public settingRealDebridApiKey: string;
   public settingDownloadPath: string;
@@ -100,7 +107,7 @@ export class SettingsComponent implements OnInit {
     );
   }
 
-  public test(): void {
+  public testDownloadPath(): void {
     this.saving = true;
     this.testPathError = null;
     this.testPathSuccess = false;
@@ -111,8 +118,40 @@ export class SettingsComponent implements OnInit {
         this.testPathSuccess = true;
       },
       (err) => {
-        console.log(err);
         this.testPathError = err.error;
+        this.saving = false;
+      }
+    );
+  }
+
+  public testDownloadSpeed(): void {
+    this.saving = true;
+    this.testDownloadSpeedError = null;
+    this.testDownloadSpeedSuccess = 0;
+
+    this.settingsService.testDownloadSpeed().subscribe(
+      (result) => {
+        this.saving = false;
+        this.testDownloadSpeedSuccess = result;
+      },
+      (err) => {
+        this.testDownloadSpeedError = err.error;
+        this.saving = false;
+      }
+    );
+  }
+  public testWriteSpeed(): void {
+    this.saving = true;
+    this.testWriteSpeedError = null;
+    this.testWriteSpeedSuccess = 0;
+
+    this.settingsService.testWriteSpeed().subscribe(
+      (result) => {
+        this.saving = false;
+        this.testWriteSpeedSuccess = result;
+      },
+      (err) => {
+        this.testWriteSpeedError = err.error;
         this.saving = false;
       }
     );

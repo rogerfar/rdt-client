@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -58,24 +59,21 @@ namespace RdtClient.Web.Controllers
         }
         
         [HttpGet]
-        [Route("TestSpeed")]
-        public async Task<ActionResult> TestSpeed()
+        [Route("TestDownloadSpeed")]
+        public async Task<ActionResult> TestDownloadSpeed(CancellationToken cancellationToken)
         {
-            var downloadPath = await _settings.GetString("DownloadPath");
-            var mappedPath = await _settings.GetString("MappedPath");
+            var downloadSpeed = await _settings.TestDownloadSpeed(cancellationToken);
+
+            return Ok(downloadSpeed);
+        }
+        
+        [HttpGet]
+        [Route("TestWriteSpeed")]
+        public async Task<ActionResult> TestWriteSpeed()
+        {
+            var writeSpeed = await _settings.TestWriteSpeed();
             
-            var downloadSpeed = await _settings.TestDownloadSpeed();
-            var containerWriteSpeed = await _settings.TestWriteSpeed(downloadPath);
-            var remoteWriteSpeed = await _settings.TestWriteSpeed(mappedPath);
-
-            var result = new
-            {
-                downloadSpeed,
-                containerWriteSpeed,
-                remoteWriteSpeed
-            };
-
-            return Ok(result);
+            return Ok(writeSpeed);
         }
     }
 

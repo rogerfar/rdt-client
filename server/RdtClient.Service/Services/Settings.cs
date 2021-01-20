@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using RdtClient.Data.Data;
 using RdtClient.Data.Models.Data;
@@ -16,8 +17,8 @@ namespace RdtClient.Service.Services
         Task<String> GetString(String key);
         Task<Int32> GetNumber(String key);
         Task TestPath(String path);
-        Task<Double> TestDownloadSpeed();
-        Task<Double> TestWriteSpeed(String path);
+        Task<Double> TestDownloadSpeed(CancellationToken cancellationToken);
+        Task<Double> TestWriteSpeed();
     }
 
     public class Settings : ISettings
@@ -28,6 +29,9 @@ namespace RdtClient.Service.Services
         {
             _settingData = settingData;
         }
+
+        private static Int64 LastTick { get; set; }
+        private static ConcurrentBag<Int64> AverageSpeed { get; } = new ConcurrentBag<Int64>();
 
         public async Task<IList<Setting>> GetAll()
         {
@@ -83,78 +87,93 @@ namespace RdtClient.Service.Services
             File.Delete(testFile);
         }
 
-        public async Task<Double> TestDownloadSpeed()
+        public async Task<Double> TestDownloadSpeed(CancellationToken cancellationToken)
         {
-            var watch = new Stopwatch();
+            var downloadPath = await GetString("DownloadPath");
 
-            var request = WebRequest.Create(new Uri("https://34.download.real-debrid.com/speedtest/testDefault.rar/" + DateTime.Now.Ticks));
-
-            watch.Start();
-
-            using var response = await request.GetResponseAsync();
-
-            await using var stream = response.GetResponseStream();
-
-            if (stream == null)
-            {
-                throw new IOException("No stream");
-            }
-
-            var buffer = new Byte[64 * 1024];
-            Int64 totalRead = 0;
-
-            while (totalRead < response.ContentLength)
-            {
-                var read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length));
-
-                if (read > 0)
-                {
-                    totalRead += read;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            watch.Stop();
-
-            var downloadSpeed = totalRead / watch.Elapsed.TotalSeconds;
-
-            return downloadSpeed;
-        }
-
-        public async Task<Double> TestWriteSpeed(String path)
-        {
-            var testFilePath = Path.Combine(path, "test.tmp");
-
-            const Int32 testFileSize = 1024 * 1024 * 1024;
-
-            var watch = new Stopwatch();
+            var testFilePath = Path.Combine(downloadPath, "testDefault.rar");
 
             if (File.Exists(testFilePath))
             {
                 File.Delete(testFilePath);
             }
-            
+
+            var download = new Download
+            {
+                Link = "https://34.download.real-debrid.com/speedtest/testDefault.rar",
+                Torrent = new Torrent
+                {
+                    RdName = ""
+                }
+            };
+
+            var downloadClient = new DownloadClient(download, downloadPath);
+
+            await downloadClient.Start(true);
+
+            while (!downloadClient.Finished)
+            {
+                await Task.Delay(1000);
+                
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    downloadClient.Cancel();
+                }
+
+                if (downloadClient.BytesDone > 1024 * 1024 * 100)
+                {
+                    downloadClient.Cancel();
+                }
+            }
+
+            if (File.Exists(testFilePath))
+            {
+                File.Delete(testFilePath);
+            }
+
+            return downloadClient.Speed;
+        }
+
+        public async Task<Double> TestWriteSpeed()
+        {
+            var downloadPath = await GetString("DownloadPath");
+
+            var testFilePath = Path.Combine(downloadPath, "test.tmp");
+
+            if (File.Exists(testFilePath))
+            {
+                File.Delete(testFilePath);
+            }
+
+            const Int32 testFileSize = 64 * 1024 * 1024;
+
+            var watch = new Stopwatch();
+
             watch.Start();
 
             var rnd = new Random();
-            
+
             await using var fileStream = new FileStream(testFilePath, FileMode.Create, FileAccess.Write, FileShare.Write);
 
             var buffer = new Byte[64 * 1024];
-            
+
             while (fileStream.Length < testFileSize)
             {
                 rnd.NextBytes(buffer);
 
                 fileStream.Write(buffer, 0, buffer.Length);
             }
-
+            
             watch.Stop();
 
             var writeSpeed = fileStream.Length / watch.Elapsed.TotalSeconds;
+            
+            fileStream.Close();
+
+            if (File.Exists(testFilePath))
+            {
+                File.Delete(testFilePath);
+            }
 
             return writeSpeed;
         }

@@ -25,4 +25,12 @@ export class SettingsService {
   public testPath(path: string): Observable<void> {
     return this.http.post<void>(`/Api/Settings/TestPath`, { path });
   }
+
+  public testDownloadSpeed(): Observable<number> {
+    return this.http.get<number>(`/Api/Settings/TestDownloadSpeed`);
+  }
+
+  public testWriteSpeed(): Observable<number> {
+    return this.http.get<number>(`/Api/Settings/TestWriteSpeed`);
+  }
 }

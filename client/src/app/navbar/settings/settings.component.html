@@ -64,21 +64,83 @@
         </div>
       </div>
 
-      <div class="notification is-danger is-light" *ngIf="error?.length > 0">Error saving settings: {{ error }}</div>
+      <div class="field">
+        <label class="label">Test download path permissions</label>
+        <div class="control">
+          <button
+            class="button is-warning"
+            (click)="testDownloadPath()"
+            [disabled]="saving"
+            [ngClass]="{ 'is-loading': saving }"
+            *ngIf="!testPathError && !testPathSuccess"
+          >
+            Test permissions
+          </button>
+          <div class="notification is-danger is-light" *ngIf="testPathError">
+            Could not test your download path<br />
+            {{ testPathError }}
+          </div>
 
-      <div class="notification is-danger is-light" *ngIf="testPathError?.length > 0">
-        Could not test your download path<br />
-        {{ testPathError }}
+          <div class="notification is-success is-light" *ngIf="testPathSuccess">Your download path looks good!</div>
+        </div>
+        <div class="help">This will check if the download folder has write permissions.</div>
       </div>
 
-      <div class="notification is-success is-light" *ngIf="testPathSuccess">Successfully tested your download path</div>
+      <div class="field">
+        <label class="label">Test RealDebrid download speed</label>
+        <div class="control">
+          <button
+            class="button is-warning"
+            (click)="testDownloadSpeed()"
+            [disabled]="saving"
+            [ngClass]="{ 'is-loading': saving }"
+            *ngIf="!testDownloadSpeedError && !testDownloadSpeedSuccess"
+          >
+            Test download speed
+          </button>
+          <div class="notification is-danger is-light" *ngIf="testDownloadSpeedError">
+            Could not test your download speed<br />
+            {{ testDownloadSpeedError }}
+          </div>
+
+          <div class="notification is-success is-light" *ngIf="testDownloadSpeedSuccess">
+            Download speed {{ testDownloadSpeedSuccess | filesize }}/s
+          </div>
+        </div>
+        <div class="help">
+          This will download a 10GB test file from RealDebrid. Hit cancel when you have seen enough.
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">Test download folder write speed</label>
+        <div class="control">
+          <button
+            class="button is-warning"
+            (click)="testWriteSpeed()"
+            [disabled]="saving"
+            [ngClass]="{ 'is-loading': saving }"
+            *ngIf="!testWriteSpeedError && !testWriteSpeedSuccess"
+          >
+            Test write speed
+          </button>
+          <div class="notification is-danger is-light" *ngIf="testWriteSpeedError">
+            Could not test your download speed<br />
+            {{ testWriteSpeedError }}
+          </div>
+
+          <div class="notification is-success is-light" *ngIf="testWriteSpeedSuccess">
+            Write speed {{ testWriteSpeedSuccess | filesize }}/s
+          </div>
+        </div>
+        <div class="help">This will write a small file to your download folder to see how fast it can write to it.</div>
+      </div>
+
+      <div class="notification is-danger is-light" *ngIf="error?.length > 0">Error saving settings: {{ error }}</div>
     </section>
     <footer class="modal-card-foot">
       <button class="button is-success" (click)="ok()" [disabled]="saving" [ngClass]="{ 'is-loading': saving }">
         Save Settings
-      </button>
-      <button class="button is-warning" (click)="test()" [disabled]="saving" [ngClass]="{ 'is-loading': saving }">
-        Test permissions
       </button>
       <button class="button" (click)="cancel()" [disabled]="saving" [ngClass]="{ 'is-loading': saving }">Cancel</button>
     </footer>

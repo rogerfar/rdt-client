@@ -5,9 +5,11 @@ VisualStudioVersion = 16.0.29911.84
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RdtClient.Web", "RdtClient.Web\RdtClient.Web.csproj", "{A8C7F095-89C6-4CD1-AFB2-27106F470D62}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RdtClient.Service", "RdtClient.Service\RdtClient.Service.csproj", "{06D27710-AE9A-4FA2-B043-1A4303561716}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RdtClient.Service", "RdtClient.Service\RdtClient.Service.csproj", "{06D27710-AE9A-4FA2-B043-1A4303561716}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RdtClient.Data", "RdtClient.Data\RdtClient.Data.csproj", "{92EF8817-AD73-4301-93BD-745D7D61DD74}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RdtClient.Data", "RdtClient.Data\RdtClient.Data.csproj", "{92EF8817-AD73-4301-93BD-745D7D61DD74}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Downloader", "Downloader\Downloader.csproj", "{48FF995D-AD14-4E41-BC69-7A144C84E3B6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{92EF8817-AD73-4301-93BD-745D7D61DD74}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{92EF8817-AD73-4301-93BD-745D7D61DD74}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{92EF8817-AD73-4301-93BD-745D7D61DD74}.Release|Any CPU.Build.0 = Release|Any CPU
+		{48FF995D-AD14-4E41-BC69-7A144C84E3B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48FF995D-AD14-4E41-BC69-7A144C84E3B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48FF995D-AD14-4E41-BC69-7A144C84E3B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48FF995D-AD14-4E41-BC69-7A144C84E3B6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
