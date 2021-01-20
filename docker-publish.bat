@@ -1,2 +1,1 @@
-docker build --tag rogerfar/rdtclient .
-docker push rogerfar/rdtclient
+docker buildx build --push --platform linux/arm64/v8,linux/amd64 --tag rogerfar/rdtclient .

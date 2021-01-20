@@ -1,5 +1,5 @@
 # Stage 1 - Build the frontend
-FROM node:12.15-buster AS node-build-env
+FROM amd64/node:15.5-buster AS node-build-env
 
 RUN mkdir /appclient
 WORKDIR /appclient
@@ -20,7 +20,7 @@ RUN dotnet build -c Release
 RUN dotnet publish -c Release -o out
 
 # Stage 3 - Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:5.0.1-buster-slim AS base
+FROM mcr.microsoft.com/dotnet/aspnet:5.0.2-buster-slim AS base
 RUN mkdir /app
 WORKDIR /app
 COPY --from=dotnet-build-env /appserver/out .
