@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using RdtClient.Data.Enums;
+using RdtClient.Service.Helpers;
 
 namespace RdtClient.Service.Services
 {
@@ -61,18 +62,58 @@ namespace RdtClient.Service.Services
 
         public async Task Tick()
         {
-            var settingApiKey = await _settings.GetString("RealDebridApiKey");
-            var settingMinFileSize = await _settings.GetNumber("MinFileSize");
-            var settingDownloadLimit = await _settings.GetNumber("DownloadLimit");
-            var settingUnpackLimit = await _settings.GetNumber("UnpackLimit");
-            var settingDownloadPath = await _settings.GetString("DownloadPath");
+            var settings = await _settings.GetAll();
             
-            settingMinFileSize = settingMinFileSize * 1024 * 1024;
-
+            var settingApiKey = settings.GetString("RealDebridApiKey");
             if (String.IsNullOrWhiteSpace(settingApiKey))
             {
                 return;
             }
+
+            var settingMinFileSize = settings.GetNumber("MinFileSize");
+            if (settingMinFileSize <= 0)
+            {
+                settingMinFileSize = 0;
+            }
+
+            settingMinFileSize = settingMinFileSize * 1024 * 1024;
+            
+            var settingDownloadLimit = settings.GetNumber("DownloadLimit");
+            if (settingDownloadLimit < 1)
+            {
+                settingDownloadLimit = 1;
+            }
+
+            var settingUnpackLimit = settings.GetNumber("UnpackLimit");
+            if (settingUnpackLimit < 1)
+            {
+                settingUnpackLimit = 1;
+            }
+
+            var settingDownloadPath = settings.GetString("DownloadPath");
+            if (String.IsNullOrWhiteSpace(settingDownloadPath))
+            {
+                return;
+            }
+
+            var settingTempPath = settings.GetString("TempPath");
+            if (String.IsNullOrWhiteSpace(settingTempPath))
+            {
+                settingTempPath = Path.GetTempPath();
+            }
+
+            var settingDownloadChunkCount = settings.GetNumber("DownloadChunkCount");
+            if (settingDownloadChunkCount <= 0)
+            {
+                settingDownloadChunkCount = 1;
+            }
+
+            var settingDownloadMaxSpeed = settings.GetNumber("DownloadMaxSpeed");
+            if (settingDownloadMaxSpeed <= 0)
+            {
+                settingDownloadMaxSpeed = 0;
+            }
+            settingDownloadMaxSpeed = settingDownloadMaxSpeed * 1024 * 1024;
 
             // Check if any torrents are finished downloading to the host, remove them from the active download list.
             var completedActiveDownloads = ActiveDownloadClients.Where(m => m.Value.Finished).ToList();
@@ -172,7 +213,7 @@ namespace RdtClient.Service.Services
                 
                 if (TorrentRunner.ActiveDownloadClients.TryAdd(download.DownloadId, downloadClient))
                 {
-                    await downloadClient.Start(false);
+                    await downloadClient.Start(false, settingTempPath, settingDownloadChunkCount, settingDownloadMaxSpeed);
                 }
             }
 

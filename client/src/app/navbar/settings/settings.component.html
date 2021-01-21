@@ -17,6 +17,7 @@
           >.
         </p>
       </div>
+
       <div class="field">
         <label class="label">Download path</label>
         <div class="control">
@@ -24,6 +25,7 @@
         </div>
         <p class="help">Path in the docker container to download files to (i.e. /data/downloads).</p>
       </div>
+
       <div class="field">
         <label class="label">Mapped path</label>
         <div class="control">
@@ -34,6 +36,18 @@
           to find your downloads.
         </p>
       </div>
+
+      <div class="field">
+        <label class="label">Temp path</label>
+        <div class="control">
+          <input class="input" type="text" maxlength="1000" [(ngModel)]="settingTempPath" />
+        </div>
+        <p class="help">
+          Path in the docker container to temporarily download to (i.e. /data/temp). Make sure the docker container has
+          enough disk space if using a path inside the container.
+        </p>
+      </div>
+
       <div class="field">
         <label class="label">Maximum parallel downloads</label>
         <div class="control">
@@ -41,6 +55,26 @@
         </div>
         <p class="help">Maximum amount of torrents that get downloaded to your host at the same time.</p>
       </div>
+
+      <div class="field">
+        <label class="label">Parallel connections per download</label>
+        <div class="control">
+          <input class="input" type="number" max="100" min="0" [(ngModel)]="settingDownloadChunkCount" />
+        </div>
+        <p class="help">
+          Maximum amount of parallel threads that are used to download a single torrent to your host. If set to 1 no
+          parallel downloading will be done.
+        </p>
+      </div>
+
+      <div class="field">
+        <label class="label">Download speed (in MB/s)</label>
+        <div class="control">
+          <input class="input" type="number" max="1000" min="0" [(ngModel)]="settingDownloadMaxSpeed" />
+        </div>
+        <p class="help">Maximum download speed in Megabytes per second. When set to 0 unlimited speed is used.</p>
+      </div>
+
       <div class="field">
         <label class="label">Maximum unpack processes</label>
         <div class="control">

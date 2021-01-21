@@ -38,7 +38,10 @@ export class SettingsComponent implements OnInit {
   public settingRealDebridApiKey: string;
   public settingDownloadPath: string;
   public settingMappedPath: string;
+  public settingTempPath: string;
   public settingDownloadLimit: number;
+  public settingDownloadChunkCount: number;
+  public settingDownloadMaxSpeed: number;
   public settingUnpackLimit: number;
   public settingMinFileSize: number;
 
@@ -55,7 +58,10 @@ export class SettingsComponent implements OnInit {
         this.settingRealDebridApiKey = this.getSetting(results, 'RealDebridApiKey');
         this.settingDownloadPath = this.getSetting(results, 'DownloadPath');
         this.settingMappedPath = this.getSetting(results, 'MappedPath');
+        this.settingTempPath = this.getSetting(results, 'TempPath');
         this.settingDownloadLimit = parseInt(this.getSetting(results, 'DownloadLimit'), 10);
+        this.settingDownloadChunkCount = parseInt(this.getSetting(results, 'DownloadChunkCount'), 10);
+        this.settingDownloadMaxSpeed = parseInt(this.getSetting(results, 'DownloadMaxSpeed'), 10);
         this.settingUnpackLimit = parseInt(this.getSetting(results, 'UnpackLimit'), 10);
         this.settingMinFileSize = parseInt(this.getSetting(results, 'MinFileSize'), 10);
       },
@@ -83,8 +89,20 @@ export class SettingsComponent implements OnInit {
         value: this.settingMappedPath,
       },
       {
+        settingId: 'TempPath',
+        value: this.settingTempPath,
+      },
+      {
         settingId: 'DownloadLimit',
         value: (this.settingDownloadLimit ?? 10).toString(),
+      },
+      {
+        settingId: 'DownloadChunkCount',
+        value: (this.settingDownloadChunkCount ?? 8).toString(),
+      },
+      {
+        settingId: 'DownloadMaxSpeed',
+        value: (this.settingDownloadMaxSpeed ?? 0).toString(),
       },
       {
         settingId: 'UnpackLimit',

@@ -34,9 +34,9 @@ namespace RdtClient.Service.Services
         public Int64 BytesDone { get; private set; }
 
         private static Int64 LastTick { get; set; }
-        private static ConcurrentBag<Int64> AverageSpeed { get; } = new ConcurrentBag<Int64>();
+        private static ConcurrentBag<Double> AverageSpeed { get; } = new ConcurrentBag<Double>();
 
-        public async Task Start(Boolean writeToMemory)
+        public async Task Start(Boolean onTheFlyDownload, String tempDirectory, Int32 chunkCount, Int64 maximumBytesPerSecond)
         {
             BytesDone = 0;
             BytesTotal = 0;
@@ -69,7 +69,7 @@ namespace RdtClient.Service.Services
 
                 await Task.Factory.StartNew(async delegate
                 {
-                    await Download(filePath, writeToMemory);
+                    await Download(filePath, onTheFlyDownload, tempDirectory, chunkCount, maximumBytesPerSecond);
                 });
             }
             catch (Exception ex)
@@ -84,7 +84,7 @@ namespace RdtClient.Service.Services
             _downloader?.CancelAsync();
         }
 
-        private async Task Download(String filePath, Boolean writeToMemory)
+        private async Task Download(String filePath, Boolean onTheFlyDownload, String tempDirectory, Int32 chunkCount, Int64 maximumBytesPerSecond)
         {
             try
             {
@@ -93,13 +93,13 @@ namespace RdtClient.Service.Services
                 var downloadOpt = new DownloadConfiguration
                 {
                     MaxTryAgainOnFailover = Int32.MaxValue,
-                    ParallelDownload = true,
-                    ChunkCount = 8,
-                    Timeout = 100,
-                    OnTheFlyDownload = writeToMemory,
+                    ParallelDownload = chunkCount > 1,
+                    ChunkCount = chunkCount,
+                    Timeout = 1000,
+                    OnTheFlyDownload = onTheFlyDownload,
                     BufferBlockSize = 1024 * 8,
-                    MaximumBytesPerSecond = 100 * 1024 * 1024,
-                    TempDirectory = @"C:\temp",
+                    MaximumBytesPerSecond = maximumBytesPerSecond,
+                    TempDirectory = tempDirectory,
                     RequestConfiguration =
                     {
                         Accept = "*/*",
@@ -124,7 +124,7 @@ namespace RdtClient.Service.Services
                     }
 
                     Speed = (Int64) AverageSpeed.Average();
-                    BytesDone = args.BytesReceived;
+                    BytesDone = args.ReceivedBytesSize;
                     BytesTotal = args.TotalBytesToReceive;
                 };
 

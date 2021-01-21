@@ -58,6 +58,16 @@ namespace RdtClient.Data.Data
                 },
                 new Setting
                 {
+                    SettingId = "TempPath",
+                    Type = "String",
+#if DEBUG
+                    Value = @"C:\Temp\rdtclient"
+#else 
+                    Value = "/data/downloads"
+#endif
+                },
+                new Setting
+                {
                     SettingId = "MappedPath",
                     Type = "String",
 #if DEBUG
@@ -81,6 +91,18 @@ namespace RdtClient.Data.Data
                 new Setting
                 {
                     SettingId = "MinFileSize",
+                    Type = "Int32",
+                    Value = "0"
+                },
+                new Setting
+                {
+                    SettingId = "DownloadChunkCount",
+                    Type = "Int32",
+                    Value = "8"
+                },
+                new Setting
+                {
+                    SettingId = "DownloadMaxSpeed",
                     Type = "Int32",
                     Value = "0"
                 }

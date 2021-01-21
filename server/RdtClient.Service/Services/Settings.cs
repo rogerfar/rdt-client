@@ -90,6 +90,7 @@ namespace RdtClient.Service.Services
         public async Task<Double> TestDownloadSpeed(CancellationToken cancellationToken)
         {
             var downloadPath = await GetString("DownloadPath");
+            var tempPath = await GetString("TempPath");
 
             var testFilePath = Path.Combine(downloadPath, "testDefault.rar");
 
@@ -109,10 +110,11 @@ namespace RdtClient.Service.Services
 
             var downloadClient = new DownloadClient(download, downloadPath);
 
-            await downloadClient.Start(true);
+            await downloadClient.Start(false, tempPath, 8, 0);
 
             while (!downloadClient.Finished)
             {
+                // ReSharper disable once MethodSupportsCancellation
                 await Task.Delay(1000);
                 
                 if (cancellationToken.IsCancellationRequested)
@@ -120,7 +122,7 @@ namespace RdtClient.Service.Services
                     downloadClient.Cancel();
                 }
 
-                if (downloadClient.BytesDone > 1024 * 1024 * 100)
+                if (downloadClient.BytesDone > 1024 * 1024 * 50)
                 {
                     downloadClient.Cancel();
                 }
@@ -129,6 +131,13 @@ namespace RdtClient.Service.Services
             if (File.Exists(testFilePath))
             {
                 File.Delete(testFilePath);
+            }
+
+            var files = Directory.GetFiles(tempPath, "*.dsc", SearchOption.TopDirectoryOnly);
+
+            foreach (var file in files)
+            {
+                File.Delete(file);
             }
 
             return downloadClient.Speed;
