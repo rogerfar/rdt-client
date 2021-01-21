@@ -80,7 +80,7 @@ namespace RdtClient.Data.Data
                 {
                     SettingId = "DownloadLimit",
                     Type = "Int32",
-                    Value = "10"
+                    Value = "2"
                 },
                 new Setting
                 {

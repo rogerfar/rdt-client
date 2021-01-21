@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RdtClient.Data.Models.Data;
@@ -32,6 +33,7 @@ namespace RdtClient.Data.Data
             var results = await _dataContext.Torrents
                                             .AsNoTracking()
                                             .Include(m => m.Downloads)
+                                            .OrderByDescending(m => m.Added)
                                             .ToListAsync();
 
             return results;
