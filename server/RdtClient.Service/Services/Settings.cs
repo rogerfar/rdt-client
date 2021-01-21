@@ -19,6 +19,7 @@ namespace RdtClient.Service.Services
         Task TestPath(String path);
         Task<Double> TestDownloadSpeed(CancellationToken cancellationToken);
         Task<Double> TestWriteSpeed();
+        void Clean();
     }
 
     public class Settings : ISettings
@@ -133,12 +134,7 @@ namespace RdtClient.Service.Services
                 File.Delete(testFilePath);
             }
 
-            var files = Directory.GetFiles(tempPath, "*.dsc", SearchOption.TopDirectoryOnly);
-
-            foreach (var file in files)
-            {
-                File.Delete(file);
-            }
+            Clean();
 
             return downloadClient.Speed;
         }
@@ -185,6 +181,28 @@ namespace RdtClient.Service.Services
             }
 
             return writeSpeed;
+        }
+
+        public void Clean()
+        {
+            try
+            {
+                var tempPath = GetString("TempPath").Result;
+
+                if (!String.IsNullOrWhiteSpace(tempPath))
+                {
+                    var files = Directory.GetFiles(tempPath, "*.dsc", SearchOption.TopDirectoryOnly);
+
+                    foreach (var file in files)
+                    {
+                        File.Delete(file);
+                    }
+                }
+            }
+            catch
+            {
+                // ignored
+            }
         }
     }
 }
