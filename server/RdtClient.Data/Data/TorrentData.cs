@@ -33,10 +33,9 @@ namespace RdtClient.Data.Data
             var results = await _dataContext.Torrents
                                             .AsNoTracking()
                                             .Include(m => m.Downloads)
-                                            .OrderByDescending(m => m.Added)
                                             .ToListAsync();
 
-            return results;
+            return results.OrderByDescending(m => m.Added).ToList();
         }
 
         public async Task<Torrent> GetById(Guid torrentId)
