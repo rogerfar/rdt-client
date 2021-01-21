@@ -161,14 +161,14 @@ namespace RdtClient.Service.Services
             
             var torrents = await _torrents.Get();
 
-            // Only poll RealDebrid every 5 when a hub is connected, otherwise ever 30 seconds
+            // Only poll RealDebrid every second when a hub is connected, otherwise every 30 seconds
             if (_nextUpdate < DateTime.UtcNow && torrents.Count > 0)
             {
                 var updateTime = 30;
 
                 if (RdtHub.HasConnections)
                 {
-                    updateTime = 5;
+                    updateTime = 1;
                 }
 
                 _nextUpdate = DateTime.UtcNow.AddSeconds(updateTime);

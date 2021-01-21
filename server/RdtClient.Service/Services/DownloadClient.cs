@@ -33,8 +33,8 @@ namespace RdtClient.Service.Services
         public Int64 BytesTotal { get; private set; }
         public Int64 BytesDone { get; private set; }
 
-        private static Int64 LastTick { get; set; }
-        private static ConcurrentBag<Double> AverageSpeed { get; } = new ConcurrentBag<Double>();
+        private Int64 LastTick { get; set; }
+        private ConcurrentBag<Double> AverageSpeed { get; } = new ConcurrentBag<Double>();
 
         public async Task Start(Boolean onTheFlyDownload, String tempDirectory, Int32 chunkCount, Int64 maximumBytesPerSecond)
         {
@@ -123,7 +123,11 @@ namespace RdtClient.Service.Services
                         LastTick = Environment.TickCount;
                     }
 
-                    Speed = (Int64) AverageSpeed.Average();
+                    if (AverageSpeed.Count > 0)
+                    {
+                        Speed = (Int64) AverageSpeed.Average();
+                    }
+
                     BytesDone = args.ReceivedBytesSize;
                     BytesTotal = args.TotalBytesToReceive;
                 };
