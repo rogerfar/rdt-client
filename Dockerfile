@@ -1,3 +1,5 @@
+ARG ARCH=
+
 # Stage 1 - Build the frontend
 FROM amd64/node:15.5-buster AS node-build-env
 
@@ -9,7 +11,7 @@ RUN npm ci
 RUN npx ng build --prod --output-path=out
 
 # Stage 2 - Build the backend
-FROM mcr.microsoft.com/dotnet/sdk:5.0 AS dotnet-build-env
+FROM mcr.microsoft.com/dotnet/sdk:5.0.102-1-buster-slim-${ARCH} AS dotnet-build-env
 
 RUN mkdir /appserver
 WORKDIR /appserver
@@ -20,7 +22,7 @@ RUN dotnet build -c Release
 RUN dotnet publish -c Release -o out
 
 # Stage 3 - Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:5.0.2-buster-slim AS base
+FROM mcr.microsoft.com/dotnet/aspnet:5.0.2-buster-slim-${ARCH} AS base
 RUN mkdir /app
 WORKDIR /app
 COPY --from=dotnet-build-env /appserver/out .
