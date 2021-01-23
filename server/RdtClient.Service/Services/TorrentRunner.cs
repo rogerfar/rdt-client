@@ -96,25 +96,6 @@ namespace RdtClient.Service.Services
                 return;
             }
 
-            var settingTempPath = settings.GetString("TempPath");
-            if (String.IsNullOrWhiteSpace(settingTempPath))
-            {
-                settingTempPath = Path.GetTempPath();
-            }
-
-            var settingDownloadChunkCount = settings.GetNumber("DownloadChunkCount");
-            if (settingDownloadChunkCount <= 0)
-            {
-                settingDownloadChunkCount = 1;
-            }
-
-            var settingDownloadMaxSpeed = settings.GetNumber("DownloadMaxSpeed");
-            if (settingDownloadMaxSpeed <= 0)
-            {
-                settingDownloadMaxSpeed = 0;
-            }
-            settingDownloadMaxSpeed = settingDownloadMaxSpeed * 1024 * 1024;
-
             // Check if any torrents are finished downloading to the host, remove them from the active download list.
             var completedActiveDownloads = ActiveDownloadClients.Where(m => m.Value.Finished).ToList();
 
@@ -213,7 +194,7 @@ namespace RdtClient.Service.Services
                 
                 if (TorrentRunner.ActiveDownloadClients.TryAdd(download.DownloadId, downloadClient))
                 {
-                    await downloadClient.Start(false, settingTempPath, settingDownloadChunkCount, settingDownloadMaxSpeed);
+                    await downloadClient.Start(settings);
                 }
             }
 

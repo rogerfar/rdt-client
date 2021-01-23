@@ -72,6 +72,29 @@ Replace the paths in `volumes` as in the above step.
 1. Same goes for `Mapped path`, but this is the destination path from your docker mapping. This is a path on your host.
 1. Save your settings.
 
+### Download Clients
+
+Currently there 2 available download clients:
+
+#### Simple Downloader
+
+This is a simple 1 connection only download manager. It uses less resources than the multi-part downloader. It downloads straight to the download path.
+
+It has the following options:
+
+- Maximum parallel downloads: This number indicates how many completed torrents from Real Debrid can be downloaded at the same time. On low powered systems it is recommended to keep this number low.
+
+#### Multi Part Downloader
+
+This [downloader](https://github.com/bezzad/Downloader) as more options and such uses more resources (memory, CPU) to download files. Recommended more powerful systems.
+
+It has the following options:
+
+- Temp Download path: Set this path to where the downloader temporarily stores chunks. This path can be an internal path in Docker (i.e. `/data/temp`) but make sure you have enough disk space to complete the whole download. When all chunks are completed the completed file is copied to your download folder.
+- Maximum parallel downloads: This number indicates how many completed torrents from Real Debrid can be downloaded at the same time.
+- Parallel connections per download: This number indicates how many threads/connections/parts/chunks it will use per download. This can increase speed, recommended is no more than 8.
+- Download speed (in MB/s): This number indicates the speed in MB/s per download. If you set this to 10 and `Maximum parallel downloads` to 2, you can download with a maximum of 20MB/s.
+
 ### Troubleshooting
 
 - If you forgot your logins simply delete the `rdtclient.db` and restart the service.

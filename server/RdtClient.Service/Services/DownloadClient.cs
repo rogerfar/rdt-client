@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Downloader;
 using RdtClient.Data.Models.Data;
+using RdtClient.Service.Helpers;
 
 namespace RdtClient.Service.Services
 {
@@ -17,6 +18,7 @@ namespace RdtClient.Service.Services
         private readonly Torrent _torrent;
 
         private DownloadService _downloader;
+        private SimpleDownloader _simpleDownloader;
 
         public DownloadClient(Download download, String destinationPath)
         {
@@ -33,10 +35,7 @@ namespace RdtClient.Service.Services
         public Int64 BytesTotal { get; private set; }
         public Int64 BytesDone { get; private set; }
 
-        private Int64 LastTick { get; set; }
-        private ConcurrentBag<Double> AverageSpeed { get; } = new ConcurrentBag<Double>();
-
-        public async Task Start(Boolean onTheFlyDownload, String tempDirectory, Int32 chunkCount, Int64 maximumBytesPerSecond)
+        public async Task Start(IList<Setting> settings)
         {
             BytesDone = 0;
             BytesTotal = 0;
@@ -44,6 +43,8 @@ namespace RdtClient.Service.Services
 
             try
             {
+                var downloadClientSetting = settings.GetString("DownloadClient");
+                
                 var fileUrl = _download.Link;
 
                 if (String.IsNullOrWhiteSpace(fileUrl))
@@ -69,7 +70,17 @@ namespace RdtClient.Service.Services
 
                 await Task.Factory.StartNew(async delegate
                 {
-                    await Download(filePath, onTheFlyDownload, tempDirectory, chunkCount, maximumBytesPerSecond);
+                    switch (downloadClientSetting)
+                    {
+                        case "Simple":
+                            await DownloadSimple(uri, filePath);
+                            break;
+                        case "MultiPart":
+                            await DownloadMultiPart(filePath, settings);
+                            break;
+                        default:
+                            throw new Exception($"Unknown download client {downloadClientSetting}");
+                    }
                 });
             }
             catch (Exception ex)
@@ -82,24 +93,82 @@ namespace RdtClient.Service.Services
         public void Cancel()
         {
             _downloader?.CancelAsync();
+            _simpleDownloader?.Cancel();
         }
 
-        private async Task Download(String filePath, Boolean onTheFlyDownload, String tempDirectory, Int32 chunkCount, Int64 maximumBytesPerSecond)
+        private async Task DownloadSimple(Uri uri, String filePath)
         {
             try
             {
-                LastTick = 0;
+                _simpleDownloader = new SimpleDownloader();
 
+                _simpleDownloader.DownloadProgressChanged += (_, args) =>
+                {
+                    Speed = (Int64) args.BytesPerSecondSpeed;
+                    BytesDone = args.ReceivedBytesSize;
+                    BytesTotal = args.TotalBytesToReceive;
+                };
+                
+                _simpleDownloader.DownloadFileCompleted += (_, args) =>
+                {
+                    if (args.Cancelled)
+                    {
+                        Error = $"The download was cancelled";
+                    }
+                    else if (args.Error != null)
+                    {
+                        Error = args.Error.Message;
+                    }
+
+                    Finished = true;
+                };
+                
+                Speed = 0;
+                BytesDone = 0;
+                BytesTotal = 0;
+
+                await _simpleDownloader.Download(uri, filePath);
+            }
+            catch (Exception ex)
+            {
+                Error = $"An unexpected error occurred downloading {_download.Link} for torrent {_torrent.RdName}: {ex.Message}";
+                Finished = true;
+            }
+        }
+
+        private async Task DownloadMultiPart(String filePath, IList<Setting> settings)
+        {
+            try
+            {
+                var settingTempPath = settings.GetString("TempPath");
+                if (String.IsNullOrWhiteSpace(settingTempPath))
+                {
+                    settingTempPath = Path.GetTempPath();
+                }
+
+                var settingDownloadChunkCount = settings.GetNumber("DownloadChunkCount");
+                if (settingDownloadChunkCount <= 0)
+                {
+                    settingDownloadChunkCount = 1;
+                }
+
+                var settingDownloadMaxSpeed = settings.GetNumber("DownloadMaxSpeed");
+                if (settingDownloadMaxSpeed <= 0)
+                {
+                    settingDownloadMaxSpeed = 0;
+                }
+                settingDownloadMaxSpeed = settingDownloadMaxSpeed * 1024 * 1024;
+                
                 var downloadOpt = new DownloadConfiguration
                 {
                     MaxTryAgainOnFailover = Int32.MaxValue,
-                    ParallelDownload = chunkCount > 1,
-                    ChunkCount = chunkCount,
+                    ParallelDownload = settingDownloadChunkCount > 1,
+                    ChunkCount = settingDownloadChunkCount,
                     Timeout = 1000,
-                    OnTheFlyDownload = onTheFlyDownload,
+                    OnTheFlyDownload = false,
                     BufferBlockSize = 1024 * 8,
-                    MaximumBytesPerSecond = maximumBytesPerSecond,
-                    TempDirectory = tempDirectory,
+                    MaximumBytesPerSecond = settingDownloadMaxSpeed,
+                    TempDirectory = settingTempPath,
                     RequestConfiguration =
                     {
                         Accept = "*/*",
@@ -115,31 +184,11 @@ namespace RdtClient.Service.Services
 
                 _downloader.DownloadProgressChanged += (_, args) =>
                 {
-                    var isElapsedTimeMoreThanOneSecond = Environment.TickCount - LastTick >= 1000;
-
-                    if (isElapsedTimeMoreThanOneSecond)
-                    {
-                        AverageSpeed.Add(args.BytesPerSecondSpeed);
-                        LastTick = Environment.TickCount;
-                    }
-
-                    if (AverageSpeed.Count > 0)
-                    {
-                        Speed = (Int64) AverageSpeed.Average();
-                    }
-
+                    Speed = (Int64) args.BytesPerSecondSpeed;
                     BytesDone = args.ReceivedBytesSize;
                     BytesTotal = args.TotalBytesToReceive;
                 };
-
-                _downloader.DownloadStarted += (_, args) =>
-                {
-                    AverageSpeed?.Clear();
-                    Speed = 0;
-                    BytesDone = 0;
-                    BytesTotal = args.TotalBytesToReceive;
-                };
-
+                
                 _downloader.DownloadFileCompleted += (_, args) =>
                 {
                     if (args.Cancelled)

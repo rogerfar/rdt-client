@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -30,10 +29,7 @@ namespace RdtClient.Service.Services
         {
             _settingData = settingData;
         }
-
-        private static Int64 LastTick { get; set; }
-        private static ConcurrentBag<Int64> AverageSpeed { get; } = new ConcurrentBag<Int64>();
-
+        
         public async Task<IList<Setting>> GetAll()
         {
             return await _settingData.GetAll();
@@ -91,7 +87,8 @@ namespace RdtClient.Service.Services
         public async Task<Double> TestDownloadSpeed(CancellationToken cancellationToken)
         {
             var downloadPath = await GetString("DownloadPath");
-            var tempPath = await GetString("TempPath");
+
+            var settings = await GetAll();
 
             var testFilePath = Path.Combine(downloadPath, "testDefault.rar");
 
@@ -111,7 +108,7 @@ namespace RdtClient.Service.Services
 
             var downloadClient = new DownloadClient(download, downloadPath);
 
-            await downloadClient.Start(false, tempPath, 8, 0);
+            await downloadClient.Start(settings);
 
             while (!downloadClient.Finished)
             {

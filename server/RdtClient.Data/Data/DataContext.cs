@@ -58,6 +58,12 @@ namespace RdtClient.Data.Data
                 },
                 new Setting
                 {
+                    SettingId = "DownloadClient",
+                    Type = "String",
+                    Value = @"Simple"
+                },
+                new Setting
+                {
                     SettingId = "TempPath",
                     Type = "String",
 #if DEBUG

@@ -39,6 +39,7 @@ export class SettingsComponent implements OnInit {
   public settingDownloadPath: string;
   public settingMappedPath: string;
   public settingTempPath: string;
+  public settingDownloadClient: string;
   public settingDownloadLimit: number;
   public settingDownloadChunkCount: number;
   public settingDownloadMaxSpeed: number;
@@ -59,6 +60,7 @@ export class SettingsComponent implements OnInit {
         this.settingDownloadPath = this.getSetting(results, 'DownloadPath');
         this.settingMappedPath = this.getSetting(results, 'MappedPath');
         this.settingTempPath = this.getSetting(results, 'TempPath');
+        this.settingDownloadClient = this.getSetting(results, 'DownloadClient');
         this.settingDownloadLimit = parseInt(this.getSetting(results, 'DownloadLimit'), 10);
         this.settingDownloadChunkCount = parseInt(this.getSetting(results, 'DownloadChunkCount'), 10);
         this.settingDownloadMaxSpeed = parseInt(this.getSetting(results, 'DownloadMaxSpeed'), 10);
@@ -91,6 +93,10 @@ export class SettingsComponent implements OnInit {
       {
         settingId: 'TempPath',
         value: this.settingTempPath,
+      },
+      {
+        settingId: 'DownloadClient',
+        value: this.settingDownloadClient,
       },
       {
         settingId: 'DownloadLimit',
