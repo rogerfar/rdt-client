@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Downloader" Version="2.0.7" />
     <PackageReference Include="MonoTorrent" Version="1.0.28" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="RD.NET" Version="1.0.0" />
@@ -16,7 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Downloader\Downloader.csproj" />
     <ProjectReference Include="..\RdtClient.Data\RdtClient.Data.csproj" />
   </ItemGroup>
 
