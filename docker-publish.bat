@@ -1,2 +1,1 @@
-docker build --tag rogerfar/rdtclient:latest --build-arg ARCH=amd64 .
-docker push rogerfar/rdtclient:latest
+docker buildx build --push --platform linux/arm64/v8,linux/amd64 --tag rogerfar/rdtclient .
