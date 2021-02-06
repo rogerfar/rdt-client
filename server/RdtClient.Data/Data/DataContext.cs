@@ -102,6 +102,12 @@ namespace RdtClient.Data.Data
                 },
                 new Setting
                 {
+                    SettingId = "OnlyDownloadAvailableFiles",
+                    Type = "Int32",
+                    Value = "1"
+                },
+                new Setting
+                {
                     SettingId = "DownloadChunkCount",
                     Type = "Int32",
                     Value = "8"

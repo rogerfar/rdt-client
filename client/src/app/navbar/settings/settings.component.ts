@@ -45,6 +45,7 @@ export class SettingsComponent implements OnInit {
   public settingDownloadMaxSpeed: number;
   public settingUnpackLimit: number;
   public settingMinFileSize: number;
+  public settingOnlyDownloadAvailableFiles: boolean;
 
   constructor(private settingsService: SettingsService) {}
 
@@ -66,6 +67,7 @@ export class SettingsComponent implements OnInit {
         this.settingDownloadMaxSpeed = parseInt(this.getSetting(results, 'DownloadMaxSpeed'), 10);
         this.settingUnpackLimit = parseInt(this.getSetting(results, 'UnpackLimit'), 10);
         this.settingMinFileSize = parseInt(this.getSetting(results, 'MinFileSize'), 10);
+        this.settingOnlyDownloadAvailableFiles = this.getSetting(results, 'OnlyDownloadAvailableFiles') === 'true';
       },
       (err) => {
         this.error = err.error;
@@ -117,6 +119,10 @@ export class SettingsComponent implements OnInit {
       {
         settingId: 'MinFileSize',
         value: (this.settingMinFileSize ?? 0).toString(),
+      },
+      {
+        settingId: 'OnlyDownloadAvailableFiles',
+        value: (this.settingOnlyDownloadAvailableFiles ? '1' : '0').toString(),
       },
     ];
 

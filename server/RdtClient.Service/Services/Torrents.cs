@@ -22,6 +22,7 @@ namespace RdtClient.Service.Services
         Task UpdateCategory(String hash, String category);
         Task UploadMagnet(String magnetLink, String category, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete);
         Task UploadFile(Byte[] bytes, String category, Boolean autoDownload, Boolean autoUnpack, Boolean autoDelete);
+        Task<List<String>> GetAvailableFiles(String hash);
         Task SelectFiles(String torrentId, IList<String> fileIds);
         Task Delete(Guid torrentId, Boolean deleteData, Boolean deleteRdTorrent, Boolean deleteLocalFiles);
         Task Unrestrict(Guid torrentId);
@@ -152,6 +153,17 @@ namespace RdtClient.Service.Services
             await Add(rdTorrent.Id, torrent.InfoHash.ToHex(), category, autoDownload, autoUnpack, autoDelete);
         }
 
+        public async Task<List<String>> GetAvailableFiles(String hash)
+        {
+            var result = await GetRdNetClient().GetAvailableFiles(hash);
+
+            var files = result.SelectMany(m => m.Value).SelectMany(m => m.Value).SelectMany(m => m.Values);
+
+            var groups = files.GroupBy(m => m.Filename);
+
+            return groups.Select(m => m.Key).ToList();
+        }
+
         public async Task SelectFiles(String torrentId, IList<String> fileIds)
         {
             await GetRdNetClient().SelectTorrentFilesAsync(torrentId, fileIds.ToArray());
@@ -246,11 +258,6 @@ namespace RdtClient.Service.Services
 
         public async Task<Profile> GetProfile()
         {
-            if (_rdtNetClient == null)
-            {
-                return new Profile();
-            }
-
             var user = await GetRdNetClient().GetUserAsync();
 
             var profile = new Profile

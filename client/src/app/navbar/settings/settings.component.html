@@ -113,6 +113,19 @@
       </div>
 
       <div class="field">
+        <div class="control">
+          <label class="checkbox">
+            <input type="checkbox" [(ngModel)]="settingOnlyDownloadAvailableFiles" />
+            Only download available files on RealDebrid
+          </label>
+          <div class="help">
+            When selected, it will only download files in the torrent that have been download by Real Debrid. You can
+            use this in combination with the Min File size setting above.
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
         <label class="label">Test download path permissions</label>
         <div class="control">
           <button

@@ -77,7 +77,10 @@ namespace RdtClient.Service.Services
             }
 
             settingMinFileSize = settingMinFileSize * 1024 * 1024;
-            
+
+            var settingOnlyDownloadAvailableFilesRaw = settings.GetNumber("OnlyDownloadAvailableFiles");
+            var settingOnlyDownloadAvailableFiles = settingOnlyDownloadAvailableFilesRaw == 1;
+
             var settingDownloadLimit = settings.GetNumber("DownloadLimit");
             if (settingDownloadLimit < 1)
             {
@@ -264,17 +267,21 @@ namespace RdtClient.Service.Services
                 // RealDebrid is waiting for file selection, select which files to download.
                 if (torrent.AutoDownload && torrent.RdStatus == RealDebridStatus.WaitingForFileSelection)
                 {
-                    var fileIds = torrent.Files
-                                         .Select(m => m.Id.ToString())
-                                         .ToArray();
+                    var files = torrent.Files;
+
+                    if (settingOnlyDownloadAvailableFiles)
+                    {
+                        var availableFiles = await _torrents.GetAvailableFiles(torrent.Hash);
+
+                        files = torrent.Files.Where(m => availableFiles.Any(f => m.Path.EndsWith(f))).ToList();
+                    }
 
                     if (settingMinFileSize > 0)
                     {
-                        fileIds = torrent.Files
-                                         .Where(m => m.Bytes > settingMinFileSize)
-                                         .Select(m => m.Id.ToString())
-                                         .ToArray();
+                        files = files.Where(m => m.Bytes > settingMinFileSize).ToList();
                     }
+
+                    var fileIds = files.Select(m => m.Id.ToString()).ToArray();
 
                     await _torrents.SelectFiles(torrent.RdId, fileIds);
                 }
