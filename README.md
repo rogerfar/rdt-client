@@ -14,7 +14,7 @@ This is a web interface to manage your torrents on Real-Debrid. It supports the 
 
 ## Docker Setup
 
-You can run the docker container on Windows, Linux. To get started either use *Docker Run* or *Docker Compose*.
+You can run the docker container on Windows, Linux. To get started either use _Docker Run_ or _Docker Compose_.
 
 ### Docker Run
 
@@ -61,6 +61,15 @@ docker-compose up -d
 
 Replace the paths in `volumes` as in the above step.
 
+## Windows Service
+
+Instead of running in Docker you can install it as a service in Windows or Linux (not tested).
+
+1. Get the latest zip file from the Releases page and extract it to your host.
+1. Open the `appsettings.json` file and replace the `LogLevel` `Path` to a path on your host.
+1. In `appsettings.json` replace the `Database` `Path` to a path on your host.
+1. When using Windows paths, make sure to escape the slashes. For example: `D:\\RdtClient\\db\\rdtclient.db`
+
 ## Setup
 
 ### First Login
@@ -68,8 +77,8 @@ Replace the paths in `volumes` as in the above step.
 1. Browse to [http://127.0.0.1:6500](http://127.0.0.1:6500) (or the path of your server).
 1. The very first credentials you enter in will be remembered for future logins.
 1. Click on `Settings` on the top and enter your Real-Debrid API key (found here: [https://real-debrid.com/apitoken](https://real-debrid.com/apitoken).
-1. If you are using docker then the `Download path` setting needs to be the same as in your docker file mapping. By default this is `/data/downloads`
-1. Same goes for `Mapped path`, but this is the destination path from your docker mapping. This is a path on your host.
+1. If you are using docker then the `Download path` setting needs to be the same as in your docker file mapping. By default this is `/data/downloads`. If you are using Windows, this is a path on your host.
+1. Same goes for `Mapped path`, but this is the destination path from your docker mapping. This is a path on your host. For Windows, this will most likely be the same as the `Download path`.
 1. Save your settings.
 
 ### Download Clients
