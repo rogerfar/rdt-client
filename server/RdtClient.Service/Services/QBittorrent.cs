@@ -443,21 +443,20 @@ namespace RdtClient.Service.Services
         {
             var torrents = await _torrents.Get();
 
-            var savePath = await AppDefaultSavePath();
-
             var torrentsToGroup = torrents.Where(m => !String.IsNullOrWhiteSpace(m.Category))
+                                          .Select(m => m.Category.ToLower())
                                           .ToList();
 
             var results = new Dictionary<String, TorrentCategory>();
 
             if (torrentsToGroup.Count > 0)
             {
-                results = torrentsToGroup.GroupBy(m => m.Category)
+                results = torrentsToGroup.GroupBy(m => m)
                                          .First()
-                                         .ToDictionary(m => m.Category,
+                                         .ToDictionary(m => m,
                                                        m => new TorrentCategory
                                                        {
-                                                           Name = m.Category,
+                                                           Name = m,
                                                            SavePath = ""
                                                        });
             }
