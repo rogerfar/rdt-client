@@ -89,6 +89,14 @@
         <p class="help">Maximum download speed in Megabytes per second. When set to 0 unlimited speed is used.</p>
       </div>
 
+      <div class="field" *ngIf="settingDownloadClient === 'MultiPart'">
+        <label class="label">Proxy Server</label>
+        <div class="control">
+          <input class="input" type="text" maxlength="1000" [(ngModel)]="settingProxyServer" />
+        </div>
+        <p class="help">Address of a proxy server.</p>
+      </div>
+
       <div class="field">
         <label class="label">Maximum unpack processes</label>
         <div class="control">

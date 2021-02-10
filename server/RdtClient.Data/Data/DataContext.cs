@@ -117,6 +117,12 @@ namespace RdtClient.Data.Data
                     SettingId = "DownloadMaxSpeed",
                     Type = "Int32",
                     Value = "0"
+                },
+                new Setting
+                {
+                    SettingId = "ProxyServer",
+                    Type = "String",
+                    Value = ""
                 }
             };
 

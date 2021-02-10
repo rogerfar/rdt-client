@@ -162,7 +162,9 @@ namespace RdtClient.Service.Services
                     settingDownloadMaxSpeed = 0;
                 }
                 settingDownloadMaxSpeed = settingDownloadMaxSpeed * 1024 * 1024;
-                
+
+                var settingProxyServer = settings.GetString("ProxyServer");
+
                 var downloadOpt = new DownloadConfiguration
                 {
                     MaxTryAgainOnFailover = Int32.MaxValue,
@@ -183,6 +185,11 @@ namespace RdtClient.Service.Services
                         UseDefaultCredentials = false
                     }
                 };
+
+                if (!String.IsNullOrWhiteSpace(settingProxyServer))
+                {
+                    downloadOpt.RequestConfiguration.Proxy = new WebProxy(new Uri(settingProxyServer), false);
+                }
 
                 _downloader = new DownloadService(downloadOpt);
 

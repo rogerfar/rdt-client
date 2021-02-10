@@ -46,6 +46,7 @@ export class SettingsComponent implements OnInit {
   public settingUnpackLimit: number;
   public settingMinFileSize: number;
   public settingOnlyDownloadAvailableFiles: boolean;
+  public settingProxyServer: string;
 
   constructor(private settingsService: SettingsService) {}
 
@@ -68,6 +69,7 @@ export class SettingsComponent implements OnInit {
         this.settingUnpackLimit = parseInt(this.getSetting(results, 'UnpackLimit'), 10);
         this.settingMinFileSize = parseInt(this.getSetting(results, 'MinFileSize'), 10);
         this.settingOnlyDownloadAvailableFiles = this.getSetting(results, 'OnlyDownloadAvailableFiles') === '1';
+        this.settingProxyServer = this.getSetting(results, 'ProxyServer');
       },
       (err) => {
         this.error = err.error;
@@ -123,6 +125,10 @@ export class SettingsComponent implements OnInit {
       {
         settingId: 'OnlyDownloadAvailableFiles',
         value: (this.settingOnlyDownloadAvailableFiles ? '1' : '0').toString(),
+      },
+      {
+        settingId: 'ProxyServer',
+        value: this.settingProxyServer,
       },
     ];
 
