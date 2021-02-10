@@ -273,12 +273,20 @@ namespace RdtClient.Service.Services
                     {
                         var availableFiles = await _torrents.GetAvailableFiles(torrent.Hash);
 
-                        files = torrent.Files.Where(m => availableFiles.Any(f => m.Path.EndsWith(f))).ToList();
+                        if (availableFiles.Count > 0)
+                        {
+                            files = torrent.Files.Where(m => availableFiles.Any(f => m.Path.EndsWith(f))).ToList();
+                        }
                     }
 
                     if (settingMinFileSize > 0)
                     {
                         files = files.Where(m => m.Bytes > settingMinFileSize).ToList();
+                    }
+
+                    if (files.Count == 0)
+                    {
+                        files = torrent.Files;
                     }
 
                     var fileIds = files.Select(m => m.Id.ToString()).ToArray();
