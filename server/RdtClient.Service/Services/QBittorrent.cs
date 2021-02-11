@@ -445,15 +445,14 @@ namespace RdtClient.Service.Services
 
             var torrentsToGroup = torrents.Where(m => !String.IsNullOrWhiteSpace(m.Category))
                                           .Select(m => m.Category.ToLower())
+                                          .Distinct()
                                           .ToList();
 
             var results = new Dictionary<String, TorrentCategory>();
 
             if (torrentsToGroup.Count > 0)
             {
-                results = torrentsToGroup.GroupBy(m => m)
-                                         .First()
-                                         .ToDictionary(m => m,
+                results = torrentsToGroup.ToDictionary(m => m,
                                                        m => new TorrentCategory
                                                        {
                                                            Name = m,
