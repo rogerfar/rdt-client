@@ -10,6 +10,7 @@ using RdtClient.Data.Data;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Services;
 using Serilog;
+using Serilog.Core;
 using Serilog.Events;
 using Serilog.Exceptions;
 
@@ -17,6 +18,8 @@ namespace RdtClient.Web
 {
     public class Program
     {
+        public static LoggingLevelSwitch LoggingLevelSwitch;
+
         public static async Task Main(String[] args)
         {
             try
@@ -29,6 +32,22 @@ namespace RdtClient.Web
                     var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
                     await dbContext.Database.MigrateAsync();
                     await dbContext.Seed();
+
+                    var logLevelSettingDb = await dbContext.Settings.FirstOrDefaultAsync(m => m.SettingId == "LogLevel");
+                    
+                    var logLevelSetting = "Warning";
+
+                    if (logLevelSettingDb != null)
+                    {
+                        logLevelSetting = logLevelSettingDb.Value;
+                    }
+
+                    if (!Enum.TryParse<LogEventLevel>(logLevelSetting, out var logLevel))
+                    {
+                        logLevel = LogEventLevel.Warning;
+                    }
+
+                    LoggingLevelSwitch.MinimumLevel = logLevel;
                 }
                 
                 await host.RunAsync();
@@ -61,19 +80,15 @@ namespace RdtClient.Web
             {
                 appSettings.HostUrl = "http://0.0.0.0:6500";
             }
-
-            if (!Enum.TryParse(appSettings.Logging.LogLevel.Default, out LogEventLevel logLevel))
-            {
-                logLevel = LogEventLevel.Information;
-            }
+            
+            LoggingLevelSwitch = new LoggingLevelSwitch(LogEventLevel.Debug);
             
             Log.Logger = new LoggerConfiguration()
                          .Enrich.FromLogContext()
                          .Enrich.WithExceptionDetails()
-                         .WriteTo.File(appSettings.Logging.File.Path, logLevel, rollOnFileSizeLimit: true, fileSizeLimitBytes: appSettings.Logging.File.FileSizeLimitBytes, retainedFileCountLimit: appSettings.Logging.File.MaxRollingFiles)
+                         .WriteTo.File(appSettings.Logging.File.Path, rollOnFileSizeLimit: true, fileSizeLimitBytes: appSettings.Logging.File.FileSizeLimitBytes, retainedFileCountLimit: appSettings.Logging.File.MaxRollingFiles)
                          .WriteTo.Console()
-                         .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
-                         .MinimumLevel.Information()
+                         .MinimumLevel.ControlledBy(LoggingLevelSwitch)
                          .CreateLogger();
 
             Serilog.Debugging.SelfLog.Enable(msg =>

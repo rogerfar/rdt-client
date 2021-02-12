@@ -35,6 +35,7 @@ export class SettingsComponent implements OnInit {
   public testWriteSpeedError: string;
   public testWriteSpeedSuccess: number;
 
+  public settingLogLevel: string;
   public settingRealDebridApiKey: string;
   public settingDownloadPath: string;
   public settingMappedPath: string;
@@ -59,6 +60,7 @@ export class SettingsComponent implements OnInit {
     this.settingsService.get().subscribe(
       (results) => {
         this.settingRealDebridApiKey = this.getSetting(results, 'RealDebridApiKey');
+        this.settingLogLevel = this.getSetting(results, 'LogLevel');
         this.settingDownloadPath = this.getSetting(results, 'DownloadPath');
         this.settingMappedPath = this.getSetting(results, 'MappedPath');
         this.settingTempPath = this.getSetting(results, 'TempPath');
@@ -85,6 +87,10 @@ export class SettingsComponent implements OnInit {
       {
         settingId: 'RealDebridApiKey',
         value: this.settingRealDebridApiKey,
+      },
+      {
+        settingId: 'LogLevel',
+        value: this.settingLogLevel,
       },
       {
         settingId: 'DownloadPath',

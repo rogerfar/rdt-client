@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
@@ -13,6 +14,7 @@ using RdtClient.Data.Data;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Middleware;
 using RdtClient.Service.Services;
+using Serilog.Events;
 
 namespace RdtClient.Web
 {

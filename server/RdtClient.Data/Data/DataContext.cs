@@ -123,6 +123,12 @@ namespace RdtClient.Data.Data
                     SettingId = "ProxyServer",
                     Type = "String",
                     Value = ""
+                },
+                new Setting
+                {
+                    SettingId = "LogLevel",
+                    Type = "String",
+                    Value = "Warning"
                 }
             };
 

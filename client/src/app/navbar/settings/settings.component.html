@@ -19,6 +19,21 @@
       </div>
 
       <div class="field">
+        <label class="label">Log level</label>
+        <div class="control select is-fullwidth">
+          <select [(ngModel)]="settingLogLevel">
+            <option value="Verbose">Verbose</option>
+            <option value="Debug">Debug</option>
+            <option value="Information">Information</option>
+            <option value="Warning">Warning</option>
+            <option value="Error">Error</option>
+            <option value="Fatal">Fatal</option>
+          </select>
+        </div>
+        <p class="help">Recommended level is Warning, set to Debug to get the most info.</p>
+      </div>
+
+      <div class="field">
         <label class="label">Download path</label>
         <div class="control">
           <input class="input" type="text" maxlength="1000" [(ngModel)]="settingDownloadPath" />

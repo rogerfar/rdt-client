@@ -13,15 +13,9 @@ namespace RdtClient.Data.Models.Internal
 
     public class AppSettingsLogging
     {
-        public AppSettingsLoggingLogLevel LogLevel { get; set; }
         public AppSettingsLoggingFile File { get; set; }
     }
-
-    public class AppSettingsLoggingLogLevel
-    {
-        public String Default { get; set; }
-    }
-
+    
     public class AppSettingsLoggingFile
     {
         public String Path { get; set; }

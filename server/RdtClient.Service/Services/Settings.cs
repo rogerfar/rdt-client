@@ -29,7 +29,7 @@ namespace RdtClient.Service.Services
         {
             _settingData = settingData;
         }
-        
+
         public async Task<IList<Setting>> GetAll()
         {
             return await _settingData.GetAll();

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using RdtClient.Data.Models.Data;
 using RdtClient.Service.Models;
 using RdtClient.Service.Services;
+using Serilog.Events;
 
 namespace RdtClient.Web.Controllers
 {
@@ -36,7 +37,17 @@ namespace RdtClient.Web.Controllers
         public async Task<ActionResult> Update([FromBody] SettingsControllerUpdateRequest request)
         {
             await _settings.Update(request.Settings);
+
             _torrents.Reset();
+
+            var logLevelSetting = await _settings.GetString("LogLevel");
+
+            if (!Enum.TryParse<LogEventLevel>(logLevelSetting, out var logLevel))
+            {
+                logLevel = LogEventLevel.Information;
+            }
+
+            Program.LoggingLevelSwitch.MinimumLevel = logLevel;
 
             return Ok();
         }
