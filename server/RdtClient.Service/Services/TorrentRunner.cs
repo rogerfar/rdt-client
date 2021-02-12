@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web;
 using RdtClient.Data.Enums;
 using RdtClient.Service.Helpers;
 
@@ -211,6 +212,9 @@ namespace RdtClient.Service.Services
                 // Check if the unpacking process is even needed
                 var uri = new Uri(download.Link);
                 var fileName = uri.Segments.Last();
+
+                fileName = HttpUtility.UrlDecode(fileName);
+
                 var extension = Path.GetExtension(fileName);
                         
                 if (extension != ".rar")

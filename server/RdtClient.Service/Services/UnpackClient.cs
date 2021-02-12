@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web;
 using RdtClient.Data.Models.Data;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
@@ -53,6 +54,9 @@ namespace RdtClient.Service.Services
                 var torrentPath = Path.Combine(_destinationPath, _torrent.RdName);
 
                 var fileName = uri.Segments.Last();
+
+                fileName = HttpUtility.UrlDecode(fileName);
+
                 var filePath = Path.Combine(torrentPath, fileName);
                 
                 if (!File.Exists(filePath))
