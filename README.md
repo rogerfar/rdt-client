@@ -19,14 +19,15 @@ You can run the docker container on Windows, Linux. To get started either use _D
 ### Docker Run
 
 ```console
-docker run --cap-add=NET_ADMIN -d \
-              -v /your/download/path/:/data/downloads \
-              -v /your/storage/path/:/data/db \
-              --log-driver json-file \
-              --log-opt max-size=10m \
-              -p 6500:6500 \
-			  --name rdtclient \
-              rogerfar/rdtclient:latest
+docker run --pull=always
+		   --cap-add=NET_ADMIN -d \
+		   --volume /your/download/path/:/data/downloads \
+		   --volume /your/storage/path/:/data/db \
+		   --log-driver json-file \
+		   --log-opt max-size=10m \
+		   -p 6500:6500 \
+		   --name rdtclient \
+		   rogerfar/rdtclient:latest
 ```
 
 Replace `/your/download/path/` with your local path to download files to. For Windows i.e. `C:/Downloads`.
