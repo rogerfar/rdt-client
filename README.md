@@ -25,7 +25,8 @@ docker run --cap-add=NET_ADMIN -d \
               --log-driver json-file \
               --log-opt max-size=10m \
               -p 6500:6500 \
-              rogerfar/rdtclient
+			  --name rdtclient \
+              rogerfar/rdtclient:latest
 ```
 
 Replace `/your/download/path/` with your local path to download files to. For Windows i.e. `C:/Downloads`.
