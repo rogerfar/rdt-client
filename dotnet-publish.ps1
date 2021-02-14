@@ -13,7 +13,7 @@ cd out
 Add-Type -Assembly System.IO.Compression.FileSystem
 $compressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
 $location = Get-Location
-[System.IO.Compression.ZipFile]::CreateFromDirectory($location, "$location/../release.zip", $compressionLevel, $false)
+[System.IO.Compression.ZipFile]::CreateFromDirectory($location, "$location/../RealDebridClient.zip", $compressionLevel, $false)
 
 cd ..
 
