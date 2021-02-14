@@ -73,7 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - First release
 - Add unraring progress and default auto download / auto remove options.
 
-[Unreleased]: https://github.com/rogerfar/rdt-client/compare/v1.5.5...HEAD
+[Unreleased]: https://github.com/rogerfar/rdt-client/compare/1.5.5...HEAD
 [1.5.5]: https://github.com/rogerfar/rdt-client/releases/tag/1.5.5
 [1.5.4]: https://github.com/rogerfar/rdt-client/releases/tag/1.5.4
 [1.5.3]: https://github.com/rogerfar/rdt-client/releases/tag/1.5.3

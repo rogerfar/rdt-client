@@ -1,0 +1,20 @@
+{
+  "name": "rdt-client",
+  "version": "1.5.6",
+  "description": "This is a web interface to manage your torrents on Real-Debrid. It supports the following features:",
+  "main": "index.js",
+  "dependencies": {
+    "gh-release": "^5.0.0"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rogerfar/rdt-client.git"
+  },
+  "author": "Roger Far",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rogerfar/rdt-client/issues"
+  },
+  "homepage": "https://github.com/rogerfar/rdt-client#readme"
+}

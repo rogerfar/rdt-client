@@ -18,3 +18,7 @@ $location = Get-Location
 cd ..
 
 Remove-Item -Path out -Recurse -Force
+
+gh-release --assets RealDebridClient.zip
+
+Remove-Item RealDebridClient.zip

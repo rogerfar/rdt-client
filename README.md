@@ -20,7 +20,6 @@ You can run the docker container on Windows, Linux. To get started either use _D
 
 ```console
 docker run --pull=always
-		   --cap-add=NET_ADMIN -d \
 		   --volume /your/download/path/:/data/downloads \
 		   --volume /your/storage/path/:/data/db \
 		   --log-driver json-file \

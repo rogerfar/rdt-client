@@ -39,3 +39,5 @@ server/RdtClient.Web/wwwroot/
 build/
 publish/
 server/Downloader/
+
+node_modules/
