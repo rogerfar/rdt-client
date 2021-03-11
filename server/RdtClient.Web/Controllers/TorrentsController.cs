@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using RdtClient.Data.Models.Data;
+using MonoTorrent;
 using RdtClient.Service.Helpers;
 using RdtClient.Service.Services;
+using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Web.Controllers
 {
@@ -74,7 +75,7 @@ namespace RdtClient.Web.Controllers
 
             var bytes = memoryStream.ToArray();
 
-            await _torrents.UploadFile(bytes, null, formData.AutoDownload, formData.AutoUnpack, formData.AutoDelete);
+            await _torrents.UploadFile(bytes, null, formData.AutoDelete);
 
             return Ok();
         }
@@ -83,9 +84,44 @@ namespace RdtClient.Web.Controllers
         [Route("UploadMagnet")]
         public async Task<ActionResult> UploadMagnet([FromBody] TorrentControllerUploadMagnetRequest request)
         {
-            await _torrents.UploadMagnet(request.MagnetLink, null, request.AutoDownload, request.AutoUnpack, request.AutoDelete);
+            await _torrents.UploadMagnet(request.MagnetLink, null, request.AutoDelete);
 
             return Ok();
+        }
+        
+        [HttpPost]
+        [Route("CheckFiles")]
+        public async Task<ActionResult> CheckFiles([FromForm] IFormFile file)
+        {
+            if (file == null || file.Length <= 0)
+            {
+                throw new Exception("Invalid torrent file");
+            }
+
+            var fileStream = file.OpenReadStream();
+
+            await using var memoryStream = new MemoryStream();
+
+            await fileStream.CopyToAsync(memoryStream);
+
+            var bytes = memoryStream.ToArray();
+
+            var torrent = await MonoTorrent.Torrent.LoadAsync(bytes);
+
+            var result = await _torrents.GetAvailableFiles(torrent.InfoHash.ToHex());
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("CheckFilesMagnet")]
+        public async Task<ActionResult> CheckFilesMagnet([FromBody] TorrentControllerCheckFilesRequest request)
+        {
+            var magnet = MagnetLink.Parse(request.MagnetLink);
+
+            var result = await _torrents.GetAvailableFiles(magnet.InfoHash.ToHex());
+
+            return Ok(result);
         }
 
         [HttpPost]
@@ -101,7 +137,13 @@ namespace RdtClient.Web.Controllers
         [Route("Download/{id}")]
         public async Task<ActionResult> Download(Guid id)
         {
-            await _torrents.Unrestrict(id);
+            var torrent = await _torrents.GetById(id);
+
+            foreach (var link in torrent.Files.Where(m => m.Selected))
+            {
+                await _downloads.Add(id, link.Path);
+                await _torrents.UnrestrictLink(id);
+            }
 
             return Ok();
         }
@@ -123,16 +165,12 @@ namespace RdtClient.Web.Controllers
 
     public class TorrentControllerUploadFileRequest
     {
-        public Boolean AutoDownload { get; set; }
-        public Boolean AutoUnpack { get; set; }
         public Boolean AutoDelete { get; set; }
     }
 
     public class TorrentControllerUploadMagnetRequest
     {
         public String MagnetLink { get; set; }
-        public Boolean AutoDownload { get; set; }
-        public Boolean AutoUnpack { get; set; }
         public Boolean AutoDelete { get; set; }
     }
 
@@ -141,5 +179,10 @@ namespace RdtClient.Web.Controllers
         public Boolean DeleteData { get; set; }
         public Boolean DeleteRdTorrent { get; set; }
         public Boolean DeleteLocalFiles { get; set; }
+    }
+
+    public class TorrentControllerCheckFilesRequest
+    {
+        public String MagnetLink { get; set; }
     }
 }

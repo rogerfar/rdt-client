@@ -1,6 +1,7 @@
 export class Download {
   public downloadId: string;
   public torrentId: string;
+  public path: string;
   public link: string;
   public added: Date;
   public downloadQueued: Date;

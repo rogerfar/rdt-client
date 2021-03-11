@@ -11,6 +11,8 @@ namespace RdtClient.Data.Models.Data
 
         public Guid TorrentId { get; set; }
 
+        public String Path { get; set; }
+
         public String Link { get; set; }
 
         public DateTimeOffset Added { get; set; }

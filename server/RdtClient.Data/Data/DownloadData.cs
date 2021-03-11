@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using RdtClient.Data.Models.Data;
+using Download = RdtClient.Data.Models.Data.Download;
 
 namespace RdtClient.Data.Data
 {
@@ -12,7 +12,8 @@ namespace RdtClient.Data.Data
         Task<IList<Download>> Get();
         Task<IList<Download>> GetForTorrent(Guid torrentId);
         Task<Download> GetById(Guid downloadId);
-        Task<Download> Add(Guid torrentId, String link);
+        Task<Download> Add(Guid torrentId, String path);
+        Task UpdateUnrestrictedLink(Guid downloadId, String unrestrictedLink);
         Task UpdateDownloadStarted(Guid downloadId, DateTimeOffset? dateTime);
         Task UpdateDownloadFinished(Guid downloadId, DateTimeOffset? dateTime);
         Task UpdateUnpackingQueued(Guid downloadId, DateTimeOffset? dateTime);
@@ -56,13 +57,13 @@ namespace RdtClient.Data.Data
                                      .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
         }
 
-        public async Task<Download> Add(Guid torrentId, String link)
+        public async Task<Download> Add(Guid torrentId, String path)
         {
             var download = new Download
             {
                 DownloadId = Guid.NewGuid(),
                 TorrentId = torrentId,
-                Link = link,
+                Path = path,
                 Added = DateTimeOffset.UtcNow,
                 DownloadQueued = DateTimeOffset.UtcNow
             };
@@ -73,7 +74,17 @@ namespace RdtClient.Data.Data
 
             return download;
         }
-        
+
+        public async Task UpdateUnrestrictedLink(Guid downloadId, String unrestrictedLink)
+        {
+            var dbDownload = await _dataContext.Downloads
+                                               .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+            dbDownload.Link = unrestrictedLink;
+
+            await _dataContext.SaveChangesAsync();
+        }
+
         public async Task UpdateDownloadStarted(Guid downloadId, DateTimeOffset? dateTime)
         {
             var dbDownload = await _dataContext.Downloads

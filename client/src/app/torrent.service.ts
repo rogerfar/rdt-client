@@ -31,25 +31,30 @@ export class TorrentService {
     return this.http.get<Torrent[]>(`/Api/Torrents`);
   }
 
-  public uploadMagnet(
-    magnetLink: string,
-    autoDownload: boolean,
-    autoUnpack: boolean,
-    autoDelete: boolean
-  ): Observable<void> {
+  public uploadMagnet(magnetLink: string, autoDelete: boolean): Observable<void> {
     return this.http.post<void>(`/Api/Torrents/UploadMagnet`, {
       magnetLink,
-      autoDownload,
-      autoUnpack,
       autoDelete,
     });
   }
 
-  public uploadFile(file: File, autoDownload: boolean, autoUnpack: boolean, autoDelete: boolean): Observable<void> {
+  public uploadFile(file: File, autoDelete: boolean): Observable<void> {
     const formData: FormData = new FormData();
     formData.append('file', file);
-    formData.append('formData', JSON.stringify({ autoDownload, autoUnpack, autoDelete }));
+    formData.append('formData', JSON.stringify({ autoDelete }));
     return this.http.post<void>(`/Api/Torrents/UploadFile`, formData);
+  }
+
+  public checkFilesMagnet(magnetLink: string): Observable<string[]> {
+    return this.http.post<string[]>(`/Api/Torrents/CheckFilesMagnet`, {
+      magnetLink,
+    });
+  }
+
+  public checkFiles(file: File): Observable<string[]> {
+    const formData: FormData = new FormData();
+    formData.append('file', file);
+    return this.http.post<string[]>(`/Api/Torrents/CheckFiles`, formData);
   }
 
   public download(torrentId: string): Observable<void> {

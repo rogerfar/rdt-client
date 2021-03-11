@@ -6,8 +6,6 @@
   {{ torrent.downloads.length | number }}
 </td>
 <td class="auto">
-  <i class="fas fa-download" *ngIf="torrent.autoDownload" title="Auto download"></i>
-  <i class="fas fa-box-open" *ngIf="torrent.autoUnpack" title="Auto unpack"></i>
   <i class="fas fa-trash" *ngIf="torrent.autoDelete" title="Auto delete"></i>
 </td>
 <td>

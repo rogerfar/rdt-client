@@ -2,15 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RdtClient.Data.Data;
 
 namespace RdtClient.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20210311002748_Downloads_Add_Path")]
+    partial class Downloads_Add_Path
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -283,6 +285,12 @@ namespace RdtClient.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("AutoDelete")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AutoDownload")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AutoUnpack")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Category")

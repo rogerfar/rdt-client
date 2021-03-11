@@ -219,6 +219,9 @@ namespace RdtClient.Service.Services
                     continue;
                 }
 
+                var downloadLink = await _torrents.UnrestrictLink(download.DownloadId);
+                download.Link = downloadLink;
+
                 download.DownloadStarted = DateTime.UtcNow;
                 await _downloads.UpdateDownloadStarted(download.DownloadId, download.DownloadStarted);
 
@@ -332,7 +335,7 @@ namespace RdtClient.Service.Services
                 }
 
                 // RealDebrid is waiting for file selection, select which files to download.
-                if (torrent.AutoDownload && torrent.RdStatus == RealDebridStatus.WaitingForFileSelection)
+                if (torrent.RdStatus == RealDebridStatus.WaitingForFileSelection)
                 {
                     Log.Debug($"Torrent {torrent.RdId} selecting files");
 
@@ -374,7 +377,7 @@ namespace RdtClient.Service.Services
 
                     Log.Debug($"Selecting files for torrent {torrent.RdId}: {String.Join(", ", fileIds)}");
 
-                    await _torrents.SelectFiles(torrent.RdId, fileIds);
+                    await _torrents.SelectFiles(torrent.TorrentId, fileIds);
                 }
 
                 // If the torrent doesn't have any files at this point, don't process it further.
@@ -385,25 +388,16 @@ namespace RdtClient.Service.Services
                 }
 
                 // RealDebrid finished downloading the torrent, process the file to host.
-                if (torrent.AutoDownload && torrent.RdStatus == RealDebridStatus.Finished)
+                if (torrent.RdStatus == RealDebridStatus.Finished)
                 {
                     Log.Debug($"Torrent {torrent.RdId} completed, download starting");
-
-                    // If the torrent doesn't have any Downloads, unrestrict the links and add them to the database.
-                    if (torrent.Downloads.Count == 0)
-                    {
-                        Log.Debug($"Torrent {torrent.RdId} unrestricting links");
-
-                        await _torrents.Unrestrict(torrent.TorrentId);
-
-                        continue;
-                    }
 
                     // If the torrent has any files that need starting to be downloaded, download them.
                     var downloadsPending = torrent.Downloads
                                                   .Where(m => m.Completed == null &&
                                                               m.DownloadStarted == null &&
                                                               m.DownloadFinished == null)
+                                                  .OrderBy(m => m.Added)
                                                   .ToList();
 
                     Log.Debug($"Torrent {torrent.RdId} found {downloadsPending.Count} downloads pending");
@@ -421,7 +415,7 @@ namespace RdtClient.Service.Services
                     }
                 }
 
-                if (torrent.AutoUnpack && torrent.RdStatus == RealDebridStatus.Finished)
+                if (torrent.RdStatus == RealDebridStatus.Finished)
                 {
                     Log.Debug($"Torrent {torrent.RdId} completed, unpack starting");
 

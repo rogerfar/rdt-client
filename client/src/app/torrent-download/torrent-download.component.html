@@ -1,6 +1,7 @@
 <td colspan="4">
   <i class="fas fa-download" aria-hidden="true"></i>
-  {{ download.link }}
+  <span *ngIf="download.link">{{ download.link }}</span>
+  <span *ngIf="!download.link">{{ download.path }}</span>
 </td>
 <td>
   {{ download.bytesTotal | filesize }}

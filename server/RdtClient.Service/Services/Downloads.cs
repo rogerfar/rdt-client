@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using RdtClient.Data.Data;
-using RdtClient.Data.Models.Data;
+using Download = RdtClient.Data.Models.Data.Download;
 
 namespace RdtClient.Service.Services
 {
@@ -12,6 +12,7 @@ namespace RdtClient.Service.Services
         Task<IList<Download>> GetForTorrent(Guid torrentId);
         Task<Download> GetById(Guid downloadId);
         Task<Download> Add(Guid torrentId, String link);
+        Task UpdateUnrestrictedLink(Guid downloadId, String unrestrictedLink);
         Task UpdateDownloadStarted(Guid downloadId, DateTimeOffset? dateTime);
         Task UpdateDownloadFinished(Guid downloadId, DateTimeOffset? dateTime);
         Task UpdateUnpackingQueued(Guid downloadId, DateTimeOffset? dateTime);
@@ -49,6 +50,11 @@ namespace RdtClient.Service.Services
         public async Task<Download> Add(Guid torrentId, String link)
         {
             return await _downloadData.Add(torrentId, link);
+        }
+
+        public async Task UpdateUnrestrictedLink(Guid downloadId, String unrestrictedLink)
+        {
+            await _downloadData.UpdateUnrestrictedLink(downloadId, unrestrictedLink);
         }
 
         public async Task UpdateDownloadStarted(Guid downloadId, DateTimeOffset? dateTime)

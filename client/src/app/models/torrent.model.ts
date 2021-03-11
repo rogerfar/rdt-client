@@ -6,8 +6,6 @@ export class Torrent {
   public category: string;
   public added: Date;
   public completed: Date;
-  public autoDownload: boolean;
-  public autoUnpack: boolean;
   public autoDelete: boolean;
 
   public rdId: string;

@@ -20,8 +20,6 @@ namespace RdtClient.Data.Models.Data
         public DateTimeOffset Added { get; set; }
         public DateTimeOffset? Completed { get; set; }
 
-        public Boolean AutoDownload { get; set; }
-        public Boolean AutoUnpack { get; set; }
         public Boolean AutoDelete { get; set; }
         
         [InverseProperty("Torrent")]

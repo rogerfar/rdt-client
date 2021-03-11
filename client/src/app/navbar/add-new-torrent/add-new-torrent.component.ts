@@ -21,12 +21,13 @@ export class AddNewTorrentComponent implements OnInit {
   public openChange = new EventEmitter<boolean>();
 
   public isActive = false;
+  public isFileModalActive = false;
 
   public fileName: string;
   public magnetLink: string;
-  public autoDownload: boolean;
-  public autoUnpack: boolean;
   public autoDelete: boolean;
+
+  public fileList: string[];
 
   public saving = false;
   public error: string;
@@ -41,7 +42,6 @@ export class AddNewTorrentComponent implements OnInit {
     this.fileName = '';
     this.magnetLink = '';
     this.autoDelete = false;
-    this.autoDownload = true;
 
     this.saving = false;
     this.selectedFile = null;
@@ -67,7 +67,7 @@ export class AddNewTorrentComponent implements OnInit {
     this.error = null;
 
     if (this.magnetLink) {
-      this.torrentService.uploadMagnet(this.magnetLink, this.autoDownload, this.autoUnpack, this.autoDelete).subscribe(
+      this.torrentService.uploadMagnet(this.magnetLink, this.autoDelete).subscribe(
         () => {
           this.cancel();
         },
@@ -77,9 +77,42 @@ export class AddNewTorrentComponent implements OnInit {
         }
       );
     } else if (this.selectedFile) {
-      this.torrentService.uploadFile(this.selectedFile, this.autoDownload, this.autoUnpack, this.autoDelete).subscribe(
+      this.torrentService.uploadFile(this.selectedFile, this.autoDelete).subscribe(
         () => {
           this.cancel();
+        },
+        (err) => {
+          this.error = err.error;
+          this.saving = false;
+        }
+      );
+    } else {
+      this.cancel();
+    }
+  }
+
+  public checkFiles(): void {
+    this.saving = true;
+    this.error = null;
+
+    if (this.magnetLink) {
+      this.torrentService.checkFilesMagnet(this.magnetLink).subscribe(
+        (result) => {
+          this.saving = false;
+          this.isFileModalActive = true;
+          this.fileList = result;
+        },
+        (err) => {
+          this.error = err.error;
+          this.saving = false;
+        }
+      );
+    } else if (this.selectedFile) {
+      this.torrentService.checkFiles(this.selectedFile).subscribe(
+        (result) => {
+          this.saving = false;
+          this.isFileModalActive = true;
+          this.fileList = result;
         },
         (err) => {
           this.error = err.error;
