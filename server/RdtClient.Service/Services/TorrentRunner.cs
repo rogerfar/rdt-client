@@ -335,7 +335,7 @@ namespace RdtClient.Service.Services
                 }
 
                 // RealDebrid is waiting for file selection, select which files to download.
-                if (torrent.RdStatus == RealDebridStatus.WaitingForFileSelection)
+                if (torrent.RdStatus == RealDebridStatus.WaitingForFileSelection && torrent.Downloads.Count == 0)
                 {
                     Log.Debug($"Torrent {torrent.RdId} selecting files");
 
