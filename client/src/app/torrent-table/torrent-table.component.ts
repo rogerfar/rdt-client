@@ -20,6 +20,12 @@ export class TorrentTableComponent implements OnInit, OnDestroy {
   public deleteRdTorrent: boolean;
   public deleteLocalFiles: boolean;
 
+  public isRetryModalActive: boolean;
+  public retryError: string;
+  public retrying: boolean;
+  public retryTorrentId: string;
+  public retry: number;
+
   constructor(private torrentService: TorrentService) {}
 
   ngOnInit(): void {
@@ -52,6 +58,10 @@ export class TorrentTableComponent implements OnInit, OnDestroy {
   }
 
   public showDeleteModal(torrentId: string): void {
+    this.deleteData = false;
+    this.deleteRdTorrent = false;
+    this.deleteLocalFiles = false;
+
     this.deleteTorrentId = torrentId;
     this.isDeleteModalActive = true;
   }
@@ -75,5 +85,31 @@ export class TorrentTableComponent implements OnInit, OnDestroy {
           this.deleting = false;
         }
       );
+  }
+
+  public showRetryModal(torrentId: string): void {
+    this.retry = 0;
+
+    this.retryTorrentId = torrentId;
+    this.isRetryModalActive = true;
+  }
+
+  public retryCancel(): void {
+    this.isRetryModalActive = false;
+  }
+
+  public retryOk(): void {
+    this.retrying = true;
+
+    this.torrentService.retry(this.retryTorrentId, this.retry).subscribe(
+      () => {
+        this.isRetryModalActive = false;
+        this.retrying = false;
+      },
+      (err) => {
+        this.retryError = err.error;
+        this.retrying = false;
+      }
+    );
   }
 }

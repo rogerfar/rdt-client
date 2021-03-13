@@ -335,7 +335,7 @@ namespace RdtClient.Service.Services
                 }
 
                 // RealDebrid is waiting for file selection, select which files to download.
-                if (torrent.RdStatus == RealDebridStatus.WaitingForFileSelection && torrent.Downloads.Count == 0)
+                if (torrent.RdStatus == RealDebridStatus.WaitingForFileSelection || torrent.Downloads.Count == 0)
                 {
                     Log.Debug($"Torrent {torrent.RdId} selecting files");
 
@@ -390,8 +390,6 @@ namespace RdtClient.Service.Services
                 // RealDebrid finished downloading the torrent, process the file to host.
                 if (torrent.RdStatus == RealDebridStatus.Finished)
                 {
-                    Log.Debug($"Torrent {torrent.RdId} completed, download starting");
-
                     // If the torrent has any files that need starting to be downloaded, download them.
                     var downloadsPending = torrent.Downloads
                                                   .Where(m => m.Completed == null &&
@@ -413,11 +411,6 @@ namespace RdtClient.Service.Services
 
                         continue;
                     }
-                }
-
-                if (torrent.RdStatus == RealDebridStatus.Finished)
-                {
-                    Log.Debug($"Torrent {torrent.RdId} completed, unpack starting");
 
                     // If all files are finished downloading, move to the unpacking step.
                     var unpackingPending = torrent.Downloads

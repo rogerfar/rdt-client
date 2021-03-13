@@ -132,32 +132,12 @@ namespace RdtClient.Web.Controllers
 
             return Ok();
         }
-
-        [HttpGet]
-        [Route("Download/{id}")]
-        public async Task<ActionResult> Download(Guid id)
-        {
-            var torrent = await _torrents.GetById(id);
-
-            foreach (var link in torrent.Files.Where(m => m.Selected))
-            {
-                await _downloads.Add(id, link.Path);
-                await _torrents.UnrestrictLink(id);
-            }
-
-            return Ok();
-        }
         
-        [HttpGet]
-        [Route("Unpack/{id}")]
-        public async Task<ActionResult> Unpack(Guid id)
+        [HttpPost]
+        [Route("Retry/{id}")]
+        public async Task<ActionResult> Retry(Guid id, [FromBody] TorrentControllerRetryRequest request)
         {
-            var downloads = await _downloads.GetForTorrent(id);
-
-            foreach (var download in downloads)
-            {
-                await _torrents.Unpack(download.DownloadId);
-            }
+            await _torrents.Retry(id, request.Retry);
 
             return Ok();
         }
@@ -179,6 +159,11 @@ namespace RdtClient.Web.Controllers
         public Boolean DeleteData { get; set; }
         public Boolean DeleteRdTorrent { get; set; }
         public Boolean DeleteLocalFiles { get; set; }
+    }
+
+    public class TorrentControllerRetryRequest
+    {
+        public Int32 Retry { get; set; }
     }
 
     public class TorrentControllerCheckFilesRequest

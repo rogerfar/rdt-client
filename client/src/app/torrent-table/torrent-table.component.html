@@ -4,7 +4,6 @@
 </div>
 <div class="table-container">
   <table class="table is-fullwidth is-hoverable">
-
     <thead>
       <tr>
         <th>Name</th>
@@ -23,6 +22,7 @@
           [torrent]="torrent"
           (click)="selectTorrent(torrent)"
           (delete)="showDeleteModal($event)"
+          (retry)="showRetryModal($event)"
         ></tr>
         <ng-container *ngIf="showFiles[torrent.torrentId]">
           <tr class="separator">
@@ -83,6 +83,48 @@
         Delete
       </button>
       <button class="button" (click)="deleteCancel()" [disabled]="deleting" [ngClass]="{ 'is-loading': deleting }">
+        Cancel
+      </button>
+    </footer>
+  </div>
+</div>
+
+<div class="modal" [class.is-active]="isRetryModalActive">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Retry torrent</p>
+      <button class="delete" aria-label="close" (click)="retryCancel()"></button>
+    </header>
+    <section class="modal-card-body">
+      <div class="field">
+        <label class="label">Retry</label>
+        <div class="control">
+          <label class="radio">
+            <input type="radio" name="retry" [value]="0" [(ngModel)]="retry" />
+            Retry on Real-Debrid
+          </label>
+          <br />
+          <label class="radio">
+            <input type="radio" name="retry" [value]="1" [(ngModel)]="retry" />
+            Retry downloading locally
+          </label>
+        </div>
+      </div>
+      <div class="notification is-danger is-light" *ngIf="retryError?.length > 0">
+        Error retrying torrent: {{ retryError }}
+      </div>
+    </section>
+    <footer class="modal-card-foot">
+      <button
+        class="button is-success"
+        (click)="retryOk()"
+        [disabled]="retrying"
+        [ngClass]="{ 'is-loading': retrying }"
+      >
+        Retry
+      </button>
+      <button class="button" (click)="retryCancel()" [disabled]="retrying" [ngClass]="{ 'is-loading': retrying }">
         Cancel
       </button>
     </footer>

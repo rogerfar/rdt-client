@@ -15,18 +15,10 @@
   {{ torrent | status }}
 </td>
 <td>
-  <span
-    class="icon download-icon"
-    (click)="download($event)"
-    title="Download to disk"
-    *ngIf="!loading && canDownload()"
-  >
-    <i class="fas fa-download"></i>
+  <span class="icon sync-icon" (click)="retryClick($event)" title="Retry" *ngIf="!loading">
+    <i class="fas fa-sync"></i>
   </span>
-  <span class="icon download-icon" (click)="unpack($event)" title="Unpack" *ngIf="!loading && canUnpack()">
-    <i class="fas fa-box-open"></i>
-  </span>
-  <span class="icon delete-icon" (click)="delete1($event)" title="Delete torrent" *ngIf="!loading">
+  <span class="icon delete-icon" (click)="deleteClick($event)" title="Delete torrent" *ngIf="!loading">
     <i class="fas fa-times"></i>
   </span>
   <span class="icon loading-icon" *ngIf="loading">

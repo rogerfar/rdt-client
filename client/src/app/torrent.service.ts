@@ -57,14 +57,6 @@ export class TorrentService {
     return this.http.post<string[]>(`/Api/Torrents/CheckFiles`, formData);
   }
 
-  public download(torrentId: string): Observable<void> {
-    return this.http.get<void>(`/Api/Torrents/Download/${torrentId}`);
-  }
-
-  public unpack(torrentId: string): Observable<void> {
-    return this.http.get<void>(`/Api/Torrents/Unpack/${torrentId}`);
-  }
-
   public delete(
     torrentId: string,
     deleteData: boolean,
@@ -75,6 +67,12 @@ export class TorrentService {
       deleteData,
       deleteRdTorrent,
       deleteLocalFiles,
+    });
+  }
+
+  public retry(torrentId: string, retry: number): Observable<void> {
+    return this.http.post<void>(`/Api/Torrents/Retry/${torrentId}`, {
+      retry,
     });
   }
 }

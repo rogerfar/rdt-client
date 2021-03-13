@@ -21,6 +21,9 @@ namespace RdtClient.Data.Models.Data
         public DateTimeOffset? Completed { get; set; }
 
         public Boolean AutoDelete { get; set; }
+
+        public String FileOrMagnet { get; set; }
+        public Boolean IsFile { get; set; }
         
         [InverseProperty("Torrent")]
         public IList<Download> Downloads { get; set; }

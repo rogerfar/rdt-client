@@ -17,7 +17,6 @@ namespace RdtClient.Service.Services
     public interface ITorrents
     {
         Task<IList<Torrent>> Get();
-        Task<Torrent> GetById(Guid torrentId);
         Task<Torrent> GetByHash(String hash);
         Task UpdateCategory(String hash, String category);
         Task UploadMagnet(String magnetLink, String category, Boolean autoDelete);
@@ -32,6 +31,7 @@ namespace RdtClient.Service.Services
         Task<Profile> GetProfile();
         Task UpdateComplete(Guid torrentId, DateTimeOffset datetime);
         Task Update();
+        Task Retry(Guid id, Int32 retry);
     }
 
     public class Torrents : ITorrents
@@ -141,7 +141,7 @@ namespace RdtClient.Service.Services
 
             var rdTorrent = await GetRdNetClient().AddTorrentMagnetAsync(magnetLink);
 
-            await Add(rdTorrent.Id, magnet.InfoHash.ToHex(), category, autoDelete);
+            await Add(rdTorrent.Id, magnet.InfoHash.ToHex(), category, autoDelete, magnetLink, false);
         }
 
         public async Task UploadFile(Byte[] bytes, String category, Boolean autoDelete)
@@ -150,7 +150,9 @@ namespace RdtClient.Service.Services
 
             var rdTorrent = await GetRdNetClient().AddTorrentFileAsync(bytes);
 
-            await Add(rdTorrent.Id, torrent.InfoHash.ToHex(), category, autoDelete);
+            var fileAsBase64 = Convert.ToBase64String(bytes);
+
+            await Add(rdTorrent.Id, torrent.InfoHash.ToHex(), category, autoDelete, fileAsBase64, true);
         }
 
         public async Task<List<String>> GetAvailableFiles(String hash)
@@ -197,17 +199,6 @@ namespace RdtClient.Service.Services
                     }
                 }
 
-                if (deleteLocalFiles)
-                {
-                    var downloadPath = await DownloadPath(torrent);
-                    downloadPath = Path.Combine(downloadPath, torrent.RdName);
-                    
-                    if (Directory.Exists(downloadPath))
-                    {
-                        Directory.Delete(downloadPath, true);
-                    }
-                }
-                
                 if (deleteData)
                 {
                     await _downloads.DeleteForTorrent(torrent.TorrentId);
@@ -217,6 +208,37 @@ namespace RdtClient.Service.Services
                 if (deleteRdTorrent)
                 {
                     await GetRdNetClient().DeleteTorrentAsync(torrent.RdId);
+                }
+
+                if (deleteLocalFiles)
+                {
+                    var downloadPath = await DownloadPath(torrent);
+                    downloadPath = Path.Combine(downloadPath, torrent.RdName);
+                    
+                    if (Directory.Exists(downloadPath))
+                    {
+                        var retry = 0;
+
+                        while (true)
+                        {
+                            try
+                            {
+                                Directory.Delete(downloadPath, true);
+
+                                break;
+                            }
+                            catch
+                            {
+                                retry++;
+                                if (retry >= 3)
+                                {
+                                    throw;
+                                }
+
+                                await Task.Delay(1000);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -270,7 +292,7 @@ namespace RdtClient.Service.Services
             return profile;
         }
 
-        private async Task Add(String rdTorrentId, String infoHash, String category, Boolean autoDelete)
+        private async Task Add(String rdTorrentId, String infoHash, String category, Boolean autoDelete, String fileOrMagnetContents, Boolean isFile)
         {
             var w = await SemaphoreSlim.WaitAsync(60000);
             if (!w)
@@ -287,7 +309,7 @@ namespace RdtClient.Service.Services
                     return;
                 }
 
-                var newTorrent = await _torrentData.Add(rdTorrentId, infoHash, category, autoDelete);
+                var newTorrent = await _torrentData.Add(rdTorrentId, infoHash, category, autoDelete, fileOrMagnetContents, isFile);
 
                 var rdTorrent = await GetRdNetClient().GetTorrentInfoAsync(rdTorrentId);
 
@@ -305,8 +327,6 @@ namespace RdtClient.Service.Services
 
             if (!w)
             {
-                
-
                 return;
             }
 
@@ -349,6 +369,43 @@ namespace RdtClient.Service.Services
             finally
             {
                 SemaphoreSlim.Release();
+            }
+        }
+
+        public async Task Retry(Guid id, Int32 retry)
+        {
+            var torrent = await _torrentData.GetById(id);
+
+            if (retry == 0)
+            {
+                await Delete(id, true, true, true);
+
+                if (String.IsNullOrWhiteSpace(torrent.FileOrMagnet))
+                {
+                    throw new Exception($"Cannot re-add this torrent, original magnet or file not found");
+                }
+
+                if (torrent.IsFile)
+                {
+                    var bytes = Convert.FromBase64String(torrent.FileOrMagnet);
+
+                    await UploadFile(bytes, torrent.Category, torrent.AutoDelete);
+                }
+                else
+                {
+                    await UploadMagnet(torrent.FileOrMagnet, torrent.Category, torrent.AutoDelete);
+                }
+            }
+            else if (retry == 1)
+            {
+                await Delete(id, false, false, true);
+
+                await _torrentData.UpdateComplete(id, null);
+                await _downloads.DeleteForTorrent(id);
+            }
+            else
+            {
+                throw new Exception($"Invalid retry option {retry}");
             }
         }
 
