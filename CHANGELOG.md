@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.3] - 2021-03-15
+### Changed
+- Fixed a bug where it sometimes could add a download multiple times when the RD torrent was in a certain state.
+
 ## [1.6.2] - 2021-03-13
 ### Added
 - Add a retry button in the interface. Giving the possibility to re-download the torrent in RealDebrid or re-download the files locally.
@@ -12,7 +16,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed an issue with some torrents not downloading when finished.
 ### Removed
 - Removed the "Download" and "Unpack" buttons from the interface.
-
 
 ## [1.6.1] - 2021-03-12
 ### Changed
