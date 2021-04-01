@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2021-04-01
+### Added
+- Add automatic retry functionality for downloads. It will retry downloading a file after an error 3 times.
+- Add Update.ps1 to automatically download the latest version from Github for Windows users.
+### Changed
+- Fixed an issue downloads sometimes getting added multiple times.
+
 ## [1.6.3] - 2021-03-15
 ### Changed
 - Fixed a bug where it sometimes could add a download multiple times when the RD torrent was in a certain state.
