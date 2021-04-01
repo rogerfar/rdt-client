@@ -19,6 +19,8 @@ namespace RdtClient.Service.Services
 
     public class TorrentRunner : ITorrentRunner
     {
+        private const Int32 RetryCount = 3;
+
         private static DateTime _nextUpdate = DateTime.UtcNow;
 
         public static readonly ConcurrentDictionary<Guid, DownloadClient> ActiveDownloadClients = new ConcurrentDictionary<Guid, DownloadClient>();
@@ -120,10 +122,24 @@ namespace RdtClient.Service.Services
             {
                 if (downloadClient.Error != null)
                 {
+                    // Retry the download
                     Log.Debug($"Processing active download {downloadId}: error {downloadClient.Error}");
+                    var download = await _downloads.GetById(downloadId);
 
-                    await _downloads.UpdateError(downloadId, downloadClient.Error);
-                    await _downloads.UpdateCompleted(downloadId, DateTimeOffset.UtcNow);
+                    if (download.RetryCount < RetryCount)
+                    {
+                        Log.Debug($"Processing active download {downloadId}: error {downloadClient.Error}, retry count {download.RetryCount}/{RetryCount}");
+
+                        await _downloads.UpdateRetryCount(downloadId, download.RetryCount + 1);
+                        await _torrents.Download(downloadId);
+                    }
+                    else
+                    {
+                        Log.Debug($"Processing active download {downloadId}: error {downloadClient.Error}, not retrying");
+
+                        await _downloads.UpdateError(downloadId, downloadClient.Error);
+                        await _downloads.UpdateCompleted(downloadId, DateTimeOffset.UtcNow);
+                    }
                 }
                 else
                 {
@@ -335,8 +351,8 @@ namespace RdtClient.Service.Services
                 }
 
                 // RealDebrid is waiting for file selection, select which files to download.
-                if (torrent.RdStatus == RealDebridStatus.WaitingForFileSelection || 
-                    (torrent.RdStatus == RealDebridStatus.Finished && torrent.Downloads.Count == 0))
+                if ((torrent.RdStatus == RealDebridStatus.WaitingForFileSelection || torrent.RdStatus == RealDebridStatus.Finished) &&
+                    torrent.Downloads.Count == 0)
                 {
                     Log.Debug($"Torrent {torrent.RdId} selecting files");
 

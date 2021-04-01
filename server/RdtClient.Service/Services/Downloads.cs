@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using RdtClient.Data.Data;
 using Download = RdtClient.Data.Models.Data.Download;
@@ -8,10 +7,9 @@ namespace RdtClient.Service.Services
 {
     public interface IDownloads
     {
-        Task<IList<Download>> Get();
-        Task<IList<Download>> GetForTorrent(Guid torrentId);
         Task<Download> GetById(Guid downloadId);
-        Task<Download> Add(Guid torrentId, String link);
+        Task<Download> Get(Guid torrentId, String path);
+        Task<Download> Add(Guid torrentId, String path);
         Task UpdateUnrestrictedLink(Guid downloadId, String unrestrictedLink);
         Task UpdateDownloadStarted(Guid downloadId, DateTimeOffset? dateTime);
         Task UpdateDownloadFinished(Guid downloadId, DateTimeOffset? dateTime);
@@ -20,6 +18,7 @@ namespace RdtClient.Service.Services
         Task UpdateUnpackingFinished(Guid downloadId, DateTimeOffset? dateTime);
         Task UpdateCompleted(Guid downloadId, DateTimeOffset? dateTime);
         Task UpdateError(Guid downloadId, String error);
+        Task UpdateRetryCount(Guid downloadId, Int32 retryCount);
         Task DeleteForTorrent(Guid torrentId);
     }
 
@@ -31,25 +30,20 @@ namespace RdtClient.Service.Services
         {
             _downloadData = downloadData;
         }
-
-        public async Task<IList<Download>> Get()
-        {
-            return await _downloadData.Get();
-        }
-
-        public async Task<IList<Download>> GetForTorrent(Guid torrentId)
-        {
-            return await _downloadData.GetForTorrent(torrentId);
-        }
-
+        
         public async Task<Download> GetById(Guid downloadId)
         {
             return await _downloadData.GetById(downloadId);
         }
 
-        public async Task<Download> Add(Guid torrentId, String link)
+        public async Task<Download> Get(Guid torrentId, String path)
         {
-            return await _downloadData.Add(torrentId, link);
+            return await _downloadData.Get(torrentId, path);
+        }
+
+        public async Task<Download> Add(Guid torrentId, String path)
+        {
+            return await _downloadData.Add(torrentId, path);
         }
 
         public async Task UpdateUnrestrictedLink(Guid downloadId, String unrestrictedLink)
@@ -90,6 +84,11 @@ namespace RdtClient.Service.Services
         public async Task UpdateError(Guid downloadId, String error)
         {
             await _downloadData.UpdateError(downloadId, error);
+        }
+
+        public async Task UpdateRetryCount(Guid downloadId, Int32 retryCount)
+        {
+            await _downloadData.UpdateRetryCount(downloadId, retryCount);
         }
 
         public async Task DeleteForTorrent(Guid torrentId)

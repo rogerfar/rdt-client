@@ -176,7 +176,13 @@ namespace RdtClient.Service.Services
 
             foreach (var file in rdTorrent.Links)
             {
-                await _downloads.Add(torrent.TorrentId, file);
+                // Make sure downloads don't get added multiple times
+                var downloadExists = await _downloads.Get(torrent.TorrentId, file);
+
+                if (downloadExists == null)
+                {
+                    await _downloads.Add(torrent.TorrentId, file);
+                }
             }
         }
 
@@ -201,6 +207,7 @@ namespace RdtClient.Service.Services
 
                 if (deleteData)
                 {
+                    await _torrentData.UpdateComplete(torrent.TorrentId, DateTimeOffset.UtcNow);
                     await _downloads.DeleteForTorrent(torrent.TorrentId);
                     await _torrentData.Delete(torrentId);
                 }

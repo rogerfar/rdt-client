@@ -30,6 +30,8 @@ namespace RdtClient.Data.Models.Data
         public DateTimeOffset? UnpackingFinished { get; set; }
         
         public DateTimeOffset? Completed { get; set; }
+
+        public Int32 RetryCount { get; set; }
         
         public String Error { get; set; }
 

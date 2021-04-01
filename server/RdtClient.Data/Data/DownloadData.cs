@@ -9,9 +9,8 @@ namespace RdtClient.Data.Data
 {
     public interface IDownloadData
     {
-        Task<IList<Download>> Get();
-        Task<IList<Download>> GetForTorrent(Guid torrentId);
         Task<Download> GetById(Guid downloadId);
+        Task<Download> Get(Guid torrentId, String path);
         Task<Download> Add(Guid torrentId, String path);
         Task UpdateUnrestrictedLink(Guid downloadId, String unrestrictedLink);
         Task UpdateDownloadStarted(Guid downloadId, DateTimeOffset? dateTime);
@@ -21,6 +20,7 @@ namespace RdtClient.Data.Data
         Task UpdateUnpackingFinished(Guid downloadId, DateTimeOffset? dateTime);
         Task UpdateCompleted(Guid downloadId, DateTimeOffset? dateTime);
         Task UpdateError(Guid downloadId, String error);
+        Task UpdateRetryCount(Guid downloadId, Int32 retryCount);
         Task DeleteForTorrent(Guid torrentId);
     }
 
@@ -57,6 +57,11 @@ namespace RdtClient.Data.Data
                                      .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
         }
 
+        public async Task<Download> Get(Guid torrentId, String path)
+        {
+            return await _dataContext.Downloads.FirstOrDefaultAsync(m => m.TorrentId == torrentId && m.Path == path);
+        }
+
         public async Task<Download> Add(Guid torrentId, String path)
         {
             var download = new Download
@@ -65,7 +70,8 @@ namespace RdtClient.Data.Data
                 TorrentId = torrentId,
                 Path = path,
                 Added = DateTimeOffset.UtcNow,
-                DownloadQueued = DateTimeOffset.UtcNow
+                DownloadQueued = DateTimeOffset.UtcNow,
+                RetryCount = 0
             };
 
             await _dataContext.Downloads.AddAsync(download);
@@ -156,6 +162,16 @@ namespace RdtClient.Data.Data
                                                .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
             dbDownload.Error = error;
+
+            await _dataContext.SaveChangesAsync();
+        }
+
+        public async Task UpdateRetryCount(Guid downloadId, Int32 retryCount)
+        {
+            var dbDownload = await _dataContext.Downloads
+                                               .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+            dbDownload.RetryCount = retryCount;
 
             await _dataContext.SaveChangesAsync();
         }
