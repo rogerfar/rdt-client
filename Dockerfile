@@ -1,38 +1,48 @@
-# Stage 1 - Build the frontend
-FROM amd64/node:15.5-buster AS node-build-env
+# Stage 1 - Build runtime image
+FROM ghcr.io/linuxserver/baseimage-mono:LTS
 
-RUN mkdir /appclient
-WORKDIR /appclient
+# set version label
+ARG BUILD_DATE
+ARG VERSION
+ARG RDTCLIENT_VERSION
+LABEL build_version="Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}"
+LABEL maintainer="ravensorb"
 
-COPY client/. .
-RUN npm ci
-RUN npx ng build --prod --output-path=out
+# set environment variables
+ARG DEBIAN_FRONTEND="noninteractive"
+ENV XDG_CONFIG_HOME="/config/xdg"
 
-# Stage 2 - Build the backend
-FROM mcr.microsoft.com/dotnet/sdk:5.0.103-alpine3.13-amd64 AS dotnet-build-env
+RUN mkdir /app || true && ln -s /config /data && mkdir -p /data/downloads /data/db || true && \
+    echo "**** Updating package information ****" && \ 
+      apt update -y -qq && \
+    echo "**** install packages ****" && \
+      apt install -y -qq wget jq && \
+    echo "**** Installing dotnet ****" && \
+      wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb  && \
+      dpkg -i packages-microsoft-prod.deb 2> /dev/null && \
+      rm packages-microsoft-prod.deb && \
+      apt update -y -qq && \
+      apt install -y -qq apt-transport-https dotnet-runtime-5.0 aspnetcore-runtime-5.0 && \
+    echo "**** install rtd-client ****" && \
+      if [ -z ${RDTCLIENT_VERSION+x} ]; then \
+         RDTCLIENT_VERSION=$(curl -sX GET https://api.github.com/repos/rogerfar/rdt-client/releases/latest | jq -r ".name"); \
+      fi && \
+      curl -o \
+         /tmp/RealDebridClient.zip -L \
+         "https://github.com/rogerfar/rdt-client/releases/download/${RDTCLIENT_VERSION}/RealDebridClient.zip" && \
+      unzip /tmp/RealDebridClient.zip -d /app && \
+    echo "**** cleanup ****" && \
+      apt-get -y -qq -o Dpkg::Use-Pty=0 clean && apt-get -y -qq -o Dpkg::Use-Pty=0 purge && \
+      rm -rf \
+         /tmp/* \
+         /var/lib/apt/lists/* \
+         /var/tmp/* || true
 
-RUN mkdir /appserver
-WORKDIR /appserver
+WORKDIR /data
 
-COPY server/. .
+# add local files
+COPY root/ /
 
-RUN if [ "$BUILDPLATFORM" = "arm/v7" ] ; then dotnet restore -r linux-arm RdtClient.sln ; else dotnet restore RdtClient.sln ; fi
-RUN if [ "$BUILDPLATFORM" = "arm/v7" ] ; then dotnet publish -r linux-arm -c Release -o out ; else dotnet publish -c Release -o out ; fi
-
-# Stage 3 - Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:5.0.3-buster-slim AS base
-
-RUN addgroup --quiet --gid 1000 dotnet
-RUN adduser --system --uid 1000 --group dotnet --shell /bin/sh
-
-RUN mkdir /app
-
-WORKDIR /app
-COPY --from=dotnet-build-env /appserver/out .
-COPY --from=node-build-env /appclient/out ./wwwroot
-
-RUN chown -R dotnet:dotnet /app
-
-USER 1000
-
-ENTRYPOINT ["dotnet", "RdtClient.Web.dll"]
+# ports and volumes
+EXPOSE 6500
+VOLUME ["/config", "/data" ]
