@@ -23,10 +23,10 @@ dotnet publish -c Release -o ..\out
 cd ..
 cd out
 
-Add-Type -Assembly System.IO.Compression.FileSystem
-$compressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
 $location = Get-Location
-[System.IO.Compression.ZipFile]::CreateFromDirectory($location, "$location/../RealDebridClient.zip", $compressionLevel, $false)
+[string]$Zip = "C:\Program Files\7-Zip\7z.exe"
+[array]$arguments = "a", "-tzip", "-y", "$location/../RealDebridClient.zip", $location
+& $Zip $arguments
 
 cd ..
 
