@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using RdtClient.Data.Enums;
 using RdtClient.Service.Models.QBittorrent;
 using RdtClient.Service.Models.QBittorrent.QuickType;
 
@@ -239,7 +240,7 @@ namespace RdtClient.Service.Services
                     downloadPath = Path.Combine(downloadPath, torrent.Category);
                 }
 
-                var torrentPath = Path.Combine(downloadPath, torrent.RdName);
+                var torrentPath = Path.Combine(downloadPath, torrent.RdName) + Path.DirectorySeparatorChar;
 
                 var bytesDone = torrent.RdProgress;
                 var bytesTotal = torrent.RdSize;
@@ -314,6 +315,11 @@ namespace RdtClient.Service.Services
                             result.State = "error";
                         }
                     }
+                }
+
+                if (torrent.RdStatus == RealDebridStatus.Error)
+                {
+                    result.State = "error";
                 }
                 
                 results.Add(result);
