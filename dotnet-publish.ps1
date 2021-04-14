@@ -25,7 +25,7 @@ cd out
 
 $location = Get-Location
 [string]$Zip = "C:\Program Files\7-Zip\7z.exe"
-[array]$arguments = "a", "-tzip", "-y", "$location/../RealDebridClient.zip", $location
+[array]$arguments = "a", "-tzip", "-y", "$location/../RealDebridClient.zip", "."
 & $Zip $arguments
 
 cd ..
