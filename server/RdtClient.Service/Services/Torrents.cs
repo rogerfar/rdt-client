@@ -439,10 +439,6 @@ namespace RdtClient.Service.Services
             {
                 torrent.RdName = rdTorrent.Filename;
             }
-            else if (!String.IsNullOrWhiteSpace(rdTorrent.OriginalFilename))
-            {
-                torrent.RdName = rdTorrent.OriginalFilename;
-            }
 
             if (rdTorrent.Bytes > 0)
             {
