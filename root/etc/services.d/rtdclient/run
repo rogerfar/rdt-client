@@ -1,0 +1,13 @@
+#!/usr/bin/with-contenv bash
+
+if [ -n "${UMASK_SET}" ] && [ -z "${UMASK}" ]; then
+  echo -e "You are using a legacy method of defining umask\nplease update your environment variable from UMASK_SET to UMASK\nto keep the functionality after July 2021"
+  umask ${UMASK_SET}
+fi
+
+echo "Changing to /app folder"
+cd /app || exit
+
+echo "Starting rtdclient"
+exec \
+  s6-setuidgid abc dotnet RdtClient.Web.dll
