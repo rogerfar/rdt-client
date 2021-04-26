@@ -9,10 +9,14 @@ RUN mkdir /appclient
 WORKDIR /appclient
 
 RUN \
+   echo "**** Cloning Source Code ****" && \ 
    git clone https://github.com/rogerfar/rdt-client.git . && \
    cd client && \
+   echo "**** Building Code  ****" && \ 
    npm ci && \
    npx ng build --prod --output-path=out
+
+RUN ls -FCla /appclient/root
 
 # Stage 2 - Build the backend
 FROM mcr.microsoft.com/dotnet/sdk:5.0-buster-slim-amd64 AS dotnet-build-env
@@ -30,10 +34,10 @@ RUN \
    echo "**** Building Source Code for $TARGETPLATFORM on $BUILDPLATFORM ****" && \ 
    cd server && \
    if [ "$TARGETPLATFORM" = "linux/arm/v7" -o "$TARGETPLATFORM" = "linux/arm64" ] ; then \
-      echo "**** Building $TARGETPLATFORM version" && \
+      echo "**** Building $TARGETPLATFORM arm version" && \
       dotnet restore -r linux-arm RdtClient.sln && dotnet publish -r linux-arm -c Release -o out ; \
    else \
-      echo "**** Building standard version" && \
+      echo "**** Building $TARGETPLATFORM x86 version" && \
       dotnet restore RdtClient.sln && dotnet publish -c Release -o out ; \
    fi
 
@@ -81,12 +85,7 @@ ENV PATH "$PATH:/usr/share/dotnet"
 WORKDIR /app
 COPY --from=dotnet-build-env /appserver/server/out .
 COPY --from=node-build-env /appclient/client/out ./wwwroot
-
-# add local files
-COPY root/ /
-
-RUN dos2unix /etc/services.d/rdtclient/run && \
-    dos2unix /etc/cont-init.d/30-config
+COPY --from=node-build-env /appclient/root/ /
 
 # ports and volumes
 EXPOSE 6500
