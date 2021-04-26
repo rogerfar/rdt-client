@@ -60,7 +60,7 @@ RUN \
     echo "**** Updating package information ****" && \ 
     apt-get update -y -qq && \
     echo "**** Install pre-reqs ****" && \ 
-    apt-get install -y -qq wget && \
+    apt-get install -y -qq wget dos2unix && \
     apt-get install -y libc6 libgcc1 libgssapi-krb5-2 libssl1.1 libstdc++6 zlib1g libicu66 && \
     echo "**** Installing dotnet ****" && \
     wget -q https://dot.net/v1/dotnet-install.sh && \
@@ -84,6 +84,9 @@ COPY --from=node-build-env /appclient/client/out ./wwwroot
 
 # add local files
 COPY root/ /
+
+RUN dos2unix /etc/services.d/rdtclient/run && \
+    dos2unix /etc/cont-init.d/30-config
 
 # ports and volumes
 EXPOSE 6500
