@@ -214,7 +214,7 @@ namespace RdtClient.Service.Services
                     Finished = true;
                 };
 
-                await _downloader.DownloadFileAsync(_download.Link, filePath);
+                await _downloader.DownloadFileTaskAsync(_download.Link, filePath);
             }
             catch (Exception ex)
             {

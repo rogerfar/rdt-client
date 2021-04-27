@@ -13,7 +13,7 @@ namespace RdtClient.Web.Controllers
 {
     /// <summary>
     /// This API behaves as a regular QBittorrent 4+ API
-    /// Documentation is found here: https://github.com/qbittorrent/qBittorrent/wiki/Web-API-Documentation
+    /// Documentation is found here: https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)
     /// </summary>
     [ApiController]
     [Route("api/v2")]
