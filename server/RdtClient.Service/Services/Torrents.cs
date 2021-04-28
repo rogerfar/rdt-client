@@ -137,7 +137,16 @@ namespace RdtClient.Service.Services
 
         public async Task UploadMagnet(String magnetLink, String category, Boolean autoDelete)
         {
-            var magnet = MagnetLink.Parse(magnetLink);
+            MagnetLink magnet;
+
+            try
+            {
+                magnet = MagnetLink.Parse(magnetLink);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"{ex.Message}, trying to parse {magnetLink}");
+            }
 
             var rdTorrent = await GetRdNetClient().AddTorrentMagnetAsync(magnetLink);
 
@@ -146,12 +155,21 @@ namespace RdtClient.Service.Services
 
         public async Task UploadFile(Byte[] bytes, String category, Boolean autoDelete)
         {
-            var torrent = await MonoTorrent.Torrent.LoadAsync(bytes);
-
-            var rdTorrent = await GetRdNetClient().AddTorrentFileAsync(bytes);
+            MonoTorrent.Torrent torrent;
 
             var fileAsBase64 = Convert.ToBase64String(bytes);
 
+            try
+            {
+                torrent = await MonoTorrent.Torrent.LoadAsync(bytes);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"{ex.Message}, trying to parse {fileAsBase64}");
+            }
+
+            var rdTorrent = await GetRdNetClient().AddTorrentFileAsync(bytes);
+            
             await Add(rdTorrent.Id, torrent.InfoHash.ToHex(), category, autoDelete, fileAsBase64, true);
         }
 

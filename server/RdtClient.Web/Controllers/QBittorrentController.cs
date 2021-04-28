@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -245,7 +246,20 @@ namespace RdtClient.Web.Controllers
 
             foreach (var url in urls)
             {
-                await _qBittorrent.TorrentsAddMagnet(url.Trim(), request.Category, false);
+                if (url.StartsWith("magnet"))
+                {
+                    await _qBittorrent.TorrentsAddMagnet(url.Trim(), request.Category, false);
+                }
+                else if (url.StartsWith("http"))
+                {
+                    var httpClient = new HttpClient();
+                    var result = await httpClient.GetByteArrayAsync(url);
+                    await _qBittorrent.TorrentsAddFile(result, request.Category, false);
+                }
+                else
+                {
+                    throw new Exception($"Invalid torrent link format {url}");
+                }
             }
 
             return Ok();
