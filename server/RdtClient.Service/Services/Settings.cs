@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using RdtClient.Data.Data;
@@ -42,7 +43,8 @@ namespace RdtClient.Service.Services
 
         public async Task<String> GetString(String key)
         {
-            var setting = await _settingData.Get(key);
+            var settings = await GetAll();
+            var setting = settings.FirstOrDefault(m => m.SettingId == key);
 
             if (setting == null)
             {
@@ -54,7 +56,8 @@ namespace RdtClient.Service.Services
 
         public async Task<Int32> GetNumber(String key)
         {
-            var setting = await _settingData.Get(key);
+            var settings = await GetAll();
+            var setting = settings.FirstOrDefault(m => m.SettingId == key);
 
             if (setting == null)
             {
