@@ -440,6 +440,8 @@ namespace RdtClient.Service.Services
 
         private async Task Update(Torrent torrent)
         {
+            var originalTorrent = JsonConvert.SerializeObject(torrent);
+
             var rdTorrent = await GetRdNetClient().GetTorrentInfoAsync(torrent.RdId);
 
             if (!String.IsNullOrWhiteSpace(rdTorrent.Filename))
@@ -491,7 +493,12 @@ namespace RdtClient.Service.Services
                 _ => RealDebridStatus.Error
             };
 
-            await _torrentData.UpdateRdData(torrent);
+            var newTorrent = JsonConvert.SerializeObject(torrent);
+
+            if (originalTorrent != newTorrent)
+            {
+                await _torrentData.UpdateRdData(torrent);
+            }
         }
     }
 }
