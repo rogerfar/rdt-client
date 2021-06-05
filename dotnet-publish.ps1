@@ -13,7 +13,7 @@ $newNavbar = (Get-Content $navbar) -replace 'Version .*?<', "Version $version<"
 
 cd client
 npm install
-ng build --prod --output-path=..\server\RdtClient.Web\wwwroot
+ng build --configuration production --output-path=..\server\RdtClient.Web\wwwroot
 
 cd ..
 cd server
