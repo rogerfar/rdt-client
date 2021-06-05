@@ -101,9 +101,7 @@ namespace RdtClient.Service.Services
 
             if (torrent != null)
             {
-                var rdTorrent = await GetRdNetClient().GetTorrentInfoAsync(torrent.RdId);
-
-                await Update(torrent, rdTorrent);
+                await Update(torrent);
             }
 
             return torrent;
@@ -115,9 +113,7 @@ namespace RdtClient.Service.Services
 
             if (torrent != null)
             {
-                var rdTorrent = await GetRdNetClient().GetTorrentInfoAsync(torrent.RdId);
-
-                await Update(torrent, rdTorrent);
+                await Update(torrent);
             }
 
             return torrent;
@@ -336,9 +332,7 @@ namespace RdtClient.Service.Services
 
                 var newTorrent = await _torrentData.Add(rdTorrentId, infoHash, category, autoDelete, fileOrMagnetContents, isFile);
 
-                var rdTorrent = await GetRdNetClient().GetTorrentInfoAsync(rdTorrentId);
-
-                await Update(newTorrent, rdTorrent);
+                await Update(newTorrent);
             }
             finally
             {
@@ -369,15 +363,8 @@ namespace RdtClient.Service.Services
                     {
                         continue;
                     }
-                    if (rdTorrent.Files == null)
-                    {
-                        var rdTorrentInfo = await GetRdNetClient().GetTorrentInfoAsync(rdTorrent.Id);
-                        await Update(torrent, rdTorrentInfo);
-                    }
-                    else
-                    {
-                        await Update(torrent, rdTorrent);
-                    }
+                    
+                    await Update(torrent);
                 }
 
                 foreach (var torrent in torrents)
@@ -451,9 +438,16 @@ namespace RdtClient.Service.Services
             return settingDownloadPath;
         }
 
-        private async Task Update(Torrent torrent, RDNET.Torrent rdTorrent)
+        private async Task Update(Torrent torrent)
         {
+            var rdTorrent = await GetRdNetClient().GetTorrentInfoAsync(torrent.RdId);
+
             if (!String.IsNullOrWhiteSpace(rdTorrent.Filename))
+            {
+                torrent.RdName = rdTorrent.Filename;
+            }
+
+            if (!String.IsNullOrWhiteSpace(rdTorrent.OriginalFilename))
             {
                 torrent.RdName = rdTorrent.Filename;
             }
