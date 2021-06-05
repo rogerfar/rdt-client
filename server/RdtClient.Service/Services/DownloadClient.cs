@@ -21,11 +21,11 @@ namespace RdtClient.Service.Services
         private DownloadService _downloader;
         private SimpleDownloader _simpleDownloader;
 
-        public DownloadClient(Download download, String destinationPath)
+        public DownloadClient(Download download, Torrent torrent, String destinationPath)
         {
             _download = download;
+            _torrent = torrent;
             _destinationPath = destinationPath;
-            _torrent = download.Torrent;
         }
 
         public Boolean Finished { get; private set; }

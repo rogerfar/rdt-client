@@ -109,7 +109,7 @@ namespace RdtClient.Service.Services
                 }
             };
 
-            var downloadClient = new DownloadClient(download, downloadPath);
+            var downloadClient = new DownloadClient(download, download.Torrent, downloadPath);
 
             await downloadClient.Start(settings);
 

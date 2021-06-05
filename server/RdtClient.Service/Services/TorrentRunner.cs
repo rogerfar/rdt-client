@@ -253,7 +253,7 @@ namespace RdtClient.Service.Services
                 Log.Debug($"Setting download path for {download.DownloadId} to {downloadPath}");
 
                 // Start the download process
-                var downloadClient = new DownloadClient(download, downloadPath);
+                var downloadClient = new DownloadClient(download, torrentDownload, downloadPath);
                 
                 if (TorrentRunner.ActiveDownloadClients.TryAdd(download.DownloadId, downloadClient))
                 {

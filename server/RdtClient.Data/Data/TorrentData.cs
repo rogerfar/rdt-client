@@ -46,14 +46,6 @@ namespace RdtClient.Data.Data
                                                       .ToListAsync();
                 }
 
-                foreach (var torrent in _torrentCache)
-                {
-                    foreach (var download in torrent.Downloads)
-                    {
-                        download.Torrent = null;
-                    }
-                }
-
                 return _torrentCache.OrderByDescending(m => m.Added).ToList();
             }
             finally
