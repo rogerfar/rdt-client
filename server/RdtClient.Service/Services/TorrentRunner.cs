@@ -221,6 +221,8 @@ namespace RdtClient.Service.Services
             {
                 Log.Debug($"Starting download {download.DownloadId}");
 
+                var torrentDownload = torrents.First(m => m.TorrentId == download.TorrentId);
+
                 if (TorrentRunner.ActiveDownloadClients.Count >= settingDownloadLimit)
                 {
                     Log.Debug($"Not starting download {download.DownloadId} because there are already the max number of downloads active");
@@ -243,9 +245,9 @@ namespace RdtClient.Service.Services
 
                 var downloadPath = settingDownloadPath;
                 
-                if (!String.IsNullOrWhiteSpace(download.Torrent.Category))
+                if (!String.IsNullOrWhiteSpace(torrentDownload.Category))
                 {
-                    downloadPath = Path.Combine(downloadPath, download.Torrent.Category);
+                    downloadPath = Path.Combine(downloadPath, torrentDownload.Category);
                 }
 
                 Log.Debug($"Setting download path for {download.DownloadId} to {downloadPath}");
@@ -274,6 +276,8 @@ namespace RdtClient.Service.Services
             foreach (var download in queuedUnpacks)
             {
                 Log.Debug($"Starting unpack {download.DownloadId}");
+
+                var torrentDownload = torrents.First(m => m.TorrentId == download.TorrentId);
 
                 // Check if the unpacking process is even needed
                 var uri = new Uri(download.Link);
@@ -320,9 +324,9 @@ namespace RdtClient.Service.Services
                 
                 var downloadPath = settingDownloadPath;
                 
-                if (!String.IsNullOrWhiteSpace(download.Torrent.Category))
+                if (!String.IsNullOrWhiteSpace(torrentDownload.Category))
                 {
-                    downloadPath = Path.Combine(downloadPath, download.Torrent.Category);
+                    downloadPath = Path.Combine(downloadPath, torrentDownload.Category);
                 }
 
                 Log.Debug($"Setting unpack path for {download.DownloadId} to {downloadPath}");
