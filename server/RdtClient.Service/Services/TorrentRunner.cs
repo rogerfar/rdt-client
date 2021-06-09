@@ -237,8 +237,16 @@ namespace RdtClient.Service.Services
                     continue;
                 }
 
-                var downloadLink = await _torrents.UnrestrictLink(download.DownloadId);
-                download.Link = downloadLink;
+                try
+                {
+                    var downloadLink = await _torrents.UnrestrictLink(download.DownloadId);
+                    download.Link = downloadLink;
+                }
+                catch (Exception ex)
+                {
+                    await _downloads.UpdateError(download.DownloadId, ex.Message);
+                    continue;
+                }
 
                 download.DownloadStarted = DateTime.UtcNow;
                 await _downloads.UpdateDownloadStarted(download.DownloadId, download.DownloadStarted);
