@@ -47,7 +47,7 @@ namespace RdtClient.Service.Services
             torrents = torrents.Where(m => m.Completed == null).ToList();
             
             var downloads = torrents.SelectMany(m => m.Downloads)
-                                    .Where(m => m.DownloadQueued != null && m.DownloadStarted != null && m.DownloadFinished == null)
+                                    .Where(m => m.DownloadQueued != null && m.DownloadStarted != null && m.DownloadFinished == null && m.Error == null)
                                     .OrderBy(m => m.DownloadQueued);
 
             foreach (var download in downloads)
@@ -56,7 +56,7 @@ namespace RdtClient.Service.Services
             }
 
             var unpacks = torrents.SelectMany(m => m.Downloads)
-                                  .Where(m => m.UnpackingQueued != null && m.UnpackingStarted != null && m.UnpackingFinished == null)
+                                  .Where(m => m.UnpackingQueued != null && m.UnpackingStarted != null && m.UnpackingFinished == null && m.Error == null)
                                   .OrderBy(m => m.DownloadQueued);
 
             foreach (var download in unpacks)
@@ -211,7 +211,7 @@ namespace RdtClient.Service.Services
 
             // Check if there are any downloads that are queued and can be started.
             var queuedDownloads = torrents.SelectMany(m => m.Downloads)
-                                          .Where(m => m.Completed == null && m.DownloadQueued != null && m.DownloadStarted == null)
+                                          .Where(m => m.Completed == null && m.DownloadQueued != null && m.DownloadStarted == null && m.Error == null)
                                           .OrderBy(m => m.DownloadQueued)
                                           .ToList();
 
@@ -245,6 +245,9 @@ namespace RdtClient.Service.Services
                 catch (Exception ex)
                 {
                     await _downloads.UpdateError(download.DownloadId, ex.Message);
+                    await _downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
+                    download.Error = ex.Message;
+                    download.Completed = DateTimeOffset.UtcNow;
                     continue;
                 }
 
@@ -275,7 +278,7 @@ namespace RdtClient.Service.Services
 
             // Check if there are any unpacks that are queued and can be started.
             var queuedUnpacks = torrents.SelectMany(m => m.Downloads)
-                                        .Where(m => m.Completed == null && m.UnpackingQueued != null && m.UnpackingStarted == null)
+                                        .Where(m => m.Completed == null && m.UnpackingQueued != null && m.UnpackingStarted == null && m.Error == null)
                                         .OrderBy(m => m.DownloadQueued)
                                         .ToList();
 
@@ -423,7 +426,8 @@ namespace RdtClient.Service.Services
                     var downloadsPending = torrent.Downloads
                                                   .Where(m => m.Completed == null &&
                                                               m.DownloadStarted == null &&
-                                                              m.DownloadFinished == null)
+                                                              m.DownloadFinished == null &&
+                                                              m.Error == null)
                                                   .OrderBy(m => m.Added)
                                                   .ToList();
 
