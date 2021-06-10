@@ -184,16 +184,35 @@ namespace RdtClient.Service.Services
         {
             var torrent = await GetById(torrentId);
 
-            await GetRdNetClient().SelectTorrentFilesAsync(torrent.RdId, fileIds.ToArray());
+            RDNET.Torrent rdTorrent = null;
 
-            var rdTorrent = await GetRdNetClient().GetTorrentInfoAsync(torrent.RdId);
+            for (var i = 0; i < 5; i++)
+            {
+                await GetRdNetClient().SelectTorrentFilesAsync(torrent.RdId, fileIds.ToArray());
+
+                await Task.Delay(5000);
+
+                rdTorrent = await GetRdNetClient().GetTorrentInfoAsync(torrent.RdId);
+
+                if (fileIds.Count == rdTorrent.Links.Count)
+                {
+                    break;
+                }
+
+                await Task.Delay(10000);
+            }
+
+            if (rdTorrent == null)
+            {
+                return;
+            }
 
             foreach (var file in rdTorrent.Links)
             {
                 // Make sure downloads don't get added multiple times
                 var downloadExists = await _downloads.Get(torrent.TorrentId, file);
 
-                if (downloadExists == null)
+                if (downloadExists == null && !String.IsNullOrWhiteSpace(file))
                 {
                     await _downloads.Add(torrent.TorrentId, file);
                 }
