@@ -21,6 +21,8 @@ export class SettingsComponent implements OnInit {
   @Output()
   public openChange = new EventEmitter<boolean>();
 
+  public activeTab = 0;
+
   public isActive = false;
 
   public saving = false;

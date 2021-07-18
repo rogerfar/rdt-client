@@ -20,6 +20,12 @@ namespace RdtClient.Data.Models.Data
         public DateTimeOffset Added { get; set; }
         public DateTimeOffset? Completed { get; set; }
 
+        public Boolean DownloadOnlyAvailableFiles { get; set; }
+
+        public String DownloadFiles { get; set; }
+
+        public Int32 MinimumFileSize { get; set; }
+
         public Boolean AutoDelete { get; set; }
 
         public String FileOrMagnet { get; set; }
