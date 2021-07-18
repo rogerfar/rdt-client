@@ -8,37 +8,38 @@
             <div class="notification is-primary">
               Welcome to RealDebrid Client. Please create your account by entering a username and password.
             </div>
-            <div class="field">
-              <label for="" class="label">Username</label>
-              <div class="control has-icons-left">
-                <input type="text" placeholder="" class="input" name="userName" [(ngModel)]="userName" required />
-                <span class="icon is-small is-left">
-                  <i class="fa fa-envelope"></i>
-                </span>
+            <form (ngSubmit)="setup()">
+              <div class="field">
+                <label for="" class="label">Username</label>
+                <div class="control has-icons-left">
+                  <input type="text" placeholder="" class="input" name="userName" [(ngModel)]="userName" required />
+                  <span class="icon is-small is-left">
+                    <i class="fa fa-envelope"></i>
+                  </span>
+                </div>
               </div>
-            </div>
-            <div class="field">
-              <label for="" class="label" name="password">Password</label>
-              <div class="control has-icons-left">
-                <input type="password" class="input" required name="password" [(ngModel)]="password" />
-                <span class="icon is-small is-left">
-                  <i class="fa fa-lock"></i>
-                </span>
+              <div class="field">
+                <label for="" class="label" name="password">Password</label>
+                <div class="control has-icons-left">
+                  <input type="password" class="input" required name="password" [(ngModel)]="password" />
+                  <span class="icon is-small is-left">
+                    <i class="fa fa-lock"></i>
+                  </span>
+                </div>
               </div>
-            </div>
-            <div class="field">
-              <button
-                class="button is-success"
-                (click)="setup()"
-                [ngClass]="{ 'is-loading': working }"
-                [disabled]="working"
-              >
-                Setup
-              </button>
-            </div>
-            <div class="notification is-danger is-light" *ngIf="error?.length > 0">
-              {{ error }}
-            </div>
+              <div class="field">
+                <button
+                  class="button is-success"
+                  [ngClass]="{ 'is-loading': working }"
+                  [disabled]="working"
+                >
+                  Setup
+                </button>
+              </div>
+              <div class="notification is-danger is-light" *ngIf="error?.length > 0">
+                {{ error }}
+              </div>
+            </form>
           </div>
 
           <div class="box" *ngIf="step === 2">

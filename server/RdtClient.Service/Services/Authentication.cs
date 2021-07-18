@@ -37,6 +37,11 @@ namespace RdtClient.Service.Services
 
         public async Task<SignInResult> Login(String userName, String password)
         {
+            if (String.IsNullOrWhiteSpace(userName) || String.IsNullOrWhiteSpace(password))
+            {
+                return SignInResult.Failed;
+            }
+
             var result = await _signInManager.PasswordSignInAsync(userName, password, true, false);
 
             return result;
