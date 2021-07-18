@@ -35,6 +35,11 @@ export class TorrentFile {
   public download: Download;
 }
 
+export class TorrentFileAvailability {
+  public filename: string;
+  public filesize: number;
+}
+
 export enum RealDebridStatus {
   Processing = 0,
   WaitingForFileSelection = 1,

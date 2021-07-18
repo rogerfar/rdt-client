@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MonoTorrent;
+using RdtClient.Data.Enums;
 using RdtClient.Service.Helpers;
 using RdtClient.Service.Services;
 using Torrent = RdtClient.Data.Models.Data.Torrent;
@@ -17,8 +18,8 @@ namespace RdtClient.Web.Controllers
     [Route("Api/Torrents")]
     public class TorrentsController : Controller
     {
-        private readonly ITorrents _torrents;
         private readonly ITorrentRunner _torrentRunner;
+        private readonly ITorrents _torrents;
 
         public TorrentsController(ITorrents torrents, ITorrentRunner torrentRunner)
         {
@@ -31,18 +32,18 @@ namespace RdtClient.Web.Controllers
         public async Task<ActionResult<IList<Torrent>>> Get()
         {
             var results = await _torrents.Get();
-            
+
             // Prevent infinite recursion when serializing
             foreach (var file in results.SelectMany(torrent => torrent.Downloads))
             {
                 file.Torrent = null;
             }
-            
+
             return Ok(results);
         }
 
         /// <summary>
-        /// Used for debugging only. Force a tick.
+        ///     Used for debugging only. Force a tick.
         /// </summary>
         /// <returns></returns>
         [HttpGet]
@@ -73,7 +74,7 @@ namespace RdtClient.Web.Controllers
 
             var bytes = memoryStream.ToArray();
 
-            await _torrents.UploadFile(bytes, null, formData.AutoDelete);
+            await _torrents.UploadFile(bytes, formData.Category, formData.DownloadAction, formData.FinishedAction, formData.DownloadMinSize, formData.DownloadManualFiles);
 
             return Ok();
         }
@@ -82,11 +83,16 @@ namespace RdtClient.Web.Controllers
         [Route("UploadMagnet")]
         public async Task<ActionResult> UploadMagnet([FromBody] TorrentControllerUploadMagnetRequest request)
         {
-            await _torrents.UploadMagnet(request.MagnetLink, null, request.AutoDelete);
+            await _torrents.UploadMagnet(request.MagnetLink,
+                                         request.Category,
+                                         request.DownloadAction,
+                                         request.FinishedAction,
+                                         request.DownloadMinSize,
+                                         request.DownloadManualFiles);
 
             return Ok();
         }
-        
+
         [HttpPost]
         [Route("CheckFiles")]
         public async Task<ActionResult> CheckFiles([FromForm] IFormFile file)
@@ -130,7 +136,7 @@ namespace RdtClient.Web.Controllers
 
             return Ok();
         }
-        
+
         [HttpPost]
         [Route("Retry/{id}")]
         public async Task<ActionResult> Retry(Guid id, [FromBody] TorrentControllerRetryRequest request)
@@ -143,13 +149,21 @@ namespace RdtClient.Web.Controllers
 
     public class TorrentControllerUploadFileRequest
     {
-        public Boolean AutoDelete { get; set; }
+        public String Category { get; set; }
+        public TorrentDownloadAction DownloadAction { get; set; }
+        public TorrentFinishedAction FinishedAction { get; set; }
+        public Int32 DownloadMinSize { get; set; }
+        public String DownloadManualFiles { get; set; }
     }
 
     public class TorrentControllerUploadMagnetRequest
     {
         public String MagnetLink { get; set; }
-        public Boolean AutoDelete { get; set; }
+        public String Category { get; set; }
+        public TorrentDownloadAction DownloadAction { get; set; }
+        public TorrentFinishedAction FinishedAction { get; set; }
+        public Int32 DownloadMinSize { get; set; }
+        public String DownloadManualFiles { get; set; }
     }
 
     public class TorrentControllerDeleteRequest

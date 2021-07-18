@@ -248,13 +248,13 @@ namespace RdtClient.Web.Controllers
             {
                 if (url.StartsWith("magnet"))
                 {
-                    await _qBittorrent.TorrentsAddMagnet(url.Trim(), request.Category, false);
+                    await _qBittorrent.TorrentsAddMagnet(url.Trim(), request.Category);
                 }
                 else if (url.StartsWith("http"))
                 {
                     var httpClient = new HttpClient();
                     var result = await httpClient.GetByteArrayAsync(url);
-                    await _qBittorrent.TorrentsAddFile(result, request.Category, false);
+                    await _qBittorrent.TorrentsAddFile(result, request.Category);
                 }
                 else
                 {
@@ -279,7 +279,7 @@ namespace RdtClient.Web.Controllers
                     await file.CopyToAsync(target);
                     var fileBytes = target.ToArray();
 
-                    await _qBittorrent.TorrentsAddFile(fileBytes, request.Category, false);
+                    await _qBittorrent.TorrentsAddFile(fileBytes, request.Category);
                 }
             }
             

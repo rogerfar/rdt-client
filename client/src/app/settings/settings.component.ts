@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Setting } from 'src/app/models/setting.model';
 import { SettingsService } from 'src/app/settings.service';
 
@@ -8,22 +8,7 @@ import { SettingsService } from 'src/app/settings.service';
   styleUrls: ['./settings.component.scss'],
 })
 export class SettingsComponent implements OnInit {
-  @Input()
-  public get open(): boolean {
-    return this.isActive;
-  }
-
-  public set open(val: boolean) {
-    this.reset();
-    this.isActive = val;
-  }
-
-  @Output()
-  public openChange = new EventEmitter<boolean>();
-
   public activeTab = 0;
-
-  public isActive = false;
 
   public saving = false;
   public error: string;
@@ -53,7 +38,9 @@ export class SettingsComponent implements OnInit {
 
   constructor(private settingsService: SettingsService) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.reset();
+  }
 
   public reset(): void {
     this.saving = false;
@@ -142,10 +129,12 @@ export class SettingsComponent implements OnInit {
 
     this.settingsService.update(settings).subscribe(
       () => {
-        this.isActive = false;
-        this.openChange.emit(this.open);
+        setTimeout(() => {
+          this.saving = false;
+        }, 1000);
       },
       (err) => {
+        this.saving = false;
         this.error = err;
       }
     );
@@ -199,11 +188,6 @@ export class SettingsComponent implements OnInit {
         this.saving = false;
       }
     );
-  }
-
-  public cancel(): void {
-    this.isActive = false;
-    this.openChange.emit(this.open);
   }
 
   private getSetting(settings: Setting[], key: string): string {

@@ -19,8 +19,8 @@ namespace RdtClient.Service.Services
         Task<IList<TorrentFileItem>> TorrentFileContents(String hash);
         Task<TorrentProperties> TorrentProperties(String hash);
         Task TorrentsDelete(String hash, Boolean deleteFiles);
-        Task TorrentsAddMagnet(String magnetLink, String category, Boolean autoDelete);
-        Task TorrentsAddFile(Byte[] fileBytes, String category, Boolean autoDelete);
+        Task TorrentsAddMagnet(String magnetLink, String category);
+        Task TorrentsAddFile(Byte[] fileBytes, String category);
         Task TorrentsSetCategory(String hash, String category);
         Task<IDictionary<String, TorrentCategory>> TorrentsCategories();
         Task CategoryCreate(String category);
@@ -432,14 +432,24 @@ namespace RdtClient.Service.Services
             await _torrents.Delete(torrent.TorrentId, true, true, deleteFiles);
         }
 
-        public async Task TorrentsAddMagnet(String magnetLink, String category, Boolean autoDelete)
+        public async Task TorrentsAddMagnet(String magnetLink, String category)
         {
-            await _torrents.UploadMagnet(magnetLink, category, autoDelete);
+            var onlyDownloadAvailableFilesSetting = await _settings.GetNumber("OnlyDownloadAvailableFiles");
+            var minFileSizeSetting = await _settings.GetNumber("MinFileSize");
+
+            var downloadAction = onlyDownloadAvailableFilesSetting == 1 ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll;
+
+            await _torrents.UploadMagnet(magnetLink, category, downloadAction, TorrentFinishedAction.None, minFileSizeSetting, null);
         }
 
-        public async Task TorrentsAddFile(Byte[] fileBytes, String category, Boolean autoDelete)
+        public async Task TorrentsAddFile(Byte[] fileBytes, String category)
         {
-            await _torrents.UploadFile(fileBytes, category, autoDelete);
+            var onlyDownloadAvailableFilesSetting = await _settings.GetNumber("OnlyDownloadAvailableFiles");
+            var minFileSizeSetting = await _settings.GetNumber("MinFileSize");
+
+            var downloadAction = onlyDownloadAvailableFilesSetting == 1 ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll;
+
+            await _torrents.UploadFile(fileBytes, category, downloadAction, TorrentFinishedAction.None, minFileSizeSetting, null);
         }
 
         public async Task TorrentsSetCategory(String hash, String category)

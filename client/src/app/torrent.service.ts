@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { Observable, Subject } from 'rxjs';
-import { Torrent } from './models/torrent.model';
+import { Torrent, TorrentFileAvailability } from './models/torrent.model';
 
 @Injectable({
   providedIn: 'root',
@@ -31,30 +31,51 @@ export class TorrentService {
     return this.http.get<Torrent[]>(`/Api/Torrents`);
   }
 
-  public uploadMagnet(magnetLink: string, autoDelete: boolean): Observable<void> {
+  public uploadMagnet(
+    magnetLink: string,
+    category: string,
+    downloadAction: number,
+    finishedAction: number,
+    downloadMinSize: number,
+    downloadManualFiles: string
+  ): Observable<void> {
     return this.http.post<void>(`/Api/Torrents/UploadMagnet`, {
       magnetLink,
-      autoDelete,
+      category,
+      downloadAction,
+      finishedAction,
+      downloadMinSize,
+      downloadManualFiles,
     });
   }
 
-  public uploadFile(file: File, autoDelete: boolean): Observable<void> {
+  public uploadFile(
+    file: File,
+    category: string,
+    downloadAction: number,
+    finishedAction: number,
+    downloadMinSize: number,
+    downloadManualFiles: string
+  ): Observable<void> {
     const formData: FormData = new FormData();
     formData.append('file', file);
-    formData.append('formData', JSON.stringify({ autoDelete }));
+    formData.append(
+      'formData',
+      JSON.stringify({ category, downloadAction, finishedAction, downloadMinSize, downloadManualFiles })
+    );
     return this.http.post<void>(`/Api/Torrents/UploadFile`, formData);
   }
 
-  public checkFilesMagnet(magnetLink: string): Observable<string[]> {
-    return this.http.post<string[]>(`/Api/Torrents/CheckFilesMagnet`, {
+  public checkFilesMagnet(magnetLink: string): Observable<TorrentFileAvailability[]> {
+    return this.http.post<TorrentFileAvailability[]>(`/Api/Torrents/CheckFilesMagnet`, {
       magnetLink,
     });
   }
 
-  public checkFiles(file: File): Observable<string[]> {
+  public checkFiles(file: File): Observable<TorrentFileAvailability[]> {
     const formData: FormData = new FormData();
     formData.append('file', file);
-    return this.http.post<string[]>(`/Api/Torrents/CheckFiles`, formData);
+    return this.http.post<TorrentFileAvailability[]>(`/Api/Torrents/CheckFiles`, formData);
   }
 
   public delete(

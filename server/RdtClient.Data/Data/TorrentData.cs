@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 
 namespace RdtClient.Data.Data
@@ -13,10 +14,21 @@ namespace RdtClient.Data.Data
         Task<IList<Torrent>> Get();
         Task<Torrent> GetById(Guid torrentId);
         Task<Torrent> GetByHash(String hash);
-        Task<Torrent> Add(String realDebridId, String hash, String category, Boolean autoDelete, String fileOrMagnetContents, Boolean isFile);
+
+        Task<Torrent> Add(String realDebridId,
+                          String hash,
+                          String category,
+                          TorrentDownloadAction downloadAction,
+                          TorrentFinishedAction finishedAction,
+                          Int32 downloadMinSize,
+                          String downloadManualFiles,
+                          String fileOrMagnetContents,
+                          Boolean isFile);
+
         Task UpdateRdData(Torrent torrent);
         Task UpdateCategory(Guid torrentId, String category);
         Task UpdateComplete(Guid torrentId, DateTimeOffset? datetime);
+        Task UpdateFilesSelected(Guid torrentId, DateTimeOffset datetime);
         Task Delete(Guid torrentId);
         Task VoidCache();
     }
@@ -95,7 +107,15 @@ namespace RdtClient.Data.Data
             return dbTorrent;
         }
 
-        public async Task<Torrent> Add(String realDebridId, String hash, String category, Boolean autoDelete, String fileOrMagnetContents, Boolean isFile)
+        public async Task<Torrent> Add(String realDebridId,
+                                       String hash,
+                                       String category,
+                                       TorrentDownloadAction downloadAction,
+                                       TorrentFinishedAction finishedAction,
+                                       Int32 downloadMinSize,
+                                       String downloadManualFiles,
+                                       String fileOrMagnetContents,
+                                       Boolean isFile)
         {
             var torrent = new Torrent
             {
@@ -104,7 +124,10 @@ namespace RdtClient.Data.Data
                 RdId = realDebridId,
                 Hash = hash.ToLower(),
                 Category = category,
-                AutoDelete = autoDelete,
+                DownloadAction = downloadAction,
+                FinishedAction = finishedAction,
+                DownloadMinSize = downloadMinSize,
+                DownloadManualFiles = downloadManualFiles,
                 FileOrMagnet = fileOrMagnetContents,
                 IsFile = isFile
             };
@@ -148,7 +171,7 @@ namespace RdtClient.Data.Data
 
             await VoidCache();
         }
-        
+
         public async Task UpdateCategory(Guid torrentId, String category)
         {
             var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
@@ -161,7 +184,7 @@ namespace RdtClient.Data.Data
             dbTorrent.Category = category;
 
             await _dataContext.SaveChangesAsync();
-            
+
             await VoidCache();
         }
 
@@ -172,7 +195,18 @@ namespace RdtClient.Data.Data
             dbTorrent.Completed = datetime;
 
             await _dataContext.SaveChangesAsync();
-            
+
+            await VoidCache();
+        }
+
+        public async Task UpdateFilesSelected(Guid torrentId, DateTimeOffset datetime)
+        {
+            var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
+
+            dbTorrent.FilesSelected = datetime;
+
+            await _dataContext.SaveChangesAsync();
+
             await VoidCache();
         }
 
@@ -188,7 +222,7 @@ namespace RdtClient.Data.Data
             _dataContext.Torrents.Remove(dbTorrent);
 
             await _dataContext.SaveChangesAsync();
-            
+
             await VoidCache();
         }
 

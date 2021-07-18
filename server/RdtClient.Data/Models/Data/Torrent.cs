@@ -17,16 +17,14 @@ namespace RdtClient.Data.Models.Data
 
         public String Category { get; set; }
         
+        public TorrentDownloadAction DownloadAction { get; set; }
+        public TorrentFinishedAction FinishedAction { get; set; }
+        public Int32 DownloadMinSize { get; set; }
+        public String DownloadManualFiles { get; set; }
+
         public DateTimeOffset Added { get; set; }
+        public DateTimeOffset? FilesSelected { get; set; }
         public DateTimeOffset? Completed { get; set; }
-
-        public Boolean DownloadOnlyAvailableFiles { get; set; }
-
-        public String DownloadFiles { get; set; }
-
-        public Int32 MinimumFileSize { get; set; }
-
-        public Boolean AutoDelete { get; set; }
 
         public String FileOrMagnet { get; set; }
         public Boolean IsFile { get; set; }
@@ -66,6 +64,20 @@ namespace RdtClient.Data.Models.Data
                 {
                     return new List<TorrentFile>();
                 }
+            }
+        }
+
+        [NotMapped]
+        public IList<String> ManualFiles
+        {
+            get
+            {
+                if (String.IsNullOrWhiteSpace(DownloadManualFiles))
+                {
+                    return new List<String>();
+                }
+
+                return DownloadManualFiles.Split(",");
             }
         }
     }

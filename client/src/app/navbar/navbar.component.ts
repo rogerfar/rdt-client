@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { TorrentService } from '../torrent.service';
-import { SettingsService } from '../settings.service';
-import { Profile } from '../models/profile.model';
-import { AuthService } from '../auth.service';
 import { Router } from '@angular/router';
+import { AuthService } from '../auth.service';
+import { Profile } from '../models/profile.model';
+import { SettingsService } from '../settings.service';
 
 @Component({
   selector: 'app-navbar',
@@ -12,9 +11,6 @@ import { Router } from '@angular/router';
 })
 export class NavbarComponent implements OnInit {
   public showMobileMenu = false;
-
-  public showNewTorrent = false;
-  public showSettings = false;
 
   public profile: Profile;
 

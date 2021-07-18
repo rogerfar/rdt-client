@@ -80,18 +80,7 @@ namespace RdtClient.Service.Services
                 Log.Debug($"No RealDebridApiKey set!");
                 return;
             }
-
-            var settingMinFileSize = settings.GetNumber("MinFileSize");
-            if (settingMinFileSize <= 0)
-            {
-                settingMinFileSize = 0;
-            }
-
-            settingMinFileSize = settingMinFileSize * 1024 * 1024;
-
-            var settingOnlyDownloadAvailableFilesRaw = settings.GetNumber("OnlyDownloadAvailableFiles");
-            var settingOnlyDownloadAvailableFiles = settingOnlyDownloadAvailableFilesRaw == 1;
-
+            
             var settingDownloadLimit = settings.GetNumber("DownloadLimit");
             if (settingDownloadLimit < 1)
             {
@@ -365,35 +354,52 @@ namespace RdtClient.Service.Services
                     continue;
                 }
 
+                // The files are selected but there are no downloads yet, check if Real Debrid has generated links yet.
+                if (torrent.Downloads.Count == 0 && torrent.FilesSelected != null)
+                {
+                    await _torrents.CheckForLinks(torrent.TorrentId);
+                }
+
                 // RealDebrid is waiting for file selection, select which files to download.
                 if ((torrent.RdStatus == RealDebridStatus.WaitingForFileSelection || torrent.RdStatus == RealDebridStatus.Finished) &&
-                    torrent.Downloads.Count == 0)
+                    torrent.Downloads.Count == 0 &&
+                    torrent.FilesSelected == null)
                 {
                     Log.Debug($"Torrent {torrent.RdId} selecting files");
 
                     var files = torrent.Files;
 
-                    if (settingOnlyDownloadAvailableFiles)
+                    if (torrent.DownloadAction == TorrentDownloadAction.DownloadAvailableFiles)
                     {
                         Log.Debug($"Torrent {torrent.RdId} determining which files are already available");
 
                         var availableFiles = await _torrents.GetAvailableFiles(torrent.Hash);
 
-                        Log.Debug($"Found {availableFiles.Count} available files for torrent {torrent.RdId}");
+                        Log.Debug($"Found {files.Count}/{torrent.Files.Count} available files for torrent {torrent.RdId}");
 
-                        if (availableFiles.Count > 0)
-                        {
-                            files = torrent.Files.Where(m => availableFiles.Any(f => m.Path.EndsWith(f))).ToList();
-
-                            Log.Debug($"Selecting {files.Count} available files for torrent {torrent.RdId}");
-                        }
+                        files = torrent.Files.Where(m => availableFiles.Any(f => m.Path.EndsWith(f.Filename))).ToList();
+                    }
+                    else if (torrent.DownloadAction == TorrentDownloadAction.DownloadAll)
+                    {
+                        Log.Debug("Selecting all files");
+                        files = torrent.Files.ToList();
+                    }
+                    else if (torrent.DownloadAction == TorrentDownloadAction.DownloadManual)
+                    {
+                        Log.Debug("Selecting manual selected files");
+                        files = torrent.Files.Where(m => torrent.ManualFiles.Any(f => m.Path.EndsWith(f))).ToList();
                     }
 
-                    if (settingMinFileSize > 0)
-                    {
-                        Log.Debug($"Torrent {torrent.RdId} determining which files are over {settingMinFileSize} bytes");
+                    Log.Debug($"Selecting {files.Count}/{torrent.Files.Count} files for torrent {torrent.RdId}");
 
-                        files = files.Where(m => m.Bytes > settingMinFileSize).ToList();
+                    if (torrent.DownloadAction != TorrentDownloadAction.DownloadManual && torrent.DownloadMinSize > 0)
+                    {
+                        var minFileSize = torrent.DownloadMinSize * 1024 * 1024;
+
+                        Log.Debug($"Torrent {torrent.RdId} determining which files are over {minFileSize} bytes");
+
+                        files = files.Where(m => m.Bytes > minFileSize)
+                                     .ToList();
 
                         Log.Debug($"Found {files.Count} files that match the minimum file size criterea for torrent {torrent.RdId}");
                     }
@@ -410,13 +416,8 @@ namespace RdtClient.Service.Services
                     Log.Debug($"Selecting files for torrent {torrent.RdId}: {String.Join(", ", fileIds)}");
 
                     await _torrents.SelectFiles(torrent.TorrentId, fileIds);
-                }
 
-                // If the torrent doesn't have any files at this point, don't process it further.
-                if (torrent.Files.Count == 0)
-                {
-                    Log.Debug($"No files found for torrent {torrent.RdId}!");
-                    continue;
+                    await _torrents.UpdateFilesSelected(torrent.TorrentId, DateTime.UtcNow);
                 }
 
                 // RealDebrid finished downloading the torrent, process the file to host.
@@ -479,12 +480,19 @@ namespace RdtClient.Service.Services
 
                         await _torrents.UpdateComplete(torrent.TorrentId, DateTimeOffset.UtcNow);
 
-                        // Remove the torrent from RealDebrid
-                        if (torrent.AutoDelete)
+                        switch (torrent.FinishedAction)
                         {
-                            Log.Debug($"Torrent {torrent.RdId} removing");
-
-                            await _torrents.Delete(torrent.TorrentId, true, true, false);
+                            case TorrentFinishedAction.RemoveAllTorrents:
+                                Log.Debug($"Torrent {torrent.RdId} removing torrents from Real Debrid and Real Debrid Client, no files");
+                                await _torrents.Delete(torrent.TorrentId, true, true, false);
+                                break;
+                            case TorrentFinishedAction.RemoveRealDebrid:
+                                Log.Debug($"Torrent {torrent.RdId} removing torrents from Real Debrid, no files");
+                                await _torrents.Delete(torrent.TorrentId, false, true, false);
+                                break;
+                            case TorrentFinishedAction.None:
+                                Log.Debug($"Torrent {torrent.RdId} not removing torrents or files");
+                                break;
                         }
                     }
                 }
