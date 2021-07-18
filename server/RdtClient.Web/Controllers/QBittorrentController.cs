@@ -337,6 +337,8 @@ namespace RdtClient.Web.Controllers
             }
 
             await _qBittorrent.CategoryCreate(request.Category.Trim());
+
+            return Ok();
         }
         
         [Authorize]

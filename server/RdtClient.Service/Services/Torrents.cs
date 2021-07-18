@@ -38,7 +38,7 @@ namespace RdtClient.Service.Services
     {
         private static RdNetClient _rdtNetClient;
 
-        private static readonly SemaphoreSlim SemaphoreSlim = new SemaphoreSlim(1, 1);
+        private static readonly SemaphoreSlim SemaphoreSlim = new(1, 1);
         
         private readonly IDownloads _downloads;
         private readonly ISettings _settings;

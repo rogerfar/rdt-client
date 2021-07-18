@@ -121,8 +121,10 @@ namespace RdtClient.Service.Services
 
             while (!downloadClient.Finished)
             {
+#pragma warning disable CA2016 // Forward the 'CancellationToken' parameter to methods that take one
                 // ReSharper disable once MethodSupportsCancellation
                 await Task.Delay(1000);
+#pragma warning restore CA2016 // Forward the 'CancellationToken' parameter to methods that take one
                 
                 if (cancellationToken.IsCancellationRequested)
                 {

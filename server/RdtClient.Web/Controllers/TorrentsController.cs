@@ -18,13 +18,11 @@ namespace RdtClient.Web.Controllers
     public class TorrentsController : Controller
     {
         private readonly ITorrents _torrents;
-        private readonly IDownloads _downloads;
         private readonly ITorrentRunner _torrentRunner;
 
-        public TorrentsController(ITorrents torrents, IDownloads downloads, ITorrentRunner torrentRunner)
+        public TorrentsController(ITorrents torrents, ITorrentRunner torrentRunner)
         {
             _torrents = torrents;
-            _downloads = downloads;
             _torrentRunner = torrentRunner;
         }
 

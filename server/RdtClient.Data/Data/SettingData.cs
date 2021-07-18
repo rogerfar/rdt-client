@@ -18,7 +18,7 @@ namespace RdtClient.Data.Data
     public class SettingData : ISettingData
     {
         private static IList<Setting> _settingCache;
-        private static readonly SemaphoreSlim _settingCacheLock = new SemaphoreSlim(1);
+        private static readonly SemaphoreSlim _settingCacheLock = new(1);
 
         private readonly DataContext _dataContext;
 

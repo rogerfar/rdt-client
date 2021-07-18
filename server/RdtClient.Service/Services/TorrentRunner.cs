@@ -23,8 +23,8 @@ namespace RdtClient.Service.Services
 
         private static DateTime _nextUpdate = DateTime.UtcNow;
 
-        public static readonly ConcurrentDictionary<Guid, DownloadClient> ActiveDownloadClients = new ConcurrentDictionary<Guid, DownloadClient>();
-        public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new ConcurrentDictionary<Guid, UnpackClient>();
+        public static readonly ConcurrentDictionary<Guid, DownloadClient> ActiveDownloadClients = new();
+        public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new();
         private readonly IDownloads _downloads;
         private readonly IRemoteService _remoteService;
 

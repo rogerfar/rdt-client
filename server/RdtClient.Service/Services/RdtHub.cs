@@ -8,7 +8,7 @@ namespace RdtClient.Service.Services
 {
     public class RdtHub : Hub
     {
-        private static readonly ConcurrentDictionary<String, String> Users = new ConcurrentDictionary<String, String>();
+        private static readonly ConcurrentDictionary<String, String> Users = new();
 
         public static Boolean HasConnections => Users.Any();
 

@@ -24,7 +24,7 @@ namespace RdtClient.Data.Data
     public class TorrentData : ITorrentData
     {
         private static IList<Torrent> _torrentCache;
-        private static readonly SemaphoreSlim _torrentCacheLock = new SemaphoreSlim(1);
+        private static readonly SemaphoreSlim _torrentCacheLock = new(1);
 
         private readonly DataContext _dataContext;
 

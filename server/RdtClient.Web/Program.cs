@@ -18,7 +18,7 @@ namespace RdtClient.Web
 {
     public class Program
     {
-        public static LoggingLevelSwitch LoggingLevelSwitch;
+        public static readonly LoggingLevelSwitch LoggingLevelSwitch = new(LogEventLevel.Debug);
 
         public static async Task Main(String[] args)
         {
@@ -80,8 +80,6 @@ namespace RdtClient.Web
             {
                 appSettings.HostUrl = "http://0.0.0.0:6500";
             }
-            
-            LoggingLevelSwitch = new LoggingLevelSwitch(LogEventLevel.Debug);
             
             Log.Logger = new LoggerConfiguration()
                          .Enrich.FromLogContext()
