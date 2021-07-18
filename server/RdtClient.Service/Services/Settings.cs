@@ -14,6 +14,7 @@ namespace RdtClient.Service.Services
     {
         Task<IList<Setting>> GetAll();
         Task Update(IList<Setting> settings);
+        Task UpdateString(String key, String value);
         Task<String> GetString(String key);
         Task<Int32> GetNumber(String key);
         Task TestPath(String path);
@@ -39,6 +40,11 @@ namespace RdtClient.Service.Services
         public async Task Update(IList<Setting> settings)
         {
             await _settingData.Update(settings);
+        }
+
+        public async Task UpdateString(String key, String value)
+        {
+            await _settingData.UpdateString(key, value);
         }
 
         public async Task<String> GetString(String key)

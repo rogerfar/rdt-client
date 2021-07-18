@@ -129,6 +129,12 @@ namespace RdtClient.Data.Data
                     SettingId = "LogLevel",
                     Type = "String",
                     Value = "Warning"
+                },
+                new Setting
+                {
+                    SettingId = "Categories",
+                    Type = "String",
+                    Value = ""
                 }
             };
 

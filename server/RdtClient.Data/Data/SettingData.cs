@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ namespace RdtClient.Data.Data
     {
         Task<IList<Setting>> GetAll();
         Task Update(IList<Setting> settings);
+        Task UpdateString(String key, String value);
     }
 
     public class SettingData : ISettingData
@@ -58,6 +60,31 @@ namespace RdtClient.Data.Data
                         dbSetting.Value = setting.Value;
                     }
                 }
+
+                await _dataContext.SaveChangesAsync();
+
+                _settingCache = null;
+            }
+            finally
+            {
+                _settingCacheLock.Release();
+            }
+        }
+
+        public async Task UpdateString(String key, String value)
+        {
+            await _settingCacheLock.WaitAsync();
+
+            try
+            {
+                var dbSetting = await _dataContext.Settings.FirstOrDefaultAsync(m => m.SettingId == key);
+
+                if (dbSetting == null)
+                {
+                    throw new Exception($"Cannot find setting with key {key}");
+                }
+                
+                dbSetting.Value = value;
 
                 await _dataContext.SaveChangesAsync();
 

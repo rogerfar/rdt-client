@@ -322,24 +322,6 @@ namespace RdtClient.Web.Controllers
         {
             var categories = await _qBittorrent.TorrentsCategories();
 
-            if (!categories.ContainsKey("radarr"))
-            {
-                categories.Add("radarr", new TorrentCategory
-                               {
-                                   Name = "radarr",
-                                   SavePath = ""
-                               });
-            }
-            
-            if (!categories.ContainsKey("sonarr"))
-            {
-                categories.Add("sonarr", new TorrentCategory
-                               {
-                                   Name = "sonarr",
-                                   SavePath = ""
-                               });
-            }
-            
             return Ok(categories);
         }
 
@@ -347,26 +329,34 @@ namespace RdtClient.Web.Controllers
         [Route("torrents/createCategory")]
         [HttpGet]
         [HttpPost]
-        public ActionResult TorrentsCreateCategory()
+        public async Task<ActionResult> TorrentsCreateCategory([FromForm] QBTorrentsCreateCategoryRequest request)
         {
-            return Ok();
-        }
+            if (String.IsNullOrWhiteSpace(request.Category))
+            {
+                return BadRequest("category name is empty");
+            }
 
-        [Authorize]
-        [Route("torrents/editCategory")]
-        [HttpGet]
-        [HttpPost]
-        public ActionResult TorrentsEditCategory()
-        {
-            return Ok();
+            await _qBittorrent.CategoryCreate(request.Category.Trim());
         }
         
         [Authorize]
         [Route("torrents/removeCategories")]
         [HttpGet]
         [HttpPost]
-        public ActionResult TorrentsRemoveCategories()
+        public async Task<ActionResult> TorrentsRemoveCategories([FromForm] QBTorrentsRemoveCategoryRequest request)
         {
+            if (String.IsNullOrWhiteSpace(request.Categories))
+            {
+                return Ok();
+            }
+
+            var categories = request.Categories.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var category in categories)
+            {
+                await _qBittorrent.CategoryRemove(category.Trim());
+            }
+
             return Ok();
         }
 
@@ -407,5 +397,15 @@ namespace RdtClient.Web.Controllers
     {
         public String Hashes { get; set; }
         public String Category { get; set; }
+    }
+    
+    public class QBTorrentsCreateCategoryRequest
+    {
+        public String Category { get; set; }
+    }
+
+    public class QBTorrentsRemoveCategoryRequest
+    {
+        public String Categories { get; set; }
     }
 }

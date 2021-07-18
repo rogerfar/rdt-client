@@ -23,6 +23,8 @@ namespace RdtClient.Service.Services
         Task TorrentsAddFile(Byte[] fileBytes, String category, Boolean autoDelete);
         Task TorrentsSetCategory(String hash, String category);
         Task<IDictionary<String, TorrentCategory>> TorrentsCategories();
+        Task CategoryCreate(String category);
+        Task CategoryRemove(String category);
     }
 
     public class QBittorrent : IQBittorrent
@@ -454,6 +456,12 @@ namespace RdtClient.Service.Services
                                           .Distinct()
                                           .ToList();
 
+            var categorySetting = await _settings.GetString("Categories");
+
+            var categories = categorySetting.Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            torrentsToGroup.AddRange(categories);
+
             var results = new Dictionary<String, TorrentCategory>();
 
             if (torrentsToGroup.Count > 0)
@@ -467,6 +475,47 @@ namespace RdtClient.Service.Services
             }
 
             return results;
+        }
+
+        public async Task CategoryCreate(String category)
+        {
+            var categoriesSetting = await _settings.GetString("Categories");
+
+            if (String.IsNullOrWhiteSpace(categoriesSetting))
+            {
+                categoriesSetting = category;
+            }
+            else
+            {
+                var categoryList = categoriesSetting.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList();
+
+                if (!categoryList.Contains(category))
+                {
+                    categoryList.Add(category);
+                }
+
+                categoriesSetting = String.Join(",", categoryList);
+            }
+
+            await _settings.UpdateString("Categories", categoriesSetting);
+        }
+
+        public async Task CategoryRemove(String category)
+        {
+            var categoriesSetting = await _settings.GetString("Categories");
+
+            if (String.IsNullOrWhiteSpace(categoriesSetting))
+            {
+                return;
+            }
+
+            var categoryList = categoriesSetting.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList();
+
+            categoryList = categoryList.Where(m => m != category).ToList();
+
+            categoriesSetting = String.Join(",", categoryList);
+
+            await _settings.UpdateString("Categories", categoriesSetting);
         }
     }
 }
