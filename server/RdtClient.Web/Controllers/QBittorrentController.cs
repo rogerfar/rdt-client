@@ -20,9 +20,9 @@ namespace RdtClient.Web.Controllers
     [Route("api/v2")]
     public class QBittorrentController : Controller
     {
-        private readonly IQBittorrent _qBittorrent;
+        private readonly QBittorrent _qBittorrent;
 
-        public QBittorrentController(IQBittorrent qBittorrent)
+        public QBittorrentController(QBittorrent qBittorrent)
         {
             _qBittorrent = qBittorrent;
         }

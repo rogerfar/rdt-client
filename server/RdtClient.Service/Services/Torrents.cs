@@ -9,57 +9,25 @@ using Newtonsoft.Json;
 using RDNET;
 using RdtClient.Data.Data;
 using RdtClient.Data.Enums;
+using RdtClient.Service.Helpers;
 using RdtClient.Service.Models;
 using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services
 {
-    public interface ITorrents
+    public class Torrents
     {
-        Task<IList<Torrent>> Get();
-        Task<Torrent> GetByHash(String hash);
-        Task UpdateCategory(String hash, String category);
+        public static readonly SemaphoreSlim TorrentResetLock = new(1, 1);
 
-        Task UploadMagnet(String magnetLink,
-                          String category,
-                          TorrentDownloadAction downloadAction,
-                          TorrentFinishedAction finishedAction,
-                          Int32 downloadMinSize,
-                          String downloadManualFiles);
+        private static readonly SemaphoreSlim RealDebridUpdateLock = new(1, 1);
 
-        Task UploadFile(Byte[] bytes,
-                        String category,
-                        TorrentDownloadAction downloadAction,
-                        TorrentFinishedAction finishedAction,
-                        Int32 downloadMinSize,
-                        String downloadManualFiles);
-
-        Task<List<TorrentInstantAvailabilityFile>> GetAvailableFiles(String hash);
-        Task SelectFiles(Guid torrentId, IList<String> fileIds);
-        Task CheckForLinks(Guid torrentId);
-        Task Delete(Guid torrentId, Boolean deleteData, Boolean deleteRdTorrent, Boolean deleteLocalFiles);
-        Task<String> UnrestrictLink(Guid downloadId);
-        Task Download(Guid downloadId);
-        Task Unpack(Guid downloadId);
-        void Reset();
-        Task<Profile> GetProfile();
-        Task UpdateComplete(Guid torrentId, DateTimeOffset datetime);
-        Task UpdateFilesSelected(Guid torrentId, DateTimeOffset datetime);
-        Task Update();
-        Task Retry(Guid id, Int32 retry);
-    }
-
-    public class Torrents : ITorrents
-    {
         private static RdNetClient _rdtNetClient;
 
-        private static readonly SemaphoreSlim SemaphoreSlim = new(1, 1);
+        private readonly Downloads _downloads;
+        private readonly Settings _settings;
+        private readonly TorrentData _torrentData;
 
-        private readonly IDownloads _downloads;
-        private readonly ISettings _settings;
-        private readonly ITorrentData _torrentData;
-
-        public Torrents(ITorrentData torrentData, ISettings settings, IDownloads downloads)
+        public Torrents(TorrentData torrentData, Settings settings, Downloads downloads)
         {
             _torrentData = torrentData;
             _settings = settings;
@@ -271,6 +239,47 @@ namespace RdtClient.Service.Services
             }
         }
 
+        private async Task DeleteDownload(Guid torrentId, Guid downloadId)
+        {
+            var torrent = await GetById(torrentId);
+            var download = await _downloads.GetById(downloadId);
+            
+            var downloadPath = await DownloadPath(torrent);
+            
+            var filePath = DownloadHelper.GetDownloadPath(downloadPath, torrent, download);
+
+            if (filePath == null)
+            {
+                return;
+            }
+
+            if (File.Exists(filePath))
+            {
+                var retry = 0;
+
+                while (true)
+                {
+                    try
+                    {
+                        File.Delete(filePath);
+
+                        break;
+                    }
+                    catch
+                    {
+                        retry++;
+
+                        if (retry >= 3)
+                        {
+                            throw;
+                        }
+
+                        await Task.Delay(1000);
+                    }
+                }
+            }
+        }
+
         public async Task<String> UnrestrictLink(Guid downloadId)
         {
             var download = await _downloads.GetById(downloadId);
@@ -322,12 +331,7 @@ namespace RdtClient.Service.Services
 
         public async Task Update()
         {
-            var w = await SemaphoreSlim.WaitAsync(1);
-
-            if (!w)
-            {
-                return;
-            }
+            await RealDebridUpdateLock.WaitAsync();
 
             var torrents = await Get();
 
@@ -360,23 +364,42 @@ namespace RdtClient.Service.Services
             }
             finally
             {
-                SemaphoreSlim.Release();
+                RealDebridUpdateLock.Release();
             }
         }
 
-        public async Task Retry(Guid id, Int32 retry)
+        public async Task RetryTorrent(Guid torrentId)
         {
-            var torrent = await _torrentData.GetById(id);
+            var torrent = await _torrentData.GetById(torrentId);
 
-            if (retry == 0)
+            foreach (var download in torrent.Downloads)
             {
-                await Delete(id, true, true, true);
-
-                if (String.IsNullOrWhiteSpace(torrent.FileOrMagnet))
+                while (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
                 {
-                    throw new Exception($"Cannot re-add this torrent, original magnet or file not found");
+                    downloadClient.Cancel();
+
+                    await Task.Delay(100);
                 }
 
+                while (TorrentRunner.ActiveUnpackClients.TryGetValue(download.DownloadId, out var unpackClient))
+                {
+                    unpackClient.Cancel();
+
+                    await Task.Delay(100);
+                }
+            }
+
+            await Delete(torrentId, true, true, true);
+
+            if (String.IsNullOrWhiteSpace(torrent.FileOrMagnet))
+            {
+                throw new Exception($"Cannot re-add this torrent, original magnet or file not found");
+            }
+
+            await TorrentResetLock.WaitAsync();
+
+            try
+            {
                 if (torrent.IsFile)
                 {
                     var bytes = Convert.FromBase64String(torrent.FileOrMagnet);
@@ -393,19 +416,52 @@ namespace RdtClient.Service.Services
                                        torrent.DownloadManualFiles);
                 }
             }
-            else if (retry == 1)
+            finally
             {
-                await Delete(id, false, false, true);
-
-                await _torrentData.UpdateComplete(id, null);
-                await _downloads.DeleteForTorrent(id);
-            }
-            else
-            {
-                throw new Exception($"Invalid retry option {retry}");
+                TorrentResetLock.Release();
             }
         }
 
+        public async Task RetryDownload(Guid downloadId)
+        {
+            var download = await _downloads.GetById(downloadId);
+
+            if (download == null)
+            {
+                return;
+            }
+
+            while (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
+            {
+                downloadClient.Cancel();
+
+                await Task.Delay(100);
+            }
+
+            while (TorrentRunner.ActiveUnpackClients.TryGetValue(download.DownloadId, out var unpackClient))
+            {
+                unpackClient.Cancel();
+
+                await Task.Delay(100);
+            }
+
+            await TorrentResetLock.WaitAsync();
+
+            try
+            {
+
+                await DeleteDownload(download.TorrentId, download.DownloadId);
+
+                await _torrentData.UpdateComplete(download.TorrentId, null);
+
+                await _downloads.Reset(downloadId);
+            }
+            finally
+            {
+                TorrentResetLock.Release();
+            }
+        }
+        
         public async Task UpdateComplete(Guid torrentId, DateTimeOffset datetime)
         {
             await _torrentData.UpdateComplete(torrentId, datetime);
@@ -425,7 +481,7 @@ namespace RdtClient.Service.Services
 
                 if (String.IsNullOrWhiteSpace(apiKey))
                 {
-                    throw new Exception("RealDebrid API Key not set in the settings");
+                    throw new Exception("Real-Debrid API Key not set in the settings");
                 }
 
                 _rdtNetClient = new RdNetClient("X245A4XAIBGVM", null, null, null, apiKey);
@@ -441,6 +497,22 @@ namespace RdtClient.Service.Services
             if (torrent != null)
             {
                 await Update(torrent);
+
+                foreach (var download in torrent.Downloads)
+                {
+                    if (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
+                    {
+                        download.Speed = downloadClient.Speed;
+                        download.BytesTotal = downloadClient.BytesTotal;
+                        download.BytesDone = downloadClient.BytesDone;
+                    }
+
+                    if (TorrentRunner.ActiveUnpackClients.TryGetValue(download.DownloadId, out var unpackClient))
+                    {
+                        download.BytesTotal = unpackClient.BytesTotal;
+                        download.BytesDone = unpackClient.BytesDone;
+                    }
+                }
             }
 
             return torrent;
@@ -456,13 +528,8 @@ namespace RdtClient.Service.Services
                                String fileOrMagnetContents,
                                Boolean isFile)
         {
-            var w = await SemaphoreSlim.WaitAsync(60000);
-
-            if (!w)
-            {
-                throw new Exception("Unable to add torrent, could not obtain lock");
-            }
-
+            await RealDebridUpdateLock.WaitAsync();
+            
             try
             {
                 var torrent = await _torrentData.GetByHash(infoHash);
@@ -486,7 +553,7 @@ namespace RdtClient.Service.Services
             }
             finally
             {
-                SemaphoreSlim.Release();
+                RealDebridUpdateLock.Release();
             }
         }
 

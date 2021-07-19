@@ -7,13 +7,13 @@ namespace RdtClient.Service
     {
         public static void Config(IServiceCollection services)
         {
-            services.AddScoped<IAuthentication, Authentication>();
-            services.AddScoped<IDownloads, Downloads>();
-            services.AddScoped<IQBittorrent, QBittorrent>();
-            services.AddScoped<IRemoteService, RemoteService>();
-            services.AddScoped<ISettings, Settings>();
-            services.AddScoped<ITorrents, Torrents>();
-            services.AddScoped<ITorrentRunner, TorrentRunner>();
+            services.AddScoped<Authentication>();
+            services.AddScoped<Downloads>();
+            services.AddScoped<QBittorrent>();
+            services.AddScoped<RemoteService>();
+            services.AddScoped<Settings>();
+            services.AddScoped<Torrents>();
+            services.AddScoped<TorrentRunner>();
         }
     }
 }

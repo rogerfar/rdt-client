@@ -10,24 +10,11 @@ using RdtClient.Data.Models.Data;
 
 namespace RdtClient.Service.Services
 {
-    public interface ISettings
+    public class Settings
     {
-        Task<IList<Setting>> GetAll();
-        Task Update(IList<Setting> settings);
-        Task UpdateString(String key, String value);
-        Task<String> GetString(String key);
-        Task<Int32> GetNumber(String key);
-        Task TestPath(String path);
-        Task<Double> TestDownloadSpeed(CancellationToken cancellationToken);
-        Task<Double> TestWriteSpeed();
-        void Clean();
-    }
+        private readonly SettingData _settingData;
 
-    public class Settings : ISettings
-    {
-        private readonly ISettingData _settingData;
-
-        public Settings(ISettingData settingData)
+        public Settings(SettingData settingData)
         {
             _settingData = settingData;
         }

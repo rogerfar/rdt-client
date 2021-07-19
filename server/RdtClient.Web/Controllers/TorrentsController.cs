@@ -18,10 +18,10 @@ namespace RdtClient.Web.Controllers
     [Route("Api/Torrents")]
     public class TorrentsController : Controller
     {
-        private readonly ITorrentRunner _torrentRunner;
-        private readonly ITorrents _torrents;
+        private readonly TorrentRunner _torrentRunner;
+        private readonly Torrents _torrents;
 
-        public TorrentsController(ITorrents torrents, ITorrentRunner torrentRunner)
+        public TorrentsController(Torrents torrents, TorrentRunner torrentRunner)
         {
             _torrents = torrents;
             _torrentRunner = torrentRunner;
@@ -29,7 +29,7 @@ namespace RdtClient.Web.Controllers
 
         [HttpGet]
         [Route("")]
-        public async Task<ActionResult<IList<Torrent>>> Get()
+        public async Task<ActionResult<IList<Torrent>>> GetAll()
         {
             var results = await _torrents.Get();
 
@@ -40,6 +40,23 @@ namespace RdtClient.Web.Controllers
             }
 
             return Ok(results);
+        }
+
+        [HttpGet]
+        [Route("Get/{torrentId:guid}")]
+        public async Task<ActionResult<Torrent>> GetById(Guid torrentId)
+        {
+            var torrent = await _torrents.GetById(torrentId);
+
+            if (torrent?.Downloads != null)
+            {
+                foreach (var file in torrent.Downloads)
+                {
+                    file.Torrent = null;
+                }
+            }
+
+            return Ok(torrent);
         }
 
         /// <summary>
@@ -129,19 +146,28 @@ namespace RdtClient.Web.Controllers
         }
 
         [HttpPost]
-        [Route("Delete/{id}")]
-        public async Task<ActionResult> Delete(Guid id, [FromBody] TorrentControllerDeleteRequest request)
+        [Route("Delete/{torrentId:guid}")]
+        public async Task<ActionResult> Delete(Guid torrentId, [FromBody] TorrentControllerDeleteRequest request)
         {
-            await _torrents.Delete(id, request.DeleteData, request.DeleteRdTorrent, request.DeleteLocalFiles);
+            await _torrents.Delete(torrentId, request.DeleteData, request.DeleteRdTorrent, request.DeleteLocalFiles);
 
             return Ok();
         }
 
         [HttpPost]
-        [Route("Retry/{id}")]
-        public async Task<ActionResult> Retry(Guid id, [FromBody] TorrentControllerRetryRequest request)
+        [Route("Retry/{torrentId:guid}")]
+        public async Task<ActionResult> Retry(Guid torrentId)
         {
-            await _torrents.Retry(id, request.Retry);
+            await _torrents.RetryTorrent(torrentId);
+
+            return Ok();
+        }
+
+        [HttpPost]
+        [Route("RetryDownload/{downloadId:guid}")]
+        public async Task<ActionResult> RetryDownload(Guid downloadId)
+        {
+            await _torrents.RetryDownload(downloadId);
 
             return Ok();
         }
@@ -171,11 +197,6 @@ namespace RdtClient.Web.Controllers
         public Boolean DeleteData { get; set; }
         public Boolean DeleteRdTorrent { get; set; }
         public Boolean DeleteLocalFiles { get; set; }
-    }
-
-    public class TorrentControllerRetryRequest
-    {
-        public Int32 Retry { get; set; }
     }
 
     public class TorrentControllerCheckFilesRequest

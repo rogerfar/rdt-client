@@ -6,29 +6,12 @@ using Download = RdtClient.Data.Models.Data.Download;
 
 namespace RdtClient.Data.Data
 {
-    public interface IDownloadData
-    {
-        Task<Download> GetById(Guid downloadId);
-        Task<Download> Get(Guid torrentId, String path);
-        Task<Download> Add(Guid torrentId, String path);
-        Task UpdateUnrestrictedLink(Guid downloadId, String unrestrictedLink);
-        Task UpdateDownloadStarted(Guid downloadId, DateTimeOffset? dateTime);
-        Task UpdateDownloadFinished(Guid downloadId, DateTimeOffset? dateTime);
-        Task UpdateUnpackingQueued(Guid downloadId, DateTimeOffset? dateTime);
-        Task UpdateUnpackingStarted(Guid downloadId, DateTimeOffset? dateTime);
-        Task UpdateUnpackingFinished(Guid downloadId, DateTimeOffset? dateTime);
-        Task UpdateCompleted(Guid downloadId, DateTimeOffset? dateTime);
-        Task UpdateError(Guid downloadId, String error);
-        Task UpdateRetryCount(Guid downloadId, Int32 retryCount);
-        Task DeleteForTorrent(Guid torrentId);
-    }
-
-    public class DownloadData : IDownloadData
+    public class DownloadData
     {
         private readonly DataContext _dataContext;
-        private readonly ITorrentData _torrentData;
+        private readonly TorrentData _torrentData;
 
-        public DownloadData(DataContext dataContext, ITorrentData torrentData)
+        public DownloadData(DataContext dataContext, TorrentData torrentData)
         {
             _dataContext = dataContext;
             _torrentData = torrentData;
@@ -44,7 +27,9 @@ namespace RdtClient.Data.Data
 
         public async Task<Download> Get(Guid torrentId, String path)
         {
-            return await _dataContext.Downloads.FirstOrDefaultAsync(m => m.TorrentId == torrentId && m.Path == path);
+            return await _dataContext.Downloads
+                                     .AsNoTracking()
+                                     .FirstOrDefaultAsync(m => m.TorrentId == torrentId && m.Path == path);
         }
 
         public async Task<Download> Add(Guid torrentId, String path)
@@ -188,6 +173,28 @@ namespace RdtClient.Data.Data
                                               .ToListAsync();
 
             _dataContext.Downloads.RemoveRange(downloads);
+
+            await _dataContext.SaveChangesAsync();
+
+            await _torrentData.VoidCache();
+        }
+
+        public async Task Reset(Guid downloadId)
+        {
+            var dbDownload = await _dataContext.Downloads
+                                               .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+            dbDownload.RetryCount = 0;
+            dbDownload.Link = null;
+            dbDownload.Added = DateTimeOffset.UtcNow;
+            dbDownload.DownloadQueued = DateTimeOffset.UtcNow;
+            dbDownload.DownloadStarted = null;
+            dbDownload.DownloadFinished = null;
+            dbDownload.UnpackingQueued = null;
+            dbDownload.UnpackingStarted = null;
+            dbDownload.UnpackingFinished = null;
+            dbDownload.Completed = null;
+            dbDownload.Error = null;
 
             await _dataContext.SaveChangesAsync();
 

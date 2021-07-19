@@ -40,7 +40,7 @@
       <div class="control select is-fullwidth">
         <select [(ngModel)]="downloadAction">
           <option [ngValue]="0">Download all files above a certain size</option>
-          <option [ngValue]="1">Download all available files on Real Debrid above a certain size</option>
+          <option [ngValue]="1">Download all available files on Real-Debrid above a certain size</option>
           <option [ngValue]="2">Pick files I want to download</option>
         </select>
       </div>
@@ -66,8 +66,8 @@
       <div class="control select is-fullwidth">
         <select [(ngModel)]="finishedAction">
           <option [ngValue]="0">Do nothing</option>
-          <option [ngValue]="1">Remove torrent from Real Debrid and Real Debrid Client</option>
-          <option [ngValue]="2">Remove torrent from Real Debrid</option>
+          <option [ngValue]="1">Remove torrent from Real-Debrid and Real-Debrid Client</option>
+          <option [ngValue]="2">Remove torrent from Real-Debrid</option>
         </select>
       </div>
     </div>
@@ -84,10 +84,16 @@
     <div class="field">
       <label class="label">Available files</label>
       <p class="help">
-        These files are available for immediate download from Real Debrid. <br />
+        These files are available for immediate download from Real-Debrid. <br />
         It is possible that there are more files in the torrent, which are not shown here.
       </p>
       <div class="scroll-container">
+        <div class="field" *ngIf="downloadAction === 2">
+          <label class="checkbox is-fullwidth-label">
+            <input type="checkbox" [checked]="allSelected" (change)="downloadFileCheckedAll()" />
+            Select all
+          </label>
+        </div>
         <div class="field" *ngIf="downloadAction === 2">
           <label class="checkbox is-fullwidth-label" *ngFor="let file of availableFiles">
             <input

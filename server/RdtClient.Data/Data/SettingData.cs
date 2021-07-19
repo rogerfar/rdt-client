@@ -8,14 +8,7 @@ using RdtClient.Data.Models.Data;
 
 namespace RdtClient.Data.Data
 {
-    public interface ISettingData
-    {
-        Task<IList<Setting>> GetAll();
-        Task Update(IList<Setting> settings);
-        Task UpdateString(String key, String value);
-    }
-
-    public class SettingData : ISettingData
+    public class SettingData
     {
         private static IList<Setting> _settingCache;
         private static readonly SemaphoreSlim _settingCacheLock = new(1);

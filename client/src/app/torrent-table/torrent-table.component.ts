@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { Torrent } from '../models/torrent.model';
 import { TorrentService } from '../torrent.service';
 
@@ -10,23 +11,8 @@ import { TorrentService } from '../torrent.service';
 export class TorrentTableComponent implements OnInit, OnDestroy {
   public torrents: Torrent[] = [];
   public error: string;
-  public showFiles: { [key: string]: boolean } = {};
 
-  public isDeleteModalActive: boolean;
-  public deleteError: string;
-  public deleting: boolean;
-  public deleteTorrentId: string;
-  public deleteData: boolean;
-  public deleteRdTorrent: boolean;
-  public deleteLocalFiles: boolean;
-
-  public isRetryModalActive: boolean;
-  public retryError: string;
-  public retrying: boolean;
-  public retryTorrentId: string;
-  public retry: number;
-
-  constructor(private torrentService: TorrentService) {}
+  constructor(private router: Router, private torrentService: TorrentService) {}
 
   ngOnInit(): void {
     this.torrentService.getList().subscribe(
@@ -49,67 +35,11 @@ export class TorrentTableComponent implements OnInit, OnDestroy {
     this.torrentService.disconnect();
   }
 
-  public selectTorrent(torrent: Torrent): void {
-    this.showFiles[torrent.torrentId] = !this.showFiles[torrent.torrentId];
+  public selectTorrent(torrentId: string): void {
+    this.router.navigate([`/torrent/${torrentId}`]);
   }
 
   public trackByMethod(index: number, el: Torrent): string {
     return el.torrentId;
-  }
-
-  public showDeleteModal(torrentId: string): void {
-    this.deleteData = false;
-    this.deleteRdTorrent = false;
-    this.deleteLocalFiles = false;
-
-    this.deleteTorrentId = torrentId;
-    this.isDeleteModalActive = true;
-  }
-
-  public deleteCancel(): void {
-    this.isDeleteModalActive = false;
-  }
-
-  public deleteOk(): void {
-    this.deleting = true;
-
-    this.torrentService
-      .delete(this.deleteTorrentId, this.deleteData, this.deleteRdTorrent, this.deleteLocalFiles)
-      .subscribe(
-        () => {
-          this.isDeleteModalActive = false;
-          this.deleting = false;
-        },
-        (err) => {
-          this.deleteError = err.error;
-          this.deleting = false;
-        }
-      );
-  }
-
-  public showRetryModal(torrentId: string): void {
-    this.retry = 0;
-
-    this.retryTorrentId = torrentId;
-    this.isRetryModalActive = true;
-  }
-
-  public retryCancel(): void {
-    this.isRetryModalActive = false;
-  }
-
-  public retryOk(): void {
-    this.retrying = true;
-
-    this.torrentService.retry(this.retryTorrentId, this.retry).subscribe(
-      () => {
-        this.isRetryModalActive = false;
-        this.retrying = false;
-      },
-      (err) => {
-        this.retryError = err.error;
-        this.retrying = false;
-      }
-    );
   }
 }

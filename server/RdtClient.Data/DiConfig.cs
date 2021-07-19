@@ -7,10 +7,10 @@ namespace RdtClient.Data
     {
         public static void Config(IServiceCollection services)
         {
-            services.AddScoped<IDownloadData, DownloadData>();
-            services.AddScoped<ISettingData, SettingData>();
-            services.AddScoped<ITorrentData, TorrentData>();
-            services.AddScoped<IUserData, UserData>();
+            services.AddScoped<DownloadData>();
+            services.AddScoped<SettingData>();
+            services.AddScoped<TorrentData>();
+            services.AddScoped<UserData>();
         }
     }
 }

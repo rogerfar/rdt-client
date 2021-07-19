@@ -4,9 +4,17 @@ export class Torrent {
   public torrentId: string;
   public hash: string;
   public category: string;
+  public downloadAction: number;
+  public finishedAction: number;
+  public downloadMinSize: number;
+  public downloadManualFiles: string;
+
   public added: Date;
+  public filesSelected: Date;
   public completed: Date;
-  public autoDelete: boolean;
+
+  public fileOrMagnet: string;
+  public isFile: boolean;
 
   public rdId: string;
   public rdName: string;

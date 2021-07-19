@@ -15,10 +15,10 @@ namespace RdtClient.Web.Controllers
     [Route("Api/Settings")]
     public class SettingsController : Controller
     {
-        private readonly ISettings _settings;
-        private readonly ITorrents _torrents;
+        private readonly Settings _settings;
+        private readonly Torrents _torrents;
 
-        public SettingsController(ISettings settings, ITorrents torrents)
+        public SettingsController(Settings settings, Torrents torrents)
         {
             _settings = settings;
             _torrents = torrents;

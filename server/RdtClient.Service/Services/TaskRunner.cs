@@ -23,7 +23,7 @@ namespace RdtClient.Service.Services
             await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
 
             using var scope = _serviceProvider.CreateScope();
-            var torrentRunner = scope.ServiceProvider.GetRequiredService<ITorrentRunner>();
+            var torrentRunner = scope.ServiceProvider.GetRequiredService<TorrentRunner>();
             
             _logger.LogInformation("TaskRunner started.");
 
@@ -33,11 +33,17 @@ namespace RdtClient.Service.Services
             {
                 try
                 {
+                    await Torrents.TorrentResetLock.WaitAsync(stoppingToken);
+
                     await torrentRunner.Tick();
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Unexpected error occurred in TorrentDownloadManager.Tick");
+                }
+                finally
+                {
+                    Torrents.TorrentResetLock.Release();
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);

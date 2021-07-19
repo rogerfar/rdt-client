@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using System.Web;
 using Downloader;
 using RdtClient.Data.Models.Data;
 using RdtClient.Service.Helpers;
@@ -44,36 +42,24 @@ namespace RdtClient.Service.Services
 
             try
             {
-                var downloadClientSetting = settings.GetString("DownloadClient");
+                var filePath = DownloadHelper.GetDownloadPath(_destinationPath, _torrent, _download);
+
+                if (filePath == null)
+                {
+                    throw new Exception("Invalid download path");
+                }
                 
-                var fileUrl = _download.Link;
-
-                if (String.IsNullOrWhiteSpace(fileUrl))
-                {
-                    throw new Exception("File URL is empty");
-                }
-
-                var uri = new Uri(fileUrl);
-                var torrentPath = Path.Combine(_destinationPath, _torrent.RdName);
-
-                if (!Directory.Exists(torrentPath))
-                {
-                    Directory.CreateDirectory(torrentPath);
-                }
-
-                var fileName = uri.Segments.Last();
-
-                fileName = HttpUtility.UrlDecode(fileName);
-
-                var filePath = Path.Combine(torrentPath, fileName);
-
                 if (File.Exists(filePath))
                 {
                     File.Delete(filePath);
                 }
 
+                var uri = new Uri(_download.Link);
+
                 await Task.Factory.StartNew(async delegate
                 {
+                    var downloadClientSetting = settings.GetString("DownloadClient");
+
                     switch (downloadClientSetting)
                     {
                         case "Simple":

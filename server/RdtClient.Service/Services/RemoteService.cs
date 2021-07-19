@@ -5,17 +5,12 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace RdtClient.Service.Services
 {
-    public interface IRemoteService
-    {
-        Task Update();
-    }
-
-    public class RemoteService : IRemoteService
+    public class RemoteService 
     {
         private readonly IHubContext<RdtHub> _hub;
-        private readonly ITorrents _torrents;
+        private readonly Torrents _torrents;
 
-        public RemoteService(IHubContext<RdtHub> hub, ITorrents torrents)
+        public RemoteService(IHubContext<RdtHub> hub, Torrents torrents)
         {
             _hub = hub;
             _torrents = torrents;

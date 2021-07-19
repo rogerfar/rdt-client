@@ -9,31 +9,7 @@ using RdtClient.Data.Models.Data;
 
 namespace RdtClient.Data.Data
 {
-    public interface ITorrentData
-    {
-        Task<IList<Torrent>> Get();
-        Task<Torrent> GetById(Guid torrentId);
-        Task<Torrent> GetByHash(String hash);
-
-        Task<Torrent> Add(String realDebridId,
-                          String hash,
-                          String category,
-                          TorrentDownloadAction downloadAction,
-                          TorrentFinishedAction finishedAction,
-                          Int32 downloadMinSize,
-                          String downloadManualFiles,
-                          String fileOrMagnetContents,
-                          Boolean isFile);
-
-        Task UpdateRdData(Torrent torrent);
-        Task UpdateCategory(Guid torrentId, String category);
-        Task UpdateComplete(Guid torrentId, DateTimeOffset? datetime);
-        Task UpdateFilesSelected(Guid torrentId, DateTimeOffset datetime);
-        Task Delete(Guid torrentId);
-        Task VoidCache();
-    }
-
-    public class TorrentData : ITorrentData
+    public class TorrentData
     {
         private static IList<Torrent> _torrentCache;
         private static readonly SemaphoreSlim _torrentCacheLock = new(1);

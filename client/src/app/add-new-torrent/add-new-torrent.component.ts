@@ -22,6 +22,7 @@ export class AddNewTorrentComponent implements OnInit {
 
   public availableFiles: TorrentFileAvailability[] = [];
   public downloadFiles: { [key: string]: boolean } = {};
+  public allSelected: boolean;
 
   public saving = false;
   public error: string;
@@ -50,6 +51,21 @@ export class AddNewTorrentComponent implements OnInit {
 
   public downloadFileChecked(file: string): void {
     this.downloadFiles[file] = !this.downloadFiles[file];
+
+    this.allSelected = true;
+    this.availableFiles.forEach((file) => {
+      if (!this.downloadFiles[file.filename]) {
+        this.allSelected = false;
+      }
+    });
+  }
+
+  public downloadFileCheckedAll(): void {
+    this.allSelected = !this.allSelected;
+
+    this.availableFiles.forEach((file) => {
+      this.downloadFiles[file.filename] = this.allSelected;
+    });
   }
 
   public ok(): void {
@@ -127,6 +143,7 @@ export class AddNewTorrentComponent implements OnInit {
     this.error = null;
     this.availableFiles = [];
     this.downloadFiles = {};
+    this.allSelected = true;
 
     if (this.magnetLink) {
       this.torrentService.checkFilesMagnet(this.magnetLink).subscribe(

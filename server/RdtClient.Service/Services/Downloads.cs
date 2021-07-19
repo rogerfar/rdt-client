@@ -5,28 +5,11 @@ using Download = RdtClient.Data.Models.Data.Download;
 
 namespace RdtClient.Service.Services
 {
-    public interface IDownloads
+    public class Downloads 
     {
-        Task<Download> GetById(Guid downloadId);
-        Task<Download> Get(Guid torrentId, String path);
-        Task<Download> Add(Guid torrentId, String path);
-        Task UpdateUnrestrictedLink(Guid downloadId, String unrestrictedLink);
-        Task UpdateDownloadStarted(Guid downloadId, DateTimeOffset? dateTime);
-        Task UpdateDownloadFinished(Guid downloadId, DateTimeOffset? dateTime);
-        Task UpdateUnpackingQueued(Guid downloadId, DateTimeOffset? dateTime);
-        Task UpdateUnpackingStarted(Guid downloadId, DateTimeOffset? dateTime);
-        Task UpdateUnpackingFinished(Guid downloadId, DateTimeOffset? dateTime);
-        Task UpdateCompleted(Guid downloadId, DateTimeOffset? dateTime);
-        Task UpdateError(Guid downloadId, String error);
-        Task UpdateRetryCount(Guid downloadId, Int32 retryCount);
-        Task DeleteForTorrent(Guid torrentId);
-    }
+        private readonly DownloadData _downloadData;
 
-    public class Downloads : IDownloads
-    {
-        private readonly IDownloadData _downloadData;
-
-        public Downloads(IDownloadData downloadData)
+        public Downloads(DownloadData downloadData)
         {
             _downloadData = downloadData;
         }
@@ -94,6 +77,11 @@ namespace RdtClient.Service.Services
         public async Task DeleteForTorrent(Guid torrentId)
         {
             await _downloadData.DeleteForTorrent(torrentId);
+        }
+
+        public async Task Reset(Guid downloadId)
+        {
+            await _downloadData.Reset(downloadId);
         }
     }
 }

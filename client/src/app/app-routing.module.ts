@@ -7,6 +7,7 @@ import { MainLayoutComponent } from './main-layout/main-layout.component';
 import { SettingsComponent } from './settings/settings.component';
 import { SetupComponent } from './setup/setup.component';
 import { TorrentTableComponent } from './torrent-table/torrent-table.component';
+import { TorrentComponent } from './torrent/torrent.component';
 
 const routes: Routes = [
   {
@@ -27,6 +28,10 @@ const routes: Routes = [
       {
         path: '',
         component: TorrentTableComponent,
+      },
+      {
+        path: 'torrent/:id',
+        component: TorrentComponent,
       },
       {
         path: 'add',

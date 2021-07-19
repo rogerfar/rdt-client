@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web;
 using RdtClient.Data.Models.Data;
+using RdtClient.Service.Helpers;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
@@ -24,7 +24,7 @@ namespace RdtClient.Service.Services
         private readonly String _destinationPath;
         private readonly Torrent _torrent;
 
-        private Boolean _cancelled = false;
+        private Boolean _cancelled;
         
         private RarArchiveEntry _rarCurrentEntry;
         private Dictionary<String, Int64> _rarfileStatus;
@@ -43,25 +43,11 @@ namespace RdtClient.Service.Services
 
             try
             {
-                var fileUrl = _download.Link;
+                var filePath = DownloadHelper.GetDownloadPath(_destinationPath, _torrent, _download);
 
-                if (String.IsNullOrWhiteSpace(fileUrl))
+                if (filePath == null)
                 {
-                    throw new Exception("File URL is empty");
-                }
-
-                var uri = new Uri(fileUrl);
-                var torrentPath = Path.Combine(_destinationPath, _torrent.RdName);
-
-                var fileName = uri.Segments.Last();
-
-                fileName = HttpUtility.UrlDecode(fileName);
-
-                var filePath = Path.Combine(torrentPath, fileName);
-                
-                if (!File.Exists(filePath))
-                {
-                    throw new Exception($"File {filePath} could not be extracted because it is missing");
+                    throw new Exception("Invalid download path");
                 }
 
                 await Task.Factory.StartNew(async delegate
@@ -88,6 +74,11 @@ namespace RdtClient.Service.Services
         {
             try
             {
+                if (!File.Exists(filePath))
+                {
+                    return;
+                }
+
                 await using (Stream stream = File.OpenRead(filePath))
                 {
                     using var archive = RarArchive.Open(stream);
@@ -97,7 +88,7 @@ namespace RdtClient.Service.Services
                     var entries = archive.Entries.Where(entry => !entry.IsDirectory)
                                          .ToList();
 
-                    _rarfileStatus = entries.ToDictionary(entry => entry.Key, entry => 0L);
+                    _rarfileStatus = entries.ToDictionary(entry => entry.Key, _ => 0L);
                     _rarCurrentEntry = null;
                     archive.CompressedBytesRead += ArchiveOnCompressedBytesRead;
 
@@ -148,7 +139,7 @@ namespace RdtClient.Service.Services
             }
             catch (Exception ex)
             {
-                Error = $"An unexpected error occurred downloading {_download.Link} for torrent {_torrent.RdName}: {ex.Message}";
+                Error = $"An unexpected error occurred unpacking {_download.Link} for torrent {_torrent.RdName}: {ex.Message}";
             }
             finally
             {

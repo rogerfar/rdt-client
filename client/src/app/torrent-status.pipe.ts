@@ -28,6 +28,11 @@ export class TorrentStatusPipe implements PipeTransform {
         const bytesDone = downloading.sum((m) => m.bytesDone);
         const bytesTotal = downloading.sum((m) => m.bytesTotal);
         let progress = (bytesDone / bytesTotal) * 100;
+
+        if (isNaN(progress)) {
+          progress = 0;
+        }
+
         let allSpeeds = downloading.sum((m) => m.speed) / downloading.length;
 
         let speed: string | string[] = '0';
@@ -44,6 +49,11 @@ export class TorrentStatusPipe implements PipeTransform {
         const bytesDone = unpacking.sum((m) => m.bytesDone);
         const bytesTotal = unpacking.sum((m) => m.bytesTotal);
         let progress = (bytesDone / bytesTotal) * 100;
+
+        if (isNaN(progress)) {
+          progress = 0;
+        }
+
         let allSpeeds = unpacking.sum((m) => m.speed) / unpacking.length;
 
         if (allSpeeds > 0) {

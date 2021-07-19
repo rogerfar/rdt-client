@@ -15,6 +15,10 @@ export class TorrentService {
   private connection: signalR.HubConnection;
 
   public connect(): void {
+    if (this.connection != null) {
+      return;
+    }
+
     this.connection = new signalR.HubConnectionBuilder().withUrl('/hub').withAutomaticReconnect().build();
     this.connection.start().catch((err) => console.error(err));
 
@@ -29,6 +33,10 @@ export class TorrentService {
 
   public getList(): Observable<Torrent[]> {
     return this.http.get<Torrent[]>(`/Api/Torrents`);
+  }
+
+  public get(torrentId: string): Observable<Torrent> {
+    return this.http.get<Torrent>(`/Api/Torrents/Get/${torrentId}`);
   }
 
   public uploadMagnet(
@@ -91,9 +99,11 @@ export class TorrentService {
     });
   }
 
-  public retry(torrentId: string, retry: number): Observable<void> {
-    return this.http.post<void>(`/Api/Torrents/Retry/${torrentId}`, {
-      retry,
-    });
+  public retry(torrentId: string): Observable<void> {
+    return this.http.post<void>(`/Api/Torrents/Retry/${torrentId}`, {});
+  }
+
+  public retryDownload(downloadId: string): Observable<void> {
+    return this.http.post<void>(`/Api/Torrents/RetryDownload/${downloadId}`, {});
   }
 }

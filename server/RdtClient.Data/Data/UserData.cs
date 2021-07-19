@@ -4,12 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace RdtClient.Data.Data
 {
-    public interface IUserData
-    {
-        Task<IdentityUser> GetUser();
-    }
-
-    public class UserData : IUserData
+    public class UserData
     {
         private readonly DataContext _dataContext;
 

@@ -1,3 +1,4 @@
+import { ClipboardModule } from '@angular/cdk/clipboard';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
@@ -15,11 +16,10 @@ import { MainLayoutComponent } from './main-layout/main-layout.component';
 import { NavbarComponent } from './navbar/navbar.component';
 import { SettingsComponent } from './settings/settings.component';
 import { SetupComponent } from './setup/setup.component';
-import { TorrentDownloadComponent } from './torrent-download/torrent-download.component';
-import { TorrentFileComponent } from './torrent-file/torrent-file.component';
-import { TorrentRowComponent } from './torrent-row/torrent-row.component';
 import { TorrentStatusPipe } from './torrent-status.pipe';
 import { TorrentTableComponent } from './torrent-table/torrent-table.component';
+import { TorrentComponent } from './torrent/torrent.component';
+import { DecodeURIPipe } from './decode-uri.pipe';
 
 curray();
 
@@ -30,16 +30,23 @@ curray();
     NavbarComponent,
     AddNewTorrentComponent,
     TorrentTableComponent,
-    TorrentRowComponent,
-    TorrentFileComponent,
     SettingsComponent,
     TorrentStatusPipe,
     DownloadStatusPipe,
     LoginComponent,
     SetupComponent,
-    TorrentDownloadComponent,
+    TorrentComponent,
+    DecodeURIPipe,
   ],
-  imports: [BrowserModule, AppRoutingModule, FormsModule, HttpClientModule, NgxFilesizeModule, FlexLayoutModule],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    FormsModule,
+    HttpClientModule,
+    NgxFilesizeModule,
+    FlexLayoutModule,
+    ClipboardModule,
+  ],
   providers: [FileSizePipe, { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }],
   bootstrap: [AppComponent],
 })

@@ -10,9 +10,9 @@ namespace RdtClient.Web.Controllers
     [Route("Api/Authentication")]
     public class AuthController : Controller
     {
-        private readonly IAuthentication _authentication;
+        private readonly Authentication _authentication;
 
-        public AuthController(IAuthentication authentication)
+        public AuthController(Authentication authentication)
         {
             _authentication = authentication;
         }

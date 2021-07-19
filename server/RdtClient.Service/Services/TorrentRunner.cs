@@ -11,13 +11,7 @@ using Serilog;
 
 namespace RdtClient.Service.Services
 {
-    public interface ITorrentRunner
-    {
-        Task Initialize();
-        Task Tick();
-    }
-
-    public class TorrentRunner : ITorrentRunner
+    public class TorrentRunner
     {
         private const Int32 RetryCount = 3;
 
@@ -25,13 +19,13 @@ namespace RdtClient.Service.Services
 
         public static readonly ConcurrentDictionary<Guid, DownloadClient> ActiveDownloadClients = new();
         public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new();
-        private readonly IDownloads _downloads;
-        private readonly IRemoteService _remoteService;
+        private readonly Downloads _downloads;
+        private readonly RemoteService _remoteService;
 
-        private readonly ISettings _settings;
-        private readonly ITorrents _torrents;
+        private readonly Settings _settings;
+        private readonly Torrents _torrents;
 
-        public TorrentRunner(ISettings settings, ITorrents torrents, IDownloads downloads, IRemoteService remoteService)
+        public TorrentRunner(Settings settings, Torrents torrents, Downloads downloads, RemoteService remoteService)
         {
             _settings = settings;
             _torrents = torrents;
@@ -174,10 +168,10 @@ namespace RdtClient.Service.Services
 
             Log.Debug($"Found {torrents.Count} torrents");
 
-            // Only poll RealDebrid every second when a hub is connected, otherwise every 30 seconds
+            // Only poll Real-Debrid every second when a hub is connected, otherwise every 30 seconds
             if (_nextUpdate < DateTime.UtcNow && torrents.Count > 0)
             {
-                Log.Debug($"Updating torrent info from RealDebrid");
+                Log.Debug($"Updating torrent info from Real-Debrid");
 
                 var updateTime = 30;
 
@@ -193,7 +187,7 @@ namespace RdtClient.Service.Services
                 // Re-get torrents to account for updated info
                 torrents = await _torrents.Get();
 
-                Log.Debug($"Finished updating torrent info from RealDebrid, next update in {updateTime} seconds");
+                Log.Debug($"Finished updating torrent info from Real-Debrid, next update in {updateTime} seconds");
             }
 
             torrents = torrents.Where(m => m.Completed == null).ToList();
@@ -279,6 +273,13 @@ namespace RdtClient.Service.Services
 
                 var torrentDownload = torrents.First(m => m.TorrentId == download.TorrentId);
 
+                if (download.Link == null)
+                {
+                    await _downloads.UpdateError(download.DownloadId, "Download Link cannot be null");
+
+                    continue;
+                }
+
                 // Check if the unpacking process is even needed
                 var uri = new Uri(download.Link);
                 var fileName = uri.Segments.Last();
@@ -346,7 +347,7 @@ namespace RdtClient.Service.Services
 
             foreach (var torrent in torrents)
             {
-                // If torrent is erroring out on the RealDebrid side, skip processing this torrent.
+                // If torrent is erroring out on the Real-Debrid side, skip processing this torrent.
                 if (torrent.RdStatus == RealDebridStatus.Error)
                 {
                     Log.Debug($"Torrent {torrent.RdId} has an error: {torrent.RdStatusRaw}, not processing further");
@@ -354,14 +355,15 @@ namespace RdtClient.Service.Services
                     continue;
                 }
 
-                // The files are selected but there are no downloads yet, check if Real Debrid has generated links yet.
+                // The files are selected but there are no downloads yet, check if Real-Debrid has generated links yet.
                 if (torrent.Downloads.Count == 0 && torrent.FilesSelected != null)
                 {
                     await _torrents.CheckForLinks(torrent.TorrentId);
                 }
 
-                // RealDebrid is waiting for file selection, select which files to download.
+                // Real-Debrid is waiting for file selection, select which files to download.
                 if ((torrent.RdStatus == RealDebridStatus.WaitingForFileSelection || torrent.RdStatus == RealDebridStatus.Finished) &&
+                    torrent.FilesSelected == null &&
                     torrent.Downloads.Count == 0 &&
                     torrent.FilesSelected == null)
                 {
@@ -420,7 +422,7 @@ namespace RdtClient.Service.Services
                     await _torrents.UpdateFilesSelected(torrent.TorrentId, DateTime.UtcNow);
                 }
 
-                // RealDebrid finished downloading the torrent, process the file to host.
+                // Real-Debrid finished downloading the torrent, process the file to host.
                 if (torrent.RdStatus == RealDebridStatus.Finished)
                 {
                     // If the torrent has any files that need starting to be downloaded, download them.
@@ -483,11 +485,11 @@ namespace RdtClient.Service.Services
                         switch (torrent.FinishedAction)
                         {
                             case TorrentFinishedAction.RemoveAllTorrents:
-                                Log.Debug($"Torrent {torrent.RdId} removing torrents from Real Debrid and Real Debrid Client, no files");
+                                Log.Debug($"Torrent {torrent.RdId} removing torrents from Real-Debrid and Real-Debrid Client, no files");
                                 await _torrents.Delete(torrent.TorrentId, true, true, false);
                                 break;
                             case TorrentFinishedAction.RemoveRealDebrid:
-                                Log.Debug($"Torrent {torrent.RdId} removing torrents from Real Debrid, no files");
+                                Log.Debug($"Torrent {torrent.RdId} removing torrents from Real-Debrid, no files");
                                 await _torrents.Delete(torrent.TorrentId, false, true, false);
                                 break;
                             case TorrentFinishedAction.None:

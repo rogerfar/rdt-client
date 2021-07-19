@@ -91,7 +91,7 @@ namespace RdtClient.Web
             Service.DiConfig.Config(services);
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger, ISettings settings)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger, Settings settings)
         {
             if (env.IsDevelopment())
             {

@@ -9,31 +9,13 @@ using RdtClient.Service.Models.QBittorrent.QuickType;
 
 namespace RdtClient.Service.Services
 {
-    public interface IQBittorrent
+    public class QBittorrent
     {
-        Task<Boolean> AuthLogin(String userName, String password);
-        Task AuthLogout();
-        Task<AppPreferences> AppPreferences();
-        Task<String> AppDefaultSavePath();
-        Task<IList<TorrentInfo>> TorrentInfo();
-        Task<IList<TorrentFileItem>> TorrentFileContents(String hash);
-        Task<TorrentProperties> TorrentProperties(String hash);
-        Task TorrentsDelete(String hash, Boolean deleteFiles);
-        Task TorrentsAddMagnet(String magnetLink, String category);
-        Task TorrentsAddFile(Byte[] fileBytes, String category);
-        Task TorrentsSetCategory(String hash, String category);
-        Task<IDictionary<String, TorrentCategory>> TorrentsCategories();
-        Task CategoryCreate(String category);
-        Task CategoryRemove(String category);
-    }
+        private readonly Authentication _authentication;
+        private readonly Settings _settings;
+        private readonly Torrents _torrents;
 
-    public class QBittorrent : IQBittorrent
-    {
-        private readonly IAuthentication _authentication;
-        private readonly ISettings _settings;
-        private readonly ITorrents _torrents;
-
-        public QBittorrent(ISettings settings, IAuthentication authentication, ITorrents torrents)
+        public QBittorrent(Settings settings, Authentication authentication, Torrents torrents)
         {
             _settings = settings;
             _authentication = authentication;
