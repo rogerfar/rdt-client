@@ -102,7 +102,7 @@ namespace RdtClient.Service.Services
                 throw new Exception($"{ex.Message}, trying to parse {magnetLink}");
             }
 
-            var rdTorrent = await GetRdNetClient().AddTorrentMagnetAsync(magnetLink);
+            var rdTorrent = await GetRdNetClient().Torrents.AddMagnetAsync(magnetLink);
 
             await Add(rdTorrent.Id, magnet.InfoHash.ToHex(), category, downloadAction, finishedAction, downloadMinSize, downloadManualFiles, magnetLink, false);
         }
@@ -127,14 +127,14 @@ namespace RdtClient.Service.Services
                 throw new Exception($"{ex.Message}, trying to parse {fileAsBase64}");
             }
 
-            var rdTorrent = await GetRdNetClient().AddTorrentFileAsync(bytes);
+            var rdTorrent = await GetRdNetClient().Torrents.AddFileAsync(bytes);
 
             await Add(rdTorrent.Id, torrent.InfoHash.ToHex(), category, downloadAction, finishedAction, downloadMinSize, downloadManualFiles, fileAsBase64, true);
         }
 
         public async Task<List<TorrentInstantAvailabilityFile>> GetAvailableFiles(String hash)
         {
-            var result = await GetRdNetClient().GetAvailableFiles(hash);
+            var result = await GetRdNetClient().Torrents.GetAvailableFiles(hash);
 
             var files = result.SelectMany(m => m.Value).SelectMany(m => m.Value).SelectMany(m => m.Values);
 
@@ -147,14 +147,14 @@ namespace RdtClient.Service.Services
         {
             var torrent = await GetById(torrentId);
 
-            await GetRdNetClient().SelectTorrentFilesAsync(torrent.RdId, fileIds.ToArray());
+            await GetRdNetClient().Torrents.SelectFilesAsync(torrent.RdId, fileIds.ToArray());
         }
 
         public async Task CheckForLinks(Guid torrentId)
         {
             var torrent = await GetById(torrentId);
 
-            var rdTorrent = await GetRdNetClient().GetTorrentInfoAsync(torrent.RdId);
+            var rdTorrent = await GetRdNetClient().Torrents.GetInfoAsync(torrent.RdId);
 
             // Sometimes RD will give you 1 rar with all files, sometimes it will give you 1 link per file.
             if (torrent.Files.Count != rdTorrent.Links.Count && rdTorrent.Links.Count != 1)
@@ -202,7 +202,7 @@ namespace RdtClient.Service.Services
 
                 if (deleteRdTorrent)
                 {
-                    await GetRdNetClient().DeleteTorrentAsync(torrent.RdId);
+                    await GetRdNetClient().Torrents.DeleteAsync(torrent.RdId);
                 }
 
                 if (deleteLocalFiles)
@@ -284,7 +284,7 @@ namespace RdtClient.Service.Services
         {
             var download = await _downloads.GetById(downloadId);
 
-            var unrestrictedLink = await GetRdNetClient().UnrestrictLinkAsync(download.Path);
+            var unrestrictedLink = await GetRdNetClient().Unrestrict.LinkAsync(download.Path);
 
             await _downloads.UpdateUnrestrictedLink(downloadId, unrestrictedLink.Download);
 
@@ -318,7 +318,7 @@ namespace RdtClient.Service.Services
 
         public async Task<Profile> GetProfile()
         {
-            var user = await GetRdNetClient().GetUserAsync();
+            var user = await GetRdNetClient().User.GetAsync();
 
             var profile = new Profile
             {
@@ -337,7 +337,7 @@ namespace RdtClient.Service.Services
 
             try
             {
-                var rdTorrents = await GetRdNetClient().GetTorrentsAsync(0, 100);
+                var rdTorrents = await GetRdNetClient().Torrents.GetAsync(0, 100);
 
                 foreach (var rdTorrent in rdTorrents)
                 {
@@ -484,7 +484,8 @@ namespace RdtClient.Service.Services
                     throw new Exception("Real-Debrid API Key not set in the settings");
                 }
 
-                _rdtNetClient = new RdNetClient("X245A4XAIBGVM", null, null, null, apiKey);
+                _rdtNetClient = new RdNetClient();
+                _rdtNetClient.UseApiAuthentication(apiKey);
             }
 
             return _rdtNetClient;
@@ -577,7 +578,7 @@ namespace RdtClient.Service.Services
                                                                   ReferenceLoopHandling = ReferenceLoopHandling.Ignore
                                                               });
 
-            var rdTorrent = await GetRdNetClient().GetTorrentInfoAsync(torrent.RdId);
+            var rdTorrent = await GetRdNetClient().Torrents.GetInfoAsync(torrent.RdId);
 
             if (!String.IsNullOrWhiteSpace(rdTorrent.Filename))
             {
