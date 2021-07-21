@@ -14,6 +14,7 @@
     <PackageReference Include="Serilog.Exceptions" Version="7.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageReference Include="SharpCompress" Version="0.28.3" />
+    <PackageReference Include="StreamJsonRpc" Version="2.8.21" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using RdtClient.Data.Data;
 using RdtClient.Data.Models.Data;
+using RdtClient.Data.Models.Internal;
 
 namespace RdtClient.Service.Services
 {
@@ -18,6 +18,8 @@ namespace RdtClient.Service.Services
         {
             _settingData = settingData;
         }
+
+        public static DbSettings Get => SettingData.Get;
 
         public async Task<IList<Setting>> GetAll()
         {
@@ -32,32 +34,6 @@ namespace RdtClient.Service.Services
         public async Task UpdateString(String key, String value)
         {
             await _settingData.UpdateString(key, value);
-        }
-
-        public async Task<String> GetString(String key)
-        {
-            var settings = await GetAll();
-            var setting = settings.FirstOrDefault(m => m.SettingId == key);
-
-            if (setting == null)
-            {
-                throw new Exception($"Setting with key {key} not found");
-            }
-
-            return setting.Value;
-        }
-
-        public async Task<Int32> GetNumber(String key)
-        {
-            var settings = await GetAll();
-            var setting = settings.FirstOrDefault(m => m.SettingId == key);
-
-            if (setting == null)
-            {
-                throw new Exception($"Setting with key {key} not found");
-            }
-
-            return Int32.Parse(setting.Value);
         }
 
         public async Task TestPath(String path)
@@ -82,9 +58,7 @@ namespace RdtClient.Service.Services
 
         public async Task<Double> TestDownloadSpeed(CancellationToken cancellationToken)
         {
-            var downloadPath = await GetString("DownloadPath");
-
-            var settings = await GetAll();
+            var downloadPath = Get.DownloadPath;
 
             var testFilePath = Path.Combine(downloadPath, "testDefault.rar");
 
@@ -104,7 +78,7 @@ namespace RdtClient.Service.Services
 
             var downloadClient = new DownloadClient(download, download.Torrent, downloadPath);
 
-            await downloadClient.Start(settings);
+            await downloadClient.Start(Get);
 
             while (!downloadClient.Finished)
             {
@@ -136,7 +110,7 @@ namespace RdtClient.Service.Services
 
         public async Task<Double> TestWriteSpeed()
         {
-            var downloadPath = await GetString("DownloadPath");
+            var downloadPath = Get.DownloadPath;
 
             var testFilePath = Path.Combine(downloadPath, "test.tmp");
 
@@ -161,7 +135,7 @@ namespace RdtClient.Service.Services
             {
                 rnd.NextBytes(buffer);
 
-                fileStream.Write(buffer, 0, buffer.Length);
+                await fileStream.WriteAsync(buffer.AsMemory(0, buffer.Length));
             }
             
             watch.Stop();
@@ -182,7 +156,7 @@ namespace RdtClient.Service.Services
         {
             try
             {
-                var tempPath = GetString("TempPath").Result;
+                var tempPath = Get.TempPath;
 
                 if (!String.IsNullOrWhiteSpace(tempPath))
                 {
@@ -198,6 +172,11 @@ namespace RdtClient.Service.Services
             {
                 // ignored
             }
+        }
+
+        public async Task ResetCache()
+        {
+            await _settingData.ResetCache();
         }
     }
 }

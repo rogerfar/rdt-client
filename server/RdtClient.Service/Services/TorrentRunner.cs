@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 using RdtClient.Data.Enums;
-using RdtClient.Service.Helpers;
 using Serilog;
 
 namespace RdtClient.Service.Services
@@ -21,13 +20,11 @@ namespace RdtClient.Service.Services
         public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new();
         private readonly Downloads _downloads;
         private readonly RemoteService _remoteService;
-
-        private readonly Settings _settings;
+        
         private readonly Torrents _torrents;
 
-        public TorrentRunner(Settings settings, Torrents torrents, Downloads downloads, RemoteService remoteService)
+        public TorrentRunner(Torrents torrents, Downloads downloads, RemoteService remoteService)
         {
-            _settings = settings;
             _torrents = torrents;
             _downloads = downloads;
             _remoteService = remoteService;
@@ -65,29 +62,26 @@ namespace RdtClient.Service.Services
             sw.Start();
 
             Log.Debug("TorrentRunner Tick Start");
-
-            var settings = await _settings.GetAll();
-            
-            var settingApiKey = settings.GetString("RealDebridApiKey");
-            if (String.IsNullOrWhiteSpace(settingApiKey))
+          
+            if (String.IsNullOrWhiteSpace(Settings.Get.RealDebridApiKey))
             {
                 Log.Debug($"No RealDebridApiKey set!");
                 return;
             }
             
-            var settingDownloadLimit = settings.GetNumber("DownloadLimit");
+            var settingDownloadLimit = Settings.Get.DownloadLimit;
             if (settingDownloadLimit < 1)
             {
                 settingDownloadLimit = 1;
             }
 
-            var settingUnpackLimit = settings.GetNumber("UnpackLimit");
+            var settingUnpackLimit = Settings.Get.UnpackLimit;
             if (settingUnpackLimit < 1)
             {
                 settingUnpackLimit = 1;
             }
 
-            var settingDownloadPath = settings.GetString("DownloadPath");
+            var settingDownloadPath = Settings.Get.DownloadPath;
             if (String.IsNullOrWhiteSpace(settingDownloadPath))
             {
                 return;
@@ -253,7 +247,7 @@ namespace RdtClient.Service.Services
                 {
                     Log.Debug($"Added download {download.DownloadId} to active downloads");
 
-                    await downloadClient.Start(settings);
+                    await downloadClient.Start(Settings.Get);
 
                     Log.Debug($"Download {download.DownloadId} started");
                 }

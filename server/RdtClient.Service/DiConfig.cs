@@ -14,6 +14,8 @@ namespace RdtClient.Service
             services.AddScoped<Settings>();
             services.AddScoped<Torrents>();
             services.AddScoped<TorrentRunner>();
+            
+            services.AddHostedService<Startup>();
         }
     }
 }

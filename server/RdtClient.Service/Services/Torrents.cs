@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using MonoTorrent;
@@ -21,17 +22,30 @@ namespace RdtClient.Service.Services
 
         private static readonly SemaphoreSlim RealDebridUpdateLock = new(1, 1);
 
-        private static RdNetClient _rdtNetClient;
-
         private readonly Downloads _downloads;
-        private readonly Settings _settings;
+        private readonly IHttpClientFactory _httpClientFactory;
         private readonly TorrentData _torrentData;
 
-        public Torrents(TorrentData torrentData, Settings settings, Downloads downloads)
+        public Torrents(IHttpClientFactory httpClientFactory, TorrentData torrentData, Downloads downloads)
         {
+            _httpClientFactory = httpClientFactory;
             _torrentData = torrentData;
-            _settings = settings;
             _downloads = downloads;
+        }
+
+        private RdNetClient GetRdNetClient()
+        {
+            var apiKey = Settings.Get.RealDebridApiKey;
+
+            if (String.IsNullOrWhiteSpace(apiKey))
+            {
+                throw new Exception("Real-Debrid API Key not set in the settings");
+            }
+
+            var rdtNetClient = new RdNetClient(null, _httpClientFactory.CreateClient());
+            rdtNetClient.UseApiAuthentication(apiKey);
+
+            return rdtNetClient;
         }
 
         public async Task<IList<Torrent>> Get()
@@ -207,7 +221,7 @@ namespace RdtClient.Service.Services
 
                 if (deleteLocalFiles)
                 {
-                    var downloadPath = await DownloadPath(torrent);
+                    var downloadPath = DownloadPath(torrent);
                     downloadPath = Path.Combine(downloadPath, torrent.RdName);
 
                     if (Directory.Exists(downloadPath))
@@ -244,7 +258,7 @@ namespace RdtClient.Service.Services
             var torrent = await GetById(torrentId);
             var download = await _downloads.GetById(downloadId);
             
-            var downloadPath = await DownloadPath(torrent);
+            var downloadPath = DownloadPath(torrent);
             
             var filePath = DownloadHelper.GetDownloadPath(downloadPath, torrent, download);
 
@@ -309,11 +323,6 @@ namespace RdtClient.Service.Services
             await _downloads.UpdateUnpackingFinished(downloadId, null);
             await _downloads.UpdateCompleted(downloadId, null);
             await _downloads.UpdateError(downloadId, null);
-        }
-
-        public void Reset()
-        {
-            _rdtNetClient = null;
         }
 
         public async Task<Profile> GetProfile()
@@ -472,25 +481,6 @@ namespace RdtClient.Service.Services
             await _torrentData.UpdateFilesSelected(torrentId, datetime);
         }
 
-        private RdNetClient GetRdNetClient()
-        {
-            if (_rdtNetClient == null)
-            {
-                var apiKey = _settings.GetString("RealDebridApiKey")
-                                      .Result;
-
-                if (String.IsNullOrWhiteSpace(apiKey))
-                {
-                    throw new Exception("Real-Debrid API Key not set in the settings");
-                }
-
-                _rdtNetClient = new RdNetClient();
-                _rdtNetClient.UseApiAuthentication(apiKey);
-            }
-
-            return _rdtNetClient;
-        }
-
         public async Task<Torrent> GetById(Guid torrentId)
         {
             var torrent = await _torrentData.GetById(torrentId);
@@ -558,9 +548,9 @@ namespace RdtClient.Service.Services
             }
         }
 
-        private async Task<String> DownloadPath(Torrent torrent)
+        private String DownloadPath(Torrent torrent)
         {
-            var settingDownloadPath = await _settings.GetString("DownloadPath");
+            var settingDownloadPath = Settings.Get.DownloadPath;
 
             if (!String.IsNullOrWhiteSpace(torrent.Category))
             {

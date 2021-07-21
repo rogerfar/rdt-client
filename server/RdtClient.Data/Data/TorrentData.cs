@@ -202,7 +202,7 @@ namespace RdtClient.Data.Data
             await VoidCache();
         }
 
-        public async Task VoidCache()
+        public static async Task VoidCache()
         {
             await _torrentCacheLock.WaitAsync();
 

@@ -37,12 +37,8 @@ namespace RdtClient.Web.Controllers
         public async Task<ActionResult> Update([FromBody] SettingsControllerUpdateRequest request)
         {
             await _settings.Update(request.Settings);
-
-            _torrents.Reset();
-
-            var logLevelSetting = await _settings.GetString("LogLevel");
-
-            if (!Enum.TryParse<LogEventLevel>(logLevelSetting, out var logLevel))
+            
+            if (!Enum.TryParse<LogEventLevel>(Settings.Get.LogLevel, out var logLevel))
             {
                 logLevel = LogEventLevel.Information;
             }

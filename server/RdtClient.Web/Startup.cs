@@ -91,7 +91,7 @@ namespace RdtClient.Web
             Service.DiConfig.Config(services);
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger, Settings settings)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
             if (env.IsDevelopment())
             {
@@ -133,8 +133,6 @@ namespace RdtClient.Web
                     spa.Options.DefaultPage = "/index.html";
                 });
             });
-
-            settings.Clean();
         }
     }
 }

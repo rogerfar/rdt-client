@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using Downloader;
 using RdtClient.Data.Models.Data;
+using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Helpers;
 
 namespace RdtClient.Service.Services
@@ -34,7 +34,7 @@ namespace RdtClient.Service.Services
         public Int64 BytesTotal { get; private set; }
         public Int64 BytesDone { get; private set; }
 
-        public async Task Start(IList<Setting> settings)
+        public async Task Start(DbSettings settings)
         {
             BytesDone = 0;
             BytesTotal = 0;
@@ -56,11 +56,9 @@ namespace RdtClient.Service.Services
 
                 var uri = new Uri(_download.Link);
 
-                await Task.Factory.StartNew(async delegate
+                await Task.Run(async delegate
                 {
-                    var downloadClientSetting = settings.GetString("DownloadClient");
-
-                    switch (downloadClientSetting)
+                    switch (settings.DownloadClient)
                     {
                         case "Simple":
                             await DownloadSimple(uri, filePath);
@@ -69,7 +67,7 @@ namespace RdtClient.Service.Services
                             await DownloadMultiPart(filePath, settings);
                             break;
                         default:
-                            throw new Exception($"Unknown download client {downloadClientSetting}");
+                            throw new Exception($"Unknown download client {settings.DownloadClient}");
                     }
                 });
             }
@@ -126,30 +124,30 @@ namespace RdtClient.Service.Services
             }
         }
 
-        private async Task DownloadMultiPart(String filePath, IList<Setting> settings)
+        private async Task DownloadMultiPart(String filePath, DbSettings settings)
         {
             try
             {
-                var settingTempPath = settings.GetString("TempPath");
+                var settingTempPath = settings.TempPath;
                 if (String.IsNullOrWhiteSpace(settingTempPath))
                 {
                     settingTempPath = Path.GetTempPath();
                 }
 
-                var settingDownloadChunkCount = settings.GetNumber("DownloadChunkCount");
+                var settingDownloadChunkCount = settings.DownloadChunkCount;
                 if (settingDownloadChunkCount <= 0)
                 {
                     settingDownloadChunkCount = 1;
                 }
 
-                var settingDownloadMaxSpeed = settings.GetNumber("DownloadMaxSpeed");
+                var settingDownloadMaxSpeed = settings.DownloadMaxSpeed;
                 if (settingDownloadMaxSpeed <= 0)
                 {
                     settingDownloadMaxSpeed = 0;
                 }
                 settingDownloadMaxSpeed = settingDownloadMaxSpeed * 1024 * 1024;
 
-                var settingProxyServer = settings.GetString("ProxyServer");
+                var settingProxyServer = settings.ProxyServer;
 
                 var downloadOpt = new DownloadConfiguration
                 {

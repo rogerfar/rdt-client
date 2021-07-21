@@ -64,7 +64,7 @@ namespace RdtClient.Service.Services
 
                             if (read > 0)
                             {
-                                fileStream.Write(buffer, 0, read);
+                                await fileStream.WriteAsync(buffer.AsMemory(0, read));
 
                                 BytesDone = fileStream.Length;
                                 BytesTotal = responseLength;

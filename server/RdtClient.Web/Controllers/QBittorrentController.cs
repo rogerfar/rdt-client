@@ -125,9 +125,9 @@ namespace RdtClient.Web.Controllers
         [Route("app/defaultSavePath")]
         [HttpGet]
         [HttpPost]
-        public async Task<ActionResult<AppPreferences>> AppDefaultSavePath()
+        public ActionResult<AppPreferences> AppDefaultSavePath()
         {
-            var result = await _qBittorrent.AppDefaultSavePath();
+            var result = _qBittorrent.AppDefaultSavePath();
             return Ok(result);
         }
         

@@ -180,7 +180,7 @@ namespace RdtClient.Service.Services
                 WebUiUsername = ""
             };
 
-            var savePath = await AppDefaultSavePath();
+            var savePath = AppDefaultSavePath();
 
             preferences.SavePath = savePath;
             preferences.TempPath = $"{savePath}temp{Path.DirectorySeparatorChar}";
@@ -195,9 +195,9 @@ namespace RdtClient.Service.Services
             return preferences;
         }
 
-        public async Task<String> AppDefaultSavePath()
+        public String AppDefaultSavePath()
         {
-            var downloadPath = await _settings.GetString("MappedPath");
+            var downloadPath = Settings.Get.MappedPath;
             downloadPath = downloadPath.TrimEnd('\\')
                                        .TrimEnd('/');
             
@@ -208,7 +208,7 @@ namespace RdtClient.Service.Services
 
         public async Task<IList<TorrentInfo>> TorrentInfo()
         {
-            var savePath = await AppDefaultSavePath();
+            var savePath = AppDefaultSavePath();
             
             var results = new List<TorrentInfo>();
 
@@ -337,7 +337,7 @@ namespace RdtClient.Service.Services
 
         public async Task<TorrentProperties> TorrentProperties(String hash)
         {
-            var savePath = await AppDefaultSavePath();
+            var savePath = AppDefaultSavePath();
             
             var torrent = await _torrents.GetByHash(hash);
 
@@ -388,11 +388,11 @@ namespace RdtClient.Service.Services
                 SeedsTotal = 100,
                 ShareRatio = 9999,
                 TimeElapsed = (Int64) (DateTimeOffset.UtcNow - torrent.Added).TotalSeconds,
-                TotalDownloaded = bytesTotal,
-                TotalDownloadedSession = bytesTotal,
+                TotalDownloaded = bytesDone,
+                TotalDownloadedSession = bytesDone,
                 TotalSize = bytesTotal,
-                TotalUploaded = bytesTotal,
-                TotalUploadedSession = bytesTotal,
+                TotalUploaded = bytesDone,
+                TotalUploadedSession = bytesDone,
                 TotalWasted = 0,
                 UpLimit = -1,
                 UpSpeed = speed,
@@ -416,22 +416,16 @@ namespace RdtClient.Service.Services
 
         public async Task TorrentsAddMagnet(String magnetLink, String category)
         {
-            var onlyDownloadAvailableFilesSetting = await _settings.GetNumber("OnlyDownloadAvailableFiles");
-            var minFileSizeSetting = await _settings.GetNumber("MinFileSize");
+            var downloadAction = Settings.Get.OnlyDownloadAvailableFiles == 1 ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll;
 
-            var downloadAction = onlyDownloadAvailableFilesSetting == 1 ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll;
-
-            await _torrents.UploadMagnet(magnetLink, category, downloadAction, TorrentFinishedAction.None, minFileSizeSetting, null);
+            await _torrents.UploadMagnet(magnetLink, category, downloadAction, TorrentFinishedAction.None, Settings.Get.MinFileSize, null);
         }
 
         public async Task TorrentsAddFile(Byte[] fileBytes, String category)
         {
-            var onlyDownloadAvailableFilesSetting = await _settings.GetNumber("OnlyDownloadAvailableFiles");
-            var minFileSizeSetting = await _settings.GetNumber("MinFileSize");
+            var downloadAction = Settings.Get.OnlyDownloadAvailableFiles == 1 ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll;
 
-            var downloadAction = onlyDownloadAvailableFilesSetting == 1 ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll;
-
-            await _torrents.UploadFile(fileBytes, category, downloadAction, TorrentFinishedAction.None, minFileSizeSetting, null);
+            await _torrents.UploadFile(fileBytes, category, downloadAction, TorrentFinishedAction.None, Settings.Get.MinFileSize, null);
         }
 
         public async Task TorrentsSetCategory(String hash, String category)
@@ -448,9 +442,7 @@ namespace RdtClient.Service.Services
                                           .Distinct()
                                           .ToList();
 
-            var categorySetting = await _settings.GetString("Categories");
-
-            var categories = categorySetting.Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var categories = Settings.Get.Categories.Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
             torrentsToGroup.AddRange(categories);
 
@@ -471,7 +463,7 @@ namespace RdtClient.Service.Services
 
         public async Task CategoryCreate(String category)
         {
-            var categoriesSetting = await _settings.GetString("Categories");
+            var categoriesSetting = Settings.Get.Categories;
 
             if (String.IsNullOrWhiteSpace(categoriesSetting))
             {
@@ -494,7 +486,7 @@ namespace RdtClient.Service.Services
 
         public async Task CategoryRemove(String category)
         {
-            var categoriesSetting = await _settings.GetString("Categories");
+            var categoriesSetting = Settings.Get.Categories;
 
             if (String.IsNullOrWhiteSpace(categoriesSetting))
             {

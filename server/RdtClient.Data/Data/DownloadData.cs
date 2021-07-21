@@ -9,12 +9,10 @@ namespace RdtClient.Data.Data
     public class DownloadData
     {
         private readonly DataContext _dataContext;
-        private readonly TorrentData _torrentData;
 
-        public DownloadData(DataContext dataContext, TorrentData torrentData)
+        public DownloadData(DataContext dataContext)
         {
             _dataContext = dataContext;
-            _torrentData = torrentData;
         }
 
         public async Task<Download> GetById(Guid downloadId)
@@ -48,7 +46,7 @@ namespace RdtClient.Data.Data
 
             await _dataContext.SaveChangesAsync();
 
-            await _torrentData.VoidCache();
+            await TorrentData.VoidCache();
 
             return download;
         }
@@ -62,7 +60,7 @@ namespace RdtClient.Data.Data
 
             await _dataContext.SaveChangesAsync();
 
-            await _torrentData.VoidCache();
+            await TorrentData.VoidCache();
         }
 
         public async Task UpdateDownloadStarted(Guid downloadId, DateTimeOffset? dateTime)
@@ -74,7 +72,7 @@ namespace RdtClient.Data.Data
 
             await _dataContext.SaveChangesAsync();
 
-            await _torrentData.VoidCache();
+            await TorrentData.VoidCache();
         }
 
         public async Task UpdateDownloadFinished(Guid downloadId, DateTimeOffset? dateTime)
@@ -91,7 +89,7 @@ namespace RdtClient.Data.Data
 
             await _dataContext.SaveChangesAsync();
 
-            await _torrentData.VoidCache();
+            await TorrentData.VoidCache();
         }
 
         public async Task UpdateUnpackingQueued(Guid downloadId, DateTimeOffset? dateTime)
@@ -103,7 +101,7 @@ namespace RdtClient.Data.Data
 
             await _dataContext.SaveChangesAsync();
 
-            await _torrentData.VoidCache();
+            await TorrentData.VoidCache();
         }
 
         public async Task UpdateUnpackingStarted(Guid downloadId, DateTimeOffset? dateTime)
@@ -115,7 +113,7 @@ namespace RdtClient.Data.Data
 
             await _dataContext.SaveChangesAsync();
 
-            await _torrentData.VoidCache();
+            await TorrentData.VoidCache();
         }
 
         public async Task UpdateUnpackingFinished(Guid downloadId, DateTimeOffset? dateTime)
@@ -127,7 +125,7 @@ namespace RdtClient.Data.Data
 
             await _dataContext.SaveChangesAsync();
 
-            await _torrentData.VoidCache();
+            await TorrentData.VoidCache();
         }
         
         public async Task UpdateCompleted(Guid downloadId, DateTimeOffset? dateTime)
@@ -139,7 +137,7 @@ namespace RdtClient.Data.Data
 
             await _dataContext.SaveChangesAsync();
 
-            await _torrentData.VoidCache();
+            await TorrentData.VoidCache();
         }
 
         public async Task UpdateError(Guid downloadId, String error)
@@ -151,7 +149,7 @@ namespace RdtClient.Data.Data
 
             await _dataContext.SaveChangesAsync();
 
-            await _torrentData.VoidCache();
+            await TorrentData.VoidCache();
         }
 
         public async Task UpdateRetryCount(Guid downloadId, Int32 retryCount)
@@ -163,7 +161,7 @@ namespace RdtClient.Data.Data
 
             await _dataContext.SaveChangesAsync();
 
-            await _torrentData.VoidCache();
+            await TorrentData.VoidCache();
         }
 
         public async Task DeleteForTorrent(Guid torrentId)
@@ -176,7 +174,7 @@ namespace RdtClient.Data.Data
 
             await _dataContext.SaveChangesAsync();
 
-            await _torrentData.VoidCache();
+            await TorrentData.VoidCache();
         }
 
         public async Task Reset(Guid downloadId)
@@ -198,7 +196,7 @@ namespace RdtClient.Data.Data
 
             await _dataContext.SaveChangesAsync();
 
-            await _torrentData.VoidCache();
+            await TorrentData.VoidCache();
         }
     }
 }

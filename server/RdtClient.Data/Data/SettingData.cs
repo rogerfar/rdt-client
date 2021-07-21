@@ -5,12 +5,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RdtClient.Data.Models.Data;
+using RdtClient.Data.Models.Internal;
 
 namespace RdtClient.Data.Data
 {
     public class SettingData
     {
-        private static IList<Setting> _settingCache;
         private static readonly SemaphoreSlim _settingCacheLock = new(1);
 
         private readonly DataContext _dataContext;
@@ -20,20 +20,37 @@ namespace RdtClient.Data.Data
             _dataContext = dataContext;
         }
 
+        public static DbSettings Get { get; private set; }
+
+        public async Task ResetCache()
+        {
+            var allSettings = await _dataContext.Settings.AsNoTracking().ToListAsync();
+
+            String GetString(String name) => allSettings.FirstOrDefault(m => m.SettingId == name)?.Value;
+            Int32 GetInt32(String name) => Int32.Parse(allSettings.FirstOrDefault(m => m.SettingId == name)?.Value ?? "0");
+
+            Get = new DbSettings
+            {
+                RealDebridApiKey = GetString("RealDebridApiKey"),
+                DownloadPath = GetString("DownloadPath"),
+                DownloadClient = GetString("DownloadClient"),
+                TempPath = GetString("TempPath"),
+                MappedPath = GetString("MappedPath"),
+                DownloadLimit = GetInt32("DownloadLimit"),
+                UnpackLimit = GetInt32("UnpackLimit"),
+                MinFileSize = GetInt32("MinFileSize"),
+                OnlyDownloadAvailableFiles = GetInt32("OnlyDownloadAvailableFiles"),
+                DownloadChunkCount = GetInt32("DownloadChunkCount"),
+                DownloadMaxSpeed = GetInt32("DownloadMaxSpeed"),
+                ProxyServer = GetString("ProxyServer"),
+                LogLevel = GetString("LogLevel"),
+                Categories = GetString("Categories")
+            };
+        }
+
         public async Task<IList<Setting>> GetAll()
         {
-            await _settingCacheLock.WaitAsync();
-
-            try
-            {
-                _settingCache ??= await _dataContext.Settings.AsNoTracking().ToListAsync();
-
-                return _settingCache;
-            }
-            finally
-            {
-                _settingCacheLock.Release();
-            }
+            return await _dataContext.Settings.AsNoTracking().ToListAsync();
         }
 
         public async Task Update(IList<Setting> settings)
@@ -56,7 +73,7 @@ namespace RdtClient.Data.Data
 
                 await _dataContext.SaveChangesAsync();
 
-                _settingCache = null;
+                await ResetCache();
             }
             finally
             {
@@ -81,7 +98,7 @@ namespace RdtClient.Data.Data
 
                 await _dataContext.SaveChangesAsync();
 
-                _settingCache = null;
+                await ResetCache();
             }
             finally
             {
