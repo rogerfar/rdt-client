@@ -442,7 +442,7 @@ namespace RdtClient.Service.Services
                                           .Distinct()
                                           .ToList();
 
-            var categories = Settings.Get.Categories.Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var categories = Settings.Get.Categories.Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct();
 
             torrentsToGroup.AddRange(categories);
 
@@ -471,7 +471,7 @@ namespace RdtClient.Service.Services
             }
             else
             {
-                var categoryList = categoriesSetting.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList();
+                var categoryList = categoriesSetting.Split(",", StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();
 
                 if (!categoryList.Contains(category))
                 {
@@ -493,7 +493,7 @@ namespace RdtClient.Service.Services
                 return;
             }
 
-            var categoryList = categoriesSetting.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList();
+            var categoryList = categoriesSetting.Split(",", StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();
 
             categoryList = categoryList.Where(m => m != category).ToList();
 
