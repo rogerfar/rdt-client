@@ -56,20 +56,22 @@ namespace RdtClient.Service.Services
 
                 var uri = new Uri(_download.Link);
 
+#pragma warning disable 4014
                 Task.Run(async delegate
-                {
-                    switch (settings.DownloadClient)
-                    {
-                        case "Simple":
-                            await DownloadSimple(uri, filePath);
-                            break;
-                        case "MultiPart":
-                            await DownloadMultiPart(filePath, settings);
-                            break;
-                        default:
-                            throw new Exception($"Unknown download client {settings.DownloadClient}");
-                    }
-                });
+#pragma warning restore 4014
+                         {
+                             switch (settings.DownloadClient)
+                             {
+                                 case "Simple":
+                                     await DownloadSimple(uri, filePath);
+                                     break;
+                                 case "MultiPart":
+                                     await DownloadMultiPart(filePath, settings);
+                                     break;
+                                 default:
+                                     throw new Exception($"Unknown download client {settings.DownloadClient}");
+                             }
+                         });
             }
             catch (Exception ex)
             {

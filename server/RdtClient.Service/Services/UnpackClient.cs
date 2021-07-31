@@ -50,13 +50,15 @@ namespace RdtClient.Service.Services
                     throw new Exception("Invalid download path");
                 }
 
+#pragma warning disable 4014
                 Task.Run(async delegate
-                {
-                    if (!_cancelled)
-                    {
-                        await Unpack(filePath);
-                    }
-                });
+#pragma warning restore 4014
+                         {
+                             if (!_cancelled)
+                             {
+                                 await Unpack(filePath);
+                             }
+                         });
             }
             catch (Exception ex)
             {
