@@ -56,7 +56,7 @@ namespace RdtClient.Service.Services
 
                 var uri = new Uri(_download.Link);
 
-                await Task.Run(async delegate
+                Task.Run(async delegate
                 {
                     switch (settings.DownloadClient)
                     {

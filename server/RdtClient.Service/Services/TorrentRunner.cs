@@ -225,6 +225,8 @@ namespace RdtClient.Service.Services
                     await _downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
                     download.Error = ex.Message;
                     download.Completed = DateTimeOffset.UtcNow;
+
+                    Log.Information($"Cannot unrestrict: {ex.Message}");
                     continue;
                 }
 

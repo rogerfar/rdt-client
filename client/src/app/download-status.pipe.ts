@@ -14,7 +14,7 @@ export class DownloadStatusPipe implements PipeTransform {
     }
 
     if (value.error) {
-      return `Error`;
+      return value.error;
     }
 
     if (value.completed != null) {

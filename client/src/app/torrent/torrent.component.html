@@ -199,6 +199,10 @@
                 <ng-container *ngIf="download.link">
                   {{ download.link | decodeURI }}
                 </ng-container>
+
+                <ng-container *ngIf="!download.link">
+                  {{ download.path }}
+                </ng-container>
               </td>
               <td>
                 {{ download.bytesTotal | filesize }}

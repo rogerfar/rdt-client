@@ -50,7 +50,7 @@ namespace RdtClient.Service.Services
                     throw new Exception("Invalid download path");
                 }
 
-                await Task.Run(async delegate
+                Task.Run(async delegate
                 {
                     if (!_cancelled)
                     {
