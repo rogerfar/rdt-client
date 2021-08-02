@@ -354,6 +354,8 @@ namespace RdtClient.Service.Services
                 // The files are selected but there are no downloads yet, check if Real-Debrid has generated links yet.
                 if (torrent.Downloads.Count == 0 && torrent.FilesSelected != null)
                 {
+                    Log.Debug($"Torrent {torrent.RdId} checking for links");
+
                     await _torrents.CheckForLinks(torrent.TorrentId);
                 }
 

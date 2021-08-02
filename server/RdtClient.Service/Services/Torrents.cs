@@ -171,7 +171,9 @@ namespace RdtClient.Service.Services
             var rdTorrent = await GetRdNetClient().Torrents.GetInfoAsync(torrent.RdId);
 
             // Sometimes RD will give you 1 rar with all files, sometimes it will give you 1 link per file.
-            if (torrent.Files.Count != rdTorrent.Links.Count && rdTorrent.Links.Count != 1)
+            if (torrent.Files.Count(m => m.Selected) != rdTorrent.Links.Count && 
+                torrent.ManualFiles.Count != rdTorrent.Links.Count &&
+                rdTorrent.Links.Count != 1)
             {
                 return;
             }

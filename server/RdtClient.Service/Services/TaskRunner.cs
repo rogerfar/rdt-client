@@ -46,7 +46,7 @@ namespace RdtClient.Service.Services
                     Torrents.TorrentResetLock.Release();
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
             }
 
             _logger.LogInformation("TaskRunner stopped.");
