@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -49,6 +50,9 @@ namespace RdtClient.Web
 
                     LoggingLevelSwitch.MinimumLevel = logLevel;
                 }
+
+                var version = Assembly.GetEntryAssembly()?.GetName().Version;
+                Log.Warning($"Starting host on version {version}");
                 
                 await host.RunAsync();
             }
