@@ -198,27 +198,29 @@ namespace RdtClient.Service.Services
         public String AppDefaultSavePath()
         {
             var downloadPath = Settings.Get.MappedPath;
+
             downloadPath = downloadPath.TrimEnd('\\')
                                        .TrimEnd('/');
-            
+
             downloadPath += Path.DirectorySeparatorChar;
-            
+
             return downloadPath;
         }
 
         public async Task<IList<TorrentInfo>> TorrentInfo()
         {
             var savePath = AppDefaultSavePath();
-            
+
             var results = new List<TorrentInfo>();
 
             var torrents = await _torrents.Get();
 
             var prio = 0;
+
             foreach (var torrent in torrents)
             {
                 var downloadPath = savePath;
-                
+
                 if (!String.IsNullOrWhiteSpace(torrent.Category))
                 {
                     downloadPath = Path.Combine(downloadPath, torrent.Category);
@@ -305,12 +307,13 @@ namespace RdtClient.Service.Services
                 {
                     result.State = "error";
                 }
-                
+
                 results.Add(result);
             }
 
             return results;
         }
+
         public async Task<IList<TorrentFileItem>> TorrentFileContents(String hash)
         {
             var results = new List<TorrentFileItem>();
@@ -338,19 +341,19 @@ namespace RdtClient.Service.Services
         public async Task<TorrentProperties> TorrentProperties(String hash)
         {
             var savePath = AppDefaultSavePath();
-            
+
             var torrent = await _torrents.GetByHash(hash);
 
             if (torrent == null)
             {
                 return null;
             }
-            
+
             if (!String.IsNullOrWhiteSpace(torrent.Category))
             {
                 savePath = Path.Combine(savePath, torrent.Category);
             }
-            
+
             var bytesDone = torrent.RdProgress;
             var bytesTotal = torrent.RdSize;
             var speed = torrent.RdSpeed ?? 0;
@@ -439,10 +442,11 @@ namespace RdtClient.Service.Services
 
             var torrentsToGroup = torrents.Where(m => !String.IsNullOrWhiteSpace(m.Category))
                                           .Select(m => m.Category.ToLower())
-                                          .Distinct()
                                           .ToList();
 
-            var categories = Settings.Get.Categories.Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct();
+            var categories = Settings.Get
+                                     .Categories
+                                     .Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
             torrentsToGroup.AddRange(categories);
 
@@ -450,7 +454,8 @@ namespace RdtClient.Service.Services
 
             if (torrentsToGroup.Count > 0)
             {
-                results = torrentsToGroup.ToDictionary(m => m,
+                results = torrentsToGroup.Distinct(StringComparer.CurrentCultureIgnoreCase)
+                                         .ToDictionary(m => m,
                                                        m => new TorrentCategory
                                                        {
                                                            Name = m,
@@ -471,7 +476,10 @@ namespace RdtClient.Service.Services
             }
             else
             {
-                var categoryList = categoriesSetting.Split(",", StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();
+                var categoryList = categoriesSetting
+                                   .Split(",", StringSplitOptions.RemoveEmptyEntries)
+                                   .Distinct(StringComparer.CurrentCultureIgnoreCase)
+                                   .ToList();
 
                 if (!categoryList.Contains(category))
                 {
@@ -493,7 +501,9 @@ namespace RdtClient.Service.Services
                 return;
             }
 
-            var categoryList = categoriesSetting.Split(",", StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();
+            var categoryList = categoriesSetting.Split(",", StringSplitOptions.RemoveEmptyEntries)
+                                                .Distinct(StringComparer.CurrentCultureIgnoreCase)
+                                                .ToList();
 
             categoryList = categoryList.Where(m => m != category).ToList();
 
