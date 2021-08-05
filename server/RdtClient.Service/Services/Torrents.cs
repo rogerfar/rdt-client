@@ -42,7 +42,10 @@ namespace RdtClient.Service.Services
                 throw new Exception("Real-Debrid API Key not set in the settings");
             }
 
-            var rdtNetClient = new RdNetClient(null, _httpClientFactory.CreateClient());
+            var httpClient = _httpClientFactory.CreateClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(10);
+
+            var rdtNetClient = new RdNetClient(null, httpClient);
             rdtNetClient.UseApiAuthentication(apiKey);
 
             return rdtNetClient;
