@@ -168,6 +168,11 @@ namespace RdtClient.Data.Data
         {
             var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
 
+            if (dbTorrent == null)
+            {
+                return;
+            }
+
             dbTorrent.Completed = datetime;
 
             await _dataContext.SaveChangesAsync();
@@ -178,6 +183,11 @@ namespace RdtClient.Data.Data
         public async Task UpdateFilesSelected(Guid torrentId, DateTimeOffset datetime)
         {
             var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
+
+            if (dbTorrent == null)
+            {
+                return;
+            }
 
             dbTorrent.FilesSelected = datetime;
 
