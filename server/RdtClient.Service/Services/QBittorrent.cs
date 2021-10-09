@@ -226,7 +226,11 @@ namespace RdtClient.Service.Services
                     downloadPath = Path.Combine(downloadPath, torrent.Category);
                 }
 
-                var torrentPath = Path.Combine(downloadPath, torrent.RdName) + Path.DirectorySeparatorChar;
+                var torrentPath = downloadPath;
+                if (!String.IsNullOrWhiteSpace(torrent.RdName))
+                {
+                    torrentPath = Path.Combine(downloadPath, torrent.RdName) + Path.DirectorySeparatorChar;
+                }
 
                 var bytesDone = torrent.RdProgress;
                 var bytesTotal = torrent.RdSize;
