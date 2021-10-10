@@ -164,6 +164,16 @@ namespace RdtClient.Data.Data
             await TorrentData.VoidCache();
         }
 
+        public async Task UpdateRemoteId(Guid downloadId, String remoteId)
+        {
+            var dbDownload = await _dataContext.Downloads
+                                               .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+            dbDownload.RemoteId = remoteId;
+
+            await _dataContext.SaveChangesAsync();
+        }
+
         public async Task DeleteForTorrent(Guid torrentId)
         {
             var downloads = await _dataContext.Downloads

@@ -36,6 +36,9 @@ export class SettingsComponent implements OnInit {
   public settingOnlyDownloadAvailableFiles: boolean;
   public settingProxyServer: string;
 
+  public aria2cUrl: string;
+  public aria2cSecret: string;
+
   constructor(private settingsService: SettingsService) {}
 
   ngOnInit(): void {
@@ -61,6 +64,8 @@ export class SettingsComponent implements OnInit {
         this.settingMinFileSize = parseInt(this.getSetting(results, 'MinFileSize'), 10);
         this.settingOnlyDownloadAvailableFiles = this.getSetting(results, 'OnlyDownloadAvailableFiles') === '1';
         this.settingProxyServer = this.getSetting(results, 'ProxyServer');
+        this.aria2cUrl = this.getSetting(results, 'Aria2cUrl');
+        this.aria2cSecret = this.getSetting(results, 'Aria2cSecret');
       },
       (err) => {
         this.error = err.error;
@@ -124,6 +129,14 @@ export class SettingsComponent implements OnInit {
       {
         settingId: 'ProxyServer',
         value: this.settingProxyServer,
+      },
+      {
+        settingId: 'Aria2cUrl',
+        value: this.aria2cUrl,
+      },
+      {
+        settingId: 'Aria2cSecret',
+        value: this.aria2cSecret,
       },
     ];
 

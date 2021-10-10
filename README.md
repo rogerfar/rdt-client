@@ -105,6 +105,15 @@ It has the following options:
 - Parallel connections per download: This number indicates how many threads/connections/parts/chunks it will use per download. This can increase speed, recommended is no more than 8.
 - Download speed (in MB/s): This number indicates the speed in MB/s per download. If you set this to 10 and `Maximum parallel downloads` to 2, you can download with a maximum of 20MB/s.
 
+#### Aria2c downloader
+
+This will use an external Aria2c downloader client. You will need to install this client yourself on your host, it is not included in the docker image.
+
+It has the following options:
+
+- Url: The full URL to your Aria2c service. This must end in /jsonrpc. A standard path is `http://192.168.10.2:6800/jsonrpc`.
+- Secret: Optional secret to connecto to your Aria2c service.
+
 ### Troubleshooting
 
 - If you forgot your logins simply delete the `rdtclient.db` and restart the service.

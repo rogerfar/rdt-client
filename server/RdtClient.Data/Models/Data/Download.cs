@@ -35,6 +35,8 @@ namespace RdtClient.Data.Models.Data
         
         public String Error { get; set; }
 
+        public String RemoteId { get; set; }
+
         [ForeignKey("TorrentId")]
         public Torrent Torrent { get; set; }
 

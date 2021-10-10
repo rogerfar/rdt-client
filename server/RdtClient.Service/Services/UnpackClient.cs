@@ -36,7 +36,7 @@ namespace RdtClient.Service.Services
             _torrent = download.Torrent;
         }
 
-        public async Task Start()
+        public void Start()
         {
             BytesDone = 0;
             BytesTotal = 0;
@@ -50,9 +50,7 @@ namespace RdtClient.Service.Services
                     throw new Exception("Invalid download path");
                 }
 
-#pragma warning disable 4014
                 Task.Run(async delegate
-#pragma warning restore 4014
                          {
                              if (!_cancelled)
                              {

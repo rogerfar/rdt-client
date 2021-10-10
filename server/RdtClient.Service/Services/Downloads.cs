@@ -74,6 +74,11 @@ namespace RdtClient.Service.Services
             await _downloadData.UpdateRetryCount(downloadId, retryCount);
         }
 
+        public async Task UpdateRemoteId(Guid downloadId, String remoteId)
+        {
+            await _downloadData.UpdateRemoteId(downloadId, remoteId);
+        }
+
         public async Task DeleteForTorrent(Guid torrentId)
         {
             await _downloadData.DeleteForTorrent(torrentId);

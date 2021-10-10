@@ -78,7 +78,7 @@ namespace RdtClient.Service.Services
 
             var downloadClient = new DownloadClient(download, download.Torrent, downloadPath);
 
-            await downloadClient.Start(Get);
+            downloadClient.Start(Get);
 
             while (!downloadClient.Finished)
             {

@@ -1,27 +1,51 @@
 ﻿using System;
-using System.ComponentModel;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
-using DownloadProgressChangedEventArgs = Downloader.DownloadProgressChangedEventArgs;
 
-namespace RdtClient.Service.Services
+namespace RdtClient.Service.Services.Downloaders
 {
-    public class SimpleDownloader
+    public class SimpleDownloader : IDownloader
     {
-        public Int64 Speed { get; private set; }
-        public Int64 BytesTotal { get; private set; }
-        public Int64 BytesDone { get; private set; }
+        public event EventHandler<DownloadCompleteEventArgs> DownloadComplete;
+        public event EventHandler<DownloadProgressEventArgs> DownloadProgress;
 
-        public event EventHandler<AsyncCompletedEventArgs> DownloadFileCompleted;
-        public event EventHandler<DownloadProgressChangedEventArgs> DownloadProgressChanged;
+        private readonly String _uri;
+        private readonly String _filePath;
 
-        private Boolean _cancelled = false;
+        private Int64 Speed { get; set; }
+        private Int64 BytesTotal { get; set; }
+        private Int64 BytesDone { get; set; }
+
+        private Boolean _cancelled;
 
         private Int64 _bytesLastUpdate;
         private DateTime _nextUpdate;
 
-        public async Task Download(Uri uri, String filePath)
+        public SimpleDownloader(String uri, String filePath)
+        {
+            _uri = uri;
+            _filePath = filePath;
+        }
+
+        public Task<String> Download()
+        {
+            Task.Run(async () =>
+            {
+                await StartDownloadTask();
+            });
+
+            return null;
+        }
+
+        public Task Cancel()
+        {
+            _cancelled = true;
+
+            return Task.CompletedTask;
+        }
+
+        private async Task StartDownloadTask()
         {
             try
             {
@@ -29,7 +53,7 @@ namespace RdtClient.Service.Services
                 _nextUpdate = DateTime.UtcNow.AddSeconds(1);
 
                 // Determine the file size
-                var webRequest = WebRequest.Create(uri);
+                var webRequest = WebRequest.Create(_uri);
                 webRequest.Method = "HEAD";
                 webRequest.Timeout = 5000;
                 Int64 responseLength;
@@ -45,7 +69,7 @@ namespace RdtClient.Service.Services
                 {
                     try
                     {
-                        var request = WebRequest.Create(uri);
+                        var request = WebRequest.Create(_uri);
                         using var response = await request.GetResponseAsync();
 
                         await using var stream = response.GetResponseStream();
@@ -55,7 +79,7 @@ namespace RdtClient.Service.Services
                             throw new IOException("No stream");
                         }
 
-                        await using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.Write);
+                        await using var fileStream = new FileStream(_filePath, FileMode.Create, FileAccess.Write, FileShare.Write);
                         var buffer = new Byte[64 * 1024];
 
                         while (fileStream.Length < response.ContentLength && !_cancelled)
@@ -78,13 +102,11 @@ namespace RdtClient.Service.Services
 
                                     timeout = DateTimeOffset.UtcNow.AddHours(1);
 
-                                    DownloadProgressChanged?.Invoke(this, new DownloadProgressChangedEventArgs(null)
+                                    DownloadProgress?.Invoke(this, new DownloadProgressEventArgs
                                     {
-                                        BytesPerSecondSpeed = Speed,
-                                        ProgressedByteSize = _bytesLastUpdate,
-                                        TotalBytesToReceive = BytesTotal,
-                                        AverageBytesPerSecondSpeed = Speed,
-                                        ReceivedBytesSize = BytesDone,
+                                        Speed = Speed,
+                                        BytesDone = BytesDone,
+                                        BytesTotal = BytesTotal
                                     });
                                 }
                             }
@@ -111,17 +133,15 @@ namespace RdtClient.Service.Services
                     throw new Exception($"Download timed out");
                 }
 
-                DownloadFileCompleted?.Invoke(this, new AsyncCompletedEventArgs(null, false, null));
+                DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs());
             }
             catch (Exception ex)
             {
-                DownloadFileCompleted?.Invoke(this, new AsyncCompletedEventArgs(ex, false, null));
+                DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs
+                {
+                    Error = ex.Message
+                });
             }
-        }
-
-        public void Cancel()
-        {
-            _cancelled = true;
         }
     }
 }

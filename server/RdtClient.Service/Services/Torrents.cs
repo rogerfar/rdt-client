@@ -514,6 +514,18 @@ namespace RdtClient.Service.Services
             return torrent;
         }
 
+        private static String DownloadPath(Torrent torrent)
+        {
+            var settingDownloadPath = Settings.Get.DownloadPath;
+
+            if (!String.IsNullOrWhiteSpace(torrent.Category))
+            {
+                settingDownloadPath = Path.Combine(settingDownloadPath, torrent.Category);
+            }
+
+            return settingDownloadPath;
+        }
+
         private async Task Add(String rdTorrentId,
                                String infoHash,
                                String category,
@@ -551,18 +563,6 @@ namespace RdtClient.Service.Services
             {
                 RealDebridUpdateLock.Release();
             }
-        }
-
-        private String DownloadPath(Torrent torrent)
-        {
-            var settingDownloadPath = Settings.Get.DownloadPath;
-
-            if (!String.IsNullOrWhiteSpace(torrent.Category))
-            {
-                settingDownloadPath = Path.Combine(settingDownloadPath, torrent.Category);
-            }
-
-            return settingDownloadPath;
         }
 
         private async Task Update(Torrent torrent)

@@ -44,7 +44,9 @@ namespace RdtClient.Data.Data
                 DownloadMaxSpeed = GetInt32("DownloadMaxSpeed"),
                 ProxyServer = GetString("ProxyServer"),
                 LogLevel = GetString("LogLevel"),
-                Categories = GetString("Categories")
+                Categories = GetString("Categories"),
+                Aria2cUrl = GetString("Aria2cUrl"),
+                Aria2cSecret = GetString("Aria2cSecret"),
             };
         }
 

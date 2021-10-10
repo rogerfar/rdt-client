@@ -1,11 +1,10 @@
 ﻿using System;
 using System.IO;
-using System.Net;
 using System.Threading.Tasks;
-using Downloader;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Helpers;
+using RdtClient.Service.Services.Downloaders;
 
 namespace RdtClient.Service.Services
 {
@@ -16,8 +15,7 @@ namespace RdtClient.Service.Services
         private readonly Download _download;
         private readonly Torrent _torrent;
 
-        private DownloadService _downloader;
-        private SimpleDownloader _simpleDownloader;
+        private IDownloader _downloader;
 
         public DownloadClient(Download download, Torrent torrent, String destinationPath)
         {
@@ -34,7 +32,7 @@ namespace RdtClient.Service.Services
         public Int64 BytesTotal { get; private set; }
         public Int64 BytesDone { get; private set; }
 
-        public async Task Start(DbSettings settings)
+        public async Task<String> Start(DbSettings settings)
         {
             BytesDone = 0;
             BytesTotal = 0;
@@ -54,159 +52,41 @@ namespace RdtClient.Service.Services
                     File.Delete(filePath);
                 }
 
-                var uri = new Uri(_download.Link);
+                _downloader = settings.DownloadClient switch
+                {
+                    "Simple" => new SimpleDownloader(_download.Link, filePath),
+                    "MultiPart" => new MultiDownloader(_download.Link, filePath, settings),
+                    "Aria2c" => new Aria2cDownloader(_download.RemoteId, _download.Link, filePath, settings),
+                    _ => throw new Exception($"Unknown download client {settings.DownloadClient}")
+                };
 
-#pragma warning disable 4014
-                Task.Run(async delegate
-#pragma warning restore 4014
-                         {
-                             switch (settings.DownloadClient)
-                             {
-                                 case "Simple":
-                                     await DownloadSimple(uri, filePath);
-                                     break;
-                                 case "MultiPart":
-                                     await DownloadMultiPart(filePath, settings);
-                                     break;
-                                 default:
-                                     throw new Exception($"Unknown download client {settings.DownloadClient}");
-                             }
-                         });
+                _downloader.DownloadComplete += (_, args) =>
+                {
+                    Finished = true;
+                    Error = args.Error;
+                };
+
+                _downloader.DownloadProgress += (_, args) =>
+                {
+                    Speed = args.Speed;
+                    BytesDone = args.BytesDone;
+                    BytesTotal = args.BytesTotal;
+                };
+
+                return await _downloader.Download();
             }
             catch (Exception ex)
             {
                 Error = $"An unexpected error occurred preparing download {_download.Link} for torrent {_torrent.RdName}: {ex.Message}";
                 Finished = true;
+
+                return null;
             }
         }
 
         public void Cancel()
         {
-            _downloader?.CancelAsync();
-            _simpleDownloader?.Cancel();
-        }
-
-        private async Task DownloadSimple(Uri uri, String filePath)
-        {
-            try
-            {
-                _simpleDownloader = new SimpleDownloader();
-
-                _simpleDownloader.DownloadProgressChanged += (_, args) =>
-                {
-                    Speed = (Int64) args.BytesPerSecondSpeed;
-                    BytesDone = args.ReceivedBytesSize;
-                    BytesTotal = args.TotalBytesToReceive;
-                };
-                
-                _simpleDownloader.DownloadFileCompleted += (_, args) =>
-                {
-                    if (args.Cancelled)
-                    {
-                        Error = $"The download was cancelled";
-                    }
-                    else if (args.Error != null)
-                    {
-                        Error = args.Error.Message;
-                    }
-
-                    Finished = true;
-                };
-                
-                Speed = 0;
-                BytesDone = 0;
-                BytesTotal = 0;
-
-                await _simpleDownloader.Download(uri, filePath);
-            }
-            catch (Exception ex)
-            {
-                Error = $"An unexpected error occurred downloading {_download.Link} for torrent {_torrent.RdName}: {ex.Message}";
-                Finished = true;
-            }
-        }
-
-        private async Task DownloadMultiPart(String filePath, DbSettings settings)
-        {
-            try
-            {
-                var settingTempPath = settings.TempPath;
-                if (String.IsNullOrWhiteSpace(settingTempPath))
-                {
-                    settingTempPath = Path.GetTempPath();
-                }
-
-                var settingDownloadChunkCount = settings.DownloadChunkCount;
-                if (settingDownloadChunkCount <= 0)
-                {
-                    settingDownloadChunkCount = 1;
-                }
-
-                var settingDownloadMaxSpeed = settings.DownloadMaxSpeed;
-                if (settingDownloadMaxSpeed <= 0)
-                {
-                    settingDownloadMaxSpeed = 0;
-                }
-                settingDownloadMaxSpeed = settingDownloadMaxSpeed * 1024 * 1024;
-
-                var settingProxyServer = settings.ProxyServer;
-
-                var downloadOpt = new DownloadConfiguration
-                {
-                    MaxTryAgainOnFailover = Int32.MaxValue,
-                    ParallelDownload = settingDownloadChunkCount > 1,
-                    ChunkCount = settingDownloadChunkCount,
-                    Timeout = 1000,
-                    OnTheFlyDownload = false,
-                    BufferBlockSize = 1024 * 8,
-                    MaximumBytesPerSecond = settingDownloadMaxSpeed,
-                    TempDirectory = settingTempPath,
-                    RequestConfiguration =
-                    {
-                        Accept = "*/*",
-                        UserAgent = $"rdt-client",
-                        ProtocolVersion = HttpVersion.Version11,
-                        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
-                        KeepAlive = true,
-                        UseDefaultCredentials = false
-                    }
-                };
-
-                if (!String.IsNullOrWhiteSpace(settingProxyServer))
-                {
-                    downloadOpt.RequestConfiguration.Proxy = new WebProxy(new Uri(settingProxyServer), false);
-                }
-
-                _downloader = new DownloadService(downloadOpt);
-
-                _downloader.DownloadProgressChanged += (_, args) =>
-                {
-                    Speed = (Int64) args.BytesPerSecondSpeed;
-                    BytesDone = args.ReceivedBytesSize;
-                    BytesTotal = args.TotalBytesToReceive;
-                };
-                
-                _downloader.DownloadFileCompleted += (_, args) =>
-                {
-                    if (args.Cancelled)
-                    {
-                        Error = $"The download was cancelled";
-                    }
-                    else if (args.Error != null)
-                    {
-                        Error = args.Error.Message;
-                    }
-
-                    Finished = true;
-                };
-
-                await _downloader.DownloadFileTaskAsync(_download.Link, filePath);
-            }
-            catch (Exception ex)
-            {
-                Error = $"An unexpected error occurred downloading {_download.Link} for torrent {_torrent.RdName}: {ex.Message}";
-                Finished = true;
-            }
+            _downloader?.Cancel();
         }
     }
 }

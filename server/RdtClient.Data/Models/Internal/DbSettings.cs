@@ -18,5 +18,7 @@ namespace RdtClient.Data.Models.Internal
         public String ProxyServer { get; set; }
         public String LogLevel { get; set; }
         public String Categories { get; set; }
+        public String Aria2cUrl { get; set; }
+        public String Aria2cSecret { get; set; }
     }
 }

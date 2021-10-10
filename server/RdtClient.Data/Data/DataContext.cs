@@ -135,6 +135,18 @@ namespace RdtClient.Data.Data
                     SettingId = "Categories",
                     Type = "String",
                     Value = ""
+                },
+                new Setting
+                {
+                    SettingId = "Aria2cUrl",
+                    Type = "String",
+                    Value = "http://127.0.0.1:6800/jsonrpc"
+                },
+                new Setting
+                {
+                    SettingId = "Aria2cSecret",
+                    Type = "String",
+                    Value = ""
                 }
             };
 

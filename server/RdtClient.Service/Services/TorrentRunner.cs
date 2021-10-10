@@ -249,7 +249,14 @@ namespace RdtClient.Service.Services
                 {
                     Log.Debug($"Added download {download.DownloadId} to active downloads");
 
-                    await downloadClient.Start(Settings.Get);
+                    var remoteId = await downloadClient.Start(Settings.Get);
+
+                    if (!String.IsNullOrWhiteSpace(remoteId) && download.RemoteId != remoteId)
+                    {
+                        Log.Debug($"Received ID {remoteId} for download {download.DownloadId}");
+
+                        await _downloads.UpdateRemoteId(download.DownloadId, remoteId);
+                    }
 
                     Log.Debug($"Download {download.DownloadId} started");
                 }
@@ -335,7 +342,7 @@ namespace RdtClient.Service.Services
                 {
                     Log.Debug($"Added unpack {download.DownloadId} to active unpacks");
 
-                    await unpackClient.Start();
+                    unpackClient.Start();
 
                     Log.Debug($"Unpack {download.DownloadId} started");
                 }

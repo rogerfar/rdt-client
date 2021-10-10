@@ -75,6 +75,7 @@
       <select [(ngModel)]="settingDownloadClient">
         <option value="Simple">Simple Downloader</option>
         <option value="MultiPart">Multi Part Downloader</option>
+        <option value="Aria2c">Aria2c</option>
       </select>
     </div>
     <p class="help">
@@ -112,6 +113,7 @@
       parallel downloading will be done.
     </p>
   </div>
+
   <div class="field" *ngIf="settingDownloadClient === 'MultiPart'">
     <label class="label">Download speed (in MB/s)</label>
     <div class="control">
@@ -119,12 +121,34 @@
     </div>
     <p class="help">Maximum download speed in Megabytes per second. When set to 0 unlimited speed is used.</p>
   </div>
+
   <div class="field" *ngIf="settingDownloadClient === 'MultiPart'">
     <label class="label">Proxy Server</label>
     <div class="control">
       <input class="input" type="text" maxlength="1000" [(ngModel)]="settingProxyServer" />
     </div>
     <p class="help">Address of a proxy server.</p>
+  </div>
+
+  <div class="field" *ngIf="settingDownloadClient === 'Aria2c'">
+    <label class="label">Aria2c URL</label>
+    <div class="control">
+      <input class="input" type="text" maxlength="1000" [(ngModel)]="aria2cUrl" />
+    </div>
+    <p class="help">
+      This is the URL to your Aria2c instance. It must end in /jsonrpc. A common URL is
+      http://192.168.10.2:6800/jsonrpc.
+    </p>
+  </div>
+
+  <div class="field" *ngIf="settingDownloadClient === 'Aria2c'">
+    <label class="label">Aria2c Secret</label>
+    <div class="control">
+      <input class="input" type="text" maxlength="1000" [(ngModel)]="aria2cSecret" />
+    </div>
+    <p class="help">
+      The secret of your Aria2c instance. Optional.
+    </p>
   </div>
 </div>
 
