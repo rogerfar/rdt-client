@@ -44,8 +44,6 @@ export class TorrentComponent implements OnInit {
         (torrent) => {
           this.torrent = torrent;
 
-          this.torrentService.connect();
-
           this.torrentService.update$.subscribe((result) => {
             this.update(result);
           });

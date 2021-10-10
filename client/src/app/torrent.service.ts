@@ -8,11 +8,13 @@ import { Torrent, TorrentFileAvailability } from './models/torrent.model';
   providedIn: 'root',
 })
 export class TorrentService {
-  constructor(private http: HttpClient) {}
-
   public update$: Subject<Torrent[]> = new Subject();
 
   private connection: signalR.HubConnection;
+
+  constructor(private http: HttpClient) {
+    this.connect();
+  }
 
   public connect(): void {
     if (this.connection != null) {
@@ -25,10 +27,6 @@ export class TorrentService {
     this.connection.on('update', (torrents: Torrent[]) => {
       this.update$.next(torrents);
     });
-  }
-
-  public disconnect(): void {
-    this.connection?.stop();
   }
 
   public getList(): Observable<Torrent[]> {

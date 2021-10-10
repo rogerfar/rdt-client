@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Torrent } from '../models/torrent.model';
 import { TorrentService } from '../torrent.service';
@@ -8,7 +8,7 @@ import { TorrentService } from '../torrent.service';
   templateUrl: './torrent-table.component.html',
   styleUrls: ['./torrent-table.component.scss'],
 })
-export class TorrentTableComponent implements OnInit, OnDestroy {
+export class TorrentTableComponent implements OnInit {
   public torrents: Torrent[] = [];
   public error: string;
 
@@ -19,8 +19,6 @@ export class TorrentTableComponent implements OnInit, OnDestroy {
       (result) => {
         this.torrents = result;
 
-        this.torrentService.connect();
-
         this.torrentService.update$.subscribe((result2) => {
           this.torrents = result2;
         });
@@ -29,10 +27,6 @@ export class TorrentTableComponent implements OnInit, OnDestroy {
         this.error = err.error;
       }
     );
-  }
-
-  ngOnDestroy(): void {
-    this.torrentService.disconnect();
   }
 
   public selectTorrent(torrentId: string): void {
