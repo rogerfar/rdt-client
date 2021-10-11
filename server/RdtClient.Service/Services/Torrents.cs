@@ -386,6 +386,8 @@ namespace RdtClient.Service.Services
         {
             var torrent = await _torrentData.GetById(torrentId);
 
+            var newRetryCount = torrent.RetryCount + 1;
+
             foreach (var download in torrent.Downloads)
             {
                 while (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
@@ -429,6 +431,8 @@ namespace RdtClient.Service.Services
                                        torrent.DownloadMinSize,
                                        torrent.DownloadManualFiles);
                 }
+
+                await _torrentData.UpdateRetryCount(torrent.TorrentId, newRetryCount);
             }
             finally
             {
@@ -634,11 +638,6 @@ namespace RdtClient.Service.Services
             {
                 await _torrentData.UpdateRdData(torrent);
             }
-        }
-
-        public async Task UpdateRetryCount(Guid torrentId, Int32 retryCount)
-        {
-            await _torrentData.UpdateRetryCount(torrentId, retryCount);
         }
     }
 }
