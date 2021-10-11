@@ -33,6 +33,10 @@
         {{ torrent | status }}
       </div>
       <div class="field">
+        <label class="label">Retry count</label>
+        {{ torrent.retryCount }} / 2
+      </div>
+      <div class="field">
         <label class="label">Hash</label>
         {{ torrent.hash }}
       </div>
@@ -245,7 +249,7 @@
                     </div>
                     <div class="field">
                       <label class="label">Retry Count</label>
-                      {{ download.retryCount }}
+                      {{ download.retryCount }} / 3
                     </div>
                   </div>
                   <div fxFlex>

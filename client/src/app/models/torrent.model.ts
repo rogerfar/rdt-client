@@ -16,6 +16,8 @@ export class Torrent {
   public fileOrMagnet: string;
   public isFile: boolean;
 
+  public retryCount: number;
+
   public rdId: string;
   public rdName: string;
   public rdSize: number;

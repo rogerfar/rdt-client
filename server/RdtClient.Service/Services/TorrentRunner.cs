@@ -115,7 +115,10 @@ namespace RdtClient.Service.Services
                     {
                         Log.Debug($"Processing active download {downloadId}: error {downloadClient.Error}, download retry count {download.RetryCount}/{DownloadRetryCount}, torrent retry count {download.Torrent.RetryCount}/{TorrentRetryCount}, retrying torrent");
 
-                        await _torrents.RetryTorrent(download.TorrentId);
+                        Task.Run(async () =>
+                        {
+                            await _torrents.RetryTorrent(download.TorrentId);
+                        });
                     }
                     else
                     {

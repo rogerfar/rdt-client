@@ -101,12 +101,12 @@ namespace RdtClient.Service.Services
             await _torrentData.UpdateCategory(torrent.TorrentId, category);
         }
 
-        public async Task UploadMagnet(String magnetLink,
-                                       String category,
-                                       TorrentDownloadAction downloadAction,
-                                       TorrentFinishedAction finishedAction,
-                                       Int32 downloadMinSize,
-                                       String downloadManualFiles)
+        public async Task<Torrent> UploadMagnet(String magnetLink,
+                                                String category,
+                                                TorrentDownloadAction downloadAction,
+                                                TorrentFinishedAction finishedAction,
+                                                Int32 downloadMinSize,
+                                                String downloadManualFiles)
         {
             MagnetLink magnet;
 
@@ -121,15 +121,15 @@ namespace RdtClient.Service.Services
 
             var rdTorrent = await GetRdNetClient().Torrents.AddMagnetAsync(magnetLink);
 
-            await Add(rdTorrent.Id, magnet.InfoHash.ToHex(), category, downloadAction, finishedAction, downloadMinSize, downloadManualFiles, magnetLink, false);
+            return await Add(rdTorrent.Id, magnet.InfoHash.ToHex(), category, downloadAction, finishedAction, downloadMinSize, downloadManualFiles, magnetLink, false);
         }
 
-        public async Task UploadFile(Byte[] bytes,
-                                     String category,
-                                     TorrentDownloadAction downloadAction,
-                                     TorrentFinishedAction finishedAction,
-                                     Int32 downloadMinSize,
-                                     String downloadManualFiles)
+        public async Task<Torrent> UploadFile(Byte[] bytes,
+                                              String category,
+                                              TorrentDownloadAction downloadAction,
+                                              TorrentFinishedAction finishedAction,
+                                              Int32 downloadMinSize,
+                                              String downloadManualFiles)
         {
             MonoTorrent.Torrent torrent;
 
@@ -146,7 +146,7 @@ namespace RdtClient.Service.Services
 
             var rdTorrent = await GetRdNetClient().Torrents.AddFileAsync(bytes);
 
-            await Add(rdTorrent.Id, torrent.InfoHash.ToHex(), category, downloadAction, finishedAction, downloadMinSize, downloadManualFiles, fileAsBase64, true);
+            return await Add(rdTorrent.Id, torrent.InfoHash.ToHex(), category, downloadAction, finishedAction, downloadMinSize, downloadManualFiles, fileAsBase64, true);
         }
 
         public async Task<List<TorrentInstantAvailabilityFile>> GetAvailableFiles(String hash)
@@ -394,14 +394,14 @@ namespace RdtClient.Service.Services
                 {
                     downloadClient.Cancel();
 
-                    await Task.Delay(1000);
+                    await Task.Delay(100);
                 }
 
                 while (TorrentRunner.ActiveUnpackClients.TryGetValue(download.DownloadId, out var unpackClient))
                 {
                     unpackClient.Cancel();
 
-                    await Task.Delay(1000);
+                    await Task.Delay(100);
                 }
             }
 
@@ -416,23 +416,25 @@ namespace RdtClient.Service.Services
 
             try
             {
+                Torrent newTorrent;
+
                 if (torrent.IsFile)
                 {
                     var bytes = Convert.FromBase64String(torrent.FileOrMagnet);
 
-                    await UploadFile(bytes, torrent.Category, torrent.DownloadAction, torrent.FinishedAction, torrent.DownloadMinSize, torrent.DownloadManualFiles);
+                    newTorrent = await UploadFile(bytes, torrent.Category, torrent.DownloadAction, torrent.FinishedAction, torrent.DownloadMinSize, torrent.DownloadManualFiles);
                 }
                 else
                 {
-                    await UploadMagnet(torrent.FileOrMagnet,
-                                       torrent.Category,
-                                       torrent.DownloadAction,
-                                       torrent.FinishedAction,
-                                       torrent.DownloadMinSize,
-                                       torrent.DownloadManualFiles);
+                    newTorrent = await UploadMagnet(torrent.FileOrMagnet,
+                                                    torrent.Category,
+                                                    torrent.DownloadAction,
+                                                    torrent.FinishedAction,
+                                                    torrent.DownloadMinSize,
+                                                    torrent.DownloadManualFiles);
                 }
 
-                await _torrentData.UpdateRetryCount(torrent.TorrentId, newRetryCount);
+                await _torrentData.UpdateRetryCount(newTorrent.TorrentId, newRetryCount);
             }
             finally
             {
@@ -530,15 +532,15 @@ namespace RdtClient.Service.Services
             return settingDownloadPath;
         }
 
-        private async Task Add(String rdTorrentId,
-                               String infoHash,
-                               String category,
-                               TorrentDownloadAction downloadAction,
-                               TorrentFinishedAction finishedAction,
-                               Int32 downloadMinSize,
-                               String downloadManualFiles,
-                               String fileOrMagnetContents,
-                               Boolean isFile)
+        private async Task<Torrent> Add(String rdTorrentId,
+                                        String infoHash,
+                                        String category,
+                                        TorrentDownloadAction downloadAction,
+                                        TorrentFinishedAction finishedAction,
+                                        Int32 downloadMinSize,
+                                        String downloadManualFiles,
+                                        String fileOrMagnetContents,
+                                        Boolean isFile)
         {
             await RealDebridUpdateLock.WaitAsync();
             
@@ -548,7 +550,7 @@ namespace RdtClient.Service.Services
 
                 if (torrent != null)
                 {
-                    return;
+                    return torrent;
                 }
 
                 var newTorrent = await _torrentData.Add(rdTorrentId,
@@ -562,6 +564,8 @@ namespace RdtClient.Service.Services
                                                         isFile);
 
                 await Update(newTorrent);
+
+                return newTorrent;
             }
             finally
             {
