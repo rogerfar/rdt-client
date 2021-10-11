@@ -29,6 +29,8 @@ namespace RdtClient.Data.Models.Data
         public String FileOrMagnet { get; set; }
         public Boolean IsFile { get; set; }
         
+        public Int32 RetryCount { get; set; }
+
         [InverseProperty("Torrent")]
         public IList<Download> Downloads { get; set; }
 

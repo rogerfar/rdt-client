@@ -392,14 +392,14 @@ namespace RdtClient.Service.Services
                 {
                     downloadClient.Cancel();
 
-                    await Task.Delay(100);
+                    await Task.Delay(1000);
                 }
 
                 while (TorrentRunner.ActiveUnpackClients.TryGetValue(download.DownloadId, out var unpackClient))
                 {
                     unpackClient.Cancel();
 
-                    await Task.Delay(100);
+                    await Task.Delay(1000);
                 }
             }
 
@@ -634,6 +634,11 @@ namespace RdtClient.Service.Services
             {
                 await _torrentData.UpdateRdData(torrent);
             }
+        }
+
+        public async Task UpdateRetryCount(Guid torrentId, Int32 retryCount)
+        {
+            await _torrentData.UpdateRetryCount(torrentId, retryCount);
         }
     }
 }

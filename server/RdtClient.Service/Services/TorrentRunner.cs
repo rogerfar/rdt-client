@@ -12,7 +12,8 @@ namespace RdtClient.Service.Services
 {
     public class TorrentRunner
     {
-        private const Int32 RetryCount = 3;
+        private const Int32 DownloadRetryCount = 3;
+        private const Int32 TorrentRetryCount = 2;
 
         private static DateTime _nextUpdate = DateTime.UtcNow;
 
@@ -103,12 +104,19 @@ namespace RdtClient.Service.Services
                     Log.Debug($"Processing active download {downloadId}: error {downloadClient.Error}");
                     var download = await _downloads.GetById(downloadId);
 
-                    if (download.RetryCount < RetryCount)
+                    if (download.RetryCount < DownloadRetryCount)
                     {
-                        Log.Debug($"Processing active download {downloadId}: error {downloadClient.Error}, retry count {download.RetryCount}/{RetryCount}");
+                        Log.Debug($"Processing active download {downloadId}: error {downloadClient.Error}, download retry count {download.RetryCount}/{DownloadRetryCount}, torrent retry count {download.Torrent.RetryCount}/{TorrentRetryCount}, retrying download");
 
                         await _downloads.UpdateRetryCount(downloadId, download.RetryCount + 1);
                         await _torrents.Download(downloadId);
+                    }
+                    else if (download.Torrent.RetryCount < TorrentRetryCount)
+                    {
+                        Log.Debug($"Processing active download {downloadId}: error {downloadClient.Error}, download retry count {download.RetryCount}/{DownloadRetryCount}, torrent retry count {download.Torrent.RetryCount}/{TorrentRetryCount}, retrying torrent");
+
+                        await _torrents.UpdateRetryCount(download.TorrentId, download.Torrent.RetryCount + 1);
+                        await _torrents.RetryTorrent(download.TorrentId);
                     }
                     else
                     {

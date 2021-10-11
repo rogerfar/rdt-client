@@ -196,6 +196,22 @@ namespace RdtClient.Data.Data
             await VoidCache();
         }
 
+        public async Task UpdateRetryCount(Guid torrentId, Int32 retryCount)
+        {
+            var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
+
+            if (dbTorrent == null)
+            {
+                return;
+            }
+
+            dbTorrent.RetryCount = retryCount;
+
+            await _dataContext.SaveChangesAsync();
+
+            await VoidCache();
+        }
+
         public async Task Delete(Guid torrentId)
         {
             var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
