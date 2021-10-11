@@ -146,9 +146,26 @@
     <div class="control">
       <input class="input" type="text" maxlength="1000" [(ngModel)]="aria2cSecret" />
     </div>
-    <p class="help">
-      The secret of your Aria2c instance. Optional.
-    </p>
+    <p class="help">The secret of your Aria2c instance. Optional.</p>
+  </div>
+
+  <button
+    class="button is-warning"
+    (click)="testAria2cConnection()"
+    [disabled]="saving"
+    [ngClass]="{ 'is-loading': saving }"
+    *ngIf="settingDownloadClient === 'Aria2c'"
+  >
+    Test aria2 connection
+  </button>
+
+  <div class="notification is-danger is-light" *ngIf="testAria2cConnectionError">
+    Could connect to Aria2 client<br />
+    {{ testAria2cConnectionError }}
+  </div>
+
+  <div class="notification is-success is-light" *ngIf="testAria2cConnectionSuccess">
+    Found Aria2 client version {{ testAria2cConnectionSuccess }}
   </div>
 </div>
 

@@ -33,7 +33,7 @@ namespace RdtClient.Service.Services.Downloaders
 
             _timer.Elapsed += OnTimedEvent;
 
-            _timer.Interval = 1000;
+            _timer.Interval = 100;
             _timer.Enabled = false;
         }
         

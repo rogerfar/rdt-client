@@ -33,4 +33,11 @@ export class SettingsService {
   public testWriteSpeed(): Observable<number> {
     return this.http.get<number>(`/Api/Settings/TestWriteSpeed`);
   }
+
+  public testAria2cConnection(url: string, secret: string): Observable<{ version: string }> {
+    return this.http.post<{ version: string }>(`/Api/Settings/TestAria2cConnection`, {
+      url,
+      secret,
+    });
+  }
 }

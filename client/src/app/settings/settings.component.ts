@@ -22,6 +22,9 @@ export class SettingsComponent implements OnInit {
   public testWriteSpeedError: string;
   public testWriteSpeedSuccess: number;
 
+  public testAria2cConnectionError: string = null;
+  public testAria2cConnectionSuccess: string = null;
+
   public settingLogLevel: string;
   public settingRealDebridApiKey: string;
   public settingDownloadPath: string;
@@ -198,6 +201,23 @@ export class SettingsComponent implements OnInit {
       },
       (err) => {
         this.testWriteSpeedError = err.error;
+        this.saving = false;
+      }
+    );
+  }
+
+  public testAria2cConnection(): void {
+    this.saving = true;
+    this.testAria2cConnectionError = null;
+    this.testAria2cConnectionSuccess = null;
+
+    this.settingsService.testAria2cConnection(this.aria2cUrl, this.aria2cSecret).subscribe(
+      (result) => {
+        this.saving = false;
+        this.testAria2cConnectionSuccess = result.version;
+      },
+      (err) => {
+        this.testAria2cConnectionError = err.error;
         this.saving = false;
       }
     );

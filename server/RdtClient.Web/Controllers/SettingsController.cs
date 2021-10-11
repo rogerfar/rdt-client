@@ -82,6 +82,15 @@ namespace RdtClient.Web.Controllers
             
             return Ok(writeSpeed);
         }
+
+        [HttpPost]
+        [Route("TestAria2cConnection")]
+        public async Task<ActionResult<String>> TestAria2cConnection([FromBody] SettingsControllerTestAria2cConnectionRequest request)
+        {
+            var version = await _settings.GetAria2cVersion(request.Url, request.Secret);
+
+            return Ok(version);
+        }
     }
 
     public class SettingsControllerUpdateRequest
@@ -92,5 +101,11 @@ namespace RdtClient.Web.Controllers
     public class SettingsControllerTestPathRequest
     {
         public String Path { get; set; }
+    }
+
+    public class SettingsControllerTestAria2cConnectionRequest
+    {
+        public String Url { get; set; }
+        public String Secret { get; set; }
     }
 }

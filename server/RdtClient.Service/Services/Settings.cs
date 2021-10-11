@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Aria2NET;
 using RdtClient.Data.Data;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.Internal;
@@ -78,13 +79,13 @@ namespace RdtClient.Service.Services
 
             var downloadClient = new DownloadClient(download, download.Torrent, downloadPath);
 
-            downloadClient.Start(Get);
+            await downloadClient.Start(Get);
 
             while (!downloadClient.Finished)
             {
 #pragma warning disable CA2016 // Forward the 'CancellationToken' parameter to methods that take one
                 // ReSharper disable once MethodSupportsCancellation
-                await Task.Delay(1000);
+                await Task.Delay(10);
 #pragma warning restore CA2016 // Forward the 'CancellationToken' parameter to methods that take one
                 
                 if (cancellationToken.IsCancellationRequested)
@@ -95,6 +96,8 @@ namespace RdtClient.Service.Services
                 if (downloadClient.BytesDone > 1024 * 1024 * 50)
                 {
                     downloadClient.Cancel();
+
+                    break;
                 }
             }
 
@@ -150,6 +153,13 @@ namespace RdtClient.Service.Services
             }
 
             return writeSpeed;
+        }
+
+        public async Task<VersionResult> GetAria2cVersion(String url, String secret)
+        {
+            var client = new Aria2NetClient(url, secret);
+
+            return await client.GetVersion();
         }
 
         public void Clean()
