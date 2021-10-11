@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.7] - 2021-10-11
+### Added
+- Add Aria2 test connection button.
+- Add full torrent retry mechanism, by default it will now retry the torrent 2 times when a download fails for more than 3 times.
+
+### Changed
+- Improved Aria2 download handling.
+
 ## [1.8.6] - 2021-10-09
 ### Added
 - Experimental support for a Aria2 download client. Check the readme for usage.
