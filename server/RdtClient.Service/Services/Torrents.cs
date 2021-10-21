@@ -173,15 +173,17 @@ namespace RdtClient.Service.Services
 
             var rdTorrent = await GetRdNetClient().Torrents.GetInfoAsync(torrent.RdId);
 
+            var torrentLinks = rdTorrent.Links.Where(m => !String.IsNullOrWhiteSpace(m)).ToList();
+
             // Sometimes RD will give you 1 rar with all files, sometimes it will give you 1 link per file.
-            if (torrent.Files.Count(m => m.Selected) != rdTorrent.Links.Count && 
-                torrent.ManualFiles.Count != rdTorrent.Links.Count &&
-                rdTorrent.Links.Count != 1)
+            if (torrent.Files.Count(m => m.Selected) != torrentLinks.Count && 
+                torrent.ManualFiles.Count != torrentLinks.Count &&
+                torrentLinks.Count != 1)
             {
                 return;
             }
 
-            foreach (var file in rdTorrent.Links)
+            foreach (var file in torrentLinks)
             {
                 // Make sure downloads don't get added multiple times
                 var downloadExists = await _downloads.Get(torrent.TorrentId, file);
