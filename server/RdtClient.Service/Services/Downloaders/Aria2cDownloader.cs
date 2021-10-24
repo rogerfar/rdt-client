@@ -13,6 +13,8 @@ namespace RdtClient.Service.Services.Downloaders
         public event EventHandler<DownloadCompleteEventArgs> DownloadComplete;
         public event EventHandler<DownloadProgressEventArgs> DownloadProgress;
 
+        private const Int32 RetryCount = 5;
+
         private readonly String _uri;
         private readonly String _filePath;
 
@@ -32,8 +34,8 @@ namespace RdtClient.Service.Services.Downloaders
             _timer = new Timer();
 
             _timer.Elapsed += OnTimedEvent;
-
-            _timer.Interval = 100;
+            
+            _timer.Interval = 1000;
             _timer.Enabled = false;
         }
         
@@ -53,20 +55,43 @@ namespace RdtClient.Service.Services.Downloaders
                     _gid = null;
                 }
             }
-            
-            _gid ??= await _aria2NetClient.AddUri(new List<String>
-                                                  {
-                                                      _uri
-                                                  },
-                                                  new Dictionary<String, Object>
-                                                  {
-                                                      {
-                                                          "dir", path
-                                                      },
-                                                      {
-                                                          "out", fileName
-                                                      }
-                                                  });
+
+            var retryCount = 0;
+            while(true)
+            {
+                try
+                {
+                    _gid ??= await _aria2NetClient.AddUri(new List<String>
+                                                          {
+                                                              _uri
+                                                          },
+                                                          new Dictionary<String, Object>
+                                                          {
+                                                              {
+                                                                  "dir", path
+                                                              },
+                                                              {
+                                                                  "out", fileName
+                                                              }
+                                                          });
+
+                    break;
+                }
+                catch
+                {
+                    if (retryCount >= RetryCount)
+                    {
+                        throw;
+                    }
+
+                    await Task.Delay(retryCount * 1000);
+
+                    retryCount++;
+                }
+            }
+
+            // Add a delay to prevent sending too many Add requests to Aria2 at the same time.
+            await Task.Delay(1000);
 
             _timer.Start();
 
