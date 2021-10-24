@@ -91,7 +91,7 @@ namespace RdtClient.Web.Controllers
 
             var bytes = memoryStream.ToArray();
 
-            await _torrents.UploadFile(bytes, formData.Category, formData.DownloadAction, formData.FinishedAction, formData.DownloadMinSize, formData.DownloadManualFiles);
+            await _torrents.UploadFile(bytes, formData.Category, formData.DownloadAction, formData.FinishedAction, formData.DownloadMinSize, formData.DownloadManualFiles, formData.Priority);
 
             return Ok();
         }
@@ -105,7 +105,8 @@ namespace RdtClient.Web.Controllers
                                          request.DownloadAction,
                                          request.FinishedAction,
                                          request.DownloadMinSize,
-                                         request.DownloadManualFiles);
+                                         request.DownloadManualFiles,
+                                         request.Priority);
 
             return Ok();
         }
@@ -171,6 +172,15 @@ namespace RdtClient.Web.Controllers
 
             return Ok();
         }
+        
+        [HttpPut]
+        [Route("Update")]
+        public async Task<ActionResult> Update([FromBody] Torrent torrent)
+        {
+            await _torrents.Update(torrent);
+
+            return Ok();
+        }
     }
 
     public class TorrentControllerUploadFileRequest
@@ -180,6 +190,7 @@ namespace RdtClient.Web.Controllers
         public TorrentFinishedAction FinishedAction { get; set; }
         public Int32 DownloadMinSize { get; set; }
         public String DownloadManualFiles { get; set; }
+        public Int32? Priority { get; set; }
     }
 
     public class TorrentControllerUploadMagnetRequest
@@ -190,6 +201,7 @@ namespace RdtClient.Web.Controllers
         public TorrentFinishedAction FinishedAction { get; set; }
         public Int32 DownloadMinSize { get; set; }
         public String DownloadManualFiles { get; set; }
+        public Int32? Priority { get; set; }
     }
 
     public class TorrentControllerDeleteRequest

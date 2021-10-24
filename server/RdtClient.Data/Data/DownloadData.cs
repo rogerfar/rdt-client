@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,14 @@ namespace RdtClient.Data.Data
         public DownloadData(DataContext dataContext)
         {
             _dataContext = dataContext;
+        }
+
+        public async Task<List<Download>> GetForTorrent(Guid torrentId)
+        {
+            return await _dataContext.Downloads
+                                     .AsNoTracking()
+                                     .Where(m => m.TorrentId == torrentId)
+                                     .ToListAsync();
         }
 
         public async Task<Download> GetById(Guid downloadId)

@@ -84,9 +84,31 @@ namespace RdtClient.Service.Services
             }
         }
 
-        public void Cancel()
+        public async Task Cancel()
         {
-            _downloader?.Cancel();
+            if (_downloader == null)
+            {
+                return;
+            }
+            await _downloader.Cancel();
+        }
+
+        public async Task Pause()
+        {
+            if (_downloader == null)
+            {
+                return;
+            }
+            await _downloader.Pause();
+        }
+
+        public async Task Resume()
+        {
+            if (_downloader == null)
+            {
+                return;
+            }
+            await _downloader.Resume();
         }
     }
 }

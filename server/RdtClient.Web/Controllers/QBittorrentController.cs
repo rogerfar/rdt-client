@@ -190,19 +190,47 @@ namespace RdtClient.Web.Controllers
         [Authorize]
         [Route("torrents/pause")]
         [HttpGet]
-        [HttpPost]
-        public ActionResult TorrentsPause()
+        public async Task<ActionResult> TorrentsPause([FromQuery] QBTorrentsHashesRequest request)
         {
+            var hashes = request.Hashes.Split("|");
+
+            foreach (var hash in hashes)
+            {
+                await _qBittorrent.TorrentPause(hash);
+            }
+
             return Ok();
+        }
+
+        [Authorize]
+        [Route("torrents/topPrio")]
+        [HttpPost]
+        public async Task<ActionResult> TorrentsPausePost([FromForm] QBTorrentsHashesRequest request)
+        {
+            return await TorrentsPause(request);
         }
 
         [Authorize]
         [Route("torrents/resume")]
         [HttpGet]
-        [HttpPost]
-        public ActionResult TorrentsResume()
+        public async Task<ActionResult> TorrentsResume([FromQuery] QBTorrentsHashesRequest request)
         {
+            var hashes = request.Hashes.Split("|");
+
+            foreach (var hash in hashes)
+            {
+                await _qBittorrent.TorrentResume(hash);
+            }
+
             return Ok();
+        }
+
+        [Authorize]
+        [Route("torrents/topPrio")]
+        [HttpPost]
+        public async Task<ActionResult> TorrentsResumePost([FromForm] QBTorrentsHashesRequest request)
+        {
+            return await TorrentsResume(request);
         }
 
         [Authorize]
@@ -248,13 +276,13 @@ namespace RdtClient.Web.Controllers
             {
                 if (url.StartsWith("magnet"))
                 {
-                    await _qBittorrent.TorrentsAddMagnet(url.Trim(), request.Category);
+                    await _qBittorrent.TorrentsAddMagnet(url.Trim(), request.Category, null);
                 }
                 else if (url.StartsWith("http"))
                 {
                     var httpClient = new HttpClient();
                     var result = await httpClient.GetByteArrayAsync(url);
-                    await _qBittorrent.TorrentsAddFile(result, request.Category);
+                    await _qBittorrent.TorrentsAddFile(result, request.Category, null);
                 }
                 else
                 {
@@ -279,7 +307,7 @@ namespace RdtClient.Web.Controllers
                     await file.CopyToAsync(target);
                     var fileBytes = target.ToArray();
 
-                    await _qBittorrent.TorrentsAddFile(fileBytes, request.Category);
+                    await _qBittorrent.TorrentsAddFile(fileBytes, request.Category, request.Priority);
                 }
             }
             
@@ -370,6 +398,29 @@ namespace RdtClient.Web.Controllers
         {
             return Ok();
         }
+
+        [Authorize]
+        [Route("torrents/topPrio")]
+        [HttpGet]
+        public async Task<ActionResult> TorrentsTopPrio([FromQuery] QBTorrentsHashesRequest request)
+        {
+            var hashes = request.Hashes.Split("|");
+
+            foreach (var hash in hashes)
+            {
+                await _qBittorrent.TorrentsTopPrio(hash);
+            }
+
+            return Ok();
+        }
+
+        [Authorize]
+        [Route("torrents/topPrio")]
+        [HttpPost]
+        public async Task<ActionResult> TorrentsTopPrioPost([FromForm] QBTorrentsHashesRequest request)
+        {
+            return await TorrentsTopPrio(request);
+        }
     }
 
     public class QBAuthLoginRequest
@@ -393,6 +444,7 @@ namespace RdtClient.Web.Controllers
     {
         public String Urls { get; set; }
         public String Category { get; set; }
+        public Int32? Priority { get; set; }
     }
 
     public class QBTorrentsSetCategoryRequest
@@ -409,5 +461,10 @@ namespace RdtClient.Web.Controllers
     public class QBTorrentsRemoveCategoryRequest
     {
         public String Categories { get; set; }
+    }
+
+    public class QBTorrentsHashesRequest
+    {
+        public String Hashes { get; set; }
     }
 }

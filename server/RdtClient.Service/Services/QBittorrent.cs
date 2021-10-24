@@ -14,12 +14,14 @@ namespace RdtClient.Service.Services
         private readonly Authentication _authentication;
         private readonly Settings _settings;
         private readonly Torrents _torrents;
+        private readonly Downloads _downloads;
 
-        public QBittorrent(Settings settings, Authentication authentication, Torrents torrents)
+        public QBittorrent(Settings settings, Authentication authentication, Torrents torrents, Downloads downloads)
         {
             _settings = settings;
             _authentication = authentication;
             _torrents = torrents;
+            _downloads = downloads;
         }
 
         public async Task<Boolean> AuthLogin(String userName, String password)
@@ -291,7 +293,7 @@ namespace RdtClient.Service.Services
                     Upspeed = speed
                 };
 
-                if (torrent.Completed.HasValue)
+                if (torrent.Completed.HasValue && torrent.Downloads.All(m => m.Completed.HasValue))
                 {
                     // Indicates completed torrent and not seeding anymore.
                     result.State = "pausedUP";
@@ -329,7 +331,7 @@ namespace RdtClient.Service.Services
                 return null;
             }
 
-            foreach (var file in torrent.Files)
+            foreach (var file in torrent.Files.Where(m => m.Selected))
             {
                 var result = new TorrentFileItem
                 {
@@ -421,18 +423,18 @@ namespace RdtClient.Service.Services
             await _torrents.Delete(torrent.TorrentId, true, true, deleteFiles);
         }
 
-        public async Task TorrentsAddMagnet(String magnetLink, String category)
+        public async Task TorrentsAddMagnet(String magnetLink, String category, Int32? priority)
         {
             var downloadAction = Settings.Get.OnlyDownloadAvailableFiles == 1 ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll;
 
-            await _torrents.UploadMagnet(magnetLink, category, downloadAction, TorrentFinishedAction.None, Settings.Get.MinFileSize, null);
+            await _torrents.UploadMagnet(magnetLink, category, downloadAction, TorrentFinishedAction.None, Settings.Get.MinFileSize, null, priority);
         }
 
-        public async Task TorrentsAddFile(Byte[] fileBytes, String category)
+        public async Task TorrentsAddFile(Byte[] fileBytes, String category, Int32? priority)
         {
             var downloadAction = Settings.Get.OnlyDownloadAvailableFiles == 1 ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll;
 
-            await _torrents.UploadFile(fileBytes, category, downloadAction, TorrentFinishedAction.None, Settings.Get.MinFileSize, null);
+            await _torrents.UploadFile(fileBytes, category, downloadAction, TorrentFinishedAction.None, Settings.Get.MinFileSize, null, priority);
         }
 
         public async Task TorrentsSetCategory(String hash, String category)
@@ -514,6 +516,51 @@ namespace RdtClient.Service.Services
             categoriesSetting = String.Join(",", categoryList);
 
             await _settings.UpdateString("Categories", categoriesSetting);
+        }
+
+        public async Task TorrentsTopPrio(String hash)
+        {
+            await _torrents.UpdatePriority(hash, 1);
+        }
+
+        public async Task TorrentPause(String hash)
+        {
+            var torrent = await _torrents.GetByHash(hash);
+
+            if (torrent == null)
+            {
+                return;
+            }
+
+            var downloads = await _downloads.GetForTorrent(torrent.TorrentId);
+
+            foreach (var download in downloads)
+            {
+                if (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
+                {
+                    downloadClient.Pause();
+                }
+            }
+        }
+
+        public async Task TorrentResume(String hash)
+        {
+            var torrent = await _torrents.GetByHash(hash);
+
+            if (torrent == null)
+            {
+                return;
+            }
+
+            var downloads = await _downloads.GetForTorrent(torrent.TorrentId);
+
+            foreach (var download in downloads)
+            {
+                if (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
+                {
+                    downloadClient.Resume();
+                }
+            }
         }
     }
 }

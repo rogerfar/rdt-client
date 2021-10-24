@@ -194,7 +194,7 @@ namespace RdtClient.Service.Services
 
                 _nextUpdate = DateTime.UtcNow.AddSeconds(updateTime);
 
-                await _torrents.Update();
+                await _torrents.UpdateRdData();
                 
                 // Re-get torrents to account for updated info
                 torrents = await _torrents.Get();
@@ -297,6 +297,7 @@ namespace RdtClient.Service.Services
                 if (download.Link == null)
                 {
                     await _downloads.UpdateError(download.DownloadId, "Download Link cannot be null");
+                    await _downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
 
                     continue;
                 }

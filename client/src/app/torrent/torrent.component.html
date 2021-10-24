@@ -27,6 +27,9 @@
         <div class="control">
           <button class="button is-primary" (click)="showRetryModal()">Retry Torrent</button>
         </div>
+        <div class="control">
+          <button class="button is-light" (click)="showUpdateSettingsModal()">Change priority</button>
+        </div>
       </div>
       <div class="field">
         <label class="label">Status</label>
@@ -39,6 +42,10 @@
       <div class="field">
         <label class="label">Hash</label>
         {{ torrent.hash }}
+      </div>
+      <div class="field">
+        <label class="label">Priority</label>
+        {{ torrent.priority || "" }}
       </div>
       <div class="field">
         <label class="label">Category</label>
@@ -439,6 +446,45 @@
         (click)="downloadRetryCancel()"
         [disabled]="downloadRetrying"
         [ngClass]="{ 'is-loading': downloadRetrying }"
+      >
+        Cancel
+      </button>
+    </footer>
+  </div>
+</div>
+
+<div class="modal" [class.is-active]="isUpdateSettingsModalActive">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Update torrent settings</p>
+      <button class="delete" aria-label="close" (click)="updateSettingsCancel()"></button>
+    </header>
+    <section class="modal-card-body">
+      <div class="field">
+        <label class="label">Priority</label>
+        <div class="control">
+          <input class="input" type="number" [(ngModel)]="updateSettingsPriority" />
+        </div>
+        <p class="help">
+          Set the priority for this torrent where 1 is the highest. When empty it will be assigned the lowest priority.
+        </p>
+      </div>
+    </section>
+    <footer class="modal-card-foot">
+      <button
+        class="button is-success"
+        (click)="updateSettingsOk()"
+        [disabled]="updating"
+        [ngClass]="{ 'is-loading': updating }"
+      >
+        Retry
+      </button>
+      <button
+        class="button"
+        (click)="updateSettingsCancel()"
+        [disabled]="updating"
+        [ngClass]="{ 'is-loading': updating }"
       >
         Cancel
       </button>

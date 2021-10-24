@@ -8,6 +8,7 @@
       <tr>
         <th>Name</th>
         <th>Category</th>
+        <th>Priority</th>
         <th>Files</th>
         <th>Downloads</th>
         <th>Size</th>
@@ -21,6 +22,9 @@
         </td>
         <td>
           {{ torrent.category }}
+        </td>
+        <td>
+          {{ torrent.priority }}
         </td>
         <td>
           {{ torrent.files.length | number }}

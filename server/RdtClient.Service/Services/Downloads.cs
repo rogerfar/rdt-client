@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using RdtClient.Data.Data;
 using Download = RdtClient.Data.Models.Data.Download;
@@ -13,7 +14,12 @@ namespace RdtClient.Service.Services
         {
             _downloadData = downloadData;
         }
-        
+
+        public async Task<List<Download>> GetForTorrent(Guid torrentId)
+        {
+            return await _downloadData.GetForTorrent(torrentId);
+        }
+
         public async Task<Download> GetById(Guid downloadId)
         {
             return await _downloadData.GetById(downloadId);

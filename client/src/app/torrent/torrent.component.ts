@@ -34,6 +34,10 @@ export class TorrentComponent implements OnInit {
   public downloadRetrying: boolean;
   public downloadRetryId: string;
 
+  public isUpdateSettingsModalActive: boolean;
+  public updateSettingsPriority: number;
+  public updating: boolean;
+
   constructor(private activatedRoute: ActivatedRoute, private router: Router, private torrentService: TorrentService) {}
 
   ngOnInit(): void {
@@ -160,6 +164,33 @@ export class TorrentComponent implements OnInit {
       (err) => {
         this.downloadRetryError = err.error;
         this.downloadRetrying = false;
+      }
+    );
+  }
+
+  public showUpdateSettingsModal(): void {
+    this.updateSettingsPriority = this.torrent.priority;
+
+    this.isUpdateSettingsModalActive = true;
+  }
+
+  public updateSettingsCancel(): void {
+    this.isUpdateSettingsModalActive = false;
+  }
+
+  public updateSettingsOk(): void {
+    this.updating = true;
+
+    this.torrent.priority = this.updateSettingsPriority;
+
+    this.torrentService.update(this.torrent).subscribe(
+      () => {
+        this.isUpdateSettingsModalActive = false;
+        this.updating = false;
+      },
+      () => {
+        this.isUpdateSettingsModalActive = false;
+        this.updating = false;
       }
     );
   }

@@ -43,7 +43,8 @@ export class TorrentService {
     downloadAction: number,
     finishedAction: number,
     downloadMinSize: number,
-    downloadManualFiles: string
+    downloadManualFiles: string,
+    priority: number
   ): Observable<void> {
     return this.http.post<void>(`/Api/Torrents/UploadMagnet`, {
       magnetLink,
@@ -52,6 +53,7 @@ export class TorrentService {
       finishedAction,
       downloadMinSize,
       downloadManualFiles,
+      priority,
     });
   }
 
@@ -61,13 +63,14 @@ export class TorrentService {
     downloadAction: number,
     finishedAction: number,
     downloadMinSize: number,
-    downloadManualFiles: string
+    downloadManualFiles: string,
+    priority: number
   ): Observable<void> {
     const formData: FormData = new FormData();
     formData.append('file', file);
     formData.append(
       'formData',
-      JSON.stringify({ category, downloadAction, finishedAction, downloadMinSize, downloadManualFiles })
+      JSON.stringify({ category, downloadAction, finishedAction, downloadMinSize, downloadManualFiles, priority })
     );
     return this.http.post<void>(`/Api/Torrents/UploadFile`, formData);
   }
@@ -103,5 +106,9 @@ export class TorrentService {
 
   public retryDownload(downloadId: string): Observable<void> {
     return this.http.post<void>(`/Api/Torrents/RetryDownload/${downloadId}`, {});
+  }
+
+  public update(torrent: Torrent): Observable<void> {
+    return this.http.put<void>(`/Api/Torrents/Update`, torrent);
   }
 }

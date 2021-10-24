@@ -21,5 +21,7 @@ namespace RdtClient.Service.Services.Downloaders
         event EventHandler<DownloadProgressEventArgs> DownloadProgress;
         Task<String> Download();
         Task Cancel();
+        Task Pause();
+        Task Resume();
     }
 }

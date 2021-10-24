@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Timers;
 using Aria2NET;
@@ -29,7 +30,12 @@ namespace RdtClient.Service.Services.Downloaders
             _uri = uri;
             _filePath = filePath;
 
-            _aria2NetClient = new Aria2NetClient(settings.Aria2cUrl, settings.Aria2cSecret);
+            var httpClient = new HttpClient
+            {
+                Timeout = TimeSpan.FromSeconds(1)
+            };
+
+            _aria2NetClient = new Aria2NetClient(settings.Aria2cUrl, settings.Aria2cSecret, httpClient);
 
             _timer = new Timer();
 
@@ -119,6 +125,40 @@ namespace RdtClient.Service.Services.Downloaders
             try
             {
                 await _aria2NetClient.RemoveDownloadResult(_gid);
+            }
+            catch
+            {
+                // ignored
+            }
+        }
+
+        public async Task Pause()
+        {
+            if (String.IsNullOrWhiteSpace(_gid))
+            {
+                return;
+            }
+
+            try
+            {
+                await _aria2NetClient.Pause(_gid);
+            }
+            catch
+            {
+                // ignored
+            }
+        }
+
+        public async Task Resume()
+        {
+            if (String.IsNullOrWhiteSpace(_gid))
+            {
+                return;
+            }
+
+            try
+            {
+                await _aria2NetClient.Unpause(_gid);
             }
             catch
             {

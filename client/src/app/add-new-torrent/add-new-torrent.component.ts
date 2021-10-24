@@ -14,6 +14,7 @@ export class AddNewTorrentComponent implements OnInit {
   private currentTorrentFile: string;
 
   public category: string;
+  public priority: number;
 
   public downloadAction: number = 0;
   public finishedAction: number = 0;
@@ -98,7 +99,8 @@ export class AddNewTorrentComponent implements OnInit {
           this.downloadAction,
           this.finishedAction,
           this.downloadMinSize,
-          downloadManualFiles
+          downloadManualFiles,
+          this.priority
         )
         .subscribe(
           () => {
@@ -117,7 +119,8 @@ export class AddNewTorrentComponent implements OnInit {
           this.downloadAction,
           this.finishedAction,
           this.downloadMinSize,
-          downloadManualFiles
+          downloadManualFiles,
+          this.priority
         )
         .subscribe(
           () => {
@@ -132,6 +135,12 @@ export class AddNewTorrentComponent implements OnInit {
       this.error = 'No magnet or file uploaded';
       this.saving = false;
     }
+  }
+
+  public onPaste(): void {
+    setTimeout(() => {
+      this.checkFiles();
+    }, 100);
   }
 
   public checkFiles(): void {

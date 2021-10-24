@@ -29,6 +29,7 @@
           [(ngModel)]="magnetLink"
           [disabled]="saving"
           (blur)="checkFiles()"
+          (paste)="onPaste()"
         ></textarea>
       </div>
     </div>
@@ -78,6 +79,16 @@
         <input class="input" type="text" maxlength="100" [(ngModel)]="category" />
       </div>
       <p class="help">The category becomes a sub-folder in your main download path.</p>
+    </div>
+
+    <div class="field">
+      <label class="label">Priority</label>
+      <div class="control">
+        <input class="input" type="number" [(ngModel)]="priority" />
+      </div>
+      <p class="help">
+        Set the priority for this torrent where 1 is the highest. When empty it will be assigned the lowest priority.
+      </p>
     </div>
   </div>
   <div fxFlex>

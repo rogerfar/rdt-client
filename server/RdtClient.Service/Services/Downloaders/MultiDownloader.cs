@@ -124,5 +124,15 @@ namespace RdtClient.Service.Services.Downloaders
 
             return Task.CompletedTask;
         }
+
+        public Task Pause()
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task Resume()
+        {
+            return Task.CompletedTask;
+        }
     }
 }

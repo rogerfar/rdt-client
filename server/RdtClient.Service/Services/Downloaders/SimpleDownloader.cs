@@ -143,5 +143,15 @@ namespace RdtClient.Service.Services.Downloaders
                 });
             }
         }
+
+        public Task Pause()
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task Resume()
+        {
+            return Task.CompletedTask;
+        }
     }
 }
