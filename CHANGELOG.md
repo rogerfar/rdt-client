@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2021-10-24
+### Added
+- Add priorty for torrents. You can set the priority when adding a new torrent. When added from Sonarr/Radarr it will assume no priority.
+- Added support for the Sonarr/Radarr/qBittorrent setPrio command. It will set the priority of a torrent to 1.
+- Added support for the Sonarr/Radarr/qBittorrent pause and resume commands. This only works with the Aria2 downloader.
+
+### Changed
+- Fixed issues when downloads get deleted when they are still being checked.
+- Improved timings and retrying of adding of downloads to Aria2. Will now try 5 times before failing.
+
 ## [1.8.9] - 2021-10-23
 ### Changed
 - Add delays between adding downloads to Aria2 to avoid Aria2 going down when adding a large amount of downloads.

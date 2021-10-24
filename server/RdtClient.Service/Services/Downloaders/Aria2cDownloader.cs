@@ -32,7 +32,7 @@ namespace RdtClient.Service.Services.Downloaders
 
             var httpClient = new HttpClient
             {
-                Timeout = TimeSpan.FromSeconds(1)
+                Timeout = TimeSpan.FromSeconds(10)
             };
 
             _aria2NetClient = new Aria2NetClient(settings.Aria2cUrl, settings.Aria2cSecret, httpClient);
