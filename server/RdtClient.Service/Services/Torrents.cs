@@ -164,12 +164,22 @@ namespace RdtClient.Service.Services
         {
             var torrent = await GetById(torrentId);
 
+            if (torrent == null)
+            {
+                return;
+            }
+
             await GetRdNetClient().Torrents.SelectFilesAsync(torrent.RdId, fileIds.ToArray());
         }
 
         public async Task CheckForLinks(Guid torrentId)
         {
             var torrent = await GetById(torrentId);
+
+            if (torrent == null)
+            {
+                return;
+            }
 
             var rdTorrent = await GetRdNetClient().Torrents.GetInfoAsync(torrent.RdId);
 
@@ -199,61 +209,63 @@ namespace RdtClient.Service.Services
         {
             var torrent = await GetById(torrentId);
 
-            if (torrent != null)
+            if (torrent == null)
             {
-                foreach (var download in torrent.Downloads)
-                {
-                    if (TorrentRunner.ActiveUnpackClients.TryRemove(download.DownloadId, out var activeUnpack))
-                    {
-                        activeUnpack.Cancel();
-                    }
+                return;
+            }
 
-                    if (TorrentRunner.ActiveDownloadClients.TryRemove(download.DownloadId, out var activeDownload))
-                    {
-                        activeDownload.Cancel();
-                    }
+            foreach (var download in torrent.Downloads)
+            {
+                if (TorrentRunner.ActiveUnpackClients.TryRemove(download.DownloadId, out var activeUnpack))
+                {
+                    activeUnpack.Cancel();
                 }
 
-                if (deleteData)
+                if (TorrentRunner.ActiveDownloadClients.TryRemove(download.DownloadId, out var activeDownload))
                 {
-                    await _torrentData.UpdateComplete(torrent.TorrentId, DateTimeOffset.UtcNow);
-                    await _downloads.DeleteForTorrent(torrent.TorrentId);
-                    await _torrentData.Delete(torrentId);
+                    activeDownload.Cancel();
                 }
+            }
 
-                if (deleteRdTorrent)
+            if (deleteData)
+            {
+                await _torrentData.UpdateComplete(torrent.TorrentId, DateTimeOffset.UtcNow);
+                await _downloads.DeleteForTorrent(torrent.TorrentId);
+                await _torrentData.Delete(torrentId);
+            }
+
+            if (deleteRdTorrent)
+            {
+                await GetRdNetClient().Torrents.DeleteAsync(torrent.RdId);
+            }
+
+            if (deleteLocalFiles)
+            {
+                var downloadPath = DownloadPath(torrent);
+                downloadPath = Path.Combine(downloadPath, torrent.RdName);
+
+                if (Directory.Exists(downloadPath))
                 {
-                    await GetRdNetClient().Torrents.DeleteAsync(torrent.RdId);
-                }
+                    var retry = 0;
 
-                if (deleteLocalFiles)
-                {
-                    var downloadPath = DownloadPath(torrent);
-                    downloadPath = Path.Combine(downloadPath, torrent.RdName);
-
-                    if (Directory.Exists(downloadPath))
+                    while (true)
                     {
-                        var retry = 0;
-
-                        while (true)
+                        try
                         {
-                            try
+                            Directory.Delete(downloadPath, true);
+
+                            break;
+                        }
+                        catch
+                        {
+                            retry++;
+
+                            if (retry >= 3)
                             {
-                                Directory.Delete(downloadPath, true);
-
-                                break;
+                                throw;
                             }
-                            catch
-                            {
-                                retry++;
 
-                                if (retry >= 3)
-                                {
-                                    throw;
-                                }
-
-                                await Task.Delay(1000);
-                            }
+                            await Task.Delay(1000);
                         }
                     }
                 }
@@ -263,7 +275,18 @@ namespace RdtClient.Service.Services
         private async Task DeleteDownload(Guid torrentId, Guid downloadId)
         {
             var torrent = await GetById(torrentId);
+
+            if (torrent == null)
+            {
+                return;
+            }
+
             var download = await _downloads.GetById(downloadId);
+
+            if (download == null)
+            {
+                return;
+            }
             
             var downloadPath = DownloadPath(torrent);
             
@@ -304,6 +327,11 @@ namespace RdtClient.Service.Services
         public async Task<String> UnrestrictLink(Guid downloadId)
         {
             var download = await _downloads.GetById(downloadId);
+
+            if (download == null)
+            {
+                throw new Exception($"Download with ID {downloadId} not found");
+            }
 
             var unrestrictedLink = await GetRdNetClient().Unrestrict.LinkAsync(download.Path);
 
@@ -387,6 +415,11 @@ namespace RdtClient.Service.Services
         public async Task RetryTorrent(Guid torrentId)
         {
             var torrent = await _torrentData.GetById(torrentId);
+
+            if (torrent == null)
+            {
+                return;
+            }
 
             var newRetryCount = torrent.RetryCount + 1;
 
@@ -498,24 +531,26 @@ namespace RdtClient.Service.Services
         {
             var torrent = await _torrentData.GetById(torrentId);
 
-            if (torrent != null)
+            if (torrent == null)
             {
-                await Update(torrent);
+                return null;
+            }
 
-                foreach (var download in torrent.Downloads)
+            await Update(torrent);
+
+            foreach (var download in torrent.Downloads)
+            {
+                if (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
                 {
-                    if (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
-                    {
-                        download.Speed = downloadClient.Speed;
-                        download.BytesTotal = downloadClient.BytesTotal;
-                        download.BytesDone = downloadClient.BytesDone;
-                    }
+                    download.Speed = downloadClient.Speed;
+                    download.BytesTotal = downloadClient.BytesTotal;
+                    download.BytesDone = downloadClient.BytesDone;
+                }
 
-                    if (TorrentRunner.ActiveUnpackClients.TryGetValue(download.DownloadId, out var unpackClient))
-                    {
-                        download.BytesTotal = unpackClient.BytesTotal;
-                        download.BytesDone = unpackClient.BytesDone;
-                    }
+                if (TorrentRunner.ActiveUnpackClients.TryGetValue(download.DownloadId, out var unpackClient))
+                {
+                    download.BytesTotal = unpackClient.BytesTotal;
+                    download.BytesDone = unpackClient.BytesDone;
                 }
             }
 

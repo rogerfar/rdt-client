@@ -104,6 +104,14 @@ namespace RdtClient.Service.Services
                     Log.Debug($"Processing active download {downloadId}: error {downloadClient.Error}");
                     var download = await _downloads.GetById(downloadId);
 
+                    if (download == null)
+                    {
+                        ActiveDownloadClients.TryRemove(downloadId, out _);
+
+                        Log.Debug($"Download with ID {downloadId} not found! Removed from queue");
+                        continue;
+                    }
+
                     if (download.RetryCount < DownloadRetryCount)
                     {
                         Log.Debug($"Processing active download {downloadId}: error {downloadClient.Error}, download retry count {download.RetryCount}/{DownloadRetryCount}, torrent retry count {download.Torrent.RetryCount}/{TorrentRetryCount}, retrying download");

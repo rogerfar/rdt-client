@@ -56,6 +56,11 @@ namespace RdtClient.Data.Data
             var dbDownload = await _dataContext.Downloads
                                                .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
+            if (dbDownload == null)
+            {
+                return;
+            }
+
             dbDownload.Link = unrestrictedLink;
 
             await _dataContext.SaveChangesAsync();
@@ -67,6 +72,11 @@ namespace RdtClient.Data.Data
         {
             var dbDownload = await _dataContext.Downloads
                                                .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+            if (dbDownload == null)
+            {
+                return;
+            }
 
             dbDownload.DownloadStarted = dateTime;
 
@@ -97,6 +107,11 @@ namespace RdtClient.Data.Data
             var dbDownload = await _dataContext.Downloads
                                                .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
+            if (dbDownload == null)
+            {
+                return;
+            }
+
             dbDownload.UnpackingQueued = dateTime;
 
             await _dataContext.SaveChangesAsync();
@@ -108,6 +123,11 @@ namespace RdtClient.Data.Data
         {
             var dbDownload = await _dataContext.Downloads
                                                .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+            if (dbDownload == null)
+            {
+                return;
+            }
 
             dbDownload.UnpackingStarted = dateTime;
 
@@ -121,6 +141,11 @@ namespace RdtClient.Data.Data
             var dbDownload = await _dataContext.Downloads
                                                .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
+            if (dbDownload == null)
+            {
+                return;
+            }
+
             dbDownload.UnpackingFinished = dateTime;
 
             await _dataContext.SaveChangesAsync();
@@ -132,6 +157,11 @@ namespace RdtClient.Data.Data
         {
             var dbDownload = await _dataContext.Downloads
                                                .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+            if (dbDownload == null)
+            {
+                return;
+            }
 
             dbDownload.Completed = dateTime;
 
@@ -145,6 +175,11 @@ namespace RdtClient.Data.Data
             var dbDownload = await _dataContext.Downloads
                                                .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
+            if (dbDownload == null)
+            {
+                return;
+            }
+
             dbDownload.Error = error;
 
             await _dataContext.SaveChangesAsync();
@@ -157,6 +192,11 @@ namespace RdtClient.Data.Data
             var dbDownload = await _dataContext.Downloads
                                                .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
+            if (dbDownload == null)
+            {
+                return;
+            }
+
             dbDownload.RetryCount = retryCount;
 
             await _dataContext.SaveChangesAsync();
@@ -168,6 +208,11 @@ namespace RdtClient.Data.Data
         {
             var dbDownload = await _dataContext.Downloads
                                                .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+            if (dbDownload == null)
+            {
+                return;
+            }
 
             dbDownload.RemoteId = remoteId;
 
