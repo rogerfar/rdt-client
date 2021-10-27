@@ -293,25 +293,19 @@ namespace RdtClient.Service.Services
                     Upspeed = speed
                 };
 
-                if (torrent.Completed.HasValue && torrent.Downloads.All(m => m.Completed.HasValue))
+                if (torrent.Completed.HasValue)
                 {
-                    // Indicates completed torrent and not seeding anymore.
-                    result.State = "pausedUP";
+                    var allDownloadsComplete = torrent.Downloads.All(m => m.Completed.HasValue);
+                    var hasDownloadsWithErrors = torrent.Downloads.Any(m => m.Error != null);
 
-                    if (torrent.Downloads.Count > 0)
+                    if (torrent.Downloads.Count == 0 || hasDownloadsWithErrors || torrent.RdStatus == RealDebridStatus.Error)
                     {
-                        var error = torrent.Downloads.FirstOrDefault(m => m.Error != null);
-
-                        if (error != null)
-                        {
-                            result.State = "error";
-                        }
+                        result.State = "error";
                     }
-                }
-
-                if (torrent.RdStatus == RealDebridStatus.Error)
-                {
-                    result.State = "error";
+                    else if (allDownloadsComplete)
+                    {
+                        result.State = "pausedUP";
+                    }
                 }
 
                 results.Add(result);
@@ -538,7 +532,7 @@ namespace RdtClient.Service.Services
             {
                 if (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
                 {
-                    downloadClient.Pause();
+                    await downloadClient.Pause();
                 }
             }
         }
@@ -558,7 +552,7 @@ namespace RdtClient.Service.Services
             {
                 if (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
                 {
-                    downloadClient.Resume();
+                    await downloadClient.Resume();
                 }
             }
         }

@@ -23,7 +23,7 @@ namespace RdtClient.Service.Services
 
             await settings.ResetCache();
             
-            settings.Clean();
+            await settings.Clean();
         }
 
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

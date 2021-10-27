@@ -33,17 +33,11 @@ namespace RdtClient.Service.Services
             {
                 try
                 {
-                    await Torrents.TorrentResetLock.WaitAsync(stoppingToken);
-
                     await torrentRunner.Tick();
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Unexpected error occurred in TorrentDownloadManager.Tick");
-                }
-                finally
-                {
-                    Torrents.TorrentResetLock.Release();
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);

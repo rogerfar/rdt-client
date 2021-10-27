@@ -8,6 +8,7 @@ using Aria2NET;
 using RdtClient.Data.Data;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.Internal;
+using RdtClient.Service.Helpers;
 
 namespace RdtClient.Service.Services
 {
@@ -54,7 +55,8 @@ namespace RdtClient.Service.Services
             var testFile = $"{path}/test.txt";
 
             await File.WriteAllTextAsync(testFile, "RealDebridClient Test File, you can remove this file.");
-            File.Delete(testFile);
+            
+            await FileHelper.Delete(testFile);
         }
 
         public async Task<Double> TestDownloadSpeed(CancellationToken cancellationToken)
@@ -63,10 +65,7 @@ namespace RdtClient.Service.Services
 
             var testFilePath = Path.Combine(downloadPath, "testDefault.rar");
 
-            if (File.Exists(testFilePath))
-            {
-                File.Delete(testFilePath);
-            }
+            await FileHelper.Delete(testFilePath);
 
             var download = new Download
             {
@@ -90,23 +89,20 @@ namespace RdtClient.Service.Services
                 
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    downloadClient.Cancel();
+                    await downloadClient.Cancel();
                 }
 
                 if (downloadClient.BytesDone > 1024 * 1024 * 50)
                 {
-                    downloadClient.Cancel();
+                    await downloadClient.Cancel();
 
                     break;
                 }
             }
 
-            if (File.Exists(testFilePath))
-            {
-                File.Delete(testFilePath);
-            }
+            await FileHelper.Delete(testFilePath);
 
-            Clean();
+            await Clean();
 
             return downloadClient.Speed;
         }
@@ -117,10 +113,7 @@ namespace RdtClient.Service.Services
 
             var testFilePath = Path.Combine(downloadPath, "test.tmp");
 
-            if (File.Exists(testFilePath))
-            {
-                File.Delete(testFilePath);
-            }
+            await FileHelper.Delete(testFilePath);
 
             const Int32 testFileSize = 64 * 1024 * 1024;
 
@@ -147,10 +140,7 @@ namespace RdtClient.Service.Services
             
             fileStream.Close();
 
-            if (File.Exists(testFilePath))
-            {
-                File.Delete(testFilePath);
-            }
+            await FileHelper.Delete(testFilePath);
 
             return writeSpeed;
         }
@@ -162,7 +152,7 @@ namespace RdtClient.Service.Services
             return await client.GetVersion();
         }
 
-        public void Clean()
+        public async Task Clean()
         {
             try
             {
@@ -174,7 +164,7 @@ namespace RdtClient.Service.Services
 
                     foreach (var file in files)
                     {
-                        File.Delete(file);
+                        await FileHelper.Delete(file);
                     }
                 }
             }

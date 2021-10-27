@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Timers;
 using Aria2NET;
 using RdtClient.Data.Models.Internal;
 
@@ -20,8 +20,7 @@ namespace RdtClient.Service.Services.Downloaders
         private readonly String _filePath;
 
         private readonly Aria2NetClient _aria2NetClient;
-        private readonly Timer _timer;
-
+        
         private String _gid;
 
         public Aria2cDownloader(String gid, String uri, String filePath, DbSettings settings)
@@ -35,14 +34,7 @@ namespace RdtClient.Service.Services.Downloaders
                 Timeout = TimeSpan.FromSeconds(10)
             };
 
-            _aria2NetClient = new Aria2NetClient(settings.Aria2cUrl, settings.Aria2cSecret, httpClient);
-
-            _timer = new Timer();
-
-            _timer.Elapsed += OnTimedEvent;
-            
-            _timer.Interval = 1000;
-            _timer.Enabled = false;
+            _aria2NetClient = new Aria2NetClient(settings.Aria2cUrl, settings.Aria2cSecret, httpClient, 10);
         }
         
         public async Task<String> Download()
@@ -50,16 +42,11 @@ namespace RdtClient.Service.Services.Downloaders
             var path = Path.GetDirectoryName(_filePath);
             var fileName = Path.GetFileName(_filePath);
 
-            if (_gid != null)
+            var isAlreadyAdded = await CheckIfAdded();
+
+            if (isAlreadyAdded)
             {
-                try
-                {
-                    await _aria2NetClient.TellStatus(_gid);
-                }
-                catch
-                {
-                    _gid = null;
-                }
+                throw new Exception($"The download link {_uri} has already been added to Aria2");
             }
 
             var retryCount = 0;
@@ -67,6 +54,20 @@ namespace RdtClient.Service.Services.Downloaders
             {
                 try
                 {
+                    if (_gid != null)
+                    {
+                        try
+                        {
+                            await _aria2NetClient.TellStatus(_gid);
+
+                            return _gid;
+                        }
+                        catch
+                        {
+                            _gid = null;
+                        }
+                    }
+                    
                     _gid ??= await _aria2NetClient.AddUri(new List<String>
                                                           {
                                                               _uri
@@ -81,7 +82,9 @@ namespace RdtClient.Service.Services.Downloaders
                                                               }
                                                           });
 
-                    break;
+                    await _aria2NetClient.TellStatus(_gid);
+
+                    return _gid;
                 }
                 catch
                 {
@@ -95,19 +98,10 @@ namespace RdtClient.Service.Services.Downloaders
                     retryCount++;
                 }
             }
-
-            // Add a delay to prevent sending too many Add requests to Aria2 at the same time.
-            await Task.Delay(1000);
-
-            _timer.Start();
-
-            return _gid;
         }
 
         public async Task Cancel()
         {
-            _timer.Stop();
-
             if (String.IsNullOrWhiteSpace(_gid))
             {
                 return;
@@ -166,46 +160,82 @@ namespace RdtClient.Service.Services.Downloaders
             }
         }
 
-        private async void OnTimedEvent(Object source, ElapsedEventArgs e)
+        public async Task Update(IEnumerable<DownloadStatusResult> allDownloads)
         {
             if (_gid == null)
             {
                 return;
             }
 
-            try
+            var download = allDownloads.FirstOrDefault(m => m.Gid == _gid);
+
+            if (download == null)
             {
-                var status = await _aria2NetClient.TellStatus(_gid);
-
-                if (!String.IsNullOrWhiteSpace(status.ErrorMessage) || status.Status == "error")
-                {
-                    await Cancel();
-                    DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs
-                    {
-                        Error = $"{status.ErrorCode}: {status.ErrorMessage}"
-                    });
-                    return;
-                }
-
-                if (status.Status == "complete" || status.Status == "removed")
-                {
-                    await Cancel();
-                    DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs());
-                    return;
-                }
-
-                DownloadProgress?.Invoke(this, new DownloadProgressEventArgs
-                {
-                    BytesDone = status.CompletedLength,
-                    BytesTotal = status.TotalLength,
-                    Speed = status.DownloadSpeed
-                });
+                return;
             }
-            catch
+
+            if (!String.IsNullOrWhiteSpace(download.ErrorMessage) || download.Status == "error")
             {
                 await Cancel();
-                DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs());
+                DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs
+                {
+                    Error = $"{download.ErrorCode}: {download.ErrorMessage}"
+                });
+                return;
             }
+
+            if (download.Status == "complete" || download.Status == "removed")
+            {
+                await Cancel();
+
+                var retryCount = 0;
+                while (true)
+                {
+                    if (retryCount >= 10)
+                    {
+                        DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs
+                        {
+                            Error = $"File not found at {_filePath}"
+                        });
+                        break;
+                    }
+
+                    if (File.Exists(_filePath))
+                    {
+                        DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs());
+                        break;
+                    }
+
+                    await Task.Delay(1000 * retryCount);
+                    retryCount++;
+                }
+                return;
+            }
+
+            DownloadProgress?.Invoke(this, new DownloadProgressEventArgs
+            {
+                BytesDone = download.CompletedLength,
+                BytesTotal = download.TotalLength,
+                Speed = download.DownloadSpeed
+            });
+        }
+
+        private async Task<Boolean> CheckIfAdded()
+        {
+            var allDownloads = await _aria2NetClient.TellAll();
+
+            foreach (var download in allDownloads.Where(m => m.Files != null))
+            {
+                foreach (var file in download.Files.Where(m => m.Uris != null))
+                {
+                    if (file.Uris.Any(uri => uri.Uri == _uri))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
     }
 }

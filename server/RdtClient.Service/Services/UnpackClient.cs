@@ -122,20 +122,7 @@ namespace RdtClient.Service.Services
                     }
                 }
 
-                var retryCount = 0;
-                while (File.Exists(filePath) && retryCount < 10)
-                {
-                    retryCount++;
-
-                    try
-                    {
-                        File.Delete(filePath);
-                    }
-                    catch
-                    {
-                        await Task.Delay(1000);
-                    }
-                }
+                await FileHelper.Delete(filePath);
             }
             catch (Exception ex)
             {

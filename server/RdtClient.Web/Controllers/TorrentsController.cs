@@ -159,7 +159,7 @@ namespace RdtClient.Web.Controllers
         [Route("Retry/{torrentId:guid}")]
         public async Task<ActionResult> Retry(Guid torrentId)
         {
-            await _torrents.RetryTorrent(torrentId);
+            await _torrents.RetryTorrent(torrentId, 0);
 
             return Ok();
         }

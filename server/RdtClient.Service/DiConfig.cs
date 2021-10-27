@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using RdtClient.Service.Services;
+using RdtClient.Service.Services.TorrentClients;
 
 namespace RdtClient.Service
 {
@@ -11,6 +12,7 @@ namespace RdtClient.Service
             services.AddScoped<Downloads>();
             services.AddScoped<QBittorrent>();
             services.AddScoped<RemoteService>();
+            services.AddScoped<RealDebridTorrentClient>();
             services.AddScoped<Settings>();
             services.AddScoped<Torrents>();
             services.AddScoped<TorrentRunner>();

@@ -39,7 +39,7 @@ export class TorrentStatusPipe implements PipeTransform {
         if (allSpeeds > 0) {
           speed = this.pipe.transform(allSpeeds, 'filesize');
 
-          return `Downloading (${progress.toFixed(2)}% - ${speed}/s)`;
+          return `Downloading file ${downloading.length}/${torrent.downloads.length} (${progress.toFixed(2)}% - ${speed}/s)`;
         }
       }
 
@@ -57,7 +57,7 @@ export class TorrentStatusPipe implements PipeTransform {
         let allSpeeds = unpacking.sum((m) => m.speed) / unpacking.length;
 
         if (allSpeeds > 0) {
-          return `Extracting (${progress.toFixed(2)}%)`;
+          return `Extracting file ${unpacking.length}/${torrent.downloads.length} (${progress.toFixed(2)}%)`;
         }
       }
 

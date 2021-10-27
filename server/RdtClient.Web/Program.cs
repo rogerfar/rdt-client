@@ -88,9 +88,15 @@ namespace RdtClient.Web
             Log.Logger = new LoggerConfiguration()
                          .Enrich.FromLogContext()
                          .Enrich.WithExceptionDetails()
-                         .WriteTo.File(appSettings.Logging.File.Path, rollOnFileSizeLimit: true, fileSizeLimitBytes: appSettings.Logging.File.FileSizeLimitBytes, retainedFileCountLimit: appSettings.Logging.File.MaxRollingFiles)
+                         .WriteTo.File(appSettings.Logging.File.Path, 
+                                       rollOnFileSizeLimit: true, 
+                                       fileSizeLimitBytes: appSettings.Logging.File.FileSizeLimitBytes, 
+                                       retainedFileCountLimit: appSettings.Logging.File.MaxRollingFiles,
+                                       outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
                          .WriteTo.Console()
                          .MinimumLevel.ControlledBy(LoggingLevelSwitch)
+                         .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                         .MinimumLevel.Override("System.Net.Http", LogEventLevel.Warning)
                          .CreateLogger();
 
             Serilog.Debugging.SelfLog.Enable(msg =>

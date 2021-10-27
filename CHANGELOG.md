@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.1] - 2021-10-24
+### Added
+- Added automatic torrent retrying when RealDebrid reports an error on the torrent.
+
+### Changed
+- Changed how Aria2 is polled, this will result in less RPC calls for a large amount of torrents.
+- Add more and better logging for the torrent runner in Debug.
+- Add Aria2 checks to see if links get added properly.
+- Update Aria2.NET and RD.NET, added automatic retrying in case of server failures.
+
 ## [1.9.0] - 2021-10-24
 ### Added
 - Add priorty for torrents. You can set the priority when adding a new torrent. When added from Sonarr/Radarr it will assume no priority.

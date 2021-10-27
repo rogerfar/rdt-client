@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Threading.Tasks;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.Internal;
@@ -15,7 +14,7 @@ namespace RdtClient.Service.Services
         private readonly Download _download;
         private readonly Torrent _torrent;
 
-        private IDownloader _downloader;
+        public IDownloader Downloader;
 
         public DownloadClient(Download download, Torrent torrent, String destinationPath)
         {
@@ -23,6 +22,8 @@ namespace RdtClient.Service.Services
             _torrent = torrent;
             _destinationPath = destinationPath;
         }
+
+        public String Type { get; set; }
 
         public Boolean Finished { get; private set; }
 
@@ -47,12 +48,11 @@ namespace RdtClient.Service.Services
                     throw new Exception("Invalid download path");
                 }
                 
-                if (File.Exists(filePath))
-                {
-                    File.Delete(filePath);
-                }
+                await FileHelper.Delete(filePath);
 
-                _downloader = settings.DownloadClient switch
+                Type = settings.DownloadClient;
+
+                Downloader = settings.DownloadClient switch
                 {
                     "Simple" => new SimpleDownloader(_download.Link, filePath),
                     "MultiPart" => new MultiDownloader(_download.Link, filePath, settings),
@@ -60,20 +60,24 @@ namespace RdtClient.Service.Services
                     _ => throw new Exception($"Unknown download client {settings.DownloadClient}")
                 };
 
-                _downloader.DownloadComplete += (_, args) =>
+                Downloader.DownloadComplete += (_, args) =>
                 {
                     Finished = true;
                     Error = args.Error;
                 };
 
-                _downloader.DownloadProgress += (_, args) =>
+                Downloader.DownloadProgress += (_, args) =>
                 {
                     Speed = args.Speed;
                     BytesDone = args.BytesDone;
                     BytesTotal = args.BytesTotal;
                 };
 
-                return await _downloader.Download();
+                var result = await Downloader.Download();
+
+                await Task.Delay(1000);
+
+                return result;
             }
             catch (Exception ex)
             {
@@ -86,29 +90,29 @@ namespace RdtClient.Service.Services
 
         public async Task Cancel()
         {
-            if (_downloader == null)
+            if (Downloader == null)
             {
                 return;
             }
-            await _downloader.Cancel();
+            await Downloader.Cancel();
         }
 
         public async Task Pause()
         {
-            if (_downloader == null)
+            if (Downloader == null)
             {
                 return;
             }
-            await _downloader.Pause();
+            await Downloader.Pause();
         }
 
         public async Task Resume()
         {
-            if (_downloader == null)
+            if (Downloader == null)
             {
                 return;
             }
-            await _downloader.Resume();
+            await Downloader.Resume();
         }
     }
 }

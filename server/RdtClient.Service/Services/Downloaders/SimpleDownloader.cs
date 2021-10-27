@@ -28,9 +28,9 @@ namespace RdtClient.Service.Services.Downloaders
             _filePath = filePath;
         }
 
-        public async Task<String> Download()
+        public Task<String> Download()
         {
-            Task.Run(async () =>
+            _ = Task.Run(async () =>
             {
                 await StartDownloadTask();
             });
