@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.Internal;
+using Serilog;
 
 namespace RdtClient.Data.Data
 {
@@ -26,8 +27,24 @@ namespace RdtClient.Data.Data
         {
             var allSettings = await _dataContext.Settings.AsNoTracking().ToListAsync();
 
-            String GetString(String name) => allSettings.FirstOrDefault(m => m.SettingId == name)?.Value;
-            Int32 GetInt32(String name) => Int32.Parse(allSettings.FirstOrDefault(m => m.SettingId == name)?.Value ?? "0");
+            String GetString(String name)
+            {
+                return allSettings.FirstOrDefault(m => m.SettingId == name)?.Value;
+            }
+
+            Int32 GetInt32(String name)
+            {
+                var strVal = GetString(name);
+
+                if (!Int32.TryParse(strVal, out var intVal))
+                {
+                    Log.Error("Unable to parse setting {name} to Int32", name);
+                    return 0;
+                }
+
+                return intVal;
+
+            }
 
             Get = new DbSettings
             {

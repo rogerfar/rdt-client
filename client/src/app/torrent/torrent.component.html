@@ -464,7 +464,7 @@
       <div class="field">
         <label class="label">Priority</label>
         <div class="control">
-          <input class="input" type="number" [(ngModel)]="updateSettingsPriority" />
+          <input class="input" type="number" step="1" [(ngModel)]="updateSettingsPriority" />
         </div>
         <p class="help">
           Set the priority for this torrent where 1 is the highest. When empty it will be assigned the lowest priority.

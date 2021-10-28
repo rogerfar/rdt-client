@@ -354,6 +354,17 @@ namespace RdtClient.Service.Services
 
                     await UpdateRdData(torrent);
                 }
+
+                foreach (var torrent in torrents)
+                {
+                    var rdTorrent = rdTorrents.FirstOrDefault(m => m.Id == torrent.RdId);
+
+                    if (rdTorrent == null)
+                    {
+                        await _downloads.DeleteForTorrent(torrent.TorrentId);
+                        await _torrentData.Delete(torrent.TorrentId);
+                    }
+                }
             }
             finally
             {
@@ -649,7 +660,7 @@ namespace RdtClient.Service.Services
                     "error" => RealDebridStatus.Error,
                     "virus" => RealDebridStatus.Error,
                     "compressing" => RealDebridStatus.Downloading,
-                    "uploading" => RealDebridStatus.Downloading,
+                    "uploading" => RealDebridStatus.Uploading,
                     "dead" => RealDebridStatus.Error,
                     _ => RealDebridStatus.Error
                 };

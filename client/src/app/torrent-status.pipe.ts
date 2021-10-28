@@ -99,6 +99,8 @@ export class TorrentStatusPipe implements PipeTransform {
         return `Torrent error: ${torrent.rdStatusRaw}`;
       case RealDebridStatus.Finished:
         return `Torrent finished, waiting to download`;
+      case RealDebridStatus.Uploading:
+        return `Torrent uploading`;
       default:
         return 'Unknown status';
     }

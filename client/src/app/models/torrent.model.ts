@@ -56,6 +56,7 @@ export enum RealDebridStatus {
   WaitingForFileSelection = 1,
   Downloading = 2,
   Finished = 3,
+  Uploading = 4,
 
   Error = 99,
 }

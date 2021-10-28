@@ -52,7 +52,7 @@
       <div class="control">
         <div class="field has-addons" style="margin-bottom: 0">
           <div class="control is-expanded">
-            <input class="input" type="number" max="1000" min="0" [(ngModel)]="downloadMinSize" />
+            <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="downloadMinSize" />
           </div>
           <div class="control">
             <a class="button is-static">MB</a>
@@ -84,7 +84,7 @@
     <div class="field">
       <label class="label">Priority</label>
       <div class="control">
-        <input class="input" type="number" [(ngModel)]="priority" />
+        <input class="input" type="number"  step="1" [(ngModel)]="priority" />
       </div>
       <p class="help">
         Set the priority for this torrent where 1 is the highest. When empty it will be assigned the lowest priority.
