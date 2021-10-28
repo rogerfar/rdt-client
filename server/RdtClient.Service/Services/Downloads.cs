@@ -89,17 +89,7 @@ namespace RdtClient.Service.Services
         {
             await _downloadData.DeleteForTorrent(torrentId);
         }
-
-        public async Task UpdateDownload(Guid downloadId)
-        {
-            await _downloadData.Download(downloadId);
-        }
-
-        public async Task UpdateUnpack(Guid downloadId)
-        {
-            await _downloadData.Unpack(downloadId);
-        }
-
+        
         public async Task Reset(Guid downloadId)
         {
             await _downloadData.Reset(downloadId);

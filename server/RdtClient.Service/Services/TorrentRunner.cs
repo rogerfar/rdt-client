@@ -179,7 +179,7 @@ namespace RdtClient.Service.Services
                             Log($"Retrying download", download, download.Torrent);
 
                             await _downloads.UpdateRetryCount(downloadId, download.RetryCount + 1);
-                            await _downloads.UpdateDownload(downloadId);
+                            await _downloads.Reset(downloadId);
                         }
                         else if (download.Torrent.RetryCount < TorrentRetryCount)
                         {
@@ -549,47 +549,6 @@ namespace RdtClient.Service.Services
 
                         await _torrents.CheckForLinks(torrent.TorrentId);
                     }
-
-                    // If the torrent has any files that need starting to be downloaded, download them.
-                    var downloadsPending = torrent.Downloads
-                                                  .Where(m => m.Completed == null &&
-                                                              m.DownloadStarted == null &&
-                                                              m.DownloadFinished == null &&
-                                                              m.Error == null)
-                                                  .OrderBy(m => m.Added)
-                                                  .ToList();
-
-                    if (downloadsPending.Count > 0)
-                    {
-                        Log($"Found {downloadsPending.Count} downloads pending", torrent);
-
-                        foreach (var download in downloadsPending)
-                        {
-                            Log($"Marking to download", download, torrent);
-
-                            await _downloads.UpdateDownload(download.DownloadId);
-                        }
-                    }
-
-                    // If all files are finished downloading, move to the unpacking step.
-                    var unpackingPending = torrent.Downloads
-                                                  .Where(m => m.Completed == null &&
-                                                              m.DownloadFinished != null &&
-                                                              m.UnpackingStarted == null &&
-                                                              m.UnpackingFinished == null)
-                                                  .ToList();
-
-                    if (unpackingPending.Count > 0)
-                    {
-                        Log($"Found {unpackingPending.Count} unpacks pending", torrent);
-
-                        foreach (var download in unpackingPending)
-                        {
-                            Log($"Marking to unpack", download, torrent);
-
-                            await _downloads.UpdateUnpack(download.DownloadId);
-                        }
-                    }
                 }
 
                 // Check if torrent is complete
@@ -597,7 +556,7 @@ namespace RdtClient.Service.Services
                 {
                     var allComplete = torrent.Downloads.Count(m => m.Completed != null);
 
-                    if (allComplete > 0)
+                    if (allComplete == torrent.Downloads.Count)
                     {
                         Log($"All downloads complete, marking torrent as complete", torrent);
 

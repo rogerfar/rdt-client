@@ -46,12 +46,15 @@ namespace RdtClient.Service.Services.Downloaders
             var fileName = Path.GetFileName(_filePath);
 
             _logger.Debug($"Starting download of {_uri}, writing to path: {path}, fileName: {fileName}");
-            
-            var isAlreadyAdded = await CheckIfAdded();
 
-            if (isAlreadyAdded)
+            if (String.IsNullOrWhiteSpace(_gid))
             {
-                throw new Exception($"The download link {_uri} has already been added to Aria2");
+                var isAlreadyAdded = await CheckIfAdded();
+
+                if (isAlreadyAdded)
+                {
+                    throw new Exception($"The download link {_uri} has already been added to Aria2");
+                }
             }
 
             var retryCount = 0;

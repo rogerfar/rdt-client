@@ -22,7 +22,8 @@ export class TorrentStatusPipe implements PipeTransform {
         return 'Finished';
       }
 
-      const downloading = torrent.downloads.where((m) => m.downloadStarted && !m.downloadFinished);
+      const downloading = torrent.downloads.where((m) => m.downloadStarted && !m.downloadFinished && m.bytesDone > 0);
+      const downloaded = torrent.downloads.where((m) => m.downloadFinished != null);
 
       if (downloading.length > 0) {
         const bytesDone = downloading.sum((m) => m.bytesDone);
@@ -33,17 +34,19 @@ export class TorrentStatusPipe implements PipeTransform {
           progress = 0;
         }
 
-        let allSpeeds = downloading.sum((m) => m.speed) / downloading.length;
+        let allSpeeds = downloading.sum((m) => m.speed);
 
         let speed: string | string[] = '0';
-        if (allSpeeds > 0) {
-          speed = this.pipe.transform(allSpeeds, 'filesize');
 
-          return `Downloading file ${downloading.length}/${torrent.downloads.length} (${progress.toFixed(2)}% - ${speed}/s)`;
-        }
+        speed = this.pipe.transform(allSpeeds, 'filesize');
+
+        return `Downloading file ${downloading.length + downloaded.length}/${
+          torrent.downloads.length
+        } (${progress.toFixed(2)}% - ${speed}/s)`;
       }
 
-      const unpacking = torrent.downloads.where((m) => m.unpackingStarted && !m.unpackingFinished);
+      const unpacking = torrent.downloads.where((m) => m.unpackingStarted && !m.unpackingFinished && m.bytesDone > 0);
+      const unpacked = torrent.downloads.where((m) => m.unpackingFinished != null);
 
       if (unpacking.length > 0) {
         const bytesDone = unpacking.sum((m) => m.bytesDone);
@@ -54,11 +57,9 @@ export class TorrentStatusPipe implements PipeTransform {
           progress = 0;
         }
 
-        let allSpeeds = unpacking.sum((m) => m.speed) / unpacking.length;
-
-        if (allSpeeds > 0) {
-          return `Extracting file ${unpacking.length}/${torrent.downloads.length} (${progress.toFixed(2)}%)`;
-        }
+        return `Extracting file ${unpacking.length + unpacked.length}/${torrent.downloads.length} (${progress.toFixed(
+          2
+        )}%)`;
       }
 
       const queuedForUnpacking = torrent.downloads.where((m) => m.unpackingQueued && !m.unpackingStarted);
@@ -73,13 +74,9 @@ export class TorrentStatusPipe implements PipeTransform {
         return `Queued for downloading`;
       }
 
-      const unpacked = torrent.downloads.where((m) => m.unpackingFinished != null);
-
       if (unpacked.length > 0) {
         return `Files unpacked`;
       }
-
-      const downloaded = torrent.downloads.where((m) => m.downloadFinished != null);
 
       if (downloaded.length > 0) {
         return `Files downloaded to host`;

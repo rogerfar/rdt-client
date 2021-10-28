@@ -242,40 +242,6 @@ namespace RdtClient.Data.Data
             await TorrentData.VoidCache();
         }
 
-        public async Task Download(Guid downloadId)
-        {
-            var dbDownload = await _dataContext.Downloads
-                                               .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
-
-            dbDownload.DownloadStarted = null;
-            dbDownload.DownloadFinished = null;
-            dbDownload.UnpackingQueued = null;
-            dbDownload.UnpackingStarted = null;
-            dbDownload.UnpackingFinished = null;
-            dbDownload.Completed = null;
-            dbDownload.Error = null;
-
-            await _dataContext.SaveChangesAsync();
-
-            await TorrentData.VoidCache();
-        }
-
-        public async Task Unpack(Guid downloadId)
-        {
-            var dbDownload = await _dataContext.Downloads
-                                               .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
-
-            dbDownload.UnpackingQueued = DateTimeOffset.UtcNow;
-            dbDownload.UnpackingStarted = null;
-            dbDownload.UnpackingFinished = null;
-            dbDownload.Completed = null;
-            dbDownload.Error = null;
-
-            await _dataContext.SaveChangesAsync();
-
-            await TorrentData.VoidCache();
-        }
-
         public async Task Reset(Guid downloadId)
         {
             var dbDownload = await _dataContext.Downloads
