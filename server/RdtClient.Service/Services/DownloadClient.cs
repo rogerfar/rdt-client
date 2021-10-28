@@ -63,7 +63,7 @@ namespace RdtClient.Service.Services
                 Downloader.DownloadComplete += (_, args) =>
                 {
                     Finished = true;
-                    Error = args.Error;
+                    Error ??= args.Error;
                 };
 
                 Downloader.DownloadProgress += (_, args) =>
@@ -74,13 +74,18 @@ namespace RdtClient.Service.Services
                 };
 
                 var result = await Downloader.Download();
-
+                
                 await Task.Delay(1000);
 
                 return result;
             }
             catch (Exception ex)
             {
+                if (Downloader != null)
+                {
+                    await Downloader.Cancel();
+                }
+
                 Error = $"An unexpected error occurred preparing download {_download.Link} for torrent {_torrent.RdName}: {ex.Message}";
                 Finished = true;
 

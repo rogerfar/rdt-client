@@ -184,8 +184,8 @@ namespace RdtClient.Service.Services
                         {
                             Log($"Retrying download", download, download.Torrent);
 
-                            await _downloads.UpdateRetryCount(downloadId, download.RetryCount + 1);
                             await _downloads.Reset(downloadId);
+                            await _downloads.UpdateRetryCount(downloadId, download.RetryCount + 1);
                         }
                         else if (download.Torrent.RetryCount < TorrentRetryCount)
                         {

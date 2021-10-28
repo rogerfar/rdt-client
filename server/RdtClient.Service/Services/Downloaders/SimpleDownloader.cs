@@ -41,8 +41,8 @@ namespace RdtClient.Service.Services.Downloaders
             {
                 await StartDownloadTask();
             });
-
-            return null;
+            
+            return Task.FromResult<String>(null);
         }
 
         public Task Cancel()
@@ -135,6 +135,11 @@ namespace RdtClient.Service.Services.Downloaders
                     {
                         await Task.Delay(1000);
                     }
+                }
+
+                if (_cancelled)
+                {
+                    throw new Exception("Download cancelled");
                 }
 
                 if (timeout <= DateTimeOffset.UtcNow)
