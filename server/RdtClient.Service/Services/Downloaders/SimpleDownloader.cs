@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace RdtClient.Service.Services.Downloaders
 {
@@ -22,14 +23,20 @@ namespace RdtClient.Service.Services.Downloaders
         private Int64 _bytesLastUpdate;
         private DateTime _nextUpdate;
 
+        private readonly ILogger _logger;
+
         public SimpleDownloader(String uri, String filePath)
         {
+            _logger = Log.ForContext<Aria2cDownloader>();
+
             _uri = uri;
             _filePath = filePath;
         }
 
         public Task<String> Download()
         {
+            _logger.Debug($"Starting download of {_uri}, writing to path: {_filePath}");
+
             _ = Task.Run(async () =>
             {
                 await StartDownloadTask();
@@ -40,6 +47,8 @@ namespace RdtClient.Service.Services.Downloaders
 
         public Task Cancel()
         {
+            _logger.Debug($"Cancelling download {_uri}");
+
             _cancelled = true;
 
             return Task.CompletedTask;

@@ -4,7 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.9.1] - 2021-10-24
+## [1.9.2] - 2021-10-27
+### Changed
+- Fixed issue where not the correct torrent was used for a download.
+
+## [1.9.1] - 2021-10-27
 ### Added
 - Added automatic torrent retrying when RealDebrid reports an error on the torrent.
 

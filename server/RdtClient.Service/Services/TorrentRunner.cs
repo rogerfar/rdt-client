@@ -295,10 +295,10 @@ namespace RdtClient.Service.Services
             foreach (var torrent in torrents)
             {
                 // Check if there are any downloads that are queued and can be started.
-                var queuedDownloads = torrents.SelectMany(m => m.Downloads)
-                                              .Where(m => m.Completed == null && m.DownloadQueued != null && m.DownloadStarted == null && m.Error == null)
-                                              .OrderBy(m => m.DownloadQueued)
-                                              .ToList();
+                var queuedDownloads = torrent.Downloads
+                                             .Where(m => m.Completed == null && m.DownloadQueued != null && m.DownloadStarted == null && m.Error == null)
+                                             .OrderBy(m => m.DownloadQueued)
+                                             .ToList();
 
                 foreach (var download in queuedDownloads)
                 {
@@ -374,10 +374,10 @@ namespace RdtClient.Service.Services
                 }
 
                 // Check if there are any unpacks that are queued and can be started.
-                var queuedUnpacks = torrents.SelectMany(m => m.Downloads)
-                                            .Where(m => m.Completed == null && m.UnpackingQueued != null && m.UnpackingStarted == null && m.Error == null)
-                                            .OrderBy(m => m.DownloadQueued)
-                                            .ToList();
+                var queuedUnpacks = torrent.Downloads
+                                           .Where(m => m.Completed == null && m.UnpackingQueued != null && m.UnpackingStarted == null && m.Error == null)
+                                           .OrderBy(m => m.DownloadQueued)
+                                           .ToList();
 
                 foreach (var download in queuedUnpacks)
                 {

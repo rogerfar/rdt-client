@@ -4,6 +4,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Downloader;
 using RdtClient.Data.Models.Internal;
+using Serilog;
 
 namespace RdtClient.Service.Services.Downloaders
 {
@@ -16,8 +17,12 @@ namespace RdtClient.Service.Services.Downloaders
         private readonly String _filePath;
         private readonly String _uri;
 
+        private readonly ILogger _logger;
+
         public MultiDownloader(String uri, String filePath, DbSettings settings)
         {
+            _logger = Log.ForContext<MultiDownloader>();
+
             _uri = uri;
             _filePath = filePath;
 
@@ -113,6 +118,8 @@ namespace RdtClient.Service.Services.Downloaders
 
         public async Task<String> Download()
         {
+            _logger.Debug($"Starting download of {_uri}, writing to path: {_filePath}");
+
             await _downloadService.DownloadFileTaskAsync(_uri, _filePath);
 
             return null;
@@ -120,6 +127,8 @@ namespace RdtClient.Service.Services.Downloaders
 
         public Task Cancel()
         {
+            _logger.Debug($"Cancelling download {_uri}");
+
             _downloadService.CancelAsync();
 
             return Task.CompletedTask;
