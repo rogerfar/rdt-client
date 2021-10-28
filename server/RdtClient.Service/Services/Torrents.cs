@@ -27,6 +27,8 @@ namespace RdtClient.Service.Services
         
         private readonly ITorrentClient _torrentClient;
 
+        public static readonly SemaphoreSlim TorrentResetLock = new(1, 1);
+
         public Torrents(ILogger<Torrents> logger,
                         TorrentData torrentData, 
                         Downloads downloads,
@@ -219,6 +221,8 @@ namespace RdtClient.Service.Services
 
             Log($"Deleting", torrent);
 
+            await UpdateComplete(torrentId, DateTimeOffset.UtcNow);
+
             foreach (var download in torrent.Downloads)
             {
                 while (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
@@ -359,59 +363,82 @@ namespace RdtClient.Service.Services
 
         public async Task RetryTorrent(Guid torrentId, Int32 retryCount)
         {
-            var torrent = await _torrentData.GetById(torrentId);
+            await TorrentResetLock.WaitAsync();
 
-            if (torrent == null)
+            try
             {
-                return;
-            }
+                var torrent = await _torrentData.GetById(torrentId);
 
-            Log($"Retrying Torrent", torrent);
-
-            foreach (var download in torrent.Downloads)
-            {
-                while (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
+                if (torrent == null)
                 {
-                    await downloadClient.Cancel();
-
-                    await Task.Delay(100);
+                    return;
                 }
 
-                while (TorrentRunner.ActiveUnpackClients.TryGetValue(download.DownloadId, out var unpackClient))
+                Log($"Retrying Torrent", torrent);
+
+                await UpdateComplete(torrent.TorrentId, DateTimeOffset.Now);
+
+                foreach (var download in torrent.Downloads)
                 {
-                    unpackClient.Cancel();
-
-                    await Task.Delay(100);
+                    await _downloads.UpdateError(download.DownloadId, null);
+                    await _downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.Now);
                 }
+
+                foreach (var download in torrent.Downloads)
+                {
+                    while (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
+                    {
+                        await downloadClient.Cancel();
+
+                        await Task.Delay(100);
+                    }
+
+                    while (TorrentRunner.ActiveUnpackClients.TryGetValue(download.DownloadId, out var unpackClient))
+                    {
+                        unpackClient.Cancel();
+
+                        await Task.Delay(100);
+                    }
+                }
+
+                await Delete(torrentId, true, true, true);
+
+                if (String.IsNullOrWhiteSpace(torrent.FileOrMagnet))
+                {
+                    throw new Exception($"Cannot re-add this torrent, original magnet or file not found");
+                }
+
+                Torrent newTorrent;
+
+                if (torrent.IsFile)
+                {
+                    var bytes = Convert.FromBase64String(torrent.FileOrMagnet);
+
+                    newTorrent = await UploadFile(bytes,
+                                                  torrent.Category,
+                                                  torrent.DownloadAction,
+                                                  torrent.FinishedAction,
+                                                  torrent.DownloadMinSize,
+                                                  torrent.DownloadManualFiles,
+                                                  torrent.Priority);
+                }
+                else
+                {
+                    newTorrent = await UploadMagnet(torrent.FileOrMagnet,
+                                                    torrent.Category,
+                                                    torrent.DownloadAction,
+                                                    torrent.FinishedAction,
+                                                    torrent.DownloadMinSize,
+                                                    torrent.DownloadManualFiles,
+                                                    torrent.Priority);
+                }
+
+                await _torrentData.UpdateRetryCount(newTorrent.TorrentId, retryCount);
             }
-
-            await Delete(torrentId, true, true, true);
-
-            if (String.IsNullOrWhiteSpace(torrent.FileOrMagnet))
+            finally
             {
-                throw new Exception($"Cannot re-add this torrent, original magnet or file not found");
+                TorrentResetLock.Release();
             }
-
-            Torrent newTorrent;
-
-            if (torrent.IsFile)
-            {
-                var bytes = Convert.FromBase64String(torrent.FileOrMagnet);
-
-                newTorrent = await UploadFile(bytes, torrent.Category, torrent.DownloadAction, torrent.FinishedAction, torrent.DownloadMinSize, torrent.DownloadManualFiles, torrent.Priority);
-            }
-            else
-            {
-                newTorrent = await UploadMagnet(torrent.FileOrMagnet,
-                                                torrent.Category,
-                                                torrent.DownloadAction,
-                                                torrent.FinishedAction,
-                                                torrent.DownloadMinSize,
-                                                torrent.DownloadManualFiles,
-                                                torrent.Priority);
-            }
-
-            await _torrentData.UpdateRetryCount(newTorrent.TorrentId, retryCount);
         }
 
         public async Task RetryDownload(Guid downloadId)

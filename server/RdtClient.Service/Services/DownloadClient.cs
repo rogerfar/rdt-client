@@ -90,6 +90,9 @@ namespace RdtClient.Service.Services
 
         public async Task Cancel()
         {
+            Finished = true;
+            Error = null;
+
             if (Downloader == null)
             {
                 return;

@@ -168,6 +168,10 @@ namespace RdtClient.Service.Services.Downloaders
 
             if (download == null)
             {
+                DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs
+                {
+                    Error = $"Download was not found in Aria2"
+                });
                 return;
             }
 

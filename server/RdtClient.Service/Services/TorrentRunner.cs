@@ -4,9 +4,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using Aria2NET;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RdtClient.Data.Enums;
@@ -27,15 +29,19 @@ namespace RdtClient.Service.Services
         public static readonly ConcurrentDictionary<Guid, DownloadClient> ActiveDownloadClients = new();
         public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new();
 
+        public static readonly SemaphoreSlim TorrentResetLock = new(1, 1);
+
         private readonly ILogger<TorrentRunner> _logger;
+        private readonly IServiceProvider _serviceProvider;
         private readonly Torrents _torrents;
         private readonly Downloads _downloads;
         private readonly RemoteService _remoteService;
         private readonly HttpClient _httpClient;
 
-        public TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Downloads downloads, RemoteService remoteService)
+        public TorrentRunner(ILogger<TorrentRunner> logger, IServiceProvider serviceProvider, Torrents torrents, Downloads downloads, RemoteService remoteService)
         {
             _logger = logger;
+            _serviceProvider = serviceProvider;
             _torrents = torrents;
             _downloads = downloads;
             _remoteService = remoteService;
@@ -185,9 +191,17 @@ namespace RdtClient.Service.Services
                         {
                             Log($"Retrying torrent", download, download.Torrent);
 
-                            await _torrents.RetryTorrent(download.TorrentId, download.Torrent.RetryCount + 1);
+                            _ = Task.Run(async () =>
+                            {
+                                using var blockScope = _serviceProvider.CreateScope();
+                                var torrentsService = (Torrents) blockScope.ServiceProvider.GetService(typeof(Torrents));
+                                await torrentsService.RetryTorrent(download.TorrentId, download.Torrent.RetryCount + 1);
+                            });
 
-                            continue;
+                            // Force a delay and return the main loop to prevent concurrency issues.
+                            await Task.Delay(10000);
+
+                            return;
                         }
                         else
                         {
@@ -468,8 +482,17 @@ namespace RdtClient.Service.Services
                     {
                         Log($"Retrying torrent", torrent);
 
-                        await _torrents.RetryTorrent(torrent.TorrentId, torrent.RetryCount + 1);
-                        continue;
+                        _ = Task.Run(async () =>
+                        {
+                            using var blockScope = _serviceProvider.CreateScope();
+                            var torrentsService = (Torrents) blockScope.ServiceProvider.GetService(typeof(Torrents));
+                            await torrentsService.RetryTorrent(torrent.TorrentId, torrent.RetryCount + 1);
+                        });
+
+                        // Force a delay and return the main loop to prevent concurrency issues.
+                        await Task.Delay(10000);
+
+                        return;
                     }
 
                     Log($"Received RealDebrid error: {torrent.RdStatusRaw}, not processing further", torrent);
