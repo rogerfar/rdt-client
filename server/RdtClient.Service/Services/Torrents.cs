@@ -209,7 +209,7 @@ namespace RdtClient.Service.Services
 
             Log($"Deleting", torrent);
 
-            await UpdateComplete(torrentId, "Torrent deleted", DateTimeOffset.UtcNow);
+            await UpdateComplete(torrentId, "Torrent deleted", DateTimeOffset.UtcNow, false);
 
             foreach (var download in torrent.Downloads)
             {
@@ -374,7 +374,8 @@ namespace RdtClient.Service.Services
 
                 Log($"Retrying Torrent", torrent);
 
-                await UpdateComplete(torrent.TorrentId, "Retrying Torrent", DateTimeOffset.UtcNow);
+                await UpdateComplete(torrent.TorrentId, "Retrying Torrent", DateTimeOffset.UtcNow, false);
+                await UpdateRetry(torrent.TorrentId, null, 0);
 
                 foreach (var download in torrent.Downloads)
                 {
@@ -464,12 +465,12 @@ namespace RdtClient.Service.Services
 
             await _downloads.Reset(downloadId);
 
-            await _torrentData.UpdateComplete(download.TorrentId, null, null);
+            await _torrentData.UpdateComplete(download.TorrentId, null, null, false);
         }
         
-        public async Task UpdateComplete(Guid torrentId, String error, DateTimeOffset datetime)
+        public async Task UpdateComplete(Guid torrentId, String error, DateTimeOffset datetime, Boolean retry)
         {
-            await _torrentData.UpdateComplete(torrentId, error, datetime);
+            await _torrentData.UpdateComplete(torrentId, error, datetime, retry);
         }
 
         public async Task UpdateFilesSelected(Guid torrentId, DateTimeOffset datetime)

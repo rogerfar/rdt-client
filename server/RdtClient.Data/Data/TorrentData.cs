@@ -177,7 +177,7 @@ namespace RdtClient.Data.Data
             await VoidCache();
         }
 
-        public async Task UpdateComplete(Guid torrentId, String error, DateTimeOffset? datetime)
+        public async Task UpdateComplete(Guid torrentId, String error, DateTimeOffset? datetime, Boolean retry)
         {
             var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
 
@@ -191,13 +191,13 @@ namespace RdtClient.Data.Data
                 var downloads = await _dataContext.Downloads.AsNoTracking().Where(m => m.TorrentId == torrentId).ToListAsync();
                 var downloadWithErrors = downloads.Where(m => !String.IsNullOrWhiteSpace(m.Error)).ToList();
 
-                if (downloads.Any())
+                if (downloadWithErrors.Any())
                 {
                     error = $"{downloadWithErrors.Count}/{downloads.Count} downloads failed with errors";
                 }
             }
 
-            if (!String.IsNullOrWhiteSpace(error))
+            if (!String.IsNullOrWhiteSpace(error) && retry)
             {
                 if (dbTorrent.RetryCount < dbTorrent.TorrentRetryAttempts)
                 {

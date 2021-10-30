@@ -480,7 +480,7 @@ namespace RdtClient.Service.Services
 
                         Log($"Received RealDebrid error: {torrent.RdStatusRaw}, not processing further", torrent);
 
-                        await _torrents.UpdateComplete(torrent.TorrentId, $"Received RealDebrid error: {torrent.RdStatusRaw}.", DateTimeOffset.UtcNow);
+                        await _torrents.UpdateComplete(torrent.TorrentId, $"Received RealDebrid error: {torrent.RdStatusRaw}.", DateTimeOffset.UtcNow, true);
 
                         continue;
                     }
@@ -567,7 +567,7 @@ namespace RdtClient.Service.Services
                         {
                             Log($"All downloads complete, marking torrent as complete", torrent);
 
-                            await _torrents.UpdateComplete(torrent.TorrentId, null, DateTimeOffset.UtcNow);
+                            await _torrents.UpdateComplete(torrent.TorrentId, null, DateTimeOffset.UtcNow, true);
 
                             switch (torrent.FinishedAction)
                             {
@@ -600,7 +600,7 @@ namespace RdtClient.Service.Services
                 catch (Exception ex)
                 {
                     _logger.LogError(ex.Message, $"Torrent processing result in an unexpected exception: {ex.Message}");
-                    await _torrents.UpdateComplete(torrent.TorrentId, ex.Message, DateTimeOffset.UtcNow);
+                    await _torrents.UpdateComplete(torrent.TorrentId, ex.Message, DateTimeOffset.UtcNow, true);
                 }
             }
             
