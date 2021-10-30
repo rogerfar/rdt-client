@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.6] - 2021-10-30
+### Added
+- Improved handling of errors on the torrent itself
+- Added retry counts when adding torrents
+- Added retry counts on the Sonarr/Radarr settings page
+
 ## [1.9.5] - 2021-10-28
 ### Changed
 - Fixed issues with the simple downloader.
