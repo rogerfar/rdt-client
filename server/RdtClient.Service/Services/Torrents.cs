@@ -9,9 +9,9 @@ using MonoTorrent;
 using Newtonsoft.Json;
 using RdtClient.Data.Data;
 using RdtClient.Data.Enums;
+using RdtClient.Data.Models.Internal;
+using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
-using RdtClient.Service.Models;
-using RdtClient.Service.Models.TorrentClient;
 using RdtClient.Service.Services.TorrentClients;
 using Torrent = RdtClient.Data.Models.Data.Torrent;
 
@@ -93,13 +93,7 @@ namespace RdtClient.Service.Services
             await _torrentData.UpdateCategory(torrent.TorrentId, category);
         }
 
-        public async Task<Torrent> UploadMagnet(String magnetLink,
-                                                String category,
-                                                TorrentDownloadAction downloadAction,
-                                                TorrentFinishedAction finishedAction,
-                                                Int32 downloadMinSize,
-                                                String downloadManualFiles,
-                                                Int32? priority)
+        public async Task<Torrent> UploadMagnet(String magnetLink, Torrent torrent)
         {
             MagnetLink magnet;
 
@@ -117,20 +111,14 @@ namespace RdtClient.Service.Services
 
             var hash = magnet.InfoHash.ToHex();
 
-            var newTorrent = await Add(id, hash, category, downloadAction, finishedAction, downloadMinSize, downloadManualFiles, magnetLink, false, priority);
+            var newTorrent = await Add(id, hash, magnetLink, false, torrent);
 
             Log($"Adding {hash} magnet link {magnetLink}", newTorrent);
 
             return newTorrent;
         }
 
-        public async Task<Torrent> UploadFile(Byte[] bytes,
-                                              String category,
-                                              TorrentDownloadAction downloadAction,
-                                              TorrentFinishedAction finishedAction,
-                                              Int32 downloadMinSize,
-                                              String downloadManualFiles,
-                                              Int32? priority)
+        public async Task<Torrent> UploadFile(Byte[] bytes, Torrent torrent)
         {
             MonoTorrent.Torrent monoTorrent;
 
@@ -149,7 +137,7 @@ namespace RdtClient.Service.Services
 
             var hash = monoTorrent.InfoHash.ToHex();
 
-            var newTorrent = await Add(id, hash, category, downloadAction, finishedAction, downloadMinSize, downloadManualFiles, fileAsBase64, true, priority);
+            var newTorrent = await Add(id, hash, fileAsBase64, true, torrent);
 
             Log($"Adding {hash} torrent file {fileAsBase64}", newTorrent);
 
@@ -221,7 +209,7 @@ namespace RdtClient.Service.Services
 
             Log($"Deleting", torrent);
 
-            await UpdateComplete(torrentId, DateTimeOffset.UtcNow);
+            await UpdateComplete(torrentId, "Torrent deleted", DateTimeOffset.UtcNow);
 
             foreach (var download in torrent.Downloads)
             {
@@ -248,7 +236,6 @@ namespace RdtClient.Service.Services
             {
                 Log($"Deleting RdtClient data", torrent);
 
-                await _torrentData.UpdateComplete(torrent.TorrentId, DateTimeOffset.UtcNow);
                 await _downloads.DeleteForTorrent(torrent.TorrentId);
                 await _torrentData.Delete(torrentId);
             }
@@ -380,31 +367,31 @@ namespace RdtClient.Service.Services
             {
                 var torrent = await _torrentData.GetById(torrentId);
 
-                if (torrent == null)
+                if (torrent?.Retry == null)
                 {
                     return;
                 }
 
                 Log($"Retrying Torrent", torrent);
 
-                await UpdateComplete(torrent.TorrentId, DateTimeOffset.Now);
+                await UpdateComplete(torrent.TorrentId, "Retrying Torrent", DateTimeOffset.UtcNow);
 
                 foreach (var download in torrent.Downloads)
                 {
                     await _downloads.UpdateError(download.DownloadId, null);
-                    await _downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.Now);
+                    await _downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
                 }
 
                 foreach (var download in torrent.Downloads)
                 {
-                    while (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
+                    while (TorrentRunner.ActiveDownloadClients.TryRemove(download.DownloadId, out var downloadClient))
                     {
                         await downloadClient.Cancel();
 
                         await Task.Delay(100);
                     }
 
-                    while (TorrentRunner.ActiveUnpackClients.TryGetValue(download.DownloadId, out var unpackClient))
+                    while (TorrentRunner.ActiveUnpackClients.TryRemove(download.DownloadId, out var unpackClient))
                     {
                         unpackClient.Cancel();
 
@@ -425,26 +412,14 @@ namespace RdtClient.Service.Services
                 {
                     var bytes = Convert.FromBase64String(torrent.FileOrMagnet);
 
-                    newTorrent = await UploadFile(bytes,
-                                                  torrent.Category,
-                                                  torrent.DownloadAction,
-                                                  torrent.FinishedAction,
-                                                  torrent.DownloadMinSize,
-                                                  torrent.DownloadManualFiles,
-                                                  torrent.Priority);
+                    newTorrent = await UploadFile(bytes, torrent);
                 }
                 else
                 {
-                    newTorrent = await UploadMagnet(torrent.FileOrMagnet,
-                                                    torrent.Category,
-                                                    torrent.DownloadAction,
-                                                    torrent.FinishedAction,
-                                                    torrent.DownloadMinSize,
-                                                    torrent.DownloadManualFiles,
-                                                    torrent.Priority);
+                    newTorrent = await UploadMagnet(torrent.FileOrMagnet, torrent);
                 }
 
-                await _torrentData.UpdateRetryCount(newTorrent.TorrentId, retryCount);
+                await _torrentData.UpdateRetry(newTorrent.TorrentId, null, retryCount);
             }
             finally
             {
@@ -485,16 +460,16 @@ namespace RdtClient.Service.Services
             
             await FileHelper.Delete(filePath);
             
-            await _torrentData.UpdateComplete(download.TorrentId, null);
-
             Log($"Resetting", download, download.Torrent);
 
             await _downloads.Reset(downloadId);
+
+            await _torrentData.UpdateComplete(download.TorrentId, null, null);
         }
         
-        public async Task UpdateComplete(Guid torrentId, DateTimeOffset datetime)
+        public async Task UpdateComplete(Guid torrentId, String error, DateTimeOffset datetime)
         {
-            await _torrentData.UpdateComplete(torrentId, datetime);
+            await _torrentData.UpdateComplete(torrentId, error, datetime);
         }
 
         public async Task UpdateFilesSelected(Guid torrentId, DateTimeOffset datetime)
@@ -512,6 +487,16 @@ namespace RdtClient.Service.Services
             }
 
             await _torrentData.UpdatePriority(torrent.TorrentId, priority);
+        }
+
+        public async Task UpdateRetry(Guid torrentId, DateTimeOffset? datetime, Int32 retry)
+        {
+            await _torrentData.UpdateRetry(torrentId, datetime, retry);
+        }
+
+        public async Task UpdateError(Guid torrentId, String error)
+        {
+            await _torrentData.UpdateError(torrentId, error);
         }
 
         public async Task<Torrent> GetById(Guid torrentId)
@@ -558,36 +543,26 @@ namespace RdtClient.Service.Services
 
         private async Task<Torrent> Add(String rdTorrentId,
                                         String infoHash,
-                                        String category,
-                                        TorrentDownloadAction downloadAction,
-                                        TorrentFinishedAction finishedAction,
-                                        Int32 downloadMinSize,
-                                        String downloadManualFiles,
                                         String fileOrMagnetContents,
                                         Boolean isFile,
-                                        Int32? priority)
+                                        Torrent torrent)
         {
             await RealDebridUpdateLock.WaitAsync();
             
             try
             {
-                var torrent = await _torrentData.GetByHash(infoHash);
+                var existingTorrent = await _torrentData.GetByHash(infoHash);
 
-                if (torrent != null)
+                if (existingTorrent != null)
                 {
-                    return torrent;
+                    return existingTorrent;
                 }
 
                 var newTorrent = await _torrentData.Add(rdTorrentId,
                                                         infoHash,
-                                                        category,
-                                                        downloadAction,
-                                                        finishedAction,
-                                                        downloadMinSize,
-                                                        downloadManualFiles,
                                                         fileOrMagnetContents,
                                                         isFile,
-                                                        priority);
+                                                        torrent);
 
                 await UpdateRdData(newTorrent);
 
@@ -598,7 +573,7 @@ namespace RdtClient.Service.Services
                 RealDebridUpdateLock.Release();
             }
         }
-        
+
         public async Task Update(Torrent torrent)
         {
             await _torrentData.Update(torrent);
@@ -703,7 +678,7 @@ namespace RdtClient.Service.Services
 
             _logger.LogDebug(message);
         }
-        
+
         private void Log(String message, Torrent torrent = null)
         {
             if (torrent != null)

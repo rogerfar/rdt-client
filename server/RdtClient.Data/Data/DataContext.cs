@@ -147,6 +147,18 @@ namespace RdtClient.Data.Data
                     SettingId = "Aria2cSecret",
                     Type = "String",
                     Value = ""
+                },
+                new Setting
+                {
+                    SettingId = "DownloadRetryAttempts",
+                    Type = "Int32",
+                    Value = "3"
+                },
+                new Setting
+                {
+                    SettingId = "TorrentRetryAttempts",
+                    Type = "Int32",
+                    Value = "1"
                 }
             };
 

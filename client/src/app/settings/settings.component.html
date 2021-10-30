@@ -204,6 +204,25 @@
       </div>
     </div>
   </div>
+
+  <div class="field">
+    <label class="label">Automatic retry downloads</label>
+    <div class="control">
+      <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="downloadRetryAttempts" />
+    </div>
+    <p class="help">When a single download fails it will retry it this many times before marking it as failed.</p>
+  </div>
+
+  <div class="field">
+    <label class="label">Automatic retry torrent</label>
+    <div class="control">
+      <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="torrentRetryAttempts" />
+    </div>
+    <p class="help">
+      When a single download has failed multiple times (see setting above) or when the torrent itself received an error
+      it will retry the full torrent this many times before marking it failed.
+    </p>
+  </div>
 </div>
 
 <div *ngIf="activeTab === 3">

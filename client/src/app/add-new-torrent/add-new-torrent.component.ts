@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { TorrentService } from 'src/app/torrent.service';
-import { TorrentFileAvailability } from '../models/torrent.model';
+import { Torrent, TorrentFileAvailability } from '../models/torrent.model';
 
 @Component({
   selector: 'app-add-new-torrent',
@@ -20,6 +20,9 @@ export class AddNewTorrentComponent implements OnInit {
   public finishedAction: number = 0;
 
   public downloadMinSize: number = 0;
+
+  public downloadRetryAttempts: number = 3;
+  public torrentRetryAttempts: number = 1;
 
   public availableFiles: TorrentFileAvailability[] = [];
   public downloadFiles: { [key: string]: boolean } = {};
@@ -91,46 +94,36 @@ export class AddNewTorrentComponent implements OnInit {
       downloadManualFiles = selectedFiles.join(',');
     }
 
+    const torrent = new Torrent();
+    torrent.category = this.category;
+    torrent.downloadAction = this.downloadAction;
+    torrent.finishedAction = this.finishedAction;
+    torrent.downloadMinSize = this.downloadMinSize;
+    torrent.downloadManualFiles = downloadManualFiles;
+    torrent.priority = this.priority;
+    torrent.torrentRetryAttempts = this.torrentRetryAttempts;
+    torrent.downloadRetryAttempts = this.downloadRetryAttempts;
+
     if (this.magnetLink) {
-      this.torrentService
-        .uploadMagnet(
-          this.magnetLink,
-          this.category,
-          this.downloadAction,
-          this.finishedAction,
-          this.downloadMinSize,
-          downloadManualFiles,
-          this.priority
-        )
-        .subscribe(
-          () => {
-            this.router.navigate(['/']);
-          },
-          (err) => {
-            this.error = err.error;
-            this.saving = false;
-          }
-        );
+      this.torrentService.uploadMagnet(this.magnetLink, torrent).subscribe(
+        () => {
+          this.router.navigate(['/']);
+        },
+        (err) => {
+          this.error = err.error;
+          this.saving = false;
+        }
+      );
     } else if (this.selectedFile) {
-      this.torrentService
-        .uploadFile(
-          this.selectedFile,
-          this.category,
-          this.downloadAction,
-          this.finishedAction,
-          this.downloadMinSize,
-          downloadManualFiles,
-          this.priority
-        )
-        .subscribe(
-          () => {
-            this.router.navigate(['/']);
-          },
-          (err) => {
-            this.error = err.error;
-            this.saving = false;
-          }
-        );
+      this.torrentService.uploadFile(this.selectedFile, torrent).subscribe(
+        () => {
+          this.router.navigate(['/']);
+        },
+        (err) => {
+          this.error = err.error;
+          this.saving = false;
+        }
+      );
     } else {
       this.error = 'No magnet or file uploaded';
       this.saving = false;

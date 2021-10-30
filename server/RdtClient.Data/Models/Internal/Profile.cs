@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RdtClient.Service.Models
+namespace RdtClient.Data.Models.Internal
 {
     public class Profile
     {

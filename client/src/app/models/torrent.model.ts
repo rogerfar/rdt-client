@@ -17,7 +17,11 @@ export class Torrent {
   public isFile: boolean;
 
   public retryCount: number;
+  public downloadRetryAttempts: number;
+  public torrentRetryAttempts: number;
+
   public priority: number;
+  public error: string;
 
   public rdId: string;
   public rdName: string;

@@ -28,7 +28,7 @@
           <button class="button is-primary" (click)="showRetryModal()">Retry Torrent</button>
         </div>
         <div class="control">
-          <button class="button is-light" (click)="showUpdateSettingsModal()">Change priority</button>
+          <button class="button is-light" (click)="showUpdateSettingsModal()">Change Settings</button>
         </div>
       </div>
       <div class="field">
@@ -37,7 +37,7 @@
       </div>
       <div class="field">
         <label class="label">Retry count</label>
-        {{ torrent.retryCount }} / 2
+        {{ torrent.retryCount }} / {{ torrent.torrentRetryAttempts}}
       </div>
       <div class="field">
         <label class="label">Hash</label>
@@ -256,7 +256,7 @@
                     </div>
                     <div class="field">
                       <label class="label">Retry Count</label>
-                      {{ download.retryCount }} / 3
+                      {{ download.retryCount }} / {{ torrent.downloadRetryAttempts }}
                     </div>
                   </div>
                   <div fxFlex>
@@ -468,6 +468,37 @@
         </div>
         <p class="help">
           Set the priority for this torrent where 1 is the highest. When empty it will be assigned the lowest priority.
+        </p>
+      </div>
+      <div class="field">
+        <label class="label">Automatic retry downloads</label>
+        <div class="control">
+          <input
+            class="input"
+            type="number"
+            max="1000"
+            min="0"
+            step="1"
+            [(ngModel)]="updateSettingsDownloadRetryAttempts"
+          />
+        </div>
+        <p class="help">When a single download fails it will retry it this many times before marking it as failed.</p>
+      </div>
+      <div class="field">
+        <label class="label">Automatic retry torrent</label>
+        <div class="control">
+          <input
+            class="input"
+            type="number"
+            max="1000"
+            min="0"
+            step="1"
+            [(ngModel)]="updateSettingsTorrentRetryAttempts"
+          />
+        </div>
+        <p class="help">
+          When a single download has failed multiple times (see setting above) or when the torrent itself received an
+          error it will retry the full torrent this many times before marking it failed.
         </p>
       </div>
     </section>

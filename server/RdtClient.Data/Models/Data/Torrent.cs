@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Newtonsoft.Json;
-using RDNET;
 using RdtClient.Data.Enums;
+using RdtClient.Data.Models.TorrentClient;
 
 namespace RdtClient.Data.Models.Data
 {
@@ -25,12 +25,17 @@ namespace RdtClient.Data.Models.Data
         public DateTimeOffset Added { get; set; }
         public DateTimeOffset? FilesSelected { get; set; }
         public DateTimeOffset? Completed { get; set; }
+        public DateTimeOffset? Retry { get; set; }
 
         public String FileOrMagnet { get; set; }
         public Boolean IsFile { get; set; }
 
         public Int32? Priority { get; set; }
         public Int32 RetryCount { get; set; }
+        public Int32 DownloadRetryAttempts { get; set; }
+        public Int32 TorrentRetryAttempts { get; set; }
+
+        public String Error { get; set; }
 
         [InverseProperty("Torrent")]
         public IList<Download> Downloads { get; set; }
@@ -50,22 +55,22 @@ namespace RdtClient.Data.Models.Data
         public String RdFiles { get; set; }
 
         [NotMapped]
-        public IList<TorrentFile> Files
+        public IList<TorrentClientFile> Files
         {
             get
             {
                 if (String.IsNullOrWhiteSpace(RdFiles))
                 {
-                    return new List<TorrentFile>();
+                    return new List<TorrentClientFile>();
                 }
 
                 try
                 {
-                    return JsonConvert.DeserializeObject<List<TorrentFile>>(RdFiles);
+                    return JsonConvert.DeserializeObject<List<TorrentClientFile>>(RdFiles);
                 }
                 catch
                 {
-                    return new List<TorrentFile>();
+                    return new List<TorrentClientFile>();
                 }
             }
         }

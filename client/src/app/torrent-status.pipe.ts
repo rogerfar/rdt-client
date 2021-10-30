@@ -9,6 +9,11 @@ export class TorrentStatusPipe implements PipeTransform {
   constructor(private pipe: FileSizePipe) {}
 
   transform(torrent: Torrent): string {
+
+    if (torrent.error) {
+      return torrent.error;
+    }
+
     if (torrent.downloads.length > 0) {
       const errors = torrent.downloads.where((m) => m.error != null);
 

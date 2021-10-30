@@ -1,7 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json;
 
-namespace RdtClient.Service.Models.QBittorrent
+namespace RdtClient.Data.Models.QBittorrent
 {
     public class AppBuildInfo
     {

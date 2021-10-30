@@ -64,6 +64,8 @@ namespace RdtClient.Data.Data
                 Categories = GetString("Categories"),
                 Aria2cUrl = GetString("Aria2cUrl"),
                 Aria2cSecret = GetString("Aria2cSecret"),
+                DownloadRetryAttempts = GetInt32("DownloadRetryAttempts"),
+                TorrentRetryAttempts = GetInt32("TorrentRetryAttempts")
             };
         }
 

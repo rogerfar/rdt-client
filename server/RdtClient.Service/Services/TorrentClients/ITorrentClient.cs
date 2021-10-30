@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using RdtClient.Service.Models.TorrentClient;
+using RdtClient.Data.Models.TorrentClient;
 
 namespace RdtClient.Service.Services.TorrentClients
 {

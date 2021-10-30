@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RdtClient.Service.Models.TorrentClient
+namespace RdtClient.Data.Models.TorrentClient
 {
     public class TorrentClientAvailableFile
     {

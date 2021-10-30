@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RdtClient.Data.Models.Data;
-using RdtClient.Service.Models;
+using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Services;
 using Serilog.Events;
 

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using RDNET;
-using RdtClient.Service.Models.TorrentClient;
+using AllDebridNET;
+using RdtClient.Data.Models.TorrentClient;
 
 namespace RdtClient.Service.Services.TorrentClients
 {
@@ -17,139 +17,110 @@ namespace RdtClient.Service.Services.TorrentClients
             _httpClientFactory = httpClientFactory;
         }
 
-        private RdNetClient GetRdNetClient()
+        private AllDebridNETClient GetClient()
         {
             var apiKey = Settings.Get.RealDebridApiKey;
 
             if (String.IsNullOrWhiteSpace(apiKey))
             {
-                throw new Exception("Real-Debrid API Key not set in the settings");
+                throw new Exception("All-Debrid API Key not set in the settings");
             }
 
             var httpClient = _httpClientFactory.CreateClient();
             httpClient.Timeout = TimeSpan.FromSeconds(10);
 
-            var rdtNetClient = new RdNetClient(null, httpClient, 5);
-            rdtNetClient.UseApiAuthentication(apiKey);
+            var allDebridNetClient = new AllDebridNETClient("RealDebridClient", apiKey);
 
-            return rdtNetClient;
+            return allDebridNetClient;
         }
 
-        private static TorrentClientTorrent Map(Torrent torrent)
+        private static TorrentClientTorrent Map(Magnet torrent)
         {
             return new TorrentClientTorrent
             {
-                Id = torrent.Id,
+                Id = torrent.Id.ToString(),
                 Filename = torrent.Filename,
-                OriginalFilename = torrent.OriginalFilename,
+                OriginalFilename = torrent.Filename,
                 Hash = torrent.Hash,
-                Bytes = torrent.Bytes,
-                OriginalBytes = torrent.OriginalBytes,
-                Host = torrent.Host,
-                Split = torrent.Split,
-                Progress = torrent.Progress,
+                Bytes = torrent.Size,
+                OriginalBytes = torrent.Size,
+                Host = null,
+                Split = 0,
+                Progress = torrent.ProcessingPerc,
                 Status = torrent.Status,
-                Added = torrent.Added,
-                Files = (torrent.Files ?? new List<TorrentFile>()).Select(m => new TorrentClientTorrentFile
+                Added = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(torrent.UploadDate),
+                Files = (torrent.Links ?? new List<Link>()).Select(m => new TorrentClientFile
                 {
-                    Path = m.Path,
-                    Bytes = m.Bytes,
-                    Id = m.Id,
-                    Selected = m.Selected
+                    Path = m.Filename,
+                    Bytes = m.Size,
+                    Id = 0,
+                    Selected = true
                 }).ToList(),
-                Links = torrent.Links,
-                Ended = torrent.Ended,
-                Speed = torrent.Speed,
-                Seeders = torrent.Seeders,
+                Links = (torrent.Links ?? new List<Link>()).Select(m => m.LinkUrl.ToString()).ToList(),
+                Ended = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(torrent.CompletionDate),
+                Speed = torrent.DownloadSpeed,
+                Seeders = torrent.Seeders
             };
         }
 
         public async Task<IList<TorrentClientTorrent>> GetTorrents()
         {
-            var page = 0;
-            var results = new List<Torrent>();
-
-            while (true)
-            {
-                var pagedResults = await GetRdNetClient().Torrents.GetAsync(page, 100);
-
-                results.AddRange(pagedResults);
-
-                if (pagedResults.Count == 0)
-                {
-                    break;
-                }
-
-                page += 100;
-            }
-
+            var results = await GetClient().Magnet.StatusAllAsync();
             return results.Select(Map).ToList();
         }
 
         public async Task<TorrentClientUser> GetUser()
         {
-            var user = await GetRdNetClient().User.GetAsync();
+            var user = await GetClient().User.GetAsync();
             
             return new TorrentClientUser
             {
                 Username = user.Username,
-                Expiration = user.Expiration
+                Expiration = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(user.PremiumUntil)
             };
         }
 
         public async Task<String> AddMagnet(String magnetLink)
         {
-            var result = await GetRdNetClient().Torrents.AddMagnetAsync(magnetLink);
+            var result = await GetClient().Magnet.UploadMagnetAsync(magnetLink);
 
-            return result.Id;
+            return result.Id.ToString();
         }
 
         public async Task<String> AddFile(Byte[] bytes)
         {
-            var result = await GetRdNetClient().Torrents.AddFileAsync(bytes);
+            var result = await GetClient().Magnet.UploadFileAsync(bytes);
 
-            return result.Id;
+            return result.Id.ToString();
         }
 
-        public async Task<List<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
+        public Task<List<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
         {
-            var result = await GetRdNetClient().Torrents.GetAvailableFiles(hash);
-
-            var files = result.SelectMany(m => m.Value).SelectMany(m => m.Value).SelectMany(m => m.Values);
-
-            var groups = files.GroupBy(m => $"{m.Filename}-{m.Filesize}");
-
-            var torrentClientAvailableFiles = groups.Select(m => new TorrentClientAvailableFile
-            {
-                Filename = m.First().Filename,
-                Filesize = m.First().Filesize
-            } ).ToList();
-
-            return torrentClientAvailableFiles;
+            return Task.FromResult(new List<TorrentClientAvailableFile>());
         }
 
-        public async Task SelectFiles(String torrentId, IList<String> fileIds)
+        public Task SelectFiles(String torrentId, IList<String> fileIds)
         {
-            await GetRdNetClient().Torrents.SelectFilesAsync(torrentId, fileIds.ToArray());
+            return Task.CompletedTask;
         }
 
         public async Task<TorrentClientTorrent> GetInfo(String torrentId)
         {
-            var result = await GetRdNetClient().Torrents.GetInfoAsync(torrentId);
+            var result = await GetClient().Magnet.StatusAsync(torrentId);
 
             return Map(result);
         }
 
         public async Task Delete(String torrentId)
         {
-            await GetRdNetClient().Torrents.DeleteAsync(torrentId);
+            await GetClient().Magnet.DeleteAsync(torrentId);
         }
 
         public async Task<String> Unrestrict(String link)
         {
-            var result = await GetRdNetClient().Unrestrict.LinkAsync(link);
+            var result = await GetClient().Links.DownloadLinkAsync(link);
 
-            return result.Download;
+            return result.Link;
         }
     }
 }

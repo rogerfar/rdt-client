@@ -36,6 +36,8 @@ export class TorrentComponent implements OnInit {
 
   public isUpdateSettingsModalActive: boolean;
   public updateSettingsPriority: number;
+  public updateSettingsDownloadRetryAttempts: number;
+  public updateSettingsTorrentRetryAttempts: number;
   public updating: boolean;
 
   constructor(private activatedRoute: ActivatedRoute, private router: Router, private torrentService: TorrentService) {}
@@ -170,6 +172,8 @@ export class TorrentComponent implements OnInit {
 
   public showUpdateSettingsModal(): void {
     this.updateSettingsPriority = this.torrent.priority;
+    this.updateSettingsDownloadRetryAttempts = this.torrent.downloadRetryAttempts;
+    this.updateSettingsTorrentRetryAttempts = this.torrent.torrentRetryAttempts;
 
     this.isUpdateSettingsModalActive = true;
   }
@@ -182,6 +186,8 @@ export class TorrentComponent implements OnInit {
     this.updating = true;
 
     this.torrent.priority = this.updateSettingsPriority;
+    this.torrent.downloadRetryAttempts = this.updateSettingsDownloadRetryAttempts;
+    this.torrent.torrentRetryAttempts = this.updateSettingsTorrentRetryAttempts;
 
     this.torrentService.update(this.torrent).subscribe(
       () => {

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 
 namespace RdtClient.Data.Data
@@ -12,7 +11,7 @@ namespace RdtClient.Data.Data
     public class TorrentData
     {
         private static IList<Torrent> _torrentCache;
-        private static readonly SemaphoreSlim _torrentCacheLock = new(1);
+        private static readonly SemaphoreSlim TorrentCacheLock = new(1, 1);
 
         private readonly DataContext _dataContext;
 
@@ -23,7 +22,7 @@ namespace RdtClient.Data.Data
 
         public async Task<IList<Torrent>> Get()
         {
-            await _torrentCacheLock.WaitAsync();
+            await TorrentCacheLock.WaitAsync();
 
             try
             {
@@ -36,7 +35,7 @@ namespace RdtClient.Data.Data
             }
             finally
             {
-                _torrentCacheLock.Release();
+                TorrentCacheLock.Release();
             }
         }
 
@@ -82,38 +81,35 @@ namespace RdtClient.Data.Data
 
         public async Task<Torrent> Add(String realDebridId,
                                        String hash,
-                                       String category,
-                                       TorrentDownloadAction downloadAction,
-                                       TorrentFinishedAction finishedAction,
-                                       Int32 downloadMinSize,
-                                       String downloadManualFiles,
                                        String fileOrMagnetContents,
                                        Boolean isFile,
-                                       Int32? priority)
+                                       Torrent torrent)
         {
-            var torrent = new Torrent
+            var newTorrent = new Torrent
             {
                 TorrentId = Guid.NewGuid(),
                 Added = DateTimeOffset.UtcNow,
                 RdId = realDebridId,
                 Hash = hash.ToLower(),
-                Category = category,
-                DownloadAction = downloadAction,
-                FinishedAction = finishedAction,
-                DownloadMinSize = downloadMinSize,
-                DownloadManualFiles = downloadManualFiles,
+                Category = torrent.Category,
+                DownloadAction = torrent.DownloadAction,
+                FinishedAction = torrent.FinishedAction,
+                DownloadMinSize = torrent.DownloadMinSize,
+                DownloadManualFiles = torrent.DownloadManualFiles,
                 FileOrMagnet = fileOrMagnetContents,
                 IsFile = isFile,
-                Priority = priority
+                Priority = torrent.Priority,
+                TorrentRetryAttempts = torrent.TorrentRetryAttempts,
+                DownloadRetryAttempts = torrent.DownloadRetryAttempts
             };
 
-            await _dataContext.Torrents.AddAsync(torrent);
+            await _dataContext.Torrents.AddAsync(newTorrent);
 
             await _dataContext.SaveChangesAsync();
 
             await VoidCache();
 
-            return torrent;
+            return newTorrent;
         }
 
         public async Task UpdateRdData(Torrent torrent)
@@ -157,6 +153,8 @@ namespace RdtClient.Data.Data
             }
 
             dbTorrent.Priority = torrent.Priority;
+            dbTorrent.DownloadRetryAttempts = torrent.DownloadRetryAttempts;
+            dbTorrent.TorrentRetryAttempts = torrent.TorrentRetryAttempts;
 
             await _dataContext.SaveChangesAsync();
 
@@ -179,7 +177,7 @@ namespace RdtClient.Data.Data
             await VoidCache();
         }
 
-        public async Task UpdateComplete(Guid torrentId, DateTimeOffset? datetime)
+        public async Task UpdateComplete(Guid torrentId, String error, DateTimeOffset? datetime)
         {
             var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
 
@@ -188,7 +186,28 @@ namespace RdtClient.Data.Data
                 return;
             }
 
+            if (String.IsNullOrWhiteSpace(error))
+            {
+                var downloads = await _dataContext.Downloads.AsNoTracking().Where(m => m.TorrentId == torrentId).ToListAsync();
+                var downloadWithErrors = downloads.Where(m => !String.IsNullOrWhiteSpace(m.Error)).ToList();
+
+                if (downloads.Any())
+                {
+                    error = $"{downloadWithErrors.Count}/{downloads.Count} downloads failed with errors";
+                }
+            }
+
+            if (!String.IsNullOrWhiteSpace(error))
+            {
+                if (dbTorrent.RetryCount < dbTorrent.TorrentRetryAttempts)
+                {
+                    dbTorrent.RetryCount += 1;
+                    dbTorrent.Retry = DateTime.UtcNow;
+                }
+            }
+
             dbTorrent.Completed = datetime;
+            dbTorrent.Error = error;
 
             await _dataContext.SaveChangesAsync();
 
@@ -211,22 +230,6 @@ namespace RdtClient.Data.Data
             await VoidCache();
         }
 
-        public async Task UpdateRetryCount(Guid torrentId, Int32 retryCount)
-        {
-            var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
-
-            if (dbTorrent == null)
-            {
-                return;
-            }
-
-            dbTorrent.RetryCount = retryCount;
-
-            await _dataContext.SaveChangesAsync();
-
-            await VoidCache();
-        }
-
         public async Task UpdatePriority(Guid torrentId, Int32? priority)
         {
             var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
@@ -237,6 +240,39 @@ namespace RdtClient.Data.Data
             }
 
             dbTorrent.Priority = priority;
+
+            await _dataContext.SaveChangesAsync();
+
+            await VoidCache();
+        }
+
+        public async Task UpdateRetry(Guid torrentId, DateTimeOffset? dateTime, Int32 retryCount)
+        {
+            var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
+
+            if (dbTorrent == null)
+            {
+                return;
+            }
+
+            dbTorrent.RetryCount = retryCount;
+            dbTorrent.Retry = dateTime;
+
+            await _dataContext.SaveChangesAsync();
+
+            await VoidCache();
+        }
+
+        public async Task UpdateError(Guid torrentId, String error)
+        {
+            var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
+
+            if (dbTorrent == null)
+            {
+                return;
+            }
+
+            dbTorrent.Error = error;
 
             await _dataContext.SaveChangesAsync();
 
@@ -261,7 +297,7 @@ namespace RdtClient.Data.Data
 
         public static async Task VoidCache()
         {
-            await _torrentCacheLock.WaitAsync();
+            await TorrentCacheLock.WaitAsync();
 
             try
             {
@@ -269,7 +305,7 @@ namespace RdtClient.Data.Data
             }
             finally
             {
-                _torrentCacheLock.Release();
+                TorrentCacheLock.Release();
             }
         }
     }

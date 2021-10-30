@@ -4,8 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using RdtClient.Data.Enums;
-using RdtClient.Service.Models.QBittorrent;
-using RdtClient.Service.Models.QBittorrent.QuickType;
+using RdtClient.Data.Models.Data;
+using RdtClient.Data.Models.QBittorrent;
+using RdtClient.Data.Models.QBittorrent.QuickType;
 
 namespace RdtClient.Service.Services
 {
@@ -293,7 +294,15 @@ namespace RdtClient.Service.Services
                     Upspeed = speed
                 };
 
-                if (torrent.Completed.HasValue)
+                if (torrent.Retry != null)
+                {
+                    result.State = "downloading";
+                }
+                else if (!String.IsNullOrWhiteSpace(torrent.Error))
+                {
+                    result.State = torrent.Error;
+                }
+                else if (torrent.Completed.HasValue)
                 {
                     var allDownloadsComplete = torrent.Downloads.All(m => m.Completed.HasValue);
                     var hasDownloadsWithErrors = torrent.Downloads.Any(m => m.Error != null);
@@ -419,16 +428,34 @@ namespace RdtClient.Service.Services
 
         public async Task TorrentsAddMagnet(String magnetLink, String category, Int32? priority)
         {
-            var downloadAction = Settings.Get.OnlyDownloadAvailableFiles == 1 ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll;
+            var torrent = new Torrent
+            {
+                Category = category,
+                DownloadAction = Settings.Get.OnlyDownloadAvailableFiles == 1 ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
+                FinishedAction = TorrentFinishedAction.None,
+                DownloadMinSize = Settings.Get.MinFileSize,
+                TorrentRetryAttempts = Settings.Get.TorrentRetryAttempts,
+                DownloadRetryAttempts = Settings.Get.DownloadRetryAttempts,
+                Priority = priority
+            };
 
-            await _torrents.UploadMagnet(magnetLink, category, downloadAction, TorrentFinishedAction.None, Settings.Get.MinFileSize, null, priority);
+            await _torrents.UploadMagnet(magnetLink, torrent);
         }
 
         public async Task TorrentsAddFile(Byte[] fileBytes, String category, Int32? priority)
         {
-            var downloadAction = Settings.Get.OnlyDownloadAvailableFiles == 1 ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll;
+            var torrent = new Torrent
+            {
+                Category = category,
+                DownloadAction = Settings.Get.OnlyDownloadAvailableFiles == 1 ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
+                FinishedAction = TorrentFinishedAction.None,
+                DownloadMinSize = Settings.Get.MinFileSize,
+                TorrentRetryAttempts = Settings.Get.TorrentRetryAttempts,
+                DownloadRetryAttempts = Settings.Get.DownloadRetryAttempts,
+                Priority = priority
+            };
 
-            await _torrents.UploadFile(fileBytes, category, downloadAction, TorrentFinishedAction.None, Settings.Get.MinFileSize, null, priority);
+            await _torrents.UploadFile(fileBytes, torrent);
         }
 
         public async Task TorrentsSetCategory(String hash, String category)

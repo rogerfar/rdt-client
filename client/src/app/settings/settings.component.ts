@@ -42,6 +42,9 @@ export class SettingsComponent implements OnInit {
   public aria2cUrl: string;
   public aria2cSecret: string;
 
+  public downloadRetryAttempts: number;
+  public torrentRetryAttempts: number;
+
   constructor(private settingsService: SettingsService) {}
 
   ngOnInit(): void {
@@ -69,6 +72,8 @@ export class SettingsComponent implements OnInit {
         this.settingProxyServer = this.getSetting(results, 'ProxyServer');
         this.aria2cUrl = this.getSetting(results, 'Aria2cUrl');
         this.aria2cSecret = this.getSetting(results, 'Aria2cSecret');
+        this.downloadRetryAttempts = parseInt(this.getSetting(results, 'DownloadRetryAttempts'), 10);
+        this.torrentRetryAttempts = parseInt(this.getSetting(results, 'TorrentRetryAttempts'), 10);
       },
       (err) => {
         this.error = err.error;
@@ -140,6 +145,14 @@ export class SettingsComponent implements OnInit {
       {
         settingId: 'Aria2cSecret',
         value: this.aria2cSecret,
+      },
+      {
+        settingId: 'DownloadRetryAttempts',
+        value: (this.downloadRetryAttempts ?? 0).toString(),
+      },
+      {
+        settingId: 'TorrentRetryAttempts',
+        value: (this.torrentRetryAttempts ?? 0).toString(),
       },
     ];
 

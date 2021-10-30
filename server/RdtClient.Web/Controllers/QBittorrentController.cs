@@ -5,8 +5,8 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RdtClient.Service.Models.QBittorrent;
-using RdtClient.Service.Models.QBittorrent.QuickType;
+using RdtClient.Data.Models.QBittorrent;
+using RdtClient.Data.Models.QBittorrent.QuickType;
 using RdtClient.Service.Services;
 
 

@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MonoTorrent;
-using RdtClient.Data.Enums;
 using RdtClient.Service.Helpers;
 using RdtClient.Service.Services;
 using Torrent = RdtClient.Data.Models.Data.Torrent;
@@ -91,7 +90,7 @@ namespace RdtClient.Web.Controllers
 
             var bytes = memoryStream.ToArray();
 
-            await _torrents.UploadFile(bytes, formData.Category, formData.DownloadAction, formData.FinishedAction, formData.DownloadMinSize, formData.DownloadManualFiles, formData.Priority);
+            await _torrents.UploadFile(bytes, formData.Torrent);
 
             return Ok();
         }
@@ -100,13 +99,7 @@ namespace RdtClient.Web.Controllers
         [Route("UploadMagnet")]
         public async Task<ActionResult> UploadMagnet([FromBody] TorrentControllerUploadMagnetRequest request)
         {
-            await _torrents.UploadMagnet(request.MagnetLink,
-                                         request.Category,
-                                         request.DownloadAction,
-                                         request.FinishedAction,
-                                         request.DownloadMinSize,
-                                         request.DownloadManualFiles,
-                                         request.Priority);
+            await _torrents.UploadMagnet(request.MagnetLink, request.Torrent);
 
             return Ok();
         }
@@ -185,23 +178,13 @@ namespace RdtClient.Web.Controllers
 
     public class TorrentControllerUploadFileRequest
     {
-        public String Category { get; set; }
-        public TorrentDownloadAction DownloadAction { get; set; }
-        public TorrentFinishedAction FinishedAction { get; set; }
-        public Int32 DownloadMinSize { get; set; }
-        public String DownloadManualFiles { get; set; }
-        public Int32? Priority { get; set; }
+        public Torrent Torrent { get; set; }
     }
 
     public class TorrentControllerUploadMagnetRequest
     {
         public String MagnetLink { get; set; }
-        public String Category { get; set; }
-        public TorrentDownloadAction DownloadAction { get; set; }
-        public TorrentFinishedAction FinishedAction { get; set; }
-        public Int32 DownloadMinSize { get; set; }
-        public String DownloadManualFiles { get; set; }
-        public Int32? Priority { get; set; }
+        public Torrent Torrent { get; set; }
     }
 
     public class TorrentControllerDeleteRequest
