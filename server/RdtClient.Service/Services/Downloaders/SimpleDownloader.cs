@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
 
@@ -8,6 +9,8 @@ namespace RdtClient.Service.Services.Downloaders
 {
     public class SimpleDownloader : IDownloader
     {
+        private const Int32 BufferSize = 8 * 1024;
+
         public event EventHandler<DownloadCompleteEventArgs> DownloadComplete;
         public event EventHandler<DownloadProgressEventArgs> DownloadProgress;
 
@@ -81,47 +84,51 @@ namespace RdtClient.Service.Services.Downloaders
                         var request = WebRequest.Create(_uri);
                         using var response = await request.GetResponseAsync();
 
-                        await using var stream = response.GetResponseStream();
+                        await using var responseStream = response.GetResponseStream();
 
-                        if (stream == null)
+                        if (responseStream == null)
                         {
                             throw new IOException("No stream");
                         }
 
-                        await using var fileStream = new FileStream(_filePath, FileMode.Create, FileAccess.Write, FileShare.Write);
-                        var buffer = new Byte[64 * 1024];
-
-                        while (fileStream.Length < response.ContentLength && !_cancelled)
+                        var speedLimit = Settings.Get.DownloadMaxSpeed * BufferSize * 1024L;
+                        
+                        if (speedLimit == 0)
                         {
-                            var read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length));
+                            speedLimit = ThrottledStream.Infinite;
+                        }
 
-                            if (read > 0)
+                        await using var destinationStream = new ThrottledStream(responseStream, speedLimit);
+
+                        await using var fileStream = new FileStream(_filePath, FileMode.Create, FileAccess.Write, FileShare.Write);
+                        
+                        var readSize = 1;
+                        while (readSize > 0 && !_cancelled)
+                        {
+                            using var innerCts = new CancellationTokenSource(1000);
+                            var buffer = new Byte[BufferSize * 8];
+                            readSize = await destinationStream.ReadAsync(buffer, 0, buffer.Length, innerCts.Token).ConfigureAwait(false);
+
+                            await fileStream.WriteAsync(buffer.AsMemory(0, readSize), innerCts.Token);
+
+                            BytesDone = fileStream.Length;
+                            BytesTotal = responseLength;
+
+                            if (DateTime.UtcNow > _nextUpdate)
                             {
-                                await fileStream.WriteAsync(buffer.AsMemory(0, read));
+                                Speed = fileStream.Length - _bytesLastUpdate;
 
-                                BytesDone = fileStream.Length;
-                                BytesTotal = responseLength;
+                                _nextUpdate = DateTime.UtcNow.AddSeconds(1);
+                                _bytesLastUpdate = fileStream.Length;
 
-                                if (DateTime.UtcNow > _nextUpdate)
+                                timeout = DateTimeOffset.UtcNow.AddHours(1);
+
+                                DownloadProgress?.Invoke(this, new DownloadProgressEventArgs
                                 {
-                                    Speed = fileStream.Length - _bytesLastUpdate;
-
-                                    _nextUpdate = DateTime.UtcNow.AddSeconds(1);
-                                    _bytesLastUpdate = fileStream.Length;
-
-                                    timeout = DateTimeOffset.UtcNow.AddHours(1);
-
-                                    DownloadProgress?.Invoke(this, new DownloadProgressEventArgs
-                                    {
-                                        Speed = Speed,
-                                        BytesDone = BytesDone,
-                                        BytesTotal = BytesTotal
-                                    });
-                                }
-                            }
-                            else
-                            {
-                                break;
+                                    Speed = Speed,
+                                    BytesDone = BytesDone,
+                                    BytesTotal = BytesTotal
+                                });
                             }
                         }
 

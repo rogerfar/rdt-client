@@ -147,7 +147,7 @@
     </p>
   </div>
 
-  <div class="field" *ngIf="settingDownloadClient === 'MultiPart'">
+  <div class="field" *ngIf="settingDownloadClient === 'MultiPart' || settingDownloadClient === 'Simple'">
     <label class="label">Download speed (in MB/s)</label>
     <div class="control">
       <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="settingDownloadMaxSpeed" />
