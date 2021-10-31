@@ -307,7 +307,7 @@ namespace RdtClient.Service.Services
                     var allDownloadsComplete = torrent.Downloads.All(m => m.Completed.HasValue);
                     var hasDownloadsWithErrors = torrent.Downloads.Any(m => m.Error != null);
 
-                    if (torrent.Downloads.Count == 0 || hasDownloadsWithErrors || torrent.RdStatus == RealDebridStatus.Error)
+                    if (torrent.Downloads.Count == 0 || hasDownloadsWithErrors || torrent.RdStatus == TorrentStatus.Error)
                     {
                         result.State = "error";
                     }

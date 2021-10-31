@@ -38,7 +38,7 @@
         </span>
         <span>Settings</span>
       </a>
-      <a class="navbar-item" *ngIf="profile" href="https://real-debrid.com/?id=1348683" target="_blank" rel="noopener">
+      <a class="navbar-item" *ngIf="profile" href="{{providerLink}}" target="_blank" rel="noopener">
         <span class="icon">
           <i class="fas fa-euro-sign" aria-hidden="true"></i>
         </span>
@@ -55,7 +55,7 @@
           <a class="navbar-item"> Profile </a>
           <a class="navbar-item" (click)="logout()"> Logout </a>
           <hr class="navbar-divider" />
-          <div class="navbar-item">Version 1.9.6</div>
+          <div class="navbar-item">Version 1.9.7</div>
         </div>
       </div>
     </div>

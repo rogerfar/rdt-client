@@ -13,12 +13,22 @@ export class NavbarComponent implements OnInit {
   public showMobileMenu = false;
 
   public profile: Profile;
+  public providerLink: string;
 
   constructor(private settingsService: SettingsService, private authService: AuthService, private router: Router) {}
 
   ngOnInit(): void {
     this.settingsService.getProfile().subscribe((result) => {
       this.profile = result;
+
+      switch (result.provider) {
+        case 'RealDebrid':
+          this.providerLink = 'https://real-debrid.com/?id=1348683';
+          break;
+        case 'AllDebrid':
+          this.providerLink = 'https://alldebrid.com/?uid=2v91l&lang=en';
+          break;
+      }
     });
   }
 

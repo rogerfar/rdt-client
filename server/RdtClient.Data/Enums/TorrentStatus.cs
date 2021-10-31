@@ -1,6 +1,6 @@
 ﻿namespace RdtClient.Data.Enums
 {
-    public enum RealDebridStatus
+    public enum TorrentStatus
     {
         Processing = 0,
         WaitingForFileSelection = 1,

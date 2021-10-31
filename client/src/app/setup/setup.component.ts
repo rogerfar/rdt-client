@@ -12,6 +12,7 @@ import { SettingsService } from '../settings.service';
 export class SetupComponent implements OnInit {
   public userName: string;
   public password: string;
+  public provider = 'RealDebrid';
   public token: string;
 
   public error: string;
@@ -40,11 +41,15 @@ export class SetupComponent implements OnInit {
   }
 
   public setToken(): void {
-    const setting = new Setting();
-    setting.settingId = 'RealDebridApiKey';
-    setting.value = this.token;
+    const settingToken = new Setting();
+    settingToken.settingId = 'RealDebridApiKey';
+    settingToken.value = this.token;
 
-    this.settingsService.update([setting]).subscribe(
+    const settingProvider = new Setting();
+    settingProvider.settingId = 'Provider';
+    settingProvider.value = this.provider;
+
+    this.settingsService.update([settingToken, settingProvider]).subscribe(
       () => {
         this.step = 3;
         this.working = false;

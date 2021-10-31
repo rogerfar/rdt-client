@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using MonoTorrent;
 using Newtonsoft.Json;
 using RdtClient.Data.Data;
-using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
@@ -27,18 +26,24 @@ namespace RdtClient.Service.Services
         
         private readonly ITorrentClient _torrentClient;
 
-        public static readonly SemaphoreSlim TorrentResetLock = new(1, 1);
+        private static readonly SemaphoreSlim TorrentResetLock = new(1, 1);
 
         public Torrents(ILogger<Torrents> logger,
                         TorrentData torrentData, 
                         Downloads downloads,
+                        AllDebridTorrentClient allDebridTorrentClient,
                         RealDebridTorrentClient realDebridTorrentClient)
         {
             _logger = logger;
             _torrentData = torrentData;
             _downloads = downloads;
             
-            _torrentClient = realDebridTorrentClient;
+            _torrentClient = Settings.Get.Provider switch
+            {
+                "RealDebrid" => realDebridTorrentClient,
+                "AllDebrid" => allDebridTorrentClient,
+                _ => null
+            };
         }
 
         public async Task<IList<Torrent>> Get()
@@ -73,7 +78,7 @@ namespace RdtClient.Service.Services
 
             if (torrent != null)
             {
-                await UpdateRdData(torrent);
+                await UpdateTorrentClientData(torrent);
             }
 
             return torrent;
@@ -144,14 +149,14 @@ namespace RdtClient.Service.Services
             return newTorrent;
         }
 
-        public async Task<List<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
+        public async Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
         {
             var result = await _torrentClient.GetAvailableFiles(hash);
 
             return result;
         }
 
-        public async Task SelectFiles(Guid torrentId, IList<String> fileIds)
+        public async Task SelectFiles(Guid torrentId)
         {
             var torrent = await GetById(torrentId);
 
@@ -160,10 +165,10 @@ namespace RdtClient.Service.Services
                 return;
             }
 
-            await _torrentClient.SelectFiles(torrent.RdId, fileIds);
+            await _torrentClient.SelectFiles(torrent);
         }
 
-        public async Task CheckForLinks(Guid torrentId)
+        public async Task CreateDownloads(Guid torrentId)
         {
             var torrent = await GetById(torrentId);
 
@@ -172,16 +177,9 @@ namespace RdtClient.Service.Services
                 return;
             }
 
-            var rdTorrent = await _torrentClient.GetInfo(torrent.RdId);
+            var torrentLinks = await _torrentClient.GetDownloadLinks(torrent);
 
-            var torrentLinks = rdTorrent.Links.Where(m => !String.IsNullOrWhiteSpace(m)).ToList();
-
-            Log($"Found {torrentLinks} links", torrent);
-
-            // Sometimes RD will give you 1 rar with all files, sometimes it will give you 1 link per file.
-            if (torrent.Files.Count(m => m.Selected) != torrentLinks.Count && 
-                torrent.ManualFiles.Count != torrentLinks.Count &&
-                torrentLinks.Count != 1)
+            if (torrentLinks == null)
             {
                 return;
             }
@@ -313,6 +311,7 @@ namespace RdtClient.Service.Services
 
             var profile = new Profile
             {
+                Provider = Settings.Get.Provider,
                 UserName = user.Username,
                 Expiration = user.Expiration
             };
@@ -339,7 +338,7 @@ namespace RdtClient.Service.Services
                         continue;
                     }
 
-                    await UpdateRdData(torrent);
+                    await UpdateTorrentClientData(torrent, rdTorrent);
                 }
 
                 foreach (var torrent in torrents)
@@ -509,7 +508,7 @@ namespace RdtClient.Service.Services
                 return null;
             }
 
-            await UpdateRdData(torrent);
+            await UpdateTorrentClientData(torrent);
 
             foreach (var download in torrent.Downloads)
             {
@@ -565,7 +564,7 @@ namespace RdtClient.Service.Services
                                                         isFile,
                                                         torrent);
 
-                await UpdateRdData(newTorrent);
+                await UpdateTorrentClientData(newTorrent);
 
                 return newTorrent;
             }
@@ -580,7 +579,7 @@ namespace RdtClient.Service.Services
             await _torrentData.Update(torrent);
         }
 
-        private async Task UpdateRdData(Torrent torrent)
+        private async Task UpdateTorrentClientData(Torrent torrent, TorrentClientTorrent torrentClientTorrent = null)
         {
             var originalTorrent = JsonConvert.SerializeObject(torrent,
                                                               new JsonSerializerSettings
@@ -588,70 +587,7 @@ namespace RdtClient.Service.Services
                                                                   ReferenceLoopHandling = ReferenceLoopHandling.Ignore
                                                               });
 
-            try
-            {
-                var rdTorrent = await _torrentClient.GetInfo(torrent.RdId);
-
-                if (!String.IsNullOrWhiteSpace(rdTorrent.Filename))
-                {
-                    torrent.RdName = rdTorrent.Filename;
-                }
-
-                if (!String.IsNullOrWhiteSpace(rdTorrent.OriginalFilename))
-                {
-                    torrent.RdName = rdTorrent.OriginalFilename;
-                }
-
-                if (rdTorrent.Bytes > 0)
-                {
-                    torrent.RdSize = rdTorrent.Bytes;
-                }
-                else if (rdTorrent.OriginalBytes > 0)
-                {
-                    torrent.RdSize = rdTorrent.OriginalBytes;
-                }
-
-                if (rdTorrent.Files != null)
-                {
-                    torrent.RdFiles = JsonConvert.SerializeObject(rdTorrent.Files);
-                }
-
-                torrent.RdHost = rdTorrent.Host;
-                torrent.RdSplit = rdTorrent.Split;
-                torrent.RdProgress = rdTorrent.Progress;
-                torrent.RdAdded = rdTorrent.Added;
-                torrent.RdEnded = rdTorrent.Ended;
-                torrent.RdSpeed = rdTorrent.Speed;
-                torrent.RdSeeders = rdTorrent.Seeders;
-                torrent.RdStatusRaw = rdTorrent.Status;
-
-                torrent.RdStatus = rdTorrent.Status switch
-                {
-                    "magnet_error" => RealDebridStatus.Error,
-                    "magnet_conversion" => RealDebridStatus.Processing,
-                    "waiting_files_selection" => RealDebridStatus.WaitingForFileSelection,
-                    "queued" => RealDebridStatus.Downloading,
-                    "downloading" => RealDebridStatus.Downloading,
-                    "downloaded" => RealDebridStatus.Finished,
-                    "error" => RealDebridStatus.Error,
-                    "virus" => RealDebridStatus.Error,
-                    "compressing" => RealDebridStatus.Downloading,
-                    "uploading" => RealDebridStatus.Uploading,
-                    "dead" => RealDebridStatus.Error,
-                    _ => RealDebridStatus.Error
-                };
-            }
-            catch (Exception ex)
-            {
-                if (ex.Message == "Resource not found")
-                {
-                    torrent.RdStatusRaw = "deleted";
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            await _torrentClient.UpdateData(torrent, torrentClientTorrent);
             
             var newTorrent = JsonConvert.SerializeObject(torrent,
                                                          new JsonSerializerSettings

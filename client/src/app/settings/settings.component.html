@@ -3,6 +3,9 @@
     <li [ngClass]="{ 'is-active': activeTab === 0 }" (click)="activeTab = 0">
       <a>General</a>
     </li>
+    <li [ngClass]="{ 'is-active': activeTab === 4 }" (click)="activeTab = 4">
+      <a>Provider</a>
+    </li>
     <li [ngClass]="{ 'is-active': activeTab === 1 }" (click)="activeTab = 1">
       <a>Download Client</a>
     </li>
@@ -15,8 +18,26 @@
   </ul>
 </div>
 
-<div *ngIf="activeTab === 0">
+<div *ngIf="activeTab === 4">
   <div class="field">
+    <label class="label">Provider</label>
+    <div class="control select is-fullwidth">
+      <select [(ngModel)]="settingProvider">
+        <option value="RealDebrid">Real-Debrid</option>
+        <option value="AllDebrid">AllDebrid</option>
+      </select>
+    </div>
+    <p class="help">
+      The following 2 providers are supported:
+      <br />
+      <a href="https://real-debrid.com/?id=1348683" target="_blank" rel="noopener">https://real-debrid.com</a>
+      <br />
+      <a href="https://alldebrid.com/?uid=2v91l&lang=en" target="_blank" rel="noopener">https://alldebrid.com</a>
+      <br/>
+      At this point only 1 provider can be used at the time.
+    </p>
+  </div>
+  <div class="field" *ngIf="settingProvider === 'RealDebrid'">
     <label class="label">Real-Debrid API Key</label>
     <div class="control">
       <input class="input" type="text" maxlength="100" [(ngModel)]="settingRealDebridApiKey" />
@@ -26,7 +47,19 @@
       <a href="https://real-debrid.com/apitoken" target="_blank" rel="noopener">https://real-debrid.com/apitoken</a>.
     </p>
   </div>
+  <div class="field" *ngIf="settingProvider === 'AllDebrid'">
+    <label class="label">AllDebrid API Key</label>
+    <div class="control">
+      <input class="input" type="text" maxlength="100" [(ngModel)]="settingRealDebridApiKey" />
+    </div>
+    <p class="help">
+      You can find your API key here:
+      <a href="https://alldebrid.com/apikeys/" target="_blank" rel="noopener">https://alldebrid.com/apikeys/</a>.
+    </p>
+  </div>
+</div>
 
+<div *ngIf="activeTab === 0">
   <div class="field">
     <label class="label">Log level</label>
     <div class="control select is-fullwidth">

@@ -4,6 +4,7 @@ namespace RdtClient.Data.Models.Internal
 {
     public class DbSettings
     {
+        public String Provider { get; set; }
         public String RealDebridApiKey { get; set; }
         public String DownloadPath { get; set; }
         public String DownloadClient { get; set; }

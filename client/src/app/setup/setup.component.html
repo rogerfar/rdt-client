@@ -28,11 +28,7 @@
                 </div>
               </div>
               <div class="field">
-                <button
-                  class="button is-success"
-                  [ngClass]="{ 'is-loading': working }"
-                  [disabled]="working"
-                >
+                <button class="button is-success" [ngClass]="{ 'is-loading': working }" [disabled]="working">
                   Setup
                 </button>
               </div>
@@ -46,25 +42,46 @@
             <div class="notification is-primary">
               To be able to use the Real-Debrid Client you need a premium subscription to download torrents.
               <br /><br />
-              Not premium yet?
+              Not premium yet? You have the choice of 2 providers:
+              <br/>
               <a href="https://real-debrid.com/?id=1348683" target="_blank" rel="noopener"
                 >Use this link to sign up to Real-Debrid.</a
               >
-              <br /><br />
-              To connect to Real-Debrid please enter your Personal Prive API Token found here:
-              <a href="https://real-debrid.com/apitoken" target="_blank" rel="noopener"
-                >https://real-debrid.com/apitoken</a
-              >.
+              <br/>
+              <a href="https://alldebrid.com/?uid=2v91l&lang=en" target="_blank" rel="noopener"
+                >Use this link to sign up to AllDebrid.</a
+              >
+              <br/>
+              <small>(Referal links)</small>
+            </div>
+            <div class="field">
+              <label class="label">Provider</label>
+              <div class="control select is-fullwidth">
+                <select [(ngModel)]="provider">
+                  <option value="RealDebrid">Real-Debrid</option>
+                  <option value="AllDebrid">AllDebrid</option>
+                </select>
+              </div>
             </div>
             <div class="field">
               <label for="" class="label">API Private Token</label>
-              <div class="control has-icons-left">
+              <div class="control">
                 <input type="text" placeholder="" class="input" name="token" [(ngModel)]="token" required />
-                <span class="icon is-small is-left">
-                  <i class="fa fa-envelope"></i>
-                </span>
               </div>
+              <p class="help" *ngIf="provider === 'RealDebrid'">
+                You can find your API key here:
+                <a href="https://real-debrid.com/apitoken" target="_blank" rel="noopener"
+                  >https://real-debrid.com/apitoken</a
+                >.
+              </p>
+              <p class="help" *ngIf="provider === 'AllDebrid'">
+                You can find your API key here:
+                <a href="https://alldebrid.com/apikeys/" target="_blank" rel="noopener"
+                  >https://alldebrid.com/apikeys/</a
+                >.
+              </p>
             </div>
+
             <div class="field">
               <button
                 class="button is-success"

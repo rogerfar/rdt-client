@@ -77,6 +77,15 @@ namespace RdtClient.Web.Controllers
                                                    [ModelBinder(BinderType = typeof(JsonModelBinder))]
                                                    TorrentControllerUploadFileRequest formData)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Select(x => x.Value.Errors)
+                                       .Where(y => y.Count > 0)
+                                       .ToList();
+
+                return BadRequest(errors);
+            }
+
             if (file == null || file.Length <= 0)
             {
                 throw new Exception("Invalid torrent file");
@@ -99,6 +108,15 @@ namespace RdtClient.Web.Controllers
         [Route("UploadMagnet")]
         public async Task<ActionResult> UploadMagnet([FromBody] TorrentControllerUploadMagnetRequest request)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Select(x => x.Value.Errors)
+                                       .Where(y => y.Count > 0)
+                                       .ToList();
+
+                return BadRequest(errors);
+            }
+
             await _torrents.UploadMagnet(request.MagnetLink, request.Torrent);
 
             return Ok();
@@ -152,6 +170,7 @@ namespace RdtClient.Web.Controllers
         [Route("Retry/{torrentId:guid}")]
         public async Task<ActionResult> Retry(Guid torrentId)
         {
+            await _torrents.UpdateRetry(torrentId, DateTimeOffset.UtcNow, 0);
             await _torrents.RetryTorrent(torrentId, 0);
 
             return Ok();

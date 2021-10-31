@@ -4,6 +4,7 @@ namespace RdtClient.Data.Models.Internal
 {
     public class Profile
     {
+        public String Provider { get; set; }
         public String UserName { get; set; }
         public DateTimeOffset? Expiration { get; set; }
     }

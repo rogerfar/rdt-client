@@ -26,6 +26,7 @@ export class SettingsComponent implements OnInit {
   public testAria2cConnectionSuccess: string = null;
 
   public settingLogLevel: string;
+  public settingProvider: string;
   public settingRealDebridApiKey: string;
   public settingDownloadPath: string;
   public settingMappedPath: string;
@@ -57,6 +58,7 @@ export class SettingsComponent implements OnInit {
 
     this.settingsService.get().subscribe(
       (results) => {
+        this.settingProvider = this.getSetting(results, 'Provider');
         this.settingRealDebridApiKey = this.getSetting(results, 'RealDebridApiKey');
         this.settingLogLevel = this.getSetting(results, 'LogLevel');
         this.settingDownloadPath = this.getSetting(results, 'DownloadPath');
@@ -86,6 +88,10 @@ export class SettingsComponent implements OnInit {
     this.saving = true;
 
     const settings: Setting[] = [
+      {
+        settingId: 'Provider',
+        value: this.settingProvider,
+      },
       {
         settingId: 'RealDebridApiKey',
         value: this.settingRealDebridApiKey,

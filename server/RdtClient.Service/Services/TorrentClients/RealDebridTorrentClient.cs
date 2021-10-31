@@ -3,17 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using RDNET;
+using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
+using RdtClient.Service.Helpers;
 
 namespace RdtClient.Service.Services.TorrentClients
 {
     public class RealDebridTorrentClient : ITorrentClient
     {
+        private readonly ILogger<RealDebridTorrentClient> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
 
-        public RealDebridTorrentClient(IHttpClientFactory httpClientFactory)
+        public RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IHttpClientFactory httpClientFactory)
         {
+            _logger = logger;
             _httpClientFactory = httpClientFactory;
         }
 
@@ -93,7 +99,7 @@ namespace RdtClient.Service.Services.TorrentClients
             return new TorrentClientUser
             {
                 Username = user.Username,
-                Expiration = user.Expiration
+                Expiration = user.Premium > 0 ? user.Expiration : null
             };
         }
 
@@ -111,7 +117,7 @@ namespace RdtClient.Service.Services.TorrentClients
             return result.Id;
         }
 
-        public async Task<List<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
+        public async Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
         {
             var result = await GetClient().Torrents.GetAvailableFiles(hash);
 
@@ -128,9 +134,66 @@ namespace RdtClient.Service.Services.TorrentClients
             return torrentClientAvailableFiles;
         }
 
-        public async Task SelectFiles(String torrentId, IList<String> fileIds)
+        public async Task SelectFiles(Data.Models.Data.Torrent torrent)
         {
-            await GetClient().Torrents.SelectFilesAsync(torrentId, fileIds.ToArray());
+            var files = torrent.Files;
+
+            Log("Seleting files", torrent);
+
+            if (torrent.DownloadAction == TorrentDownloadAction.DownloadAvailableFiles)
+            {
+                Log($"Determining which files are already available on RealDebrid", torrent);
+
+                var availableFiles = await GetAvailableFiles(torrent.Hash);
+
+                Log($"Found {files.Count}/{torrent.Files.Count} available files on RealDebrid", torrent);
+
+                files = torrent.Files.Where(m => availableFiles.Any(f => m.Path.EndsWith(f.Filename))).ToList();
+            }
+            else if (torrent.DownloadAction == TorrentDownloadAction.DownloadAll)
+            {
+                Log("Selecting all files", torrent);
+                files = torrent.Files.ToList();
+            }
+            else if (torrent.DownloadAction == TorrentDownloadAction.DownloadManual)
+            {
+                Log("Selecting manual selected files", torrent);
+                files = torrent.Files.Where(m => torrent.ManualFiles.Any(f => m.Path.EndsWith(f))).ToList();
+            }
+
+            Log($"Selecting {files.Count}/{torrent.Files.Count} files", torrent);
+
+            if (torrent.DownloadAction != TorrentDownloadAction.DownloadManual && torrent.DownloadMinSize > 0)
+            {
+                var minFileSize = torrent.DownloadMinSize * 1024 * 1024;
+
+                Log($"Determining which files are over {minFileSize} bytes", torrent);
+
+                files = files.Where(m => m.Bytes > minFileSize)
+                             .ToList();
+
+                Log($"Found {files.Count} files that match the minimum file size criterea", torrent);
+            }
+
+            if (files.Count == 0)
+            {
+                Log($"Filtered all files out! Downloading ALL files instead!", torrent);
+
+                files = torrent.Files;
+            }
+
+            var fileIds = files.Select(m => m.Id.ToString()).ToArray();
+
+            Log($"Selecting files:");
+
+            foreach (var file in files)
+            {
+                Log($"{file.Id}: {file.Path} ({file.Bytes}b)");
+            }
+
+            Log("", torrent);
+
+            await GetClient().Torrents.SelectFilesAsync(torrent.RdId, fileIds.ToArray());
         }
 
         public async Task<TorrentClientTorrent> GetInfo(String torrentId)
@@ -150,6 +213,105 @@ namespace RdtClient.Service.Services.TorrentClients
             var result = await GetClient().Unrestrict.LinkAsync(link);
 
             return result.Download;
+        }
+
+        public async Task<Data.Models.Data.Torrent> UpdateData(Data.Models.Data.Torrent torrent, TorrentClientTorrent torrentClientTorrent)
+        {
+            try
+            {
+                var rdTorrent = await GetInfo(torrent.RdId);
+
+                if (!String.IsNullOrWhiteSpace(rdTorrent.Filename))
+                {
+                    torrent.RdName = rdTorrent.Filename;
+                }
+
+                if (!String.IsNullOrWhiteSpace(rdTorrent.OriginalFilename))
+                {
+                    torrent.RdName = rdTorrent.OriginalFilename;
+                }
+
+                if (rdTorrent.Bytes > 0)
+                {
+                    torrent.RdSize = rdTorrent.Bytes;
+                }
+                else if (rdTorrent.OriginalBytes > 0)
+                {
+                    torrent.RdSize = rdTorrent.OriginalBytes;
+                }
+
+                if (rdTorrent.Files != null)
+                {
+                    torrent.RdFiles = JsonConvert.SerializeObject(rdTorrent.Files);
+                }
+
+                torrent.RdHost = rdTorrent.Host;
+                torrent.RdSplit = rdTorrent.Split;
+                torrent.RdProgress = rdTorrent.Progress;
+                torrent.RdAdded = rdTorrent.Added;
+                torrent.RdEnded = rdTorrent.Ended;
+                torrent.RdSpeed = rdTorrent.Speed;
+                torrent.RdSeeders = rdTorrent.Seeders;
+                torrent.RdStatusRaw = rdTorrent.Status;
+
+                torrent.RdStatus = rdTorrent.Status switch
+                {
+                    "magnet_error" => TorrentStatus.Error,
+                    "magnet_conversion" => TorrentStatus.Processing,
+                    "waiting_files_selection" => TorrentStatus.WaitingForFileSelection,
+                    "queued" => TorrentStatus.Downloading,
+                    "downloading" => TorrentStatus.Downloading,
+                    "downloaded" => TorrentStatus.Finished,
+                    "error" => TorrentStatus.Error,
+                    "virus" => TorrentStatus.Error,
+                    "compressing" => TorrentStatus.Downloading,
+                    "uploading" => TorrentStatus.Uploading,
+                    "dead" => TorrentStatus.Error,
+                    _ => TorrentStatus.Error
+                };
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message == "Resource not found")
+                {
+                    torrent.RdStatusRaw = "deleted";
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return torrent;
+        }
+
+        public async Task<IList<String>> GetDownloadLinks(Data.Models.Data.Torrent torrent)
+        {
+            var rdTorrent = await GetInfo(torrent.RdId);
+
+            var torrentLinks = rdTorrent.Links.Where(m => !String.IsNullOrWhiteSpace(m)).ToList();
+
+            Log($"Found {torrentLinks} links", torrent);
+
+            // Sometimes RD will give you 1 rar with all files, sometimes it will give you 1 link per file.
+            if (torrent.Files.Count(m => m.Selected) != torrentLinks.Count && 
+                torrent.ManualFiles.Count != torrentLinks.Count &&
+                torrentLinks.Count != 1)
+            {
+                return null;
+            }
+
+            return torrentLinks;
+        }
+
+        private void Log(String message, Data.Models.Data.Torrent torrent = null)
+        {
+            if (torrent != null)
+            {
+                message = $"{message} {torrent.ToLog()}";
+            }
+
+            _logger.LogDebug(message);
         }
     }
 }

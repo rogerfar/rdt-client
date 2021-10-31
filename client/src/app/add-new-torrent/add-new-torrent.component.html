@@ -39,12 +39,29 @@
     <div class="field">
       <label class="label">Download action</label>
       <div class="control select is-fullwidth">
-        <select [(ngModel)]="downloadAction">
-          <option [ngValue]="0">Download all files above a certain size</option>
-          <option [ngValue]="1">Download all available files on Real-Debrid above a certain size</option>
-          <option [ngValue]="2">Pick files I want to download</option>
+        <select [(ngModel)]="downloadAction" [disabled]="provider === 'AllDebrid'">
+          <option [ngValue]="0">Download all files</option>
+          <option [ngValue]="1">Download all available files</option>
+          <option [ngValue]="2">Manually pick files</option>
         </select>
       </div>
+      <p class="help" *ngIf="provider === 'AllDebrid'">
+        This option is only available for RealDebrid. AllDebrid will always download the full torrent.
+      </p>
+    </div>
+
+    <div
+      class="notification is-success is-light"
+      *ngIf="provider === 'AllDebrid' && availableFiles && availableFiles.length > 0"
+    >
+      This torrent is available for immediate download.
+    </div>
+
+    <div
+      class="notification is-warning is-light"
+      *ngIf="provider === 'AllDebrid' && availableFiles && availableFiles.length === 0"
+    >
+      This torrent is not available for immediate download.
     </div>
 
     <div class="field">
@@ -59,6 +76,10 @@
           </div>
         </div>
       </div>
+      <p class="help" *ngIf="provider === 'AllDebrid'">
+        When downloading with AllDebrid it cannot be guaranteed that only files above this limit will be download as
+        some files are grouped together in 1 large archive.
+      </p>
       <p class="help" *ngIf="downloadAction === 2">This setting does not apply to manually selected files.</p>
     </div>
 
@@ -93,28 +114,14 @@
     <div class="field">
       <label class="label">Automatic retry downloads</label>
       <div class="control">
-        <input
-          class="input"
-          type="number"
-          max="1000"
-          min="0"
-          step="1"
-          [(ngModel)]="downloadRetryAttempts"
-        />
+        <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="downloadRetryAttempts" />
       </div>
       <p class="help">When a single download fails it will retry it this many times before marking it as failed.</p>
     </div>
     <div class="field">
       <label class="label">Automatic retry torrent</label>
       <div class="control">
-        <input
-          class="input"
-          type="number"
-          max="1000"
-          min="0"
-          step="1"
-          [(ngModel)]="torrentRetryAttempts"
-        />
+        <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="torrentRetryAttempts" />
       </div>
       <p class="help">
         When a single download has failed multiple times (see setting above) or when the torrent itself received an
@@ -122,12 +129,12 @@
       </p>
     </div>
   </div>
-  <div fxFlex>
+  <div fxFlex *ngIf="provider === 'RealDebrid'">
     <div class="field">
       <label class="label">Available files</label>
       <p class="help">
         These files are available for immediate download from Real-Debrid. <br />
-        It is possible that there are more files in the torrent, which are not shown here.
+        It is possible that there are more files in the torrent, which are not shown here.<br />
       </p>
       <div class="scroll-container">
         <div class="field" *ngIf="downloadAction === 2">
@@ -136,7 +143,7 @@
             Select all
           </label>
         </div>
-        <div class="field" *ngIf="downloadAction === 2">
+        <div class="field" *ngIf="downloadAction === 2 && availableFiles != null">
           <label class="checkbox is-fullwidth-label" *ngFor="let file of availableFiles">
             <input
               type="checkbox"
@@ -146,9 +153,10 @@
             {{ file.filename }} ({{ file.filesize | filesize }})
           </label>
         </div>
-        <div class="field" *ngIf="downloadAction !== 2">
+        <div class="field" *ngIf="downloadAction !== 2 && availableFiles != null">
           <label class="is-fullwidth-label is-block" *ngFor="let file of availableFiles">
-            {{ file.filename }} ({{ file.filesize | filesize }})
+            {{ file.filename }}
+            <span *ngIf="file.filesize > 0">({{ file.filesize | filesize }})</span>
           </label>
         </div>
       </div>

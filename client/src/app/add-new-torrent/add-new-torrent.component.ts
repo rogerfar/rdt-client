@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { TorrentService } from 'src/app/torrent.service';
 import { Torrent, TorrentFileAvailability } from '../models/torrent.model';
+import { SettingsService } from '../settings.service';
 
 @Component({
   selector: 'app-add-new-torrent',
@@ -12,6 +13,8 @@ export class AddNewTorrentComponent implements OnInit {
   public fileName: string;
   public magnetLink: string;
   private currentTorrentFile: string;
+
+  public provider: string;
 
   public category: string;
   public priority: number;
@@ -24,7 +27,7 @@ export class AddNewTorrentComponent implements OnInit {
   public downloadRetryAttempts: number = 3;
   public torrentRetryAttempts: number = 1;
 
-  public availableFiles: TorrentFileAvailability[] = [];
+  public availableFiles: TorrentFileAvailability[];
   public downloadFiles: { [key: string]: boolean } = {};
   public allSelected: boolean;
 
@@ -33,7 +36,11 @@ export class AddNewTorrentComponent implements OnInit {
 
   private selectedFile: File;
 
-  constructor(private router: Router, private torrentService: TorrentService) {}
+  constructor(private router: Router, private torrentService: TorrentService, private settingsService: SettingsService) {
+    this.settingsService.get().subscribe(settings => {
+      this.provider = settings.firstOrDefault(m => m.settingId === 'Provider')?.value;
+    });
+  }
 
   ngOnInit(): void {}
 
@@ -143,7 +150,7 @@ export class AddNewTorrentComponent implements OnInit {
 
     this.saving = true;
     this.error = null;
-    this.availableFiles = [];
+    this.availableFiles = null;
     this.downloadFiles = {};
     this.allSelected = true;
 

@@ -473,7 +473,7 @@ namespace RdtClient.Service.Services
                     Log("Processing", torrent);
 
                     // If torrent is erroring out on the Real-Debrid side.
-                    if (torrent.RdStatus == RealDebridStatus.Error)
+                    if (torrent.RdStatus == TorrentStatus.Error)
                     {
                         Log($"Torrent reported an error: {torrent.RdStatusRaw}", torrent);
                         Log($"Torrent retry count {torrent.RetryCount}/{torrent.TorrentRetryAttempts}", torrent);
@@ -486,75 +486,26 @@ namespace RdtClient.Service.Services
                     }
 
                     // Real-Debrid is waiting for file selection, select which files to download.
-                    if ((torrent.RdStatus == RealDebridStatus.WaitingForFileSelection || torrent.RdStatus == RealDebridStatus.Finished) &&
+                    if ((torrent.RdStatus == TorrentStatus.WaitingForFileSelection || torrent.RdStatus == TorrentStatus.Finished) &&
                         torrent.FilesSelected == null &&
-                        torrent.Downloads.Count == 0 &&
-                        torrent.FilesSelected == null)
+                        torrent.Downloads.Count == 0)
                     {
                         Log($"Selecting files", torrent);
 
-                        var files = torrent.Files;
-
-                        if (torrent.DownloadAction == TorrentDownloadAction.DownloadAvailableFiles)
-                        {
-                            Log($"Determining which files are already available on RealDebrid", torrent);
-
-                            var availableFiles = await _torrents.GetAvailableFiles(torrent.Hash);
-
-                            Log($"Found {files.Count}/{torrent.Files.Count} available files on RealDebrid", torrent);
-
-                            files = torrent.Files.Where(m => availableFiles.Any(f => m.Path.EndsWith(f.Filename))).ToList();
-                        }
-                        else if (torrent.DownloadAction == TorrentDownloadAction.DownloadAll)
-                        {
-                            Log("Selecting all files", torrent);
-                            files = torrent.Files.ToList();
-                        }
-                        else if (torrent.DownloadAction == TorrentDownloadAction.DownloadManual)
-                        {
-                            Log("Selecting manual selected files", torrent);
-                            files = torrent.Files.Where(m => torrent.ManualFiles.Any(f => m.Path.EndsWith(f))).ToList();
-                        }
-
-                        Log($"Selecting {files.Count}/{torrent.Files.Count} files", torrent);
-
-                        if (torrent.DownloadAction != TorrentDownloadAction.DownloadManual && torrent.DownloadMinSize > 0)
-                        {
-                            var minFileSize = torrent.DownloadMinSize * 1024 * 1024;
-
-                            Log($"Determining which files are over {minFileSize} bytes", torrent);
-
-                            files = files.Where(m => m.Bytes > minFileSize)
-                                         .ToList();
-
-                            Log($"Found {files.Count} files that match the minimum file size criterea", torrent);
-                        }
-
-                        if (files.Count == 0)
-                        {
-                            Log($"Filtered all files out! Downloading ALL files instead!", torrent);
-
-                            files = torrent.Files;
-                        }
-
-                        var fileIds = files.Select(m => m.Id.ToString()).ToArray();
-
-                        Log($"Selecting files:{Environment.NewLine}{String.Join(Environment.NewLine, files.Select(m => m.Path))}", torrent);
-
-                        await _torrents.SelectFiles(torrent.TorrentId, fileIds);
+                        await _torrents.SelectFiles(torrent.TorrentId);
 
                         await _torrents.UpdateFilesSelected(torrent.TorrentId, DateTime.UtcNow);
                     }
 
                     // Real-Debrid finished downloading the torrent, process the file to host.
-                    if (torrent.RdStatus == RealDebridStatus.Finished)
+                    if (torrent.RdStatus == TorrentStatus.Finished)
                     {
                         // The files are selected but there are no downloads yet, check if Real-Debrid has generated links yet.
                         if (torrent.Downloads.Count == 0 && torrent.FilesSelected != null)
                         {
-                            Log($"Checking for links", torrent);
+                            Log($"Creating downloads", torrent);
 
-                            await _torrents.CheckForLinks(torrent.TorrentId);
+                            await _torrents.CreateDownloads(torrent.TorrentId);
                         }
                     }
 

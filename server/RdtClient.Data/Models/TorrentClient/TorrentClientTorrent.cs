@@ -15,6 +15,7 @@ namespace RdtClient.Data.Models.TorrentClient
         public Int64 Split { get; set; }
         public Int64 Progress { get; set; }
         public String Status { get; set; }
+        public Int64 StatusCode { get; set; }
         public DateTimeOffset Added { get; set; }
         public List<TorrentClientFile> Files { get; set; }
         public List<String> Links { get; set; }

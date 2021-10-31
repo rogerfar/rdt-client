@@ -46,7 +46,7 @@ namespace RdtClient.Data.Models.Data
         public String RdHost { get; set; }
         public Int64 RdSplit { get; set; }
         public Int64 RdProgress { get; set; }
-        public RealDebridStatus RdStatus { get; set; }
+        public TorrentStatus RdStatus { get; set; }
         public String RdStatusRaw { get; set; }
         public DateTimeOffset RdAdded { get; set; }
         public DateTimeOffset? RdEnded { get; set; }

@@ -8,6 +8,7 @@ namespace RdtClient.Service
     {
         public static void Config(IServiceCollection services)
         {
+            services.AddScoped<AllDebridTorrentClient>();
             services.AddScoped<Authentication>();
             services.AddScoped<Downloads>();
             services.AddScoped<QBittorrent>();
