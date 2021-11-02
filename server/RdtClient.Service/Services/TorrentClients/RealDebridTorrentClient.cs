@@ -318,8 +318,6 @@ namespace RdtClient.Service.Services.TorrentClients
             // If there is only 1 link, delay for 1 minute to see if more links pop up.
             if (downloadLinks.Count == 1 && torrent.RdEnded.HasValue && DateTime.UtcNow > torrent.RdEnded.Value.ToUniversalTime().AddMinutes(1))
             {
-                var rem = torrent.RdEnded.Value.ToUniversalTime() - DateTimeOffset.UtcNow;
-                Log($"Delaying {rem.TotalSeconds} more seconds", torrent);
                 return downloadLinks;
             }
             
