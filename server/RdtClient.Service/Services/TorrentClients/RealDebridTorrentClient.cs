@@ -16,6 +16,7 @@ namespace RdtClient.Service.Services.TorrentClients
     {
         private readonly ILogger<RealDebridTorrentClient> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
+        private TimeSpan _offset;
 
         public RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IHttpClientFactory httpClientFactory)
         {
@@ -38,10 +39,14 @@ namespace RdtClient.Service.Services.TorrentClients
             var rdtNetClient = new RdNetClient(null, httpClient, 5);
             rdtNetClient.UseApiAuthentication(apiKey);
 
+            // Get the server time to fix up the timezones on results
+            var serverTime = rdtNetClient.Api.GetIsoTimeAsync().Result;
+            _offset = serverTime.Offset;
+
             return rdtNetClient;
         }
 
-        private static TorrentClientTorrent Map(Torrent torrent)
+        private TorrentClientTorrent Map(Torrent torrent)
         {
             return new TorrentClientTorrent
             {
@@ -55,7 +60,7 @@ namespace RdtClient.Service.Services.TorrentClients
                 Split = torrent.Split,
                 Progress = torrent.Progress,
                 Status = torrent.Status,
-                Added = torrent.Added,
+                Added = ChangeTimeZone(torrent.Added).Value,
                 Files = (torrent.Files ?? new List<TorrentFile>()).Select(m => new TorrentClientFile
                 {
                     Path = m.Path,
@@ -64,7 +69,7 @@ namespace RdtClient.Service.Services.TorrentClients
                     Selected = m.Selected
                 }).ToList(),
                 Links = torrent.Links,
-                Ended = torrent.Ended,
+                Ended = ChangeTimeZone(torrent.Ended),
                 Speed = torrent.Speed,
                 Seeders = torrent.Seeders,
             };
@@ -289,19 +294,41 @@ namespace RdtClient.Service.Services.TorrentClients
         {
             var rdTorrent = await GetInfo(torrent.RdId);
 
-            var torrentLinks = rdTorrent.Links.Where(m => !String.IsNullOrWhiteSpace(m)).ToList();
+            var downloadLinks = rdTorrent.Links.Where(m => !String.IsNullOrWhiteSpace(m)).ToList();
 
-            Log($"Found {torrentLinks} links", torrent);
+            Log($"Found {downloadLinks.Count} links", torrent);
 
-            // Sometimes RD will give you 1 rar with all files, sometimes it will give you 1 link per file.
-            if (torrent.Files.Count(m => m.Selected) != torrentLinks.Count && 
-                torrent.ManualFiles.Count != torrentLinks.Count &&
-                torrentLinks.Count != 1)
+            foreach (var link in downloadLinks)
             {
-                return null;
+                Log($"{link}", torrent);
             }
 
-            return torrentLinks;
+            // Check if all the links are set that have been selected
+            if (torrent.Files.Count(m => m.Selected) == downloadLinks.Count)
+            {
+                return downloadLinks;
+            }
+
+            // Check if all all the links are set for manual selection
+            if (torrent.ManualFiles.Count == downloadLinks.Count)
+            {
+                return downloadLinks;
+            }
+
+            // If there is only 1 link, delay for 1 minute to see if more links pop up.
+            if (downloadLinks.Count == 1 && torrent.RdEnded.HasValue && DateTime.UtcNow > torrent.RdEnded.Value.ToUniversalTime().AddMinutes(1))
+            {
+                var rem = torrent.RdEnded.Value.ToUniversalTime() - DateTimeOffset.UtcNow;
+                Log($"Delaying {rem.TotalSeconds} more seconds", torrent);
+                return downloadLinks;
+            }
+            
+            return null;
+        }
+        
+        private DateTimeOffset? ChangeTimeZone(DateTimeOffset? dateTimeOffset)
+        {
+            return dateTimeOffset?.Subtract(_offset).ToOffset(_offset);
         }
 
         private void Log(String message, Data.Models.Data.Torrent torrent = null)

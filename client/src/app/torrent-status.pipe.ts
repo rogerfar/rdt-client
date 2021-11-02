@@ -103,7 +103,7 @@ export class TorrentStatusPipe implements PipeTransform {
       case RealDebridStatus.Error:
         return `Torrent error: ${torrent.rdStatusRaw}`;
       case RealDebridStatus.Finished:
-        return `Torrent finished, waiting to download`;
+        return `Torrent finished, waiting for download links`;
       case RealDebridStatus.Uploading:
         return `Torrent uploading`;
       default:

@@ -177,21 +177,21 @@ namespace RdtClient.Service.Services
                 return;
             }
 
-            var torrentLinks = await _torrentClient.GetDownloadLinks(torrent);
+            var downloadLinks = await _torrentClient.GetDownloadLinks(torrent);
 
-            if (torrentLinks == null)
+            if (downloadLinks == null)
             {
                 return;
             }
 
-            foreach (var file in torrentLinks)
+            foreach (var downloadLink in downloadLinks)
             {
                 // Make sure downloads don't get added multiple times
-                var downloadExists = await _downloads.Get(torrent.TorrentId, file);
+                var downloadExists = await _downloads.Get(torrent.TorrentId, downloadLink);
 
-                if (downloadExists == null && !String.IsNullOrWhiteSpace(file))
+                if (downloadExists == null && !String.IsNullOrWhiteSpace(downloadLink))
                 {
-                    await _downloads.Add(torrent.TorrentId, file);
+                    await _downloads.Add(torrent.TorrentId, downloadLink);
                 }
             }
         }
