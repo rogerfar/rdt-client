@@ -73,7 +73,7 @@ export class TorrentStatusPipe implements PipeTransform {
         return `Queued for unpacking`;
       }
 
-      const queuedForDownload = torrent.downloads.where((m) => m.downloadQueued && !m.downloadStarted);
+      const queuedForDownload = torrent.downloads.where((m) => !m.downloadStarted && !m.downloadFinished);
 
       if (queuedForDownload.length > 0) {
         return `Queued for downloading`;

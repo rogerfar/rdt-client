@@ -49,6 +49,8 @@ namespace RdtClient.Data.Data
             Get = new DbSettings
             {
                 Provider = GetString("Provider"),
+                ProviderAutoImport = GetInt32("ProviderAutoImport"),
+                ProviderAutoDelete= GetInt32("ProviderAutoDelete"),
                 RealDebridApiKey = GetString("RealDebridApiKey"),
                 DownloadPath = GetString("DownloadPath"),
                 DownloadClient = GetString("DownloadClient"),

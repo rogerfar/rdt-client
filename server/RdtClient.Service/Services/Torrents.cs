@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using MonoTorrent;
 using System.Text.Json.Serialization;
 using RdtClient.Data.Data;
+using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
@@ -212,14 +213,25 @@ namespace RdtClient.Service.Services
 
             foreach (var download in torrent.Downloads)
             {
+                var retry = 10;
+
                 while (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
                 {
                     Log($"Cancelling download", download, torrent);
 
                     await downloadClient.Cancel();
 
-                    await Task.Delay(100);
+                    await Task.Delay(500);
+
+                    retry++;
+
+                    if (retry > 5)
+                    {
+                        break;
+                    }
                 }
+
+                retry = 10;
 
                 while (TorrentRunner.ActiveUnpackClients.TryGetValue(download.DownloadId, out var unpackClient))
                 {
@@ -227,7 +239,14 @@ namespace RdtClient.Service.Services
 
                     unpackClient.Cancel();
 
-                    await Task.Delay(100);
+                    await Task.Delay(500);
+
+                    retry++;
+
+                    if (retry > 10)
+                    {
+                        break;
+                    }
                 }
             }
 
@@ -334,22 +353,43 @@ namespace RdtClient.Service.Services
                 {
                     var torrent = torrents.FirstOrDefault(m => m.RdId == rdTorrent.Id);
 
-                    if (torrent == null)
+                    // Auto import torrents only torrents that have their files selected
+                    if (torrent == null && Settings.Get.ProviderAutoImport == 1)
                     {
-                        continue;
-                    }
+                        var newTorrent = new Torrent
+                        {
+                            Category = null,
+                            DownloadAction = TorrentDownloadAction.DownloadManual,
+                            FinishedAction = TorrentFinishedAction.None,
+                            DownloadMinSize = 0,
+                            TorrentRetryAttempts = 0,
+                            DownloadRetryAttempts = Settings.Get.DownloadRetryAttempts,
+                            Priority = 0,
+                            RdId = rdTorrent.Id
+                        };
 
-                    await UpdateTorrentClientData(torrent, rdTorrent);
+                        await _torrentClient.UpdateData(newTorrent, rdTorrent);
+
+                        if (newTorrent.RdStatus == TorrentStatus.WaitingForFileSelection)
+                        {
+                            continue;
+                        }
+
+                        await _torrentData.Add(rdTorrent.Id, rdTorrent.Hash, null, false, newTorrent);
+                    }
+                    else
+                    {
+                        await UpdateTorrentClientData(torrent, rdTorrent);
+                    }
                 }
 
                 foreach (var torrent in torrents)
                 {
                     var rdTorrent = rdTorrents.FirstOrDefault(m => m.Id == torrent.RdId);
 
-                    if (rdTorrent == null)
+                    if (rdTorrent == null && Settings.Get.ProviderAutoDelete == 1)
                     {
-                        await _downloads.DeleteForTorrent(torrent.TorrentId);
-                        await _torrentData.Delete(torrent.TorrentId);
+                        await Delete(torrent.TorrentId, true, false, true);
                     }
                 }
             }

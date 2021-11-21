@@ -269,7 +269,7 @@ namespace RdtClient.Service.Services
             torrents = torrents.Where(m => m.Completed == null).ToList();
 
             // Only poll Real-Debrid every second when a hub is connected, otherwise every 30 seconds
-            if (_nextUpdate < DateTime.UtcNow && torrents.Count > 0)
+            if (_nextUpdate < DateTime.UtcNow && ((torrents.Count > 0 && Settings.Get.ProviderAutoImport == 0) || Settings.Get.ProviderAutoImport == 1))
             {
                 Log($"Updating torrent info from Real-Debrid");
 

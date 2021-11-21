@@ -33,7 +33,7 @@
       <a href="https://real-debrid.com/?id=1348683" target="_blank" rel="noopener">https://real-debrid.com</a>
       <br />
       <a href="https://alldebrid.com/?uid=2v91l&lang=en" target="_blank" rel="noopener">https://alldebrid.com</a>
-      <br/>
+      <br />
       At this point only 1 provider can be used at the time.
     </p>
   </div>
@@ -56,6 +56,29 @@
       You can find your API key here:
       <a href="https://alldebrid.com/apikeys/" target="_blank" rel="noopener">https://alldebrid.com/apikeys/</a>.
     </p>
+  </div>
+  <div class="field">
+    <div class="control">
+      <label class="checkbox">
+        <input type="checkbox" [(ngModel)]="settingProviderAutoImport" />
+        Automatically import and process torrents added to provider.
+      </label>
+      <div class="help">
+        When selected, import downloads that are not added through RealDebridClient but have been directly added to
+        Real-Debrid or AllDebrid.
+      </div>
+    </div>
+  </div>
+  <div class="field">
+    <div class="control">
+      <label class="checkbox">
+        <input type="checkbox" [(ngModel)]="settingProviderAutoDelete" />
+        Automatically delete downloads removed from provider.
+      </label>
+      <div class="help">
+        When selected, cancel and delete downloads that have been removed from Real-Debrid or AllDebrid.
+      </div>
+    </div>
   </div>
 </div>
 
