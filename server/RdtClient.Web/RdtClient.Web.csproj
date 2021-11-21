@@ -4,7 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <UserSecretsId>94c24cba-f03f-4453-a671-3640b517c573</UserSecretsId>
-    <Version>1.9.8</Version>
+    <Version>2.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
