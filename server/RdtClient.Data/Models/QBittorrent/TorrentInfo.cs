@@ -1,5 +1,5 @@
 ﻿using System;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace RdtClient.Data.Models.QBittorrent
 {
@@ -7,136 +7,136 @@ namespace RdtClient.Data.Models.QBittorrent
     {
         public class TorrentInfo
         {
-            [JsonProperty("added_on")]
+            [JsonPropertyName("added_on")]
             public Int64 AddedOn { get; set; }
 
-            [JsonProperty("amount_left")]
+            [JsonPropertyName("amount_left")]
             public Int64 AmountLeft { get; set; }
 
-            [JsonProperty("auto_tmm")]
+            [JsonPropertyName("auto_tmm")]
             public Boolean AutoTmm { get; set; }
 
-            [JsonProperty("availability")]
+            [JsonPropertyName("availability")]
             public Decimal Availability { get; set; }
 
-            [JsonProperty("category")]
+            [JsonPropertyName("category")]
             public String Category { get; set; }
 
-            [JsonProperty("completed")]
+            [JsonPropertyName("completed")]
             public Int64 Completed { get; set; }
 
-            [JsonProperty("completion_on")]
+            [JsonPropertyName("completion_on")]
             public Int64? CompletionOn { get; set; }
             
-            [JsonProperty(PropertyName = "content_path")]
+            [JsonPropertyName("content_path")]
             public String ContentPath { get; set; }
 
-            [JsonProperty("dl_limit")]
+            [JsonPropertyName("dl_limit")]
             public Int64 DlLimit { get; set; }
 
-            [JsonProperty("dlspeed")]
+            [JsonPropertyName("dlspeed")]
             public Int64 Dlspeed { get; set; }
 
-            [JsonProperty("downloaded")]
+            [JsonPropertyName("downloaded")]
             public Int64 Downloaded { get; set; }
 
-            [JsonProperty("downloaded_session")]
+            [JsonPropertyName("downloaded_session")]
             public Int64 DownloadedSession { get; set; }
 
-            [JsonProperty("eta")]
+            [JsonPropertyName("eta")]
             public Int64 Eta { get; set; }
 
-            [JsonProperty("f_l_piece_prio")]
+            [JsonPropertyName("f_l_piece_prio")]
             public Boolean FlPiecePrio { get; set; }
 
-            [JsonProperty("force_start")]
+            [JsonPropertyName("force_start")]
             public Boolean ForceStart { get; set; }
 
-            [JsonProperty("hash")]
+            [JsonPropertyName("hash")]
             public String Hash { get; set; }
 
-            [JsonProperty("last_activity")]
+            [JsonPropertyName("last_activity")]
             public Int64 LastActivity { get; set; }
 
-            [JsonProperty("magnet_uri")]
+            [JsonPropertyName("magnet_uri")]
             public String MagnetUri { get; set; }
 
-            [JsonProperty("max_ratio")]
+            [JsonPropertyName("max_ratio")]
             public Int64 MaxRatio { get; set; }
 
-            [JsonProperty("max_seeding_time")]
+            [JsonPropertyName("max_seeding_time")]
             public Int64 MaxSeedingTime { get; set; }
 
-            [JsonProperty("name")]
+            [JsonPropertyName("name")]
             public String Name { get; set; }
 
-            [JsonProperty("num_complete")]
+            [JsonPropertyName("num_complete")]
             public Int64 NumComplete { get; set; }
 
-            [JsonProperty("num_incomplete")]
+            [JsonPropertyName("num_incomplete")]
             public Int64 NumIncomplete { get; set; }
 
-            [JsonProperty("num_leechs")]
+            [JsonPropertyName("num_leechs")]
             public Int64 NumLeechs { get; set; }
 
-            [JsonProperty("num_seeds")]
+            [JsonPropertyName("num_seeds")]
             public Int64 NumSeeds { get; set; }
 
-            [JsonProperty("priority")]
+            [JsonPropertyName("priority")]
             public Int64 Priority { get; set; }
 
-            [JsonProperty("progress")]
+            [JsonPropertyName("progress")]
             public Single Progress { get; set; }
 
-            [JsonProperty("ratio")]
+            [JsonPropertyName("ratio")]
             public Int64 Ratio { get; set; }
 
-            [JsonProperty("ratio_limit")]
+            [JsonPropertyName("ratio_limit")]
             public Int64 RatioLimit { get; set; }
 
-            [JsonProperty("save_path")]
+            [JsonPropertyName("save_path")]
             public String SavePath { get; set; }
 
-            [JsonProperty("seeding_time_limit")]
+            [JsonPropertyName("seeding_time_limit")]
             public Int64 SeedingTimeLimit { get; set; }
 
-            [JsonProperty("seen_complete")]
+            [JsonPropertyName("seen_complete")]
             public Int64 SeenComplete { get; set; }
 
-            [JsonProperty("seq_dl")]
+            [JsonPropertyName("seq_dl")]
             public Boolean SeqDl { get; set; }
 
-            [JsonProperty("size")]
+            [JsonPropertyName("size")]
             public Int64 Size { get; set; }
 
-            [JsonProperty("state")]
+            [JsonPropertyName("state")]
             public String State { get; set; }
 
-            [JsonProperty("super_seeding")]
+            [JsonPropertyName("super_seeding")]
             public Boolean SuperSeeding { get; set; }
 
-            [JsonProperty("tags")]
+            [JsonPropertyName("tags")]
             public String Tags { get; set; }
 
-            [JsonProperty("time_active")]
+            [JsonPropertyName("time_active")]
             public Int64 TimeActive { get; set; }
 
-            [JsonProperty("total_size")]
+            [JsonPropertyName("total_size")]
             public Int64 TotalSize { get; set; }
 
-            [JsonProperty("tracker")]
+            [JsonPropertyName("tracker")]
             public String Tracker { get; set; }
 
-            [JsonProperty("up_limit")]
+            [JsonPropertyName("up_limit")]
             public Int64 UpLimit { get; set; }
 
-            [JsonProperty("uploaded")]
+            [JsonPropertyName("uploaded")]
             public Int64 Uploaded { get; set; }
 
-            [JsonProperty("uploaded_session")]
+            [JsonPropertyName("uploaded_session")]
             public Int64 UploadedSession { get; set; }
 
-            [JsonProperty("upspeed")]
+            [JsonPropertyName("upspeed")]
             public Int64 Upspeed { get; set; }
         }
     }

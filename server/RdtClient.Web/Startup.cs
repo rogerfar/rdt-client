@@ -35,8 +35,7 @@ namespace RdtClient.Web
             var connectionString = $"Data Source={appSettings.Database.Path}";
             services.AddDbContext<DataContext>(options => options.UseSqlite(connectionString));
 
-            services.AddControllers()
-                    .AddNewtonsoftJson();
+            services.AddControllers();
 
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "wwwroot"; });
 

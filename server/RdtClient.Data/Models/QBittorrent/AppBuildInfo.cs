@@ -1,26 +1,26 @@
 ﻿using System;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace RdtClient.Data.Models.QBittorrent
 {
     public class AppBuildInfo
     {
-        [JsonProperty("bitness")]
+        [JsonPropertyName("bitness")]
         public Int64 Bitness { get; set; }
 
-        [JsonProperty("boost")]
+        [JsonPropertyName("boost")]
         public String Boost { get; set; }
 
-        [JsonProperty("libtorrent")]
+        [JsonPropertyName("libtorrent")]
         public String Libtorrent { get; set; }
 
-        [JsonProperty("openssl")]
+        [JsonPropertyName("openssl")]
         public String Openssl { get; set; }
 
-        [JsonProperty("qt")]
+        [JsonPropertyName("qt")]
         public String Qt { get; set; }
 
-        [JsonProperty("zlib")]
+        [JsonPropertyName("zlib")]
         public String Zlib { get; set; }
     }
 }

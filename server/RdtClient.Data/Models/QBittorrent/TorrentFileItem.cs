@@ -1,11 +1,11 @@
 using System;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace RdtClient.Data.Models.QBittorrent
 {
     public class TorrentFileItem
     {
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public String Name { get; set; }
     }
 }

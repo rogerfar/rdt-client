@@ -1,107 +1,107 @@
 ﻿using System;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace RdtClient.Data.Models.QBittorrent
 {
     public class TorrentProperties
     {
-        [JsonProperty("addition_date")]
+        [JsonPropertyName("addition_date")]
         public Int64 AdditionDate { get; set; }
 
-        [JsonProperty("comment")]
+        [JsonPropertyName("comment")]
         public String Comment { get; set; }
 
-        [JsonProperty("completion_date")]
+        [JsonPropertyName("completion_date")]
         public Int64 CompletionDate { get; set; }
 
-        [JsonProperty("created_by")]
+        [JsonPropertyName("created_by")]
         public String CreatedBy { get; set; }
 
-        [JsonProperty("creation_date")]
+        [JsonPropertyName("creation_date")]
         public Int64 CreationDate { get; set; }
 
-        [JsonProperty("dl_limit")]
+        [JsonPropertyName("dl_limit")]
         public Int64 DlLimit { get; set; }
 
-        [JsonProperty("dl_speed")]
+        [JsonPropertyName("dl_speed")]
         public Int64 DlSpeed { get; set; }
 
-        [JsonProperty("dl_speed_avg")]
+        [JsonPropertyName("dl_speed_avg")]
         public Int64 DlSpeedAvg { get; set; }
 
-        [JsonProperty("eta")]
+        [JsonPropertyName("eta")]
         public Int64 Eta { get; set; }
 
-        [JsonProperty("last_seen")]
+        [JsonPropertyName("last_seen")]
         public Int64 LastSeen { get; set; }
 
-        [JsonProperty("nb_connections")]
+        [JsonPropertyName("nb_connections")]
         public Int64 NbConnections { get; set; }
 
-        [JsonProperty("nb_connections_limit")]
+        [JsonPropertyName("nb_connections_limit")]
         public Int64 NbConnectionsLimit { get; set; }
 
-        [JsonProperty("peers")]
+        [JsonPropertyName("peers")]
         public Int64 Peers { get; set; }
 
-        [JsonProperty("peers_total")]
+        [JsonPropertyName("peers_total")]
         public Int64 PeersTotal { get; set; }
 
-        [JsonProperty("piece_size")]
+        [JsonPropertyName("piece_size")]
         public Int64 PieceSize { get; set; }
 
-        [JsonProperty("pieces_have")]
+        [JsonPropertyName("pieces_have")]
         public Int64 PiecesHave { get; set; }
 
-        [JsonProperty("pieces_num")]
+        [JsonPropertyName("pieces_num")]
         public Int64 PiecesNum { get; set; }
 
-        [JsonProperty("reannounce")]
+        [JsonPropertyName("reannounce")]
         public Int64 Reannounce { get; set; }
 
-        [JsonProperty("save_path")]
+        [JsonPropertyName("save_path")]
         public String SavePath { get; set; }
 
-        [JsonProperty("seeding_time")]
+        [JsonPropertyName("seeding_time")]
         public Int64 SeedingTime { get; set; }
 
-        [JsonProperty("seeds")]
+        [JsonPropertyName("seeds")]
         public Int64 Seeds { get; set; }
 
-        [JsonProperty("seeds_total")]
+        [JsonPropertyName("seeds_total")]
         public Int64 SeedsTotal { get; set; }
 
-        [JsonProperty("share_ratio")]
+        [JsonPropertyName("share_ratio")]
         public Int64 ShareRatio { get; set; }
 
-        [JsonProperty("time_elapsed")]
+        [JsonPropertyName("time_elapsed")]
         public Int64 TimeElapsed { get; set; }
 
-        [JsonProperty("total_downloaded")]
+        [JsonPropertyName("total_downloaded")]
         public Int64 TotalDownloaded { get; set; }
 
-        [JsonProperty("total_downloaded_session")]
+        [JsonPropertyName("total_downloaded_session")]
         public Int64 TotalDownloadedSession { get; set; }
 
-        [JsonProperty("total_size")]
+        [JsonPropertyName("total_size")]
         public Int64 TotalSize { get; set; }
 
-        [JsonProperty("total_uploaded")]
+        [JsonPropertyName("total_uploaded")]
         public Int64 TotalUploaded { get; set; }
 
-        [JsonProperty("total_uploaded_session")]
+        [JsonPropertyName("total_uploaded_session")]
         public Int64 TotalUploadedSession { get; set; }
 
-        [JsonProperty("total_wasted")]
+        [JsonPropertyName("total_wasted")]
         public Int64 TotalWasted { get; set; }
 
-        [JsonProperty("up_limit")]
+        [JsonPropertyName("up_limit")]
         public Int64 UpLimit { get; set; }
 
-        [JsonProperty("up_speed")]
+        [JsonPropertyName("up_speed")]
         public Int64 UpSpeed { get; set; }
 
-        [JsonProperty("up_speed_avg")]
+        [JsonPropertyName("up_speed_avg")]
         public Int64 UpSpeedAvg { get; set; }
     }
 }

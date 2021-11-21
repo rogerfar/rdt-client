@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MonoTorrent;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using RdtClient.Data.Data;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Data.Models.TorrentClient;
@@ -581,19 +582,19 @@ namespace RdtClient.Service.Services
 
         private async Task UpdateTorrentClientData(Torrent torrent, TorrentClientTorrent torrentClientTorrent = null)
         {
-            var originalTorrent = JsonConvert.SerializeObject(torrent,
-                                                              new JsonSerializerSettings
-                                                              {
-                                                                  ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-                                                              });
+            var originalTorrent = JsonSerializer.Serialize(torrent,
+                                                           new JsonSerializerOptions
+                                                           {
+                                                               ReferenceHandler = ReferenceHandler.IgnoreCycles
+                                                           });
 
             await _torrentClient.UpdateData(torrent, torrentClientTorrent);
             
-            var newTorrent = JsonConvert.SerializeObject(torrent,
-                                                         new JsonSerializerSettings
-                                                         {
-                                                             ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-                                                         });
+            var newTorrent = JsonSerializer.Serialize(torrent,
+                                                      new JsonSerializerOptions
+                                                      {
+                                                          ReferenceHandler = ReferenceHandler.IgnoreCycles
+                                                      });
 
             if (originalTorrent != newTorrent)
             {

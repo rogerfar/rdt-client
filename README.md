@@ -3,10 +3,10 @@
 This is a web interface to manage your torrents on Real-Debrid or AllDebrid. It supports the following features:
 
 - Add new torrents through magnets or files
-- Download all files from Real Debrid or AllDebrid to your local machine automatically
+- Download all files from Real-Debrid or AllDebrid to your local machine automatically
 - Unpack all files when finished downloading
 - Implements a fake qBittorrent API so you can hook up other applications like Sonarr or Couchpotato.
-- Built with Angular 11 and .NET 5
+- Built with Angular 13 and .NET 6
 
 **You will need a Premium service at Real-Debrid or AllDebrid!**
 
@@ -70,6 +70,7 @@ Replace the paths in `volumes` as in the above step.
 
 Instead of running in Docker you can install it as a service in Windows or Linux (not tested).
 
+1. Make sure you have the ASP.NET Core Runtime 6 installed: [https://dotnet.microsoft.com/download/dotnet/6.0](https://dotnet.microsoft.com/download/dotnet/6.0)
 1. Get the latest zip file from the Releases page and extract it to your host.
 1. Open the `appsettings.json` file and replace the `LogLevel` `Path` to a path on your host.
 1. In `appsettings.json` replace the `Database` `Path` to a path on your host.
@@ -96,7 +97,7 @@ This is a simple 1 connection only download manager. It uses less resources than
 
 It has the following options:
 
-- Maximum parallel downloads: This number indicates how many completed torrents from Real Debrid can be downloaded at the same time. On low powered systems it is recommended to keep this number low.
+- Maximum parallel downloads: This number indicates how many completed torrents from Real-Debrid can be downloaded at the same time. On low powered systems it is recommended to keep this number low.
 
 #### Multi Part Downloader
 
@@ -105,7 +106,7 @@ This [downloader](https://github.com/bezzad/Downloader) as more options and such
 It has the following options:
 
 - Temp Download path: Set this path to where the downloader temporarily stores chunks. This path can be an internal path in Docker (i.e. `/data/temp`) but make sure you have enough disk space to complete the whole download. When all chunks are completed the completed file is copied to your download folder.
-- Maximum parallel downloads: This number indicates how many completed torrents from Real Debrid can be downloaded at the same time.
+- Maximum parallel downloads: This number indicates how many completed torrents from Real-Debrid can be downloaded at the same time.
 - Parallel connections per download: This number indicates how many threads/connections/parts/chunks it will use per download. This can increase speed, recommended is no more than 8.
 - Download speed (in MB/s): This number indicates the speed in MB/s per download. If you set this to 10 and `Maximum parallel downloads` to 2, you can download with a maximum of 20MB/s.
 
@@ -149,8 +150,8 @@ Notice: the progress and ETA reported in Sonarr's Activity tab will not be accur
 - NodeJS
 - NPM
 - Angular CLI
-- .NET 5
-- Visual Studio 2019
+- .NET 6
+- Visual Studio 2022
 - (optional) Resharper
 
 1. Open the client folder project in VS Code and run `npm install`.

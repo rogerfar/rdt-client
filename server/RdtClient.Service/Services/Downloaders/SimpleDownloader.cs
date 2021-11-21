@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
@@ -30,7 +31,7 @@ namespace RdtClient.Service.Services.Downloaders
 
         public SimpleDownloader(String uri, String filePath)
         {
-            _logger = Log.ForContext<Aria2cDownloader>();
+            _logger = Log.ForContext<SimpleDownloader>();
 
             _uri = uri;
             _filePath = filePath;
@@ -64,27 +65,17 @@ namespace RdtClient.Service.Services.Downloaders
                 _bytesLastUpdate = 0;
                 _nextUpdate = DateTime.UtcNow.AddSeconds(1);
 
-                // Determine the file size
-                var webRequest = WebRequest.Create(_uri);
-                webRequest.Method = "HEAD";
-                webRequest.Timeout = 5000;
-                Int64 responseLength;
-
-                using (var webResponse = await webRequest.GetResponseAsync())
-                {
-                    responseLength = Int64.Parse(webResponse.Headers.Get("Content-Length"));
-                }
-
+                BytesTotal = await GetContentSize();
+                
                 var timeout = DateTimeOffset.UtcNow.AddHours(1);
 
+                var httpClient = new HttpClient();
+                
                 while (timeout > DateTimeOffset.UtcNow && !_cancelled)
                 {
                     try
                     {
-                        var request = WebRequest.Create(_uri);
-                        using var response = await request.GetResponseAsync();
-
-                        await using var responseStream = response.GetResponseStream();
+                        var responseStream = await httpClient.GetStreamAsync(_uri);
 
                         if (responseStream == null)
                         {
@@ -112,8 +103,7 @@ namespace RdtClient.Service.Services.Downloaders
                             await fileStream.WriteAsync(buffer.AsMemory(0, readSize), innerCts.Token);
 
                             BytesDone = fileStream.Length;
-                            BytesTotal = responseLength;
-
+                            
                             if (DateTime.UtcNow > _nextUpdate)
                             {
                                 Speed = fileStream.Length - _bytesLastUpdate;
@@ -163,6 +153,23 @@ namespace RdtClient.Service.Services.Downloaders
                     Error = ex.Message
                 });
             }
+        }
+
+        private async Task<Int64> GetContentSize()
+        {
+            var httpClient = new HttpClient
+            {
+                Timeout = TimeSpan.FromSeconds(5)
+            };
+
+            var responseHeaders = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, _uri));
+
+            if (!responseHeaders.IsSuccessStatusCode)
+            {
+                return -1;
+            }
+
+            return responseHeaders.Content.Headers.ContentLength ?? -1;
         }
 
         public Task Pause()

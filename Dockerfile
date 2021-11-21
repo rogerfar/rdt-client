@@ -14,12 +14,12 @@ RUN \
    cd client && \
    echo "**** Building Code  ****" && \
    npm ci && \
-   npx ng build --prod --output-path=out
+   npx ng build --output-path=out
 
 RUN ls -FCla /appclient/root
 
 # Stage 2 - Build the backend
-FROM mcr.microsoft.com/dotnet/sdk:5.0-buster-slim-amd64 AS dotnet-build-env
+FROM mcr.microsoft.com/dotnet/sdk:6.0-bullseye-slim-amd64 AS dotnet-build-env
 ARG TARGETPLATFORM
 ENV TARGETPLATFORM=${TARGETPLATFORM:-linux/amd64}
 ARG BUILDPLATFORM

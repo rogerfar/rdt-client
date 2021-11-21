@@ -4,11 +4,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
 using Aria2NET;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.Internal;
@@ -47,14 +47,14 @@ namespace RdtClient.Service.Services
         {
             Log("Initializing TorrentRunner");
 
-            var settingsCopy = JsonConvert.DeserializeObject<DbSettings>(JsonConvert.SerializeObject(Settings.Get));
+            var settingsCopy = JsonSerializer.Deserialize<DbSettings>(JsonSerializer.Serialize(Settings.Get));
 
             if (settingsCopy != null)
             {
                 settingsCopy.RealDebridApiKey = "*****";
                 settingsCopy.Aria2cSecret = "*****";
 
-                Log(JsonConvert.SerializeObject(settingsCopy));
+                Log(JsonSerializer.Serialize(settingsCopy));
             }
 
             // When starting up reset any pending downloads or unpackings so that they are restarted.

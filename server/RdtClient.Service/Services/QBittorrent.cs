@@ -246,6 +246,13 @@ namespace RdtClient.Service.Services
                     speed = (Int32) torrent.Downloads.Average(m => m.Speed);
                 }
 
+                var progress = (bytesDone / (Single)bytesTotal);
+
+                if (!Single.IsNormal(progress))
+                {
+                    progress = 0;
+                }
+
                 var result = new TorrentInfo
                 {
                     AddedOn = torrent.Added.ToUnixTimeSeconds(),
@@ -274,7 +281,7 @@ namespace RdtClient.Service.Services
                     NumLeechs = 100,
                     NumSeeds = 100,
                     Priority = ++prio,
-                    Progress = bytesDone / (Single) bytesTotal,
+                    Progress = progress,
                     Ratio = 1,
                     RatioLimit = 1,
                     SavePath = downloadPath,
