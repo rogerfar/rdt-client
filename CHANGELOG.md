@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.0] - 2021-11-21
 ### Changed
 - Update projects to .NET6 and Angular 13.
+### Added
+- Added setting to automatically import torrents from RealDebrid / AllDebrid.
+- Added setting to automatically delete torrents from RealDebridClient when they have been removed from RealDebrid / AllDebrid.
 
 ## [1.9.8] - 2021-10-30
 ### Added
