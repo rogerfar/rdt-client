@@ -1,5 +1,5 @@
 # Stage 1 - Build the frontend
-FROM node:15.5-buster AS node-build-env
+FROM node:16-buster AS node-build-env
 ARG TARGETPLATFORM
 ENV TARGETPLATFORM=${TARGETPLATFORM:-linux/amd64}
 ARG BUILDPLATFORM
