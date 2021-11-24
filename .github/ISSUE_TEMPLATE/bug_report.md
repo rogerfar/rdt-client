@@ -12,3 +12,5 @@ assignees: ''
 **Wat OS are you running?**
 
 **Are you using Docker or as a service?**
+
+**Please attach a log file here with the log setting set to debug**
