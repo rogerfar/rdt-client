@@ -224,7 +224,17 @@ namespace RdtClient.Service.Services.TorrentClients
         {
             try
             {
+                if (torrent == null)
+                {
+                    return null;
+                }
+
                 var rdTorrent = await GetInfo(torrent.RdId);
+
+                if (rdTorrent == null)
+                {
+                    return torrent;
+                }
 
                 if (!String.IsNullOrWhiteSpace(rdTorrent.Filename))
                 {
@@ -279,7 +289,10 @@ namespace RdtClient.Service.Services.TorrentClients
             {
                 if (ex.Message == "Resource not found")
                 {
-                    torrent.RdStatusRaw = "deleted";
+                    if (torrent != null)
+                    {
+                        torrent.RdStatusRaw = "deleted";
+                    }
                 }
                 else
                 {
