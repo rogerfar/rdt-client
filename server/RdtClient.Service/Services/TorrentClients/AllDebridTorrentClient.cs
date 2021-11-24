@@ -238,9 +238,9 @@ namespace RdtClient.Service.Services.TorrentClients
 
             foreach (var link in links)
             {
-                var fileList = link.Files.SelectMany(file => GetFiles(file));
+                var fileList = GetFiles(link.Files, "");
 
-                Log($"{link.Filename} ({link.Size}b) {link.LinkUrl}, contains {String.Join(", ", fileList)}");
+                Log($"{link.Filename} ({link.Size}b) {link.LinkUrl}, contains files:{Environment.NewLine}{String.Join(Environment.NewLine, fileList)}");
             }
 
             Log("", torrent);
@@ -248,18 +248,55 @@ namespace RdtClient.Service.Services.TorrentClients
             return links.Select(m => m.LinkUrl.ToString()).ToList();
         }
 
-        private static IList<String> GetFiles(File file, String parent = null)
+        private static IEnumerable<String> GetFiles(IList<File> files, String parent)
         {
-            var result = new List<String>
-            {
-                $"{parent}/{file.Name}"
-            };
+            var result = new List<String>();
 
-            if (file.Files != null && file.Files.Count > 0)
+            foreach (var file in files)
             {
-                foreach (var subFile in file.Files)
+                if (!String.IsNullOrWhiteSpace(file.N))
                 {
-                    result.AddRange(GetFiles(subFile, file.Name));
+                    result.Add($"{parent}/{file.N}");
+                }
+                
+                if (file.E != null && file.E.Value.PurpleEArray != null && file.E.Value.PurpleEArray.Count > 0)
+                {
+                    result.AddRange(GetFiles(file.E.Value.PurpleEArray, file.N));
+                }
+            }
+
+            return result;
+        }
+
+        private static IEnumerable<String> GetFiles(IList<FileE1> files, String parent)
+        {
+            var result = new List<String>();
+
+            foreach (var file in files)
+            {
+                if (!String.IsNullOrWhiteSpace(file.N))
+                {
+                    result.Add($"{parent}/{file.N}");
+                }
+                
+                if (file.E != null && file.E.Count > 0)
+                {
+                    result.AddRange(GetFiles(file.E, file.N));
+                }
+            }
+
+            return result;
+        }
+
+        private static IEnumerable<String> GetFiles(IList<FileE2> files, String parent)
+        {
+            var result = new List<String>();
+
+            foreach (var file in files)
+            {
+                if (!String.IsNullOrWhiteSpace(file.N))
+                {
+                    result.Add($"{parent}/{file.N}");
                 }
             }
 
