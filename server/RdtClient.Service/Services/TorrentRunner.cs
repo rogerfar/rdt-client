@@ -282,10 +282,8 @@ namespace RdtClient.Service.Services
 
                 if (RdtHub.HasConnections)
                 {
-                    updateTime = 5;
+                    updateTime = 10;
                 }
-
-                updateTime = 0;
 
                 _nextUpdate = DateTime.UtcNow.AddSeconds(updateTime);
 #endif
