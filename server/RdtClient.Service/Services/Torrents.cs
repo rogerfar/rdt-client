@@ -333,7 +333,9 @@ namespace RdtClient.Service.Services
             {
                 Provider = Settings.Get.Provider,
                 UserName = user.Username,
-                Expiration = user.Expiration
+                Expiration = user.Expiration,
+                CurrentVersion = UpdateChecker.CurrentVersion,
+                LatestVersion = UpdateChecker.LatestVersion
             };
 
             return profile;

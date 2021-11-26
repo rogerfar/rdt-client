@@ -112,6 +112,7 @@ namespace RdtClient.Web
                        .ConfigureServices((hostContext, services) =>
                        {
                            services.AddHostedService<TaskRunner>();
+                           services.AddHostedService<UpdateChecker>();
                        })
                        .ConfigureWebHostDefaults(webBuilder =>
                        {

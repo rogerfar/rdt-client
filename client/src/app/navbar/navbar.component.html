@@ -38,7 +38,7 @@
         </span>
         <span>Settings</span>
       </a>
-      <a class="navbar-item" *ngIf="profile" href="{{providerLink}}" target="_blank" rel="noopener">
+      <a class="navbar-item" *ngIf="profile" href="{{ providerLink }}" target="_blank" rel="noopener">
         <span class="icon">
           <i class="fas fa-euro-sign" aria-hidden="true"></i>
         </span>
@@ -61,3 +61,7 @@
     </div>
   </div>
 </nav>
+<div class="notification is-warning" *ngIf="profile.latestVersion && profile.currentVersion !== profile.latestVersion">
+  Version {{ profile.latestVersion }} of RealDebrid Client was found. You are currently on version
+  {{ profile.currentVersion }}.
+</div>
