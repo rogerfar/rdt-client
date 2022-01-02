@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 using AllDebridNET;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using RDNET;
+using RDNET.Exceptions;
 using RdtClient.Data.Enums;
-using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
+using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services.TorrentClients
 {
@@ -192,9 +194,20 @@ namespace RdtClient.Service.Services.TorrentClients
                     _ => TorrentStatus.Error
                 };
             }
-            catch (Exception ex)
+            catch (AllDebridException ex)
             {
-                if (ex.Message == "Resource not found")
+                if (ex.ErrorCode == "MAGNET_INVALID_ID")
+                {
+                    torrent.RdStatusRaw = "deleted";
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            catch (RealDebridException ex)
+            {
+                if (ex.ErrorCode == 7)
                 {
                     torrent.RdStatusRaw = "deleted";
                 }

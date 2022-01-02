@@ -370,14 +370,14 @@ namespace RdtClient.Service.Services
                             RdId = rdTorrent.Id
                         };
 
-                        await _torrentClient.UpdateData(newTorrent, rdTorrent);
-
                         if (newTorrent.RdStatus == TorrentStatus.WaitingForFileSelection)
                         {
                             continue;
                         }
 
-                        await _torrentData.Add(rdTorrent.Id, rdTorrent.Hash, null, false, newTorrent);
+                        torrent = await _torrentData.Add(rdTorrent.Id, rdTorrent.Hash, null, false, newTorrent);
+
+                        await UpdateTorrentClientData(torrent, rdTorrent);
                     }
                     else
                     {
@@ -624,23 +624,30 @@ namespace RdtClient.Service.Services
 
         private async Task UpdateTorrentClientData(Torrent torrent, TorrentClientTorrent torrentClientTorrent = null)
         {
-            var originalTorrent = JsonSerializer.Serialize(torrent,
-                                                           new JsonSerializerOptions
-                                                           {
-                                                               ReferenceHandler = ReferenceHandler.IgnoreCycles
-                                                           });
-
-            await _torrentClient.UpdateData(torrent, torrentClientTorrent);
-            
-            var newTorrent = JsonSerializer.Serialize(torrent,
-                                                      new JsonSerializerOptions
-                                                      {
-                                                          ReferenceHandler = ReferenceHandler.IgnoreCycles
-                                                      });
-
-            if (originalTorrent != newTorrent)
+            try
             {
-                await _torrentData.UpdateRdData(torrent);
+                var originalTorrent = JsonSerializer.Serialize(torrent,
+                                                               new JsonSerializerOptions
+                                                               {
+                                                                   ReferenceHandler = ReferenceHandler.IgnoreCycles
+                                                               });
+
+                await _torrentClient.UpdateData(torrent, torrentClientTorrent);
+
+                var newTorrent = JsonSerializer.Serialize(torrent,
+                                                          new JsonSerializerOptions
+                                                          {
+                                                              ReferenceHandler = ReferenceHandler.IgnoreCycles
+                                                          });
+
+                if (originalTorrent != newTorrent)
+                {
+                    await _torrentData.UpdateRdData(torrent);
+                }
+            }
+            catch (Exception ex)
+            {
+                // ignored
             }
         }
 

@@ -55,13 +55,13 @@
           <a class="navbar-item"> Profile </a>
           <a class="navbar-item" (click)="logout()"> Logout </a>
           <hr class="navbar-divider" />
-          <div class="navbar-item">Version 2.0.2</div>
+          <div class="navbar-item">Version 2.0.3</div>
         </div>
       </div>
     </div>
   </div>
 </nav>
-<div class="notification is-warning" *ngIf="profile.latestVersion && profile.currentVersion !== profile.latestVersion">
+<div class="notification is-warning" *ngIf="profile && profile.latestVersion && profile.currentVersion !== profile.latestVersion">
   Version {{ profile.latestVersion }} of RealDebrid Client was found. You are currently on version
   {{ profile.currentVersion }}.
 </div>
