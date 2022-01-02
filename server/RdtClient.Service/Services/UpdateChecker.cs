@@ -6,7 +6,6 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -15,8 +14,8 @@ namespace RdtClient.Service.Services
 {
     public class UpdateChecker : BackgroundService
     {
-        public static String CurrentVersion { get; set; }
-        public static String LatestVersion { get; set; }
+        public static String CurrentVersion { get; private set; }
+        public static String LatestVersion { get; private set; }
 
         private readonly ILogger<TaskRunner> _logger;
 
@@ -29,7 +28,14 @@ namespace RdtClient.Service.Services
         {
             var version = Assembly.GetEntryAssembly()?.GetName().Version?.ToString();
 
-            CurrentVersion = $"v{version[..version.LastIndexOf(".")]}";
+            if (String.IsNullOrWhiteSpace(version))
+            {
+                CurrentVersion = "";
+
+                return;
+            }
+
+            CurrentVersion = $"v{version[..version.LastIndexOf(".", StringComparison.Ordinal)]}";
 
             _logger.LogInformation($"UpdateChecker started, currently on version {CurrentVersion}.");
 
