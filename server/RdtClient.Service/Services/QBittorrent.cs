@@ -307,7 +307,7 @@ namespace RdtClient.Service.Services
                 }
                 else if (!String.IsNullOrWhiteSpace(torrent.Error))
                 {
-                    result.State = torrent.Error;
+                    result.State = "error";
                 }
                 else if (torrent.Completed.HasValue)
                 {
