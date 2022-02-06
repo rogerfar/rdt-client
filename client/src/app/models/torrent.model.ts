@@ -20,6 +20,7 @@ export class Torrent {
   public downloadRetryAttempts: number;
   public torrentRetryAttempts: number;
   public deleteOnError: number;
+  public lifetime: number;
 
   public priority: number;
   public error: string;

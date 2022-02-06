@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.6] - 2022-02-06
 ### Added
 - Added setting to automatically delete torrents in the state of error after a certain amount of time.
+- Added lifetime setting to automatically expire torrents after a certain amount of time.
 
 ## [2.0.5] - 2022-01-11
 ### Changed

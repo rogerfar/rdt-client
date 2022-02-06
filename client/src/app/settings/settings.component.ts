@@ -46,6 +46,7 @@ export class SettingsComponent implements OnInit {
   public settingDownloadRetryAttempts: number;
   public settingTorrentRetryAttempts: number;
   public settingDeleteOnError: number;
+  public settingTorrentLifetime: number;
 
   constructor(private settingsService: SettingsService) {}
 
@@ -80,6 +81,7 @@ export class SettingsComponent implements OnInit {
         this.settingDownloadRetryAttempts = parseInt(this.getSetting(results, 'DownloadRetryAttempts'), 10);
         this.settingTorrentRetryAttempts = parseInt(this.getSetting(results, 'TorrentRetryAttempts'), 10);
         this.settingDeleteOnError = parseInt(this.getSetting(results, 'DeleteOnError'), 10);
+        this.settingTorrentLifetime = parseInt(this.getSetting(results, 'TorrentLifetime'), 10);
       },
       (err) => {
         this.error = err.error;
@@ -175,6 +177,10 @@ export class SettingsComponent implements OnInit {
       {
         settingId: 'DeleteOnError',
         value: (this.settingDeleteOnError ?? 0).toString(),
+      },
+      {
+        settingId: 'TorrentLifetime',
+        value: (this.settingTorrentLifetime ?? 0).toString(),
       },
     ];
 

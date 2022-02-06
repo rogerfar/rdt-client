@@ -70,6 +70,7 @@ namespace RdtClient.Data.Data
                 DownloadRetryAttempts = GetInt32("DownloadRetryAttempts"),
                 TorrentRetryAttempts = GetInt32("TorrentRetryAttempts"),
                 DeleteOnError = GetInt32("DeleteOnError"),
+                TorrentLifetime = GetInt32("TorrentLifetime"),
             };
         }
 

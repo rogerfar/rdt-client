@@ -248,12 +248,12 @@ namespace RdtClient.Service.Services
             {
                 try
                 {
-                    _logger.LogDebug($"Retrying torrent {torrent.RetryCount}/{torrent.TorrentRetryAttempts}", torrent);
+                    Log($"Retrying torrent {torrent.RetryCount}/{torrent.TorrentRetryAttempts}", torrent);
 
                     if (torrent.RetryCount > torrent.TorrentRetryAttempts)
                     {
                         await _torrents.UpdateRetry(torrent.TorrentId, null, torrent.RetryCount);
-                        _logger.LogDebug($"Torrent reach max retry count", torrent);
+                        Log($"Torrent reach max retry count");
                         continue;
                     }
 
@@ -267,14 +267,35 @@ namespace RdtClient.Service.Services
             }
 
             // Process torrent errors
-            foreach (var torrent in torrents.Where(m => m.Error != null && m.Completed != null && m.DeleteOnError > 0))
+            foreach (var torrent in torrents.Where(m => m.Error != null && m.DeleteOnError > 0))
             {
+                if (torrent.Completed == null)
+                {
+                    continue;
+                }
+
                 if (torrent.Completed.Value.AddMinutes(torrent.DeleteOnError) > DateTime.UtcNow)
                 {
                     continue;
                 }
 
+                Log($"Removing torrent because it has been {torrent.DeleteOnError} minutes in the error state", torrent);
+
                 await _torrents.Delete(torrent.TorrentId, true, true, true);
+            }
+            
+            // Process torrent lifetime
+            foreach (var torrent in torrents.Where(m => m.Downloads.Count == 0 && m.Completed == null && m.Lifetime > 0))
+            {
+                if (torrent.Added.AddMinutes(torrent.Lifetime) > DateTime.UtcNow)
+                {
+                    continue;
+                }
+
+                Log($"Torrent has reached its {torrent.Lifetime} minutes lifetime, marking as error", torrent);
+
+                await _torrents.UpdateRetry(torrent.TorrentId, null, 99);
+                await _torrents.UpdateError(torrent.TorrentId, "Torrent expired in RealDebrid Client");
             }
 
             torrents = torrents.Where(m => m.Completed == null).ToList();

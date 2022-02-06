@@ -291,10 +291,21 @@
   <div class="field">
     <label class="label">Delete download when in error</label>
     <div class="control">
-      <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="settingDeleteOnError" />
+      <input class="input" type="number" max="100000" min="0" step="1" [(ngModel)]="settingDeleteOnError" />
     </div>
     <p class="help">
       When a download has been in error for this many minutes, delete it from the provider and the client. 0 to disable.
+    </p>
+  </div>
+
+  <div class="field">
+    <label class="label">Torrent maximum lifetime</label>
+    <div class="control">
+      <input class="input" type="number" max="100000" min="0" step="1" [(ngModel)]="settingTorrentLifetime" />
+    </div>
+    <p class="help">
+      The maximum lifetime of a torrent in minutes. When this time has passed, mark the torrent as error. If the torrent
+      is completed and has downloads, the lifetime setting will not apply. 0 to disable.
     </p>
   </div>
 </div>

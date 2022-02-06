@@ -444,6 +444,7 @@ namespace RdtClient.Service.Services
                 TorrentRetryAttempts = Settings.Get.TorrentRetryAttempts,
                 DownloadRetryAttempts = Settings.Get.DownloadRetryAttempts,
                 DeleteOnError = Settings.Get.DeleteOnError,
+                Lifetime = Settings.Get.TorrentLifetime,
                 Priority = priority
             };
 
@@ -461,6 +462,7 @@ namespace RdtClient.Service.Services
                 TorrentRetryAttempts = Settings.Get.TorrentRetryAttempts,
                 DownloadRetryAttempts = Settings.Get.DownloadRetryAttempts,
                 DeleteOnError = Settings.Get.DeleteOnError,
+                Lifetime = Settings.Get.TorrentLifetime,
                 Priority = priority
             };
 

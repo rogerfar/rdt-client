@@ -27,6 +27,7 @@ export class AddNewTorrentComponent implements OnInit {
   public downloadRetryAttempts: number = 3;
   public torrentRetryAttempts: number = 1;
   public torrentDeleteOnError: number = 0;
+  public torrentLifetime: number = 0;
 
   public availableFiles: TorrentFileAvailability[];
   public downloadFiles: { [key: string]: boolean } = {};

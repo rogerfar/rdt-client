@@ -101,7 +101,8 @@ namespace RdtClient.Data.Data
                 Priority = torrent.Priority,
                 TorrentRetryAttempts = torrent.TorrentRetryAttempts,
                 DownloadRetryAttempts = torrent.DownloadRetryAttempts,
-                DeleteOnError = torrent.DeleteOnError
+                DeleteOnError = torrent.DeleteOnError,
+                Lifetime = torrent.Lifetime
             };
 
             await _dataContext.Torrents.AddAsync(newTorrent);
@@ -157,6 +158,7 @@ namespace RdtClient.Data.Data
             dbTorrent.DownloadRetryAttempts = torrent.DownloadRetryAttempts;
             dbTorrent.TorrentRetryAttempts = torrent.TorrentRetryAttempts;
             dbTorrent.DeleteOnError = torrent.DeleteOnError;
+            dbTorrent.Lifetime = torrent.Lifetime;
 
             await _dataContext.SaveChangesAsync();
 

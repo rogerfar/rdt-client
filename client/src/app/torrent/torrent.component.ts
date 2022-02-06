@@ -39,6 +39,7 @@ export class TorrentComponent implements OnInit {
   public updateSettingsDownloadRetryAttempts: number;
   public updateSettingsTorrentRetryAttempts: number;
   public updateSettingsDeleteOnError: number;
+  public updateSettingsTorrentLifetime: number;
 
   public updating: boolean;
 
@@ -177,6 +178,7 @@ export class TorrentComponent implements OnInit {
     this.updateSettingsDownloadRetryAttempts = this.torrent.downloadRetryAttempts;
     this.updateSettingsTorrentRetryAttempts = this.torrent.torrentRetryAttempts;
     this.updateSettingsDeleteOnError = this.torrent.deleteOnError;
+    this.updateSettingsTorrentLifetime = this.torrent.lifetime;
 
     this.isUpdateSettingsModalActive = true;
   }
@@ -192,6 +194,7 @@ export class TorrentComponent implements OnInit {
     this.torrent.downloadRetryAttempts = this.updateSettingsDownloadRetryAttempts;
     this.torrent.torrentRetryAttempts = this.updateSettingsTorrentRetryAttempts;
     this.torrent.deleteOnError = this.updateSettingsDeleteOnError;
+    this.torrent.lifetime = this.updateSettingsTorrentLifetime;
 
     this.torrentService.update(this.torrent).subscribe(
       () => {
