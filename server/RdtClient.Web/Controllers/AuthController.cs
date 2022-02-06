@@ -90,9 +90,29 @@ namespace RdtClient.Web.Controllers
             await _authentication.Logout();
             return Ok();
         }
+                
+        [Route("Update")]
+        [HttpPost]
+        public async Task<ActionResult> Update([FromBody] AuthControllerUpdateRequest request)
+        {
+            var updateResult = await _authentication.Update(request.UserName, request.Password);
+
+            if (!updateResult.Succeeded)
+            {
+                return BadRequest(updateResult.Errors.First().Description);
+            }
+
+            return Ok();
+        }
     }
 
     public class AuthControllerLoginRequest
+    {
+        public String UserName { get; set; }
+        public String Password { get; set; }
+    }
+
+    public class AuthControllerUpdateRequest
     {
         public String UserName { get; set; }
         public String Password { get; set; }

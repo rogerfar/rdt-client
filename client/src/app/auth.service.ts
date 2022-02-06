@@ -29,4 +29,11 @@ export class AuthService {
   public logout() {
     return this.http.post<void>(`/Api/Authentication/Logout`, {});
   }
+
+  public update(userName: string, password: string): Observable<void> {
+    return this.http.post<void>(`/Api/Authentication/Update`, {
+      userName,
+      password,
+    });
+  }
 }

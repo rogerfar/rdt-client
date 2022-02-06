@@ -48,5 +48,32 @@ namespace RdtClient.Service.Services
         {
             await _signInManager.SignOutAsync();
         }
+
+        public async Task<IdentityResult> Update(String newUserName, String newPassword)
+        {
+            var user = await GetUser();
+
+            if (user == null)
+            {
+                throw new Exception("No logged in user found");
+            }
+
+            if (!String.IsNullOrWhiteSpace(newUserName))
+            {
+                user.UserName = newUserName;
+            }
+
+            await _userManager.UpdateAsync(user);
+
+            if (!String.IsNullOrWhiteSpace(newPassword))
+            {
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+
+                return result;
+            }
+
+            return IdentityResult.Success;
+        }
     }
 }
