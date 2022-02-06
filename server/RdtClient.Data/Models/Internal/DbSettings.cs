@@ -25,5 +25,6 @@ namespace RdtClient.Data.Models.Internal
         public String Aria2cSecret { get; set; }
         public Int32 DownloadRetryAttempts { get; set; }
         public Int32 TorrentRetryAttempts { get; set; }
+        public Int32 DeleteOnError { get; set; }
     }
 }

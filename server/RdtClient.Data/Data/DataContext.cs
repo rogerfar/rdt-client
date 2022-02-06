@@ -60,6 +60,12 @@ namespace RdtClient.Data.Data
                 },
                 new Setting
                 {
+                    SettingId = "DeleteOnError",
+                    Type = "Int32",
+                    Value = "0"
+                },
+                new Setting
+                {
                     SettingId = "RealDebridApiKey",
                     Type = "String",
                     Value = ""

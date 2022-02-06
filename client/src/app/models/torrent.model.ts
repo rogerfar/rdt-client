@@ -19,6 +19,7 @@ export class Torrent {
   public retryCount: number;
   public downloadRetryAttempts: number;
   public torrentRetryAttempts: number;
+  public deleteOnError: number;
 
   public priority: number;
   public error: string;

@@ -41,12 +41,11 @@ export class SettingsComponent implements OnInit {
   public settingMinFileSize: number;
   public settingOnlyDownloadAvailableFiles: boolean;
   public settingProxyServer: string;
-
-  public aria2cUrl: string;
-  public aria2cSecret: string;
-
-  public downloadRetryAttempts: number;
-  public torrentRetryAttempts: number;
+  public settingAria2cUrl: string;
+  public settingAria2cSecret: string;
+  public settingDownloadRetryAttempts: number;
+  public settingTorrentRetryAttempts: number;
+  public settingDeleteOnError: number;
 
   constructor(private settingsService: SettingsService) {}
 
@@ -76,10 +75,11 @@ export class SettingsComponent implements OnInit {
         this.settingMinFileSize = parseInt(this.getSetting(results, 'MinFileSize'), 10);
         this.settingOnlyDownloadAvailableFiles = this.getSetting(results, 'OnlyDownloadAvailableFiles') === '1';
         this.settingProxyServer = this.getSetting(results, 'ProxyServer');
-        this.aria2cUrl = this.getSetting(results, 'Aria2cUrl');
-        this.aria2cSecret = this.getSetting(results, 'Aria2cSecret');
-        this.downloadRetryAttempts = parseInt(this.getSetting(results, 'DownloadRetryAttempts'), 10);
-        this.torrentRetryAttempts = parseInt(this.getSetting(results, 'TorrentRetryAttempts'), 10);
+        this.settingAria2cUrl = this.getSetting(results, 'Aria2cUrl');
+        this.settingAria2cSecret = this.getSetting(results, 'Aria2cSecret');
+        this.settingDownloadRetryAttempts = parseInt(this.getSetting(results, 'DownloadRetryAttempts'), 10);
+        this.settingTorrentRetryAttempts = parseInt(this.getSetting(results, 'TorrentRetryAttempts'), 10);
+        this.settingDeleteOnError = parseInt(this.getSetting(results, 'DeleteOnError'), 10);
       },
       (err) => {
         this.error = err.error;
@@ -158,19 +158,23 @@ export class SettingsComponent implements OnInit {
       },
       {
         settingId: 'Aria2cUrl',
-        value: this.aria2cUrl,
+        value: this.settingAria2cUrl,
       },
       {
         settingId: 'Aria2cSecret',
-        value: this.aria2cSecret,
+        value: this.settingAria2cSecret,
       },
       {
         settingId: 'DownloadRetryAttempts',
-        value: (this.downloadRetryAttempts ?? 0).toString(),
+        value: (this.settingDownloadRetryAttempts ?? 0).toString(),
       },
       {
         settingId: 'TorrentRetryAttempts',
-        value: (this.torrentRetryAttempts ?? 0).toString(),
+        value: (this.settingTorrentRetryAttempts ?? 0).toString(),
+      },
+      {
+        settingId: 'DeleteOnError',
+        value: (this.settingDeleteOnError ?? 0).toString(),
       },
     ];
 
@@ -242,7 +246,7 @@ export class SettingsComponent implements OnInit {
     this.testAria2cConnectionError = null;
     this.testAria2cConnectionSuccess = null;
 
-    this.settingsService.testAria2cConnection(this.aria2cUrl, this.aria2cSecret).subscribe(
+    this.settingsService.testAria2cConnection(this.settingAria2cUrl, this.settingAria2cSecret).subscribe(
       (result) => {
         this.saving = false;
         this.testAria2cConnectionSuccess = result.version;

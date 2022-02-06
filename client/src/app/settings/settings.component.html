@@ -122,6 +122,14 @@
     </div>
     <p class="help">Maximum amount of downloads that get unpacked on your host at the same time.</p>
   </div>
+
+  <div class="field">
+    <label class="label">Maximum unpack processes</label>
+    <div class="control">
+      <input class="input" type="number" max="100" min="1" step="1" [(ngModel)]="settingUnpackLimit" />
+    </div>
+    <p class="help">Maximum amount of downloads that get unpacked on your host at the same time.</p>
+  </div>
 </div>
 
 <div *ngIf="activeTab === 1">
@@ -189,7 +197,7 @@
   <div class="field" *ngIf="settingDownloadClient === 'Aria2c'">
     <label class="label">Aria2c URL</label>
     <div class="control">
-      <input class="input" type="text" maxlength="1000" [(ngModel)]="aria2cUrl" />
+      <input class="input" type="text" maxlength="1000" [(ngModel)]="settingAria2cUrl" />
     </div>
     <p class="help">
       This is the URL to your Aria2c instance. It must end in /jsonrpc. A common URL is
@@ -200,7 +208,7 @@
   <div class="field" *ngIf="settingDownloadClient === 'Aria2c'">
     <label class="label">Aria2c Secret</label>
     <div class="control">
-      <input class="input" type="text" maxlength="1000" [(ngModel)]="aria2cSecret" />
+      <input class="input" type="text" maxlength="1000" [(ngModel)]="settingAria2cSecret" />
     </div>
     <p class="help">The secret of your Aria2c instance. Optional.</p>
   </div>
@@ -264,7 +272,7 @@
   <div class="field">
     <label class="label">Automatic retry downloads</label>
     <div class="control">
-      <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="downloadRetryAttempts" />
+      <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="settingDownloadRetryAttempts" />
     </div>
     <p class="help">When a single download fails it will retry it this many times before marking it as failed.</p>
   </div>
@@ -272,11 +280,21 @@
   <div class="field">
     <label class="label">Automatic retry torrent</label>
     <div class="control">
-      <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="torrentRetryAttempts" />
+      <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="settingTorrentRetryAttempts" />
     </div>
     <p class="help">
       When a single download has failed multiple times (see setting above) or when the torrent itself received an error
       it will retry the full torrent this many times before marking it failed.
+    </p>
+  </div>
+
+  <div class="field">
+    <label class="label">Delete download when in error</label>
+    <div class="control">
+      <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="settingDeleteOnError" />
+    </div>
+    <p class="help">
+      When a download has been in error for this many minutes, delete it from the provider and the client. 0 to disable.
     </p>
   </div>
 </div>

@@ -26,6 +26,7 @@ export class AddNewTorrentComponent implements OnInit {
 
   public downloadRetryAttempts: number = 3;
   public torrentRetryAttempts: number = 1;
+  public torrentDeleteOnError: number = 0;
 
   public availableFiles: TorrentFileAvailability[];
   public downloadFiles: { [key: string]: boolean } = {};
@@ -36,9 +37,13 @@ export class AddNewTorrentComponent implements OnInit {
 
   private selectedFile: File;
 
-  constructor(private router: Router, private torrentService: TorrentService, private settingsService: SettingsService) {
-    this.settingsService.get().subscribe(settings => {
-      this.provider = settings.firstOrDefault(m => m.settingId === 'Provider')?.value;
+  constructor(
+    private router: Router,
+    private torrentService: TorrentService,
+    private settingsService: SettingsService
+  ) {
+    this.settingsService.get().subscribe((settings) => {
+      this.provider = settings.firstOrDefault((m) => m.settingId === 'Provider')?.value;
     });
   }
 
@@ -110,6 +115,7 @@ export class AddNewTorrentComponent implements OnInit {
     torrent.priority = this.priority;
     torrent.torrentRetryAttempts = this.torrentRetryAttempts;
     torrent.downloadRetryAttempts = this.downloadRetryAttempts;
+    torrent.deleteOnError = this.torrentDeleteOnError;
 
     if (this.magnetLink) {
       this.torrentService.uploadMagnet(this.magnetLink, torrent).subscribe(

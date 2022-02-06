@@ -50,7 +50,7 @@ namespace RdtClient.Data.Data
             {
                 Provider = GetString("Provider"),
                 ProviderAutoImport = GetInt32("ProviderAutoImport"),
-                ProviderAutoDelete= GetInt32("ProviderAutoDelete"),
+                ProviderAutoDelete = GetInt32("ProviderAutoDelete"),
                 RealDebridApiKey = GetString("RealDebridApiKey"),
                 DownloadPath = GetString("DownloadPath"),
                 DownloadClient = GetString("DownloadClient"),
@@ -68,7 +68,8 @@ namespace RdtClient.Data.Data
                 Aria2cUrl = GetString("Aria2cUrl"),
                 Aria2cSecret = GetString("Aria2cSecret"),
                 DownloadRetryAttempts = GetInt32("DownloadRetryAttempts"),
-                TorrentRetryAttempts = GetInt32("TorrentRetryAttempts")
+                TorrentRetryAttempts = GetInt32("TorrentRetryAttempts"),
+                DeleteOnError = GetInt32("DeleteOnError"),
             };
         }
 

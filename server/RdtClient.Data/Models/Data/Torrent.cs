@@ -34,6 +34,7 @@ namespace RdtClient.Data.Models.Data
         public Int32 RetryCount { get; set; }
         public Int32 DownloadRetryAttempts { get; set; }
         public Int32 TorrentRetryAttempts { get; set; }
+        public Int32 DeleteOnError { get; set; }
 
         public String Error { get; set; }
 

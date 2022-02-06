@@ -37,7 +37,7 @@
       </div>
       <div class="field">
         <label class="label">Retry count</label>
-        {{ torrent.retryCount }} / {{ torrent.torrentRetryAttempts}}
+        {{ torrent.retryCount }} / {{ torrent.torrentRetryAttempts }}
       </div>
       <div class="field">
         <label class="label">Hash</label>
@@ -499,6 +499,16 @@
         <p class="help">
           When a single download has failed multiple times (see setting above) or when the torrent itself received an
           error it will retry the full torrent this many times before marking it failed.
+        </p>
+      </div>
+      <div class="field">
+        <label class="label">Delete download when in error</label>
+        <div class="control">
+          <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="updateSettingsDeleteOnError" />
+        </div>
+        <p class="help">
+          When a download has been in error for this many minutes, delete it from the provider and the client. 0 to
+          disable.
         </p>
       </div>
     </section>

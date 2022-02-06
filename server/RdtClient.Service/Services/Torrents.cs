@@ -366,6 +366,7 @@ namespace RdtClient.Service.Services
                             DownloadMinSize = 0,
                             TorrentRetryAttempts = 0,
                             DownloadRetryAttempts = Settings.Get.DownloadRetryAttempts,
+                            DeleteOnError = Settings.Get.DeleteOnError,
                             Priority = 0,
                             RdId = rdTorrent.Id
                         };

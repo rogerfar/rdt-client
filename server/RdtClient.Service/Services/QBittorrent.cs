@@ -443,6 +443,7 @@ namespace RdtClient.Service.Services
                 DownloadMinSize = Settings.Get.MinFileSize,
                 TorrentRetryAttempts = Settings.Get.TorrentRetryAttempts,
                 DownloadRetryAttempts = Settings.Get.DownloadRetryAttempts,
+                DeleteOnError = Settings.Get.DeleteOnError,
                 Priority = priority
             };
 
@@ -459,6 +460,7 @@ namespace RdtClient.Service.Services
                 DownloadMinSize = Settings.Get.MinFileSize,
                 TorrentRetryAttempts = Settings.Get.TorrentRetryAttempts,
                 DownloadRetryAttempts = Settings.Get.DownloadRetryAttempts,
+                DeleteOnError = Settings.Get.DeleteOnError,
                 Priority = priority
             };
 

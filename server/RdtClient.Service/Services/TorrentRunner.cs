@@ -266,6 +266,17 @@ namespace RdtClient.Service.Services
                 }
             }
 
+            // Process torrent errors
+            foreach (var torrent in torrents.Where(m => m.Error != null && m.Completed != null && m.DeleteOnError > 0))
+            {
+                if (torrent.Completed.Value.AddMinutes(torrent.DeleteOnError) > DateTime.UtcNow)
+                {
+                    continue;
+                }
+
+                await _torrents.Delete(torrent.TorrentId, true, true, true);
+            }
+
             torrents = torrents.Where(m => m.Completed == null).ToList();
 
             // Only poll Real-Debrid every second when a hub is connected, otherwise every 30 seconds
