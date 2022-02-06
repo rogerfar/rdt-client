@@ -70,6 +70,13 @@
     </div>
   </div>
   <div class="field">
+    <label class="label">Automatically import category.</label>
+    <div class="control">
+      <input class="input" type="text" maxlength="100" [(ngModel)]="settingProviderAutoImportCategory" />
+    </div>
+    <p class="help">When a torrent is imported assign it this category.</p>
+  </div>
+  <div class="field">
     <div class="control">
       <label class="checkbox">
         <input type="checkbox" [(ngModel)]="settingProviderAutoDelete" />

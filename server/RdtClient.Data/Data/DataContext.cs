@@ -54,6 +54,12 @@ namespace RdtClient.Data.Data
                 },
                 new Setting
                 {
+                    SettingId = "ProviderAutoImportCategory",
+                    Type = "String",
+                    Value = ""
+                },
+                new Setting
+                {
                     SettingId = "ProviderAutoDelete",
                     Type = "Int32",
                     Value = "0"

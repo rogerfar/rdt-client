@@ -6,6 +6,7 @@ namespace RdtClient.Data.Models.Internal
     {
         public String Provider { get; set; }
         public Int32 ProviderAutoImport { get; set; }
+        public String ProviderAutoImportCategory { get; set; }
         public Int32 ProviderAutoDelete { get; set; }
         public String RealDebridApiKey { get; set; }
         public String DownloadPath { get; set; }

@@ -28,6 +28,7 @@ export class SettingsComponent implements OnInit {
   public settingLogLevel: string;
   public settingProvider: string;
   public settingProviderAutoImport: boolean;
+  public settingProviderAutoImportCategory: string;
   public settingProviderAutoDelete: boolean;
   public settingRealDebridApiKey: string;
   public settingDownloadPath: string;
@@ -62,6 +63,7 @@ export class SettingsComponent implements OnInit {
       (results) => {
         this.settingProvider = this.getSetting(results, 'Provider');
         this.settingProviderAutoImport = this.getSetting(results, 'ProviderAutoImport') === '1';
+        this.settingProviderAutoImportCategory = this.getSetting(results, 'ProviderAutoImportCategory');
         this.settingProviderAutoDelete = this.getSetting(results, 'ProviderAutoDelete') === '1';
         this.settingRealDebridApiKey = this.getSetting(results, 'RealDebridApiKey');
         this.settingLogLevel = this.getSetting(results, 'LogLevel');
@@ -101,6 +103,10 @@ export class SettingsComponent implements OnInit {
       {
         settingId: 'ProviderAutoImport',
         value: this.settingProviderAutoImport ? '1' : '0',
+      },
+      {
+        settingId: 'ProviderAutoImportCategory',
+        value: this.settingProviderAutoImportCategory,
       },
       {
         settingId: 'ProviderAutoDelete',

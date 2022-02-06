@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.7] - 2022-02-06
+- Added setting to set the category when a torrent is imported from RealDebrid or other provider.
+
 ## [2.0.6] - 2022-02-06
 ### Added
 - Added setting to automatically delete torrents in the state of error after a certain amount of time.

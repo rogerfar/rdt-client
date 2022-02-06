@@ -360,7 +360,7 @@ namespace RdtClient.Service.Services
                     {
                         var newTorrent = new Torrent
                         {
-                            Category = null,
+                            Category = Settings.Get.ProviderAutoImportCategory,
                             DownloadAction = TorrentDownloadAction.DownloadManual,
                             FinishedAction = TorrentFinishedAction.None,
                             DownloadMinSize = 0,

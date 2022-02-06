@@ -50,6 +50,7 @@ namespace RdtClient.Data.Data
             {
                 Provider = GetString("Provider"),
                 ProviderAutoImport = GetInt32("ProviderAutoImport"),
+                ProviderAutoImportCategory = GetString("ProviderAutoImportCategory"),
                 ProviderAutoDelete = GetInt32("ProviderAutoDelete"),
                 RealDebridApiKey = GetString("RealDebridApiKey"),
                 DownloadPath = GetString("DownloadPath"),
