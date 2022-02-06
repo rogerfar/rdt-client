@@ -117,6 +117,7 @@ export class AddNewTorrentComponent implements OnInit {
     torrent.torrentRetryAttempts = this.torrentRetryAttempts;
     torrent.downloadRetryAttempts = this.downloadRetryAttempts;
     torrent.deleteOnError = this.torrentDeleteOnError;
+    torrent.lifetime = this.torrentLifetime;
 
     if (this.magnetLink) {
       this.torrentService.uploadMagnet(this.magnetLink, torrent).subscribe(

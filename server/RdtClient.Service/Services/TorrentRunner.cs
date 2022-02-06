@@ -294,9 +294,11 @@ namespace RdtClient.Service.Services
 
                 Log($"Torrent has reached its {torrent.Lifetime} minutes lifetime, marking as error", torrent);
 
-                await _torrents.UpdateRetry(torrent.TorrentId, null, 99);
-                await _torrents.UpdateError(torrent.TorrentId, "Torrent expired in RealDebrid Client");
+                await _torrents.UpdateRetry(torrent.TorrentId, null, torrent.TorrentRetryAttempts);
+                await _torrents.UpdateComplete(torrent.TorrentId, $"Torrent lifetime of {torrent.Lifetime} minutes reached", DateTimeOffset.UtcNow, false);
             }
+
+            torrents = await _torrents.Get();
 
             torrents = torrents.Where(m => m.Completed == null).ToList();
 
