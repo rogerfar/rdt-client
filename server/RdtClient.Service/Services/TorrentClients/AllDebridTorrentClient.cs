@@ -82,7 +82,7 @@ namespace RdtClient.Service.Services.TorrentClients
         public async Task<TorrentClientUser> GetUser()
         {
             var user = await GetClient().User.GetAsync();
-            
+
             return new TorrentClientUser
             {
                 Username = user.Username,
@@ -251,6 +251,11 @@ namespace RdtClient.Service.Services.TorrentClients
 
             foreach (var link in links)
             {
+                if (link.Files == null)
+                {
+                    continue;
+                }
+
                 var fileList = GetFiles(link.Files, "");
 
                 Log($"{link.Filename} ({link.Size}b) {link.LinkUrl}, contains files:{Environment.NewLine}{String.Join(Environment.NewLine, fileList)}");
@@ -271,7 +276,7 @@ namespace RdtClient.Service.Services.TorrentClients
                 {
                     result.Add($"{parent}/{file.N}");
                 }
-                
+
                 if (file.E != null && file.E.Value.PurpleEArray != null && file.E.Value.PurpleEArray.Count > 0)
                 {
                     result.AddRange(GetFiles(file.E.Value.PurpleEArray, file.N));
@@ -291,7 +296,7 @@ namespace RdtClient.Service.Services.TorrentClients
                 {
                     result.Add($"{parent}/{file.N}");
                 }
-                
+
                 if (file.E != null && file.E.Count > 0)
                 {
                     result.AddRange(GetFiles(file.E, file.N));
