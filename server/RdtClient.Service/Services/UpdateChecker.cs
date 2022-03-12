@@ -37,7 +37,7 @@ namespace RdtClient.Service.Services
 
             CurrentVersion = $"v{version[..version.LastIndexOf(".", StringComparison.Ordinal)]}";
 
-            _logger.LogInformation($"UpdateChecker started, currently on version {CurrentVersion}.");
+            _logger.LogInformation("UpdateChecker started, currently on version {CurrentVersion}.", CurrentVersion);
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -58,7 +58,7 @@ namespace RdtClient.Service.Services
 
                     if (latestRelease != CurrentVersion)
                     {
-                        _logger.LogInformation($"New version found on GitHub: {latestRelease}");
+                        _logger.LogInformation("New version found on GitHub: {latestRelease}", latestRelease);
                     }
 
                     LatestVersion = latestRelease;

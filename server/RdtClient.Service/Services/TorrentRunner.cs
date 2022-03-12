@@ -117,7 +117,7 @@ namespace RdtClient.Service.Services
             var sw = new Stopwatch();
             sw.Start();
 
-            if (ActiveDownloadClients.Count > 0 || ActiveUnpackClients.Count > 0)
+            if (!ActiveDownloadClients.IsEmpty || !ActiveUnpackClients.IsEmpty)
             {
                 Log($"TorrentRunner Tick Start, {ActiveDownloadClients.Count} active downloads, {ActiveUnpackClients.Count} active unpacks");
             }
@@ -373,7 +373,7 @@ namespace RdtClient.Service.Services
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, $"Cannot unrestrict link: {ex.Message}");
+                            _logger.LogError(ex, "Cannot unrestrict link: {ex.Message}", ex.Message);
 
                             await _downloads.UpdateError(download.DownloadId, ex.Message);
                             await _downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
@@ -582,7 +582,7 @@ namespace RdtClient.Service.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex.Message, $"Torrent processing result in an unexpected exception: {ex.Message}");
+                    _logger.LogError(ex.Message, "Torrent processing result in an unexpected exception: {Message}", ex.Message);
                     await _torrents.UpdateComplete(torrent.TorrentId, ex.Message, DateTimeOffset.UtcNow, true);
                 }
             }

@@ -88,7 +88,7 @@ namespace RdtClient.Service.Services
         {
             _baseStream.SetLength(value);
         }
-
+        
         /// <inheritdoc />
         public override Int32 Read(Byte[] buffer, Int32 offset, Int32 count)
         {
@@ -104,7 +104,7 @@ namespace RdtClient.Service.Services
         {
             await Throttle(count).ConfigureAwait(false);
 
-            return await _baseStream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+            return await _baseStream.ReadAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -118,7 +118,7 @@ namespace RdtClient.Service.Services
         public override async Task WriteAsync(Byte[] buffer, Int32 offset, Int32 count, CancellationToken cancellationToken)
         {
             await Throttle(count).ConfigureAwait(false);
-            await _baseStream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+            await _baseStream.WriteAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
         }
 
         private async Task Throttle(Int32 transmissionVolume)
@@ -132,7 +132,7 @@ namespace RdtClient.Service.Services
             }
         }
 
-        private async Task Sleep(Int32 time)
+        private static async Task Sleep(Int32 time)
         {
             if (time > 0)
             {

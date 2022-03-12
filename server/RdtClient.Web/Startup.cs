@@ -107,7 +107,7 @@ namespace RdtClient.Web
 
                 if (context.Response.StatusCode != 200)
                 {
-                    logger.LogWarning($"{context.Response.StatusCode}: {context.Request.Path.Value}");
+                    logger.LogWarning("{StatusCode}: {Value}", context.Response.StatusCode, context.Request.Path.Value);
                 }
             });
 

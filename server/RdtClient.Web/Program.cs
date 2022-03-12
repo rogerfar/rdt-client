@@ -109,7 +109,7 @@ namespace RdtClient.Web
 
             return Host.CreateDefaultBuilder(args)
                        .UseWindowsService()
-                       .ConfigureServices((hostContext, services) =>
+                       .ConfigureServices((_, services) =>
                        {
                            services.AddHostedService<TaskRunner>();
                            services.AddHostedService<UpdateChecker>();
@@ -117,10 +117,10 @@ namespace RdtClient.Web
                        .ConfigureWebHostDefaults(webBuilder =>
                        {
                            webBuilder.UseUrls(appSettings.HostUrl)
-                                     .UseSerilog()
                                      .UseKestrel()
                                      .UseStartup<Startup>();
-                       });
+                       })
+                       .UseSerilog();
         }
     }
 }

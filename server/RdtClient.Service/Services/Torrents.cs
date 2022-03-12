@@ -110,7 +110,7 @@ namespace RdtClient.Service.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"{ex.Message}, trying to parse {magnetLink}");
+                _logger.LogError(ex, "{ex.Message}, trying to parse {magnetLink}", ex.Message, magnetLink);
                 throw new Exception($"{ex.Message}, trying to parse {magnetLink}");
             }
 
@@ -647,7 +647,7 @@ namespace RdtClient.Service.Services
                     await _torrentData.UpdateRdData(torrent);
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 // ignored
             }

@@ -98,7 +98,7 @@ namespace RdtClient.Service.Services.Downloaders
                         {
                             using var innerCts = new CancellationTokenSource(1000);
                             var buffer = new Byte[BufferSize * 8];
-                            readSize = await destinationStream.ReadAsync(buffer, 0, buffer.Length, innerCts.Token).ConfigureAwait(false);
+                            readSize = await destinationStream.ReadAsync(buffer.AsMemory(0, buffer.Length), innerCts.Token).ConfigureAwait(false);
 
                             await fileStream.WriteAsync(buffer.AsMemory(0, readSize), innerCts.Token);
 
