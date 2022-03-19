@@ -497,7 +497,7 @@ namespace RdtClient.Service.Services
                                                        m => new TorrentCategory
                                                        {
                                                            Name = m,
-                                                           SavePath = ""
+                                                           SavePath = Path.Combine(AppDefaultSavePath(), m)
                                                        });
             }
 
@@ -593,6 +593,30 @@ namespace RdtClient.Service.Services
                     await downloadClient.Resume();
                 }
             }
+        }
+
+        public async Task<SyncMetaData> SyncMainData()
+        {
+            var torrents = await TorrentInfo();
+
+            var categories = await TorrentsCategories();
+
+            var activeDownloads = TorrentRunner.ActiveDownloadClients.Sum(m => m.Value.Speed);
+
+            return new SyncMetaData
+            {
+                Categories = categories,
+                FullUpdate = true,
+                Rid = 0,
+                Tags = null,
+                Trackers = new Dictionary<String, List<String>>(),
+                Torrents = torrents.ToDictionary(m => m.Hash, m => m),
+                ServerState = new SyncMetaDataServerState
+                {
+                    DlInfoSpeed = activeDownloads,
+                    UpInfoSpeed = 0
+                }
+            };
         }
     }
 }

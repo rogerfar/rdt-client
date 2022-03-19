@@ -421,6 +421,24 @@ namespace RdtClient.Web.Controllers
         {
             return await TorrentsTopPrio(request);
         }
+
+        [Authorize]
+        [Route("sync/maindata")]
+        [HttpGet]
+        public async Task<ActionResult> SyncMainData()
+        {
+            var result = await _qBittorrent.SyncMainData();
+
+            return Ok(result);
+        }
+
+        [Authorize]
+        [Route("sync/maindata")]
+        [HttpPost]
+        public async Task<ActionResult> SyncMainDataPost()
+        {
+            return await SyncMainData();
+        }
     }
 
     public class QBAuthLoginRequest

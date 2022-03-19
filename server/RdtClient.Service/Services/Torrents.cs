@@ -272,7 +272,7 @@ namespace RdtClient.Service.Services
                 }
             }
 
-            if (deleteLocalFiles)
+            if (deleteLocalFiles && !String.IsNullOrWhiteSpace(torrent.RdName))
             {
                 var downloadPath = DownloadPath(torrent);
                 downloadPath = Path.Combine(downloadPath, torrent.RdName);
