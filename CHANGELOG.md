@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.11] - 2022-03-19
+### Changed
+- Fixed the "Progress" for the AllDebrid client, thanks @23doors.
+
 ## [2.0.10] - 2022-03-19
 ### Added
 - When changing the download speed setting for the simple downloader it will apply the setting to active downloads.
@@ -13,12 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the simple downloader download limiter.
 
 ## [2.0.9] - 2022-03-12
+### Changed
 - Updated packages, added logging to the RD and AD providers when serialization fails.
 
 ## [2.0.8] - 2022-02-28
+### Changed
 - Fixed issue with AllDebrid sometimes returning NULL links.
 
 ## [2.0.7] - 2022-02-06
+### Changed
 - Added setting to set the category when a torrent is imported from RealDebrid or other provider.
 
 ## [2.0.6] - 2022-02-06

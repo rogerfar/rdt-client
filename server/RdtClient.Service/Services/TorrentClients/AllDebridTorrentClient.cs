@@ -55,7 +55,7 @@ namespace RdtClient.Service.Services.TorrentClients
                 OriginalBytes = torrent.Size,
                 Host = null,
                 Split = 0,
-                Progress = torrent.ProcessingPerc,
+                Progress = (Int64) Math.Round(torrent.Downloaded * 100.0 / torrent.Size),
                 Status = torrent.Status,
                 StatusCode = torrent.StatusCode,
                 Added = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(torrent.UploadDate),
