@@ -28,5 +28,7 @@ namespace RdtClient.Data.Models.Internal
         public Int32 TorrentRetryAttempts { get; set; }
         public Int32 DeleteOnError { get; set; }
         public Int32 TorrentLifetime { get; set; }
+        public String RunOnTorrentCompleteFileName { get; set; }
+        public String RunOnTorrentCompleteArguments { get; set; }
     }
 }

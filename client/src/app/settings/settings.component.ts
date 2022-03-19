@@ -48,6 +48,8 @@ export class SettingsComponent implements OnInit {
   public settingTorrentRetryAttempts: number;
   public settingDeleteOnError: number;
   public settingTorrentLifetime: number;
+  public settingRunOnTorrentCompleteFileName: string;
+  public settingRunOnTorrentCompleteArguments: string;
 
   constructor(private settingsService: SettingsService) {}
 
@@ -84,6 +86,8 @@ export class SettingsComponent implements OnInit {
         this.settingTorrentRetryAttempts = parseInt(this.getSetting(results, 'TorrentRetryAttempts'), 10);
         this.settingDeleteOnError = parseInt(this.getSetting(results, 'DeleteOnError'), 10);
         this.settingTorrentLifetime = parseInt(this.getSetting(results, 'TorrentLifetime'), 10);
+        this.settingRunOnTorrentCompleteFileName = this.getSetting(results, 'RunOnTorrentCompleteFileName');
+        this.settingRunOnTorrentCompleteArguments = this.getSetting(results, 'RunOnTorrentCompleteArguments');
       },
       (err) => {
         this.error = err.error;
@@ -187,6 +191,14 @@ export class SettingsComponent implements OnInit {
       {
         settingId: 'TorrentLifetime',
         value: (this.settingTorrentLifetime ?? 0).toString(),
+      },
+      {
+        settingId: 'RunOnTorrentCompleteFileName',
+        value: this.settingRunOnTorrentCompleteFileName,
+      },
+      {
+        settingId: 'RunOnTorrentCompleteArguments',
+        value: this.settingRunOnTorrentCompleteArguments,
       },
     ];
 

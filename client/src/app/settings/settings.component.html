@@ -137,6 +137,40 @@
     </div>
     <p class="help">Maximum amount of downloads that get unpacked on your host at the same time.</p>
   </div>
+
+  <div class="field">
+    <label class="label">Run external program on torrent completion</label>
+    <div class="control">
+      <input class="input" type="text" [(ngModel)]="settingRunOnTorrentCompleteFileName" />
+    </div>
+    <p class="help">
+      Path to the executable to run when the torrent and all downloads are finished. No arguments should be passed here.
+      <br />
+      <strong>When running in Docker, this command will run on your docker instance!</strong>
+    </p>
+  </div>
+
+  <div class="field">
+    <label class="label">External program arguments</label>
+    <div class="control">
+      <input class="input" type="text" [(ngModel)]="settingRunOnTorrentCompleteArguments" />
+    </div>
+    <p class="help">
+      When the executable above is executed, use these parameters.
+      <br />
+      Supports the following parameters:
+    </p>
+    <ul class="help">
+      <li>%N: Torrent name</li>
+      <li>%L: Category</li>
+      <li>%F: Content path (same as root path for multifile torrent)</li>
+      <li>%R: Root path (first torrent subdirectory path)</li>
+      <li>%D: Save path</li>
+      <li>%C: Number of files</li>
+      <li>%Z: Torrent size (bytes)</li>
+      <li>%I: Info hash</li>
+    </ul>
+  </div>
 </div>
 
 <div *ngIf="activeTab === 1">

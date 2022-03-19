@@ -573,6 +573,8 @@ namespace RdtClient.Service.Services
 
                                     break;
                             }
+
+                            await _torrents.RunTorrentComplete(torrent.TorrentId);
                         }
                         else
                         {

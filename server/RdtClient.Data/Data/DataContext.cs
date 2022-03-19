@@ -195,6 +195,18 @@ namespace RdtClient.Data.Data
                     SettingId = "TorrentRetryAttempts",
                     Type = "Int32",
                     Value = "1"
+                },
+                new Setting
+                {
+                    SettingId = "RunOnTorrentCompleteFileName",
+                    Type = "String",
+                    Value = ""
+                },
+                new Setting
+                {
+                    SettingId = "RunOnTorrentCompleteArguments",
+                    Type = "String",
+                    Value = ""
                 }
             };
 

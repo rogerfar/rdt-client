@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -622,6 +625,91 @@ namespace RdtClient.Service.Services
         public async Task Update(Torrent torrent)
         {
             await _torrentData.Update(torrent);
+        }
+
+        public async Task RunTorrentComplete(Guid torrentId)
+        {
+            if (String.IsNullOrWhiteSpace(Settings.Get.RunOnTorrentCompleteFileName))
+            {
+                return;
+            }
+
+            var torrent = await _torrentData.GetById(torrentId);
+            var downloads = await _downloads.GetForTorrent(torrentId);
+
+            var fileName = Settings.Get.RunOnTorrentCompleteFileName;
+            var arguments = Settings.Get.RunOnTorrentCompleteArguments ?? "";
+
+            Log($"Parsing external program {fileName} with arguments {arguments}", torrent);
+
+            var downloadPath = DownloadPath(torrent);
+            var torrentPath = Path.Combine(downloadPath, torrent.RdName);
+
+            arguments = arguments.Replace("%N", $"\"{torrent.RdName}\"");
+            arguments = arguments.Replace("%L", $"\"{torrent.Category}\"");
+            arguments = arguments.Replace("%F", $"\"{torrentPath}\"");
+            arguments = arguments.Replace("%R", $"\"{downloadPath}\"");
+            arguments = arguments.Replace("%D", $"\"{torrentPath}\"");
+            arguments = arguments.Replace("%C", downloads.Count.ToString(CultureInfo.InvariantCulture).Replace(",", "").Replace(".", ""));
+            arguments = arguments.Replace("%Z", torrent.RdSize.ToString(CultureInfo.InvariantCulture).Replace(",", "").Replace(".", ""));
+            arguments = arguments.Replace("%I", torrent.Hash);
+
+            Log($"Executing external program {fileName} with arguments {arguments}", torrent);
+
+            var errorSb = new StringBuilder();
+            var outputSb = new StringBuilder();
+
+            using var process = new Process();
+            
+            process.StartInfo.FileName = fileName;
+            process.StartInfo.Arguments = arguments;
+            process.StartInfo.CreateNoWindow = true;
+            process.StartInfo.UseShellExecute = false;
+            process.StartInfo.RedirectStandardOutput = true;
+            process.StartInfo.RedirectStandardError = true;
+
+            process.OutputDataReceived += (_, data) =>
+            {
+                if (data.Data == null)
+                {
+                    return;
+                }
+
+                outputSb.AppendLine(data.Data.Trim());
+            };
+            process.ErrorDataReceived += (_, data) =>
+            {
+                if (data.Data == null)
+                {
+                    return;
+                }
+
+                errorSb.AppendLine(data.Data.Trim());
+            };
+            
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
+            var exited = process.WaitForExit(60000 * 10);
+
+            var errors = errorSb.ToString();
+            var output = outputSb.ToString();
+
+            if (errors.Length > 0)
+            {
+                Log($"External application exited with errors: {errors}", torrent);
+            }
+
+            if (output.Length > 0)
+            {
+                Log($"External application exited with output: {output}", torrent);
+            }
+
+            if (!exited)
+            {
+                Log("External application after a 60 second timeout", torrent);
+            }
         }
 
         private async Task UpdateTorrentClientData(Torrent torrent, TorrentClientTorrent torrentClientTorrent = null)
