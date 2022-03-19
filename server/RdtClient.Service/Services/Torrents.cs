@@ -483,14 +483,14 @@ namespace RdtClient.Service.Services
 
             Log($"Retrying Download", download, download.Torrent);
 
-            while (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
+            while (TorrentRunner.ActiveDownloadClients.TryRemove(download.DownloadId, out var downloadClient))
             {
                 await downloadClient.Cancel();
 
                 await Task.Delay(100);
             }
 
-            while (TorrentRunner.ActiveUnpackClients.TryGetValue(download.DownloadId, out var unpackClient))
+            while (TorrentRunner.ActiveUnpackClients.TryRemove(download.DownloadId, out var unpackClient))
             {
                 unpackClient.Cancel();
 

@@ -18,13 +18,11 @@ namespace RdtClient.Service.Services.Downloaders
         private readonly String _uri;
         private readonly String _filePath;
 
-        private Int64 Speed { get; set; }
-        private Int64 BytesTotal { get; set; }
-        private Int64 BytesDone { get; set; }
+        private Int64 _bytesTotal;
+        private Int64 _bytesDone;
 
         private Boolean _cancelled;
 
-        private Int64 _bytesLastUpdate;
         private DateTime _nextUpdate;
 
         private readonly ILogger _logger;
@@ -62,15 +60,14 @@ namespace RdtClient.Service.Services.Downloaders
         {
             try
             {
-                _bytesLastUpdate = 0;
                 _nextUpdate = DateTime.UtcNow.AddSeconds(1);
 
-                BytesTotal = await GetContentSize();
+                _bytesTotal = await GetContentSize();
                 
                 var timeout = DateTimeOffset.UtcNow.AddHours(1);
 
                 var httpClient = new HttpClient();
-                
+
                 while (timeout > DateTimeOffset.UtcNow && !_cancelled)
                 {
                     try
@@ -82,43 +79,46 @@ namespace RdtClient.Service.Services.Downloaders
                             throw new IOException("No stream");
                         }
 
-                        var speedLimit = Settings.Get.DownloadMaxSpeed * BufferSize * 1024L;
+                        var speedLimit = Settings.Get.DownloadMaxSpeed;
                         
-                        if (speedLimit == 0)
-                        {
-                            speedLimit = ThrottledStream.Infinite;
-                        }
-
-                        await using var destinationStream = new ThrottledStream(responseStream, speedLimit);
+                        await using var destinationStream = new ThrottledStream(responseStream, speedLimit * 1000L * 1000L);
 
                         await using var fileStream = new FileStream(_filePath, FileMode.Create, FileAccess.Write, FileShare.Write);
                         
                         var readSize = 1;
+                        var buffer = new Byte[BufferSize * 8];
+
                         while (readSize > 0 && !_cancelled)
                         {
-                            using var innerCts = new CancellationTokenSource(1000);
-                            var buffer = new Byte[BufferSize * 8];
-                            readSize = await destinationStream.ReadAsync(buffer.AsMemory(0, buffer.Length), innerCts.Token).ConfigureAwait(false);
-
-                            await fileStream.WriteAsync(buffer.AsMemory(0, readSize), innerCts.Token);
-
-                            BytesDone = fileStream.Length;
-                            
-                            if (DateTime.UtcNow > _nextUpdate)
+                            // ReSharper disable once ConvertToUsingDeclaration
+                            using (var innerCts = new CancellationTokenSource(1000))
                             {
-                                Speed = fileStream.Length - _bytesLastUpdate;
+                                readSize = await destinationStream.ReadAsync(buffer.AsMemory(0, buffer.Length), innerCts.Token).ConfigureAwait(false);
 
-                                _nextUpdate = DateTime.UtcNow.AddSeconds(1);
-                                _bytesLastUpdate = fileStream.Length;
+                                await fileStream.WriteAsync(buffer.AsMemory(0, readSize), innerCts.Token);
 
-                                timeout = DateTimeOffset.UtcNow.AddHours(1);
+                                _bytesDone = fileStream.Length;
 
-                                DownloadProgress?.Invoke(this, new DownloadProgressEventArgs
+                                if (DateTime.UtcNow > _nextUpdate)
                                 {
-                                    Speed = Speed,
-                                    BytesDone = BytesDone,
-                                    BytesTotal = BytesTotal
-                                });
+                                    _nextUpdate = DateTime.UtcNow.AddSeconds(1);
+
+                                    timeout = DateTimeOffset.UtcNow.AddHours(1);
+
+                                    DownloadProgress?.Invoke(this,
+                                                             new DownloadProgressEventArgs
+                                                             {
+                                                                 Speed = destinationStream.Speed,
+                                                                 BytesDone = _bytesDone,
+                                                                 BytesTotal = _bytesTotal
+                                                             });
+
+                                    if (Settings.Get.DownloadMaxSpeed != speedLimit)
+                                    {
+                                        speedLimit = Settings.Get.DownloadMaxSpeed;
+                                        destinationStream.BandwidthLimit = speedLimit * 1000L * 1000L;
+                                    }
+                                }
                             }
                         }
 

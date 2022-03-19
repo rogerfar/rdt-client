@@ -11,9 +11,11 @@ namespace RdtClient.Service.Services
     /// </summary>
     public class ThrottledStream : Stream
     {
-        private readonly Bandwidth _bandwidth;
-        private readonly Stream _baseStream;
+        public Int64 Speed => (Int64)_bandwidth.AverageSpeed;
+
+        private Bandwidth _bandwidth;
         private Int64 _bandwidthLimit;
+        private readonly Stream _baseStream;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="T:ThrottledStream" /> class.
@@ -33,11 +35,6 @@ namespace RdtClient.Service.Services
 
             _baseStream = baseStream ?? throw new ArgumentNullException(nameof(baseStream));
             BandwidthLimit = bandwidthLimit;
-
-            _bandwidth = new Bandwidth
-            {
-                BandwidthLimit = BandwidthLimit
-            };
         }
 
         public static Int64 Infinite => Int64.MaxValue;
@@ -49,7 +46,12 @@ namespace RdtClient.Service.Services
         public Int64 BandwidthLimit
         {
             get => _bandwidthLimit;
-            set => _bandwidthLimit = value <= 0 ? Infinite : value;
+            set
+            {
+                _bandwidthLimit = value <= 0 ? Infinite : value;
+                _bandwidth ??= new Bandwidth();
+                _bandwidth.BandwidthLimit = _bandwidthLimit;
+            }
         }
 
         /// <inheritdoc />
@@ -70,7 +72,7 @@ namespace RdtClient.Service.Services
             get => _baseStream.Position;
             set => _baseStream.Position = value;
         }
-
+        
         /// <inheritdoc />
         public override void Flush()
         {
@@ -88,7 +90,7 @@ namespace RdtClient.Service.Services
         {
             _baseStream.SetLength(value);
         }
-        
+
         /// <inheritdoc />
         public override Int32 Read(Byte[] buffer, Int32 offset, Int32 count)
         {
@@ -104,7 +106,7 @@ namespace RdtClient.Service.Services
         {
             await Throttle(count).ConfigureAwait(false);
 
-            return await _baseStream.ReadAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
+            return await _baseStream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -118,7 +120,7 @@ namespace RdtClient.Service.Services
         public override async Task WriteAsync(Byte[] buffer, Int32 offset, Int32 count, CancellationToken cancellationToken)
         {
             await Throttle(count).ConfigureAwait(false);
-            await _baseStream.WriteAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
+            await _baseStream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
         }
 
         private async Task Throttle(Int32 transmissionVolume)
@@ -128,6 +130,7 @@ namespace RdtClient.Service.Services
             {
                 // Calculate the time to sleep.
                 _bandwidth.CalculateSpeed(transmissionVolume);
+
                 await Sleep(_bandwidth.PopSpeedRetrieveTime()).ConfigureAwait(false);
             }
         }
@@ -147,7 +150,7 @@ namespace RdtClient.Service.Services
         }
     }
 
-    public class Bandwidth
+    internal class Bandwidth
     {
         private const Double OneSecond = 1000; // millisecond
         private Int64 _count;
@@ -182,7 +185,7 @@ namespace RdtClient.Service.Services
             if (momentSpeed >= BandwidthLimit)
             {
                 var expectedTime = (receivedBytesCount * OneSecond) / BandwidthLimit;
-                Interlocked.Add(ref _speedRetrieveTime, (Int32)expectedTime - elapsedTime);
+                Interlocked.Add(ref _speedRetrieveTime, (Int32) expectedTime - elapsedTime);
             }
         }
 
