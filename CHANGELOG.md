@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.10] - 2022-03-19
+### Added
+- When changing the download speed setting for the simple downloader it will apply the setting to active downloads.
+- Add running of external applications when the torrent is finished.
+### Changed
+- Fixed deserialization of the availability check for RealDebrid.
+- Fixed the simple downloader download limiter.
+
 ## [2.0.9] - 2022-03-12
 - Updated packages, added logging to the RD and AD providers when serialization fails.
 
