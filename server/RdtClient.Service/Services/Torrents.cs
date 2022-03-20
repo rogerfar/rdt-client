@@ -384,7 +384,7 @@ namespace RdtClient.Service.Services
 
                         await UpdateTorrentClientData(torrent, rdTorrent);
                     }
-                    else
+                    else if (torrent != null)
                     {
                         await UpdateTorrentClientData(torrent, rdTorrent);
                     }
