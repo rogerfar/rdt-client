@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -135,10 +136,20 @@ namespace RdtClient.Web.Controllers
         [Route("torrents/info")]
         [HttpGet]
         [HttpPost]
-        public async Task<ActionResult<IList<TorrentInfo>>> TorrentsInfo()
+        public async Task<ActionResult<IList<TorrentInfo>>> TorrentsInfo([FromQuery] QBTorrentsHashRequest request)
         {
-            var result = await _qBittorrent.TorrentInfo();
-            return Ok(result);
+            var results = await _qBittorrent.TorrentInfo();
+            IList<TorrentInfo> filteredResults = new List<TorrentInfo>();
+
+            if (request.Category == null) {
+                filteredResults = results;
+            } else if (request.Category == "") {
+                filteredResults = results.Where(m => m.Category == null).ToList();
+            } else {
+                filteredResults = results.Where(m => m.Category == request.Category).ToList();
+            }
+
+            return Ok(filteredResults);
         }
 
         [Authorize]
@@ -450,6 +461,7 @@ namespace RdtClient.Web.Controllers
     public class QBTorrentsHashRequest
     {
         public String Hash { get; set; }
+        public String Category { get; set; }
     }
 
     public class QBTorrentsDeleteRequest
