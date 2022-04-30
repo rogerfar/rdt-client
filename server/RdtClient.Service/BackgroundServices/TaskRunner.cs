@@ -1,8 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using RdtClient.Service.Services;
 
-namespace RdtClient.Service.Services;
+namespace RdtClient.Service.BackgroundServices;
 
 public class TaskRunner : BackgroundService
 {
@@ -34,7 +35,7 @@ public class TaskRunner : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error occurred in TorrentDownloadManager.Tick");
+                _logger.LogError(ex, $"Unexpected error occurred in TorrentDownloadManager.Tick: {ex.Message}");
             }
 
             await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);

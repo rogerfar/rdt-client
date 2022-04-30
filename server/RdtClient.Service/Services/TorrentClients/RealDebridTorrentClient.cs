@@ -11,7 +11,7 @@ public class RealDebridTorrentClient : ITorrentClient
 {
     private readonly ILogger<RealDebridTorrentClient> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
-    private TimeSpan _offset;
+    private TimeSpan? _offset = null;
 
     public RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IHttpClientFactory httpClientFactory)
     {
@@ -21,24 +21,42 @@ public class RealDebridTorrentClient : ITorrentClient
 
     private RdNetClient GetClient()
     {
-        var apiKey = Settings.Get.RealDebridApiKey;
-
-        if (String.IsNullOrWhiteSpace(apiKey))
+        try
         {
-            throw new Exception("Real-Debrid API Key not set in the settings");
+            var apiKey = Settings.Get.RealDebridApiKey;
+
+            if (String.IsNullOrWhiteSpace(apiKey))
+            {
+                throw new Exception("Real-Debrid API Key not set in the settings");
+            }
+
+            var httpClient = _httpClientFactory.CreateClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.ProviderTimeout);
+
+            var rdtNetClient = new RdNetClient(null, httpClient, 5);
+            rdtNetClient.UseApiAuthentication(apiKey);
+
+            // Get the server time to fix up the timezones on results
+            if (_offset == null)
+            {
+                var serverTime = rdtNetClient.Api.GetIsoTimeAsync().Result;
+                _offset = serverTime.Offset;
+            }
+
+            return rdtNetClient;
         }
+        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+        {
+            _logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
 
-        var httpClient = _httpClientFactory.CreateClient();
-        httpClient.Timeout = TimeSpan.FromSeconds(10);
+            throw;
+        }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
 
-        var rdtNetClient = new RdNetClient(null, httpClient, 5);
-        rdtNetClient.UseApiAuthentication(apiKey);
-
-        // Get the server time to fix up the timezones on results
-        var serverTime = rdtNetClient.Api.GetIsoTimeAsync().Result;
-        _offset = serverTime.Offset;
-
-        return rdtNetClient;
+            throw; 
+        }
     }
 
     private TorrentClientTorrent Map(Torrent torrent)
@@ -334,7 +352,12 @@ public class RealDebridTorrentClient : ITorrentClient
         
     private DateTimeOffset? ChangeTimeZone(DateTimeOffset? dateTimeOffset)
     {
-        return dateTimeOffset?.Subtract(_offset).ToOffset(_offset);
+        if (_offset == null)
+        {
+            return dateTimeOffset;
+        }
+
+        return dateTimeOffset?.Subtract(_offset.Value).ToOffset(_offset.Value);
     }
 
     private void Log(String message, Data.Models.Data.Torrent torrent = null)

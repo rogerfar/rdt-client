@@ -63,6 +63,18 @@ public class DataContext : IdentityDbContext
             },
             new Setting
             {
+                SettingId = "ProviderTimeout",
+                Type = "Int32",
+                Value = "10"
+            },
+            new Setting
+            {
+                SettingId = "ProviderCheckInterval",
+                Type = "Int32",
+                Value = "10"
+            },
+            new Setting
+            {
                 SettingId = "DeleteOnError",
                 Type = "Int32",
                 Value = "0"

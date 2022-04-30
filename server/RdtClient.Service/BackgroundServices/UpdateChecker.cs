@@ -4,16 +4,16 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace RdtClient.Service.Services;
+namespace RdtClient.Service.BackgroundServices;
 
 public class UpdateChecker : BackgroundService
 {
     public static String CurrentVersion { get; private set; }
     public static String LatestVersion { get; private set; }
 
-    private readonly ILogger<TaskRunner> _logger;
+    private readonly ILogger<UpdateChecker> _logger;
 
-    public UpdateChecker(ILogger<TaskRunner> logger)
+    public UpdateChecker(ILogger<UpdateChecker> logger)
     {
         _logger = logger;
     }

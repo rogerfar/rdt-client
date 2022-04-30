@@ -3,10 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RdtClient.Data.Data;
+using RdtClient.Service.Services;
 using Serilog;
 using Serilog.Events;
 
-namespace RdtClient.Service.Services;
+namespace RdtClient.Service.BackgroundServices;
 
 public class Startup : IHostedService
 {

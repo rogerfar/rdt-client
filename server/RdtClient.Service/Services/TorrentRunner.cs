@@ -14,8 +14,6 @@ namespace RdtClient.Service.Services;
 
 public class TorrentRunner
 {
-    private static DateTime _nextUpdate = DateTime.UtcNow;
-
     public static readonly ConcurrentDictionary<Guid, DownloadClient> ActiveDownloadClients = new();
     public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new();
 
@@ -297,35 +295,6 @@ public class TorrentRunner
 
         torrents = torrents.Where(m => m.Completed == null).ToList();
 
-        // Only poll Real-Debrid every second when a hub is connected, otherwise every 30 seconds
-        if (_nextUpdate < DateTime.UtcNow && ((torrents.Count > 0 && Settings.Get.ProviderAutoImport == 0) || Settings.Get.ProviderAutoImport == 1))
-        {
-            Log($"Updating torrent info from Real-Debrid");
-
-#if DEBUG
-            var updateTime = 0;
-
-            _nextUpdate = DateTime.UtcNow;
-#else
-                var updateTime = 30;
-
-                if (RdtHub.HasConnections)
-                {
-                    updateTime = 10;
-                }
-
-                _nextUpdate = DateTime.UtcNow.AddSeconds(updateTime);
-#endif
-
-            await _torrents.UpdateRdData();
-                
-            // Re-get torrents to account for updated info
-            torrents = await _torrents.Get();
-            torrents = torrents.Where(m => m.Completed == null).ToList();
-
-            Log($"Finished updating torrent info from Real-Debrid, next update in {updateTime} seconds");
-        }
-
         if (torrents.Count > 0)
         {
             Log($"Processing {torrents.Count} torrents");
@@ -569,7 +538,14 @@ public class TorrentRunner
                                 break;
                         }
 
-                        await _torrents.RunTorrentComplete(torrent.TorrentId);
+                        try
+                        {
+                            await _torrents.RunTorrentComplete(torrent.TorrentId);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex.Message, "Unable to run post process: {Message}", ex.Message);
+                        }
                     }
                     else
                     {

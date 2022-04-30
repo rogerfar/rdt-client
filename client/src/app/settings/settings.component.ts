@@ -30,6 +30,8 @@ export class SettingsComponent implements OnInit {
   public settingProviderAutoImport: boolean;
   public settingProviderAutoImportCategory: string;
   public settingProviderAutoDelete: boolean;
+  public settingProviderTimeout: number;
+  public settingProviderCheckInterval: number;
   public settingRealDebridApiKey: string;
   public settingDownloadPath: string;
   public settingMappedPath: string;
@@ -67,6 +69,8 @@ export class SettingsComponent implements OnInit {
         this.settingProviderAutoImport = this.getSetting(results, 'ProviderAutoImport') === '1';
         this.settingProviderAutoImportCategory = this.getSetting(results, 'ProviderAutoImportCategory');
         this.settingProviderAutoDelete = this.getSetting(results, 'ProviderAutoDelete') === '1';
+        this.settingProviderTimeout = parseInt(this.getSetting(results, 'ProviderTimeout'), 10);
+        this.settingProviderCheckInterval = parseInt(this.getSetting(results, 'ProviderCheckInterval'), 10);
         this.settingRealDebridApiKey = this.getSetting(results, 'RealDebridApiKey');
         this.settingLogLevel = this.getSetting(results, 'LogLevel');
         this.settingDownloadPath = this.getSetting(results, 'DownloadPath');
@@ -115,6 +119,14 @@ export class SettingsComponent implements OnInit {
       {
         settingId: 'ProviderAutoDelete',
         value: this.settingProviderAutoDelete ? '1' : '0',
+      },
+      {
+        settingId: 'ProviderTimeout',
+        value: (this.settingProviderTimeout ?? 10).toString(),
+      },
+      {
+        settingId: 'ProviderCheckInterval',
+        value: (this.settingProviderCheckInterval ?? 10).toString(),
       },
       {
         settingId: 'RealDebridApiKey',

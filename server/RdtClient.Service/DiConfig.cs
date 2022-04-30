@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using RdtClient.Service.BackgroundServices;
 using RdtClient.Service.Services;
 using RdtClient.Service.Services.TorrentClients;
 
@@ -18,6 +19,7 @@ public static class DiConfig
         services.AddScoped<Torrents>();
         services.AddScoped<TorrentRunner>();
             
+        services.AddHostedService<ProviderUpdater>();
         services.AddHostedService<Startup>();
         services.AddHostedService<TaskRunner>();
         services.AddHostedService<UpdateChecker>();

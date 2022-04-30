@@ -12,6 +12,9 @@
     <li [ngClass]="{ 'is-active': activeTab === 2 }" (click)="activeTab = 2">
       <a>Radarr/Sonarr</a>
     </li>
+    <li [ngClass]="{ 'is-active': activeTab === 5 }" (click)="activeTab = 5">
+      <a>Watch</a>
+    </li>
     <li [ngClass]="{ 'is-active': activeTab === 3 }" (click)="activeTab = 3">
       <a>Tests</a>
     </li>
@@ -70,7 +73,7 @@
     </div>
   </div>
   <div class="field">
-    <label class="label">Automatically import category.</label>
+    <label class="label">Automatically import category</label>
     <div class="control">
       <input class="input" type="text" maxlength="100" [(ngModel)]="settingProviderAutoImportCategory" />
     </div>
@@ -86,6 +89,27 @@
         When selected, cancel and delete downloads that have been removed from Real-Debrid or AllDebrid.
       </div>
     </div>
+  </div>
+  <div class="field">
+    <label class="label">Connection Timeout</label>
+    <div class="control">
+      <input class="input" type="number" min="1" max="9999" [(ngModel)]="settingProviderTimeout" />
+    </div>
+    <p class="help">
+      The timeout to use to connect to the provider in seconds, with a minimum of 5 seconds. Increase if you experience
+      timeout errors in the log. This setting is only used when there is a user connected to the web interface or if
+      AutoImport/AutoDelete has been enabled.
+    </p>
+  </div>
+  <div class="field">
+    <label class="label">Check Interval</label>
+    <div class="control">
+      <input class="input" type="number" min="10" max="9999" [(ngModel)]="settingProviderCheckInterval" />
+    </div>
+    <p class="help">
+      This interval is used to check Real-Debrid or AllDebrid for updates. This setting is only used when there are
+      active downloads. If there are no active downloads it will use this setting * 3, with a minimum of 30 seconds.
+    </p>
   </div>
 </div>
 
@@ -414,6 +438,50 @@
       </div>
     </div>
     <div class="help">This will write a small file to your download folder to see how fast it can write to it.</div>
+  </div>
+</div>
+
+<div *ngIf="activeTab === 5">
+  <div class="field">
+    <label class="label">Watch Path</label>
+    <div class="control">
+      <input class="input" type="text" maxlength="100" [(ngModel)]="settingWatchPath" />
+    </div>
+    <p class="help">
+      Watch this path for .torrent or .magnet files. When a file is found it will be automatically imported.
+    </p>
+  </div>
+  <div class="field">
+    <div class="control">
+      <label class="checkbox">
+        <input type="checkbox" [(ngModel)]="settingProviderAutoDelete" />
+        Automatically delete downloads removed from provider.
+      </label>
+      <div class="help">
+        When selected, cancel and delete downloads that have been removed from Real-Debrid or AllDebrid.
+      </div>
+    </div>
+  </div>
+  <div class="field">
+    <label class="label">Connection Timeout</label>
+    <div class="control">
+      <input class="input" type="number" min="1" max="9999" [(ngModel)]="settingProviderTimeout" />
+    </div>
+    <p class="help">
+      The timeout to use to connect to the provider in seconds, with a minimum of 5 seconds. Increase if you experience
+      timeout errors in the log. This setting is only used when there is a user connected to the web interface or if
+      AutoImport/AutoDelete has been enabled.
+    </p>
+  </div>
+  <div class="field">
+    <label class="label">Check Interval</label>
+    <div class="control">
+      <input class="input" type="number" min="10" max="9999" [(ngModel)]="settingProviderCheckInterval" />
+    </div>
+    <p class="help">
+      This interval is used to check Real-Debrid or AllDebrid for updates. This setting is only used when there are
+      active downloads. If there are no active downloads it will use this setting * 3, with a minimum of 30 seconds.
+    </p>
   </div>
 </div>
 

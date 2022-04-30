@@ -9,6 +9,7 @@ using RdtClient.Data.Data;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Data.Models.TorrentClient;
+using RdtClient.Service.BackgroundServices;
 using RdtClient.Service.Helpers;
 using RdtClient.Service.Services.TorrentClients;
 using Torrent = RdtClient.Data.Models.Data.Torrent;

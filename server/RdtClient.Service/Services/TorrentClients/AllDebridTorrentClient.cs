@@ -24,19 +24,34 @@ public class AllDebridTorrentClient : ITorrentClient
 
     private AllDebridNETClient GetClient()
     {
-        var apiKey = Settings.Get.RealDebridApiKey;
-
-        if (String.IsNullOrWhiteSpace(apiKey))
+        try
         {
-            throw new Exception("All-Debrid API Key not set in the settings");
+            var apiKey = Settings.Get.RealDebridApiKey;
+
+            if (String.IsNullOrWhiteSpace(apiKey))
+            {
+                throw new Exception("All-Debrid API Key not set in the settings");
+            }
+
+            var httpClient = _httpClientFactory.CreateClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(10);
+
+            var allDebridNetClient = new AllDebridNETClient("RealDebridClient", apiKey);
+
+            return allDebridNetClient;
         }
+        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+        {
+            _logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
 
-        var httpClient = _httpClientFactory.CreateClient();
-        httpClient.Timeout = TimeSpan.FromSeconds(10);
+            throw;
+        }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
 
-        var allDebridNetClient = new AllDebridNETClient("RealDebridClient", apiKey);
-
-        return allDebridNetClient;
+            throw; 
+        }
     }
 
     private static TorrentClientTorrent Map(Magnet torrent)

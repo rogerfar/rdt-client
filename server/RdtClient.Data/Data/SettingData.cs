@@ -47,6 +47,8 @@ public class SettingData
             ProviderAutoImport = GetInt32("ProviderAutoImport"),
             ProviderAutoImportCategory = GetString("ProviderAutoImportCategory"),
             ProviderAutoDelete = GetInt32("ProviderAutoDelete"),
+            ProviderTimeout = GetInt32("ProviderTimeout"),
+            ProviderCheckInterval = GetInt32("ProviderCheckInterval"),
             RealDebridApiKey = GetString("RealDebridApiKey"),
             DownloadPath = GetString("DownloadPath"),
             DownloadClient = GetString("DownloadClient"),
