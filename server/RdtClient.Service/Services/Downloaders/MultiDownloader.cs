@@ -1,147 +1,143 @@
-﻿using System;
-using System.IO;
-using System.Net;
-using System.Threading.Tasks;
+﻿using System.Net;
 using Downloader;
 using RdtClient.Data.Models.Internal;
 using Serilog;
 
-namespace RdtClient.Service.Services.Downloaders
+namespace RdtClient.Service.Services.Downloaders;
+
+public class MultiDownloader : IDownloader
 {
-    public class MultiDownloader : IDownloader
+    public event EventHandler<DownloadCompleteEventArgs> DownloadComplete;
+    public event EventHandler<DownloadProgressEventArgs> DownloadProgress;
+
+    private readonly DownloadService _downloadService;
+    private readonly String _filePath;
+    private readonly String _uri;
+
+    private readonly ILogger _logger;
+
+    public MultiDownloader(String uri, String filePath, DbSettings settings)
     {
-        public event EventHandler<DownloadCompleteEventArgs> DownloadComplete;
-        public event EventHandler<DownloadProgressEventArgs> DownloadProgress;
+        _logger = Log.ForContext<MultiDownloader>();
 
-        private readonly DownloadService _downloadService;
-        private readonly String _filePath;
-        private readonly String _uri;
+        _uri = uri;
+        _filePath = filePath;
 
-        private readonly ILogger _logger;
+        var settingTempPath = settings.TempPath;
 
-        public MultiDownloader(String uri, String filePath, DbSettings settings)
+        if (String.IsNullOrWhiteSpace(settingTempPath))
         {
-            _logger = Log.ForContext<MultiDownloader>();
+            settingTempPath = Path.GetTempPath();
+        }
 
-            _uri = uri;
-            _filePath = filePath;
+        var settingDownloadChunkCount = settings.DownloadChunkCount;
 
-            var settingTempPath = settings.TempPath;
+        if (settingDownloadChunkCount <= 0)
+        {
+            settingDownloadChunkCount = 1;
+        }
 
-            if (String.IsNullOrWhiteSpace(settingTempPath))
+        var settingDownloadMaxSpeed = settings.DownloadMaxSpeed;
+
+        if (settingDownloadMaxSpeed <= 0)
+        {
+            settingDownloadMaxSpeed = 0;
+        }
+
+        settingDownloadMaxSpeed = settingDownloadMaxSpeed * 1024 * 1024;
+
+        var settingProxyServer = settings.ProxyServer;
+
+        var downloadOpt = new DownloadConfiguration
+        {
+            MaxTryAgainOnFailover = Int32.MaxValue,
+            ParallelDownload = settingDownloadChunkCount > 1,
+            ChunkCount = settingDownloadChunkCount,
+            Timeout = 1000,
+            OnTheFlyDownload = false,
+            BufferBlockSize = 1024 * 8,
+            MaximumBytesPerSecond = settingDownloadMaxSpeed,
+            TempDirectory = settingTempPath,
+            RequestConfiguration =
             {
-                settingTempPath = Path.GetTempPath();
+                Accept = "*/*",
+                UserAgent = $"rdt-client",
+                ProtocolVersion = HttpVersion.Version11,
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+                KeepAlive = true,
+                UseDefaultCredentials = false
+            }
+        };
+
+        if (!String.IsNullOrWhiteSpace(settingProxyServer))
+        {
+            downloadOpt.RequestConfiguration.Proxy = new WebProxy(new Uri(settingProxyServer), false);
+        }
+
+        _downloadService = new DownloadService(downloadOpt);
+
+        _downloadService.DownloadProgressChanged += (_, args) =>
+        {
+            if (DownloadProgress == null)
+            {
+                return;
             }
 
-            var settingDownloadChunkCount = settings.DownloadChunkCount;
+            DownloadProgress.Invoke(this,
+                                     new DownloadProgressEventArgs
+                                     {
+                                         Speed = (Int64)args.BytesPerSecondSpeed,
+                                         BytesDone = args.ReceivedBytesSize,
+                                         BytesTotal = args.TotalBytesToReceive
+                                     });
+        };
 
-            if (settingDownloadChunkCount <= 0)
+        _downloadService.DownloadFileCompleted += (_, args) =>
+        {
+            String error = null;
+
+            if (args.Cancelled)
             {
-                settingDownloadChunkCount = 1;
+                error = $"The download was cancelled";
+            }
+            else if (args.Error != null)
+            {
+                error = args.Error.Message;
             }
 
-            var settingDownloadMaxSpeed = settings.DownloadMaxSpeed;
+            DownloadComplete?.Invoke(this,
+                                     new DownloadCompleteEventArgs
+                                     {
+                                         Error = error
+                                     });
+        };
+    }
 
-            if (settingDownloadMaxSpeed <= 0)
-            {
-                settingDownloadMaxSpeed = 0;
-            }
+    public async Task<String> Download()
+    {
+        _logger.Debug($"Starting download of {_uri}, writing to path: {_filePath}");
 
-            settingDownloadMaxSpeed = settingDownloadMaxSpeed * 1024 * 1024;
+        await _downloadService.DownloadFileTaskAsync(_uri, _filePath);
 
-            var settingProxyServer = settings.ProxyServer;
+        return null;
+    }
 
-            var downloadOpt = new DownloadConfiguration
-            {
-                MaxTryAgainOnFailover = Int32.MaxValue,
-                ParallelDownload = settingDownloadChunkCount > 1,
-                ChunkCount = settingDownloadChunkCount,
-                Timeout = 1000,
-                OnTheFlyDownload = false,
-                BufferBlockSize = 1024 * 8,
-                MaximumBytesPerSecond = settingDownloadMaxSpeed,
-                TempDirectory = settingTempPath,
-                RequestConfiguration =
-                {
-                    Accept = "*/*",
-                    UserAgent = $"rdt-client",
-                    ProtocolVersion = HttpVersion.Version11,
-                    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
-                    KeepAlive = true,
-                    UseDefaultCredentials = false
-                }
-            };
+    public Task Cancel()
+    {
+        _logger.Debug($"Cancelling download {_uri}");
 
-            if (!String.IsNullOrWhiteSpace(settingProxyServer))
-            {
-                downloadOpt.RequestConfiguration.Proxy = new WebProxy(new Uri(settingProxyServer), false);
-            }
+        _downloadService.CancelAsync();
 
-            _downloadService = new DownloadService(downloadOpt);
+        return Task.CompletedTask;
+    }
 
-            _downloadService.DownloadProgressChanged += (_, args) =>
-            {
-                if (DownloadProgress == null)
-                {
-                    return;
-                }
+    public Task Pause()
+    {
+        return Task.CompletedTask;
+    }
 
-                DownloadProgress?.Invoke(this,
-                                         new DownloadProgressEventArgs
-                                         {
-                                             Speed = (Int64)args.BytesPerSecondSpeed,
-                                             BytesDone = args.ReceivedBytesSize,
-                                             BytesTotal = args.TotalBytesToReceive
-                                         });
-            };
-
-            _downloadService.DownloadFileCompleted += (_, args) =>
-            {
-                String error = null;
-
-                if (args.Cancelled)
-                {
-                    error = $"The download was cancelled";
-                }
-                else if (args.Error != null)
-                {
-                    error = args.Error.Message;
-                }
-
-                DownloadComplete?.Invoke(this,
-                                         new DownloadCompleteEventArgs
-                                         {
-                                             Error = error
-                                         });
-            };
-        }
-
-        public async Task<String> Download()
-        {
-            _logger.Debug($"Starting download of {_uri}, writing to path: {_filePath}");
-
-            await _downloadService.DownloadFileTaskAsync(_uri, _filePath);
-
-            return null;
-        }
-
-        public Task Cancel()
-        {
-            _logger.Debug($"Cancelling download {_uri}");
-
-            _downloadService.CancelAsync();
-
-            return Task.CompletedTask;
-        }
-
-        public Task Pause()
-        {
-            return Task.CompletedTask;
-        }
-
-        public Task Resume()
-        {
-            return Task.CompletedTask;
-        }
+    public Task Resume()
+    {
+        return Task.CompletedTask;
     }
 }

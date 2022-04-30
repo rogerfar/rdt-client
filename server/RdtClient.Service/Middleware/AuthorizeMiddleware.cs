@@ -1,32 +1,29 @@
-﻿using System;
-using System.Net;
-using System.Threading.Tasks;
+﻿using System.Net;
 using Microsoft.AspNetCore.Http;
 
-namespace RdtClient.Service.Middleware
+namespace RdtClient.Service.Middleware;
+
+public class AuthorizeMiddleware
 {
-    public class AuthorizeMiddleware
+    private readonly RequestDelegate _next;
+
+    public AuthorizeMiddleware(RequestDelegate next)
     {
-        private readonly RequestDelegate _next;
+        _next = next;
+    }
 
-        public AuthorizeMiddleware(RequestDelegate next)
+    /// <summary>
+    /// Return a 403 instead of a 401, it's quirk that QBittorrent has.
+    /// </summary>
+    /// <param name="context"></param>
+    /// <returns></returns>
+    public async Task Invoke(HttpContext context)
+    {
+        await _next(context);
+
+        if (context.Response.StatusCode == (Int32) HttpStatusCode.Unauthorized)
         {
-            _next = next;
-        }
-
-        /// <summary>
-        /// Return a 403 instead of a 401, it's quirk that QBittorrent has.
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        public async Task Invoke(HttpContext context)
-        {
-            await _next(context);
-
-            if (context.Response.StatusCode == (Int32) HttpStatusCode.Unauthorized)
-            {
-                context.Response.StatusCode = (Int32) HttpStatusCode.Forbidden;
-            }
+            context.Response.StatusCode = (Int32) HttpStatusCode.Forbidden;
         }
     }
 }

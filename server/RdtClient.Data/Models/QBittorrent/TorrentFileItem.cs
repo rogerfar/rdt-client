@@ -1,11 +1,9 @@
-using System;
 using System.Text.Json.Serialization;
 
-namespace RdtClient.Data.Models.QBittorrent
+namespace RdtClient.Data.Models.QBittorrent;
+
+public class TorrentFileItem
 {
-    public class TorrentFileItem
-    {
-        [JsonPropertyName("name")]
-        public String Name { get; set; }
-    }
+    [JsonPropertyName("name")]
+    public String Name { get; set; }
 }

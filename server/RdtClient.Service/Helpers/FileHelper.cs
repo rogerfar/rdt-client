@@ -1,44 +1,39 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
+﻿namespace RdtClient.Service.Helpers;
 
-namespace RdtClient.Service.Helpers
+public static class FileHelper
 {
-    public static class FileHelper
+    public static async Task Delete(String path)
     {
-        public static async Task Delete(String path)
+        if (String.IsNullOrWhiteSpace(path))
         {
-            if (String.IsNullOrWhiteSpace(path))
+            return;
+        }
+
+        if (!File.Exists(path))
+        {
+            return;
+        }
+
+        var retry = 0;
+
+        while (true)
+        {
+            try
             {
-                return;
+                File.Delete(path);
+
+                break;
             }
-
-            if (!File.Exists(path))
+            catch
             {
-                return;
-            }
-
-            var retry = 0;
-
-            while (true)
-            {
-                try
+                if (retry >= 3)
                 {
-                    File.Delete(path);
-
-                    break;
+                    throw;
                 }
-                catch
-                {
-                    if (retry >= 3)
-                    {
-                        throw;
-                    }
 
-                    retry++;
+                retry++;
 
-                    await Task.Delay(1000 * retry);
-                }
+                await Task.Delay(1000 * retry);
             }
         }
     }

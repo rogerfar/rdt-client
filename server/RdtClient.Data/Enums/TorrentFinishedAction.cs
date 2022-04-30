@@ -1,9 +1,8 @@
-﻿namespace RdtClient.Data.Enums
+﻿namespace RdtClient.Data.Enums;
+
+public enum TorrentFinishedAction
 {
-    public enum TorrentFinishedAction
-    {
-        None = 0,
-        RemoveAllTorrents = 1,
-        RemoveRealDebrid = 2
-    }
+    None = 0,
+    RemoveAllTorrents = 1,
+    RemoveRealDebrid = 2
 }

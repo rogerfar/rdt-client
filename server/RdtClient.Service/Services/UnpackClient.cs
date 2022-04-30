@@ -1,149 +1,143 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using RdtClient.Data.Models.Data;
+﻿using RdtClient.Data.Models.Data;
 using RdtClient.Service.Helpers;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
 
-namespace RdtClient.Service.Services
+namespace RdtClient.Service.Services;
+
+public class UnpackClient
 {
-    public class UnpackClient
+    public Boolean Finished { get; private set; }
+        
+    public String Error { get; private set; }
+        
+    public Int64 BytesTotal { get; private set; }
+    public Int64 BytesDone { get; private set; }
+        
+    private readonly Download _download;
+    private readonly String _destinationPath;
+    private readonly Torrent _torrent;
+
+    private Boolean _cancelled;
+        
+    private RarArchiveEntry _rarCurrentEntry;
+    private Dictionary<String, Int64> _rarfileStatus;
+
+    public UnpackClient(Download download, String destinationPath)
     {
-        public Boolean Finished { get; private set; }
-        
-        public String Error { get; private set; }
-        
-        public Int64 BytesTotal { get; private set; }
-        public Int64 BytesDone { get; private set; }
-        
-        private readonly Download _download;
-        private readonly String _destinationPath;
-        private readonly Torrent _torrent;
+        _download = download;
+        _destinationPath = destinationPath;
+        _torrent = download.Torrent;
+    }
 
-        private Boolean _cancelled;
-        
-        private RarArchiveEntry _rarCurrentEntry;
-        private Dictionary<String, Int64> _rarfileStatus;
+    public void Start()
+    {
+        BytesDone = 0;
+        BytesTotal = 0;
 
-        public UnpackClient(Download download, String destinationPath)
+        try
         {
-            _download = download;
-            _destinationPath = destinationPath;
-            _torrent = download.Torrent;
-        }
+            var filePath = DownloadHelper.GetDownloadPath(_destinationPath, _torrent, _download);
 
-        public void Start()
-        {
-            BytesDone = 0;
-            BytesTotal = 0;
-
-            try
+            if (filePath == null)
             {
-                var filePath = DownloadHelper.GetDownloadPath(_destinationPath, _torrent, _download);
+                throw new Exception("Invalid download path");
+            }
 
-                if (filePath == null)
+            Task.Run(async delegate
+            {
+                if (!_cancelled)
                 {
-                    throw new Exception("Invalid download path");
+                    await Unpack(filePath);
                 }
-
-                Task.Run(async delegate
-                         {
-                             if (!_cancelled)
-                             {
-                                 await Unpack(filePath);
-                             }
-                         });
-            }
-            catch (Exception ex)
-            {
-                Error = $"An unexpected error occurred preparing download {_download.Link} for torrent {_torrent.RdName}: {ex.Message}";
-                Finished = true;
-            }
+            });
         }
-
-        public void Cancel()
+        catch (Exception ex)
         {
-            _cancelled = true;
+            Error = $"An unexpected error occurred preparing download {_download.Link} for torrent {_torrent.RdName}: {ex.Message}";
+            Finished = true;
         }
+    }
 
-        private async Task Unpack(String filePath)
+    public void Cancel()
+    {
+        _cancelled = true;
+    }
+
+    private async Task Unpack(String filePath)
+    {
+        try
         {
-            try
-            {
-                if (!File.Exists(filePath))
-                {
-                    return;
-                }
-
-                await using (Stream stream = File.OpenRead(filePath))
-                {
-                    using var archive = RarArchive.Open(stream);
-
-                    BytesTotal = archive.TotalSize;
-
-                    var entries = archive.Entries.Where(entry => !entry.IsDirectory)
-                                         .ToList();
-
-                    _rarfileStatus = entries.ToDictionary(entry => entry.Key, _ => 0L);
-                    _rarCurrentEntry = null;
-                    archive.CompressedBytesRead += ArchiveOnCompressedBytesRead;
-
-                    var extractPath = _destinationPath;
-
-                    if (!entries.Any(m => m.Key.StartsWith(_torrent.RdName + @"\")) && !entries.Any(m => m.Key.StartsWith(_torrent.RdName + @"/")))
-                    {
-                        extractPath = Path.Combine(_destinationPath, _torrent.RdName);
-                    }
-
-                    if (entries.Any(m => m.Key.Contains(".r00")))
-                    {
-                        extractPath = Path.Combine(extractPath, "Temp");
-                    }
-
-                    foreach (var entry in entries)
-                    {
-                        if (_cancelled)
-                        {
-                            return;
-                        }
-                        
-                        _rarCurrentEntry = entry;
-
-                        entry.WriteToDirectory(extractPath,
-                                               new ExtractionOptions
-                                               {
-                                                   ExtractFullPath = true,
-                                                   Overwrite = true
-                                               });
-                    }
-                }
-
-                await FileHelper.Delete(filePath);
-            }
-            catch (Exception ex)
-            {
-                Error = $"An unexpected error occurred unpacking {_download.Link} for torrent {_torrent.RdName}: {ex.Message}";
-            }
-            finally
-            {
-                Finished = true;
-            }
-        }
-
-        private void ArchiveOnCompressedBytesRead(Object sender, CompressedBytesReadEventArgs e)
-        {
-            if (_rarCurrentEntry == null)
+            if (!File.Exists(filePath))
             {
                 return;
             }
 
-            _rarfileStatus[_rarCurrentEntry.Key] = e.CompressedBytesRead;
+            await using (Stream stream = File.OpenRead(filePath))
+            {
+                using var archive = RarArchive.Open(stream);
 
-            BytesDone = _rarfileStatus.Sum(m => m.Value);
+                BytesTotal = archive.TotalSize;
+
+                var entries = archive.Entries.Where(entry => !entry.IsDirectory)
+                                     .ToList();
+
+                _rarfileStatus = entries.ToDictionary(entry => entry.Key, _ => 0L);
+                _rarCurrentEntry = null;
+                archive.CompressedBytesRead += ArchiveOnCompressedBytesRead;
+
+                var extractPath = _destinationPath;
+
+                if (!entries.Any(m => m.Key.StartsWith(_torrent.RdName + @"\")) && !entries.Any(m => m.Key.StartsWith(_torrent.RdName + @"/")))
+                {
+                    extractPath = Path.Combine(_destinationPath, _torrent.RdName);
+                }
+
+                if (entries.Any(m => m.Key.Contains(".r00")))
+                {
+                    extractPath = Path.Combine(extractPath, "Temp");
+                }
+
+                foreach (var entry in entries)
+                {
+                    if (_cancelled)
+                    {
+                        return;
+                    }
+                        
+                    _rarCurrentEntry = entry;
+
+                    entry.WriteToDirectory(extractPath,
+                                           new ExtractionOptions
+                                           {
+                                               ExtractFullPath = true,
+                                               Overwrite = true
+                                           });
+                }
+            }
+
+            await FileHelper.Delete(filePath);
         }
+        catch (Exception ex)
+        {
+            Error = $"An unexpected error occurred unpacking {_download.Link} for torrent {_torrent.RdName}: {ex.Message}";
+        }
+        finally
+        {
+            Finished = true;
+        }
+    }
+
+    private void ArchiveOnCompressedBytesRead(Object sender, CompressedBytesReadEventArgs e)
+    {
+        if (_rarCurrentEntry == null)
+        {
+            return;
+        }
+
+        _rarfileStatus[_rarCurrentEntry.Key] = e.CompressedBytesRead;
+
+        BytesDone = _rarfileStatus.Sum(m => m.Value);
     }
 }

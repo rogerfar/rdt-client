@@ -1,49 +1,45 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace RdtClient.Service.Services
+namespace RdtClient.Service.Services;
+
+public class TaskRunner : BackgroundService
 {
-    public class TaskRunner : BackgroundService
+    private readonly ILogger<TaskRunner> _logger;
+    private readonly IServiceProvider _serviceProvider;
+
+    public TaskRunner(ILogger<TaskRunner> logger, IServiceProvider serviceProvider)
     {
-        private readonly ILogger<TaskRunner> _logger;
-        private readonly IServiceProvider _serviceProvider;
+        _logger = logger;
+        _serviceProvider = serviceProvider;
+    }
 
-        public TaskRunner(ILogger<TaskRunner> logger, IServiceProvider serviceProvider)
-        {
-            _logger = logger;
-            _serviceProvider = serviceProvider;
-        }
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
-
-            using var scope = _serviceProvider.CreateScope();
-            var torrentRunner = scope.ServiceProvider.GetRequiredService<TorrentRunner>();
+        using var scope = _serviceProvider.CreateScope();
+        var torrentRunner = scope.ServiceProvider.GetRequiredService<TorrentRunner>();
             
-            _logger.LogInformation("TaskRunner started.");
+        _logger.LogInformation("TaskRunner started.");
 
-            await torrentRunner.Initialize();
+        await torrentRunner.Initialize();
             
-            while (!stoppingToken.IsCancellationRequested)
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            try
             {
-                try
-                {
-                    await torrentRunner.Tick();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Unexpected error occurred in TorrentDownloadManager.Tick");
-                }
-
-                await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
+                await torrentRunner.Tick();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error occurred in TorrentDownloadManager.Tick");
             }
 
-            _logger.LogInformation("TaskRunner stopped.");
+            await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
         }
+
+        _logger.LogInformation("TaskRunner stopped.");
     }
 }

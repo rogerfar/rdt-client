@@ -1,126 +1,180 @@
-using System;
 using System.Diagnostics;
-using System.Reflection;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using System.Net;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 using RdtClient.Data.Data;
 using RdtClient.Data.Models.Internal;
+using RdtClient.Service.Middleware;
 using RdtClient.Service.Services;
 using Serilog;
-using Serilog.Core;
 using Serilog.Events;
 using Serilog.Exceptions;
 
-namespace RdtClient.Web
+var builder = WebApplication.CreateBuilder(args);
+
+// Bind the AppSettings from the appsettings.json files.
+builder.Configuration.AddJsonFile("appsettings.json", false, false);
+builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, false);
+
+// Bind AppSettings
+var appSettings = new AppSettings();
+builder.Configuration.Bind(appSettings);
+builder.Services.AddSingleton(appSettings);
+
+// Configure URLs
+if (appSettings.Port <= 0)
 {
-    public class Program
+    appSettings.Port = 6500;
+}
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(appSettings.Port);
+});
+
+builder.Host.UseSerilog((_, lc) => lc.Enrich.FromLogContext()
+                                     .Enrich.WithExceptionDetails()
+                                     .WriteTo.File(appSettings.Logging.File.Path, 
+                                                   rollOnFileSizeLimit: true, 
+                                                   fileSizeLimitBytes: appSettings.Logging.File.FileSizeLimitBytes, 
+                                                   retainedFileCountLimit: appSettings.Logging.File.MaxRollingFiles,
+                                                   outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
+                                     .WriteTo.Console()
+                                     .MinimumLevel.ControlledBy(Settings.LoggingLevelSwitch)
+                                     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                                     .MinimumLevel.Override("System.Net.Http", LogEventLevel.Warning));
+
+Serilog.Debugging.SelfLog.Enable(msg =>
+{
+    Debug.Print(msg);
+    Debugger.Break();
+    Console.WriteLine(msg);
+    Debug.WriteLine(msg);
+});
+
+Log.Information("Starting RealDebridClient host");
+
+builder.Services.AddControllers();
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+       .AddCookie(options =>
+       {
+           options.SlidingExpiration = true;
+       });
+
+builder.Services.AddAuthorization();
+
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+       {
+           options.User.RequireUniqueEmail = false;
+           options.Password.RequiredLength = 10;
+           options.Password.RequireUppercase = false;
+           options.Password.RequireLowercase = false;
+           options.Password.RequireNonAlphanumeric = false;
+           options.Password.RequiredUniqueChars = 5;
+       })
+       .AddEntityFrameworkStores<DataContext>()
+       .AddDefaultTokenProviders();
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Events.OnRedirectToLogin = context =>
     {
-        public static readonly LoggingLevelSwitch LoggingLevelSwitch = new(LogEventLevel.Debug);
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        return Task.CompletedTask;
+    };
+    options.Cookie.Name = "SID";
+});
 
-        public static async Task Main(String[] args)
-        {
-            try
-            {
-                var host = CreateHostBuilder(args).Build();
+// Configure development cors.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Dev",
+                      corsBuilder => corsBuilder.AllowAnyMethod()
+                                                .AllowAnyHeader()
+                                                .AllowCredentials());
+});
 
-                // Perform migrations
-                using (var scope = host.Services.CreateScope())
-                {
-                    var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-                    await dbContext.Database.MigrateAsync();
-                    await dbContext.Seed();
+// Configure misc services.
+builder.Services.AddResponseCaching();
+builder.Services.AddMemoryCache();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddHttpClient();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSession();
 
-                    var logLevelSettingDb = await dbContext.Settings.FirstOrDefaultAsync(m => m.SettingId == "LogLevel");
-                    
-                    var logLevelSetting = "Warning";
+builder.Services.AddSpaStaticFiles(spaBuilder =>
+{
+    spaBuilder.RootPath = "wwwroot";
+});
 
-                    if (logLevelSettingDb != null)
-                    {
-                        logLevelSetting = logLevelSettingDb.Value;
-                    }
+builder.Services.AddSignalR(hubOptions =>
+{
+    hubOptions.EnableDetailedErrors = true;
+});
 
-                    if (!Enum.TryParse<LogEventLevel>(logLevelSetting, out var logLevel))
-                    {
-                        logLevel = LogEventLevel.Warning;
-                    }
+builder.Host.UseWindowsService();
 
-                    LoggingLevelSwitch.MinimumLevel = logLevel;
-                }
+RdtClient.Data.DiConfig.Config(builder.Services, appSettings);
+RdtClient.Service.DiConfig.Config(builder.Services);
 
-                var version = Assembly.GetEntryAssembly()?.GetName().Version;
-                Log.Warning($"Starting host on version {version}");
-                
-                await host.RunAsync();
-            }
-            catch (Exception ex)
-            {
-                Log.Fatal(ex, "Host terminated unexpectedly");
-            }
-            finally
-            {
-                Log.CloseAndFlush();
-            }
-        }
+ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
-        // ReSharper disable once MemberCanBePrivate.Global
-        public static IHostBuilder CreateHostBuilder(String[] args)
-        {
-            var configuration = new ConfigurationBuilder()
-#if DEBUG
-                                .AddJsonFile("appsettings.Development.json", true, false)
-#else
-                                .AddJsonFile("appsettings.json", true, false)
-#endif
-                                .Build();
+try
+{
+    // Build the app
+    var app = builder.Build();
 
-            var appSettings = new AppSettings();
-            configuration.Bind(appSettings);
-
-            if (String.IsNullOrWhiteSpace(appSettings.HostUrl))
-            {
-                appSettings.HostUrl = "http://0.0.0.0:6500";
-            }
-            
-            Log.Logger = new LoggerConfiguration()
-                         .Enrich.FromLogContext()
-                         .Enrich.WithExceptionDetails()
-                         .WriteTo.File(appSettings.Logging.File.Path, 
-                                       rollOnFileSizeLimit: true, 
-                                       fileSizeLimitBytes: appSettings.Logging.File.FileSizeLimitBytes, 
-                                       retainedFileCountLimit: appSettings.Logging.File.MaxRollingFiles,
-                                       outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
-                         .WriteTo.Console()
-                         .MinimumLevel.ControlledBy(LoggingLevelSwitch)
-                         .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-                         .MinimumLevel.Override("System.Net.Http", LogEventLevel.Warning)
-                         .CreateLogger();
-
-            Serilog.Debugging.SelfLog.Enable(msg =>
-            {
-                Debug.Print(msg);
-                Debugger.Break();
-                Console.WriteLine(msg);
-                Debug.WriteLine(msg);
-            });
-
-            return Host.CreateDefaultBuilder(args)
-                       .UseWindowsService()
-                       .ConfigureServices((_, services) =>
-                       {
-                           services.AddHostedService<TaskRunner>();
-                           services.AddHostedService<UpdateChecker>();
-                       })
-                       .ConfigureWebHostDefaults(webBuilder =>
-                       {
-                           webBuilder.UseUrls(appSettings.HostUrl)
-                                     .UseKestrel()
-                                     .UseStartup<Startup>();
-                       })
-                       .UseSerilog();
-        }
+    if (builder.Environment.IsDevelopment())
+    {
+        app.UseCors("Dev");
+        app.UseDeveloperExceptionPage();
     }
+
+    app.ConfigureExceptionHandler();
+
+    app.UseMiddleware<AuthorizeMiddleware>();
+
+    app.Use(async (context, next) =>
+    {
+        await next.Invoke();
+
+        if (context.Response.StatusCode != 200)
+        {
+            Log.Warning("{StatusCode}: {Value}", context.Response.StatusCode, context.Request.Path.Value);
+        }
+    });
+
+    app.UseRouting();
+
+    app.UseAuthentication();
+
+    app.UseAuthorization();
+            
+    app.UseEndpoints(endpoints =>
+    {
+        endpoints.MapHub<RdtHub>("/hub");
+        endpoints.MapControllers();
+    });
+
+    app.MapWhen(x => !x.Request.Path.StartsWithSegments("/api"), routeBuilder =>
+    {
+        routeBuilder.UseSpaStaticFiles();
+        routeBuilder.UseSpa(spa =>
+        {
+            spa.Options.SourcePath = "wwwroot";
+            spa.Options.DefaultPage = "/index.html";
+        });
+    });
+    
+    // Run the app
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Host terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
 }

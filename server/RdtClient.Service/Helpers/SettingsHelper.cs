@@ -1,34 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using RdtClient.Data.Models.Data;
+﻿using RdtClient.Data.Models.Data;
 
-namespace RdtClient.Service.Helpers
+namespace RdtClient.Service.Helpers;
+
+public static class SettingsHelper
 {
-    public static class SettingsHelper
+    public static String GetString(this IList<Setting> settings, String key)
     {
-        public static String GetString(this IList<Setting> settings, String key)
+        var setting = settings.FirstOrDefault(m => m.SettingId == key);
+
+        if (setting == null)
         {
-            var setting = settings.FirstOrDefault(m => m.SettingId == key);
-
-            if (setting == null)
-            {
-                throw new Exception($"Setting with key {key} not found");
-            }
-
-            return setting.Value;
+            throw new Exception($"Setting with key {key} not found");
         }
 
-        public static Int32 GetNumber(this IList<Setting> settings, String key)
+        return setting.Value;
+    }
+
+    public static Int32 GetNumber(this IList<Setting> settings, String key)
+    {
+        var setting = settings.FirstOrDefault(m => m.SettingId == key);
+
+        if (setting == null)
         {
-            var setting = settings.FirstOrDefault(m => m.SettingId == key);
-
-            if (setting == null)
-            {
-                throw new Exception($"Setting with key {key} not found");
-            }
-
-            return Int32.Parse(setting.Value);
+            throw new Exception($"Setting with key {key} not found");
         }
+
+        return Int32.Parse(setting.Value);
     }
 }

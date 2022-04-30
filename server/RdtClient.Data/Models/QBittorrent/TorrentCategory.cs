@@ -1,14 +1,12 @@
-﻿using System;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
-namespace RdtClient.Data.Models.QBittorrent
+namespace RdtClient.Data.Models.QBittorrent;
+
+public class TorrentCategory
 {
-    public class TorrentCategory
-    {
-        [JsonPropertyName("name")]
-        public String Name { get; set; }
+    [JsonPropertyName("name")]
+    public String Name { get; set; }
 
-        [JsonPropertyName("savePath")]
-        public String SavePath { get; set; }
-    }
+    [JsonPropertyName("savePath")]
+    public String SavePath { get; set; }
 }
