@@ -74,7 +74,7 @@ public class SimpleDownloader : IDownloader
                         throw new IOException("No stream");
                     }
 
-                    var speedLimit = Settings.Get.DownloadMaxSpeed;
+                    var speedLimit = Settings.Get.DownloadClient.MaxSpeed;
                         
                     await using var destinationStream = new ThrottledStream(responseStream, speedLimit * 1000L * 1000L);
 
@@ -108,9 +108,9 @@ public class SimpleDownloader : IDownloader
                                                              BytesTotal = _bytesTotal
                                                          });
 
-                                if (Settings.Get.DownloadMaxSpeed != speedLimit)
+                                if (Settings.Get.DownloadClient.MaxSpeed != speedLimit)
                                 {
-                                    speedLimit = Settings.Get.DownloadMaxSpeed;
+                                    speedLimit = Settings.Get.DownloadClient.MaxSpeed;
                                     destinationStream.BandwidthLimit = speedLimit * 1000L * 1000L;
                                 }
                             }
@@ -139,11 +139,11 @@ public class SimpleDownloader : IDownloader
                 throw new Exception($"Download timed out");
             }
 
-            DownloadComplete.Invoke(this, new DownloadCompleteEventArgs());
+            DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs());
         }
         catch (Exception ex)
         {
-            DownloadComplete.Invoke(this, new DownloadCompleteEventArgs
+            DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs
             {
                 Error = ex.Message
             });

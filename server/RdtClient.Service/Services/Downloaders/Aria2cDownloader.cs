@@ -31,7 +31,7 @@ public class Aria2cDownloader : IDownloader
             Timeout = TimeSpan.FromSeconds(10)
         };
 
-        _aria2NetClient = new Aria2NetClient(settings.Aria2cUrl, settings.Aria2cSecret, httpClient, 10);
+        _aria2NetClient = new Aria2NetClient(settings.DownloadClient.Aria2cUrl, settings.DownloadClient.Aria2cSecret, httpClient, 10);
     }
         
     public async Task<String> Download()
@@ -162,7 +162,7 @@ public class Aria2cDownloader : IDownloader
 
         if (download == null)
         {
-            DownloadComplete.Invoke(this, new DownloadCompleteEventArgs
+            DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs
             {
                 Error = $"Download was not found in Aria2"
             });
@@ -172,7 +172,7 @@ public class Aria2cDownloader : IDownloader
         if (!String.IsNullOrWhiteSpace(download.ErrorMessage) || download.Status == "error")
         {
             await Remove();
-            DownloadComplete.Invoke(this, new DownloadCompleteEventArgs
+            DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs
             {
                 Error = $"{download.ErrorCode}: {download.ErrorMessage}"
             });
@@ -190,7 +190,7 @@ public class Aria2cDownloader : IDownloader
             {
                 if (retryCount >= 10)
                 {
-                    DownloadComplete.Invoke(this, new DownloadCompleteEventArgs
+                    DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs
                     {
                         Error = $"File not found at {_filePath}"
                     });
@@ -199,7 +199,7 @@ public class Aria2cDownloader : IDownloader
 
                 if (File.Exists(_filePath))
                 {
-                    DownloadComplete.Invoke(this, new DownloadCompleteEventArgs());
+                    DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs());
                     break;
                 }
 
@@ -209,7 +209,7 @@ public class Aria2cDownloader : IDownloader
             return;
         }
 
-        DownloadProgress.Invoke(this, new DownloadProgressEventArgs
+        DownloadProgress?.Invoke(this, new DownloadProgressEventArgs
         {
             BytesDone = download.CompletedLength,
             BytesTotal = download.TotalLength,

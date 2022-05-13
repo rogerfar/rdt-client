@@ -11,7 +11,7 @@ public class RealDebridTorrentClient : ITorrentClient
 {
     private readonly ILogger<RealDebridTorrentClient> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
-    private TimeSpan? _offset = null;
+    private TimeSpan? _offset;
 
     public RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IHttpClientFactory httpClientFactory)
     {
@@ -23,7 +23,7 @@ public class RealDebridTorrentClient : ITorrentClient
     {
         try
         {
-            var apiKey = Settings.Get.RealDebridApiKey;
+            var apiKey = Settings.Get.Provider.ApiKey;
 
             if (String.IsNullOrWhiteSpace(apiKey))
             {
@@ -31,7 +31,7 @@ public class RealDebridTorrentClient : ITorrentClient
             }
 
             var httpClient = _httpClientFactory.CreateClient();
-            httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.ProviderTimeout);
+            httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
 
             var rdtNetClient = new RdNetClient(null, httpClient, 5);
             rdtNetClient.UseApiAuthentication(apiKey);
@@ -73,7 +73,7 @@ public class RealDebridTorrentClient : ITorrentClient
             Split = torrent.Split,
             Progress = torrent.Progress,
             Status = torrent.Status,
-            Added = ChangeTimeZone(torrent.Added).Value,
+            Added = ChangeTimeZone(torrent.Added)!.Value,
             Files = (torrent.Files ?? new List<TorrentFile>()).Select(m => new TorrentClientFile
             {
                 Path = m.Path,

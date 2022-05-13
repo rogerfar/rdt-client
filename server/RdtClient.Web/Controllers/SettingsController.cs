@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Services;
-using Serilog.Events;
 
 namespace RdtClient.Web.Controllers;
 
@@ -22,25 +20,18 @@ public class SettingsController : Controller
 
     [HttpGet]
     [Route("")]
-    public async Task<ActionResult<IList<Setting>>> Get()
+    public ActionResult Get()
     {
-        var result = await _settings.GetAll();
+        var result = _settings.GetAll();
         return Ok(result);
     }
 
     [HttpPut]
     [Route("")]
-    public async Task<ActionResult> Update([FromBody] SettingsControllerUpdateRequest request)
+    public async Task<ActionResult> Update([FromBody] IList<SettingProperty> settings)
     {
-        await _settings.Update(request.Settings);
-            
-        if (!Enum.TryParse<LogEventLevel>(Settings.Get.LogLevel, out var logLevel))
-        {
-            logLevel = LogEventLevel.Information;
-        }
-
-        Settings.LoggingLevelSwitch.MinimumLevel = logLevel;
-
+        await _settings.Update(settings);
+        
         return Ok();
     }
 
@@ -87,11 +78,6 @@ public class SettingsController : Controller
 
         return Ok(version);
     }
-}
-
-public class SettingsControllerUpdateRequest
-{
-    public IList<Setting> Settings { get; set; }
 }
 
 public class SettingsControllerTestPathRequest

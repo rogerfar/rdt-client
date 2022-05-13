@@ -19,6 +19,13 @@ export class AuthService {
     });
   }
 
+  public setupProvider(provider: string, token: string): Observable<void> {
+    return this.http.post<void>(`/Api/Authentication/SetupProvider`, {
+      provider,
+      token,
+    });
+  }
+
   public login(userName: string, password: string): Observable<void> {
     return this.http.post<void>(`/Api/Authentication/Login`, {
       userName,

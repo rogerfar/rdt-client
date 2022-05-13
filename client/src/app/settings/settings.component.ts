@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { Setting } from 'src/app/models/setting.model';
 import { SettingsService } from 'src/app/settings.service';
+import { Setting } from '../models/setting.model';
 
 @Component({
   selector: 'app-settings',
@@ -9,6 +9,8 @@ import { SettingsService } from 'src/app/settings.service';
 })
 export class SettingsComponent implements OnInit {
   public activeTab = 0;
+
+  public tabs: Setting[] = [];
 
   public saving = false;
   public error: string;
@@ -25,34 +27,6 @@ export class SettingsComponent implements OnInit {
   public testAria2cConnectionError: string = null;
   public testAria2cConnectionSuccess: string = null;
 
-  public settingLogLevel: string;
-  public settingProvider: string;
-  public settingProviderAutoImport: boolean;
-  public settingProviderAutoImportCategory: string;
-  public settingProviderAutoDelete: boolean;
-  public settingProviderTimeout: number;
-  public settingProviderCheckInterval: number;
-  public settingRealDebridApiKey: string;
-  public settingDownloadPath: string;
-  public settingMappedPath: string;
-  public settingTempPath: string;
-  public settingDownloadClient: string;
-  public settingDownloadLimit: number;
-  public settingDownloadChunkCount: number;
-  public settingDownloadMaxSpeed: number;
-  public settingUnpackLimit: number;
-  public settingMinFileSize: number;
-  public settingOnlyDownloadAvailableFiles: boolean;
-  public settingProxyServer: string;
-  public settingAria2cUrl: string;
-  public settingAria2cSecret: string;
-  public settingDownloadRetryAttempts: number;
-  public settingTorrentRetryAttempts: number;
-  public settingDeleteOnError: number;
-  public settingTorrentLifetime: number;
-  public settingRunOnTorrentCompleteFileName: string;
-  public settingRunOnTorrentCompleteArguments: string;
-
   constructor(private settingsService: SettingsService) {}
 
   ngOnInit(): void {
@@ -60,161 +34,21 @@ export class SettingsComponent implements OnInit {
   }
 
   public reset(): void {
-    this.saving = false;
-    this.error = null;
+    this.settingsService.get().subscribe((settings) => {
+      this.tabs = settings.where((m) => m.key.indexOf(':') === -1);
 
-    this.settingsService.get().subscribe(
-      (results) => {
-        this.settingProvider = this.getSetting(results, 'Provider');
-        this.settingProviderAutoImport = this.getSetting(results, 'ProviderAutoImport') === '1';
-        this.settingProviderAutoImportCategory = this.getSetting(results, 'ProviderAutoImportCategory');
-        this.settingProviderAutoDelete = this.getSetting(results, 'ProviderAutoDelete') === '1';
-        this.settingProviderTimeout = parseInt(this.getSetting(results, 'ProviderTimeout'), 10);
-        this.settingProviderCheckInterval = parseInt(this.getSetting(results, 'ProviderCheckInterval'), 10);
-        this.settingRealDebridApiKey = this.getSetting(results, 'RealDebridApiKey');
-        this.settingLogLevel = this.getSetting(results, 'LogLevel');
-        this.settingDownloadPath = this.getSetting(results, 'DownloadPath');
-        this.settingMappedPath = this.getSetting(results, 'MappedPath');
-        this.settingTempPath = this.getSetting(results, 'TempPath');
-        this.settingDownloadClient = this.getSetting(results, 'DownloadClient');
-        this.settingDownloadLimit = parseInt(this.getSetting(results, 'DownloadLimit'), 10);
-        this.settingDownloadChunkCount = parseInt(this.getSetting(results, 'DownloadChunkCount'), 10);
-        this.settingDownloadMaxSpeed = parseInt(this.getSetting(results, 'DownloadMaxSpeed'), 10);
-        this.settingUnpackLimit = parseInt(this.getSetting(results, 'UnpackLimit'), 10);
-        this.settingMinFileSize = parseInt(this.getSetting(results, 'MinFileSize'), 10);
-        this.settingOnlyDownloadAvailableFiles = this.getSetting(results, 'OnlyDownloadAvailableFiles') === '1';
-        this.settingProxyServer = this.getSetting(results, 'ProxyServer');
-        this.settingAria2cUrl = this.getSetting(results, 'Aria2cUrl');
-        this.settingAria2cSecret = this.getSetting(results, 'Aria2cSecret');
-        this.settingDownloadRetryAttempts = parseInt(this.getSetting(results, 'DownloadRetryAttempts'), 10);
-        this.settingTorrentRetryAttempts = parseInt(this.getSetting(results, 'TorrentRetryAttempts'), 10);
-        this.settingDeleteOnError = parseInt(this.getSetting(results, 'DeleteOnError'), 10);
-        this.settingTorrentLifetime = parseInt(this.getSetting(results, 'TorrentLifetime'), 10);
-        this.settingRunOnTorrentCompleteFileName = this.getSetting(results, 'RunOnTorrentCompleteFileName');
-        this.settingRunOnTorrentCompleteArguments = this.getSetting(results, 'RunOnTorrentCompleteArguments');
-      },
-      (err) => {
-        this.error = err.error;
-        this.saving = true;
+      for (let tab of this.tabs) {
+        tab.settings = settings.where((m) => m.key.indexOf(`${tab.key}:`) > -1);
       }
-    );
+    });
   }
 
   public ok(): void {
     this.saving = true;
 
-    const settings: Setting[] = [
-      {
-        settingId: 'Provider',
-        value: this.settingProvider,
-      },
-      {
-        settingId: 'ProviderAutoImport',
-        value: this.settingProviderAutoImport ? '1' : '0',
-      },
-      {
-        settingId: 'ProviderAutoImportCategory',
-        value: this.settingProviderAutoImportCategory,
-      },
-      {
-        settingId: 'ProviderAutoDelete',
-        value: this.settingProviderAutoDelete ? '1' : '0',
-      },
-      {
-        settingId: 'ProviderTimeout',
-        value: (this.settingProviderTimeout ?? 10).toString(),
-      },
-      {
-        settingId: 'ProviderCheckInterval',
-        value: (this.settingProviderCheckInterval ?? 10).toString(),
-      },
-      {
-        settingId: 'RealDebridApiKey',
-        value: this.settingRealDebridApiKey,
-      },
-      {
-        settingId: 'LogLevel',
-        value: this.settingLogLevel,
-      },
-      {
-        settingId: 'DownloadPath',
-        value: this.settingDownloadPath,
-      },
-      {
-        settingId: 'MappedPath',
-        value: this.settingMappedPath,
-      },
-      {
-        settingId: 'TempPath',
-        value: this.settingTempPath,
-      },
-      {
-        settingId: 'DownloadClient',
-        value: this.settingDownloadClient,
-      },
-      {
-        settingId: 'DownloadLimit',
-        value: (this.settingDownloadLimit ?? 10).toString(),
-      },
-      {
-        settingId: 'DownloadChunkCount',
-        value: (this.settingDownloadChunkCount ?? 8).toString(),
-      },
-      {
-        settingId: 'DownloadMaxSpeed',
-        value: (this.settingDownloadMaxSpeed ?? 0).toString(),
-      },
-      {
-        settingId: 'UnpackLimit',
-        value: (this.settingUnpackLimit ?? 1).toString(),
-      },
-      {
-        settingId: 'MinFileSize',
-        value: (this.settingMinFileSize ?? 0).toString(),
-      },
-      {
-        settingId: 'OnlyDownloadAvailableFiles',
-        value: (this.settingOnlyDownloadAvailableFiles ? '1' : '0').toString(),
-      },
-      {
-        settingId: 'ProxyServer',
-        value: this.settingProxyServer,
-      },
-      {
-        settingId: 'Aria2cUrl',
-        value: this.settingAria2cUrl,
-      },
-      {
-        settingId: 'Aria2cSecret',
-        value: this.settingAria2cSecret,
-      },
-      {
-        settingId: 'DownloadRetryAttempts',
-        value: (this.settingDownloadRetryAttempts ?? 0).toString(),
-      },
-      {
-        settingId: 'TorrentRetryAttempts',
-        value: (this.settingTorrentRetryAttempts ?? 0).toString(),
-      },
-      {
-        settingId: 'DeleteOnError',
-        value: (this.settingDeleteOnError ?? 0).toString(),
-      },
-      {
-        settingId: 'TorrentLifetime',
-        value: (this.settingTorrentLifetime ?? 0).toString(),
-      },
-      {
-        settingId: 'RunOnTorrentCompleteFileName',
-        value: this.settingRunOnTorrentCompleteFileName,
-      },
-      {
-        settingId: 'RunOnTorrentCompleteArguments',
-        value: this.settingRunOnTorrentCompleteArguments,
-      },
-    ];
+    const settingsToSave = this.tabs.selectMany((m) => m.settings).where((m) => m.type !== 'Object');
 
-    this.settingsService.update(settings).subscribe(
+    this.settingsService.update(settingsToSave).subscribe(
       () => {
         setTimeout(() => {
           this.saving = false;
@@ -228,11 +62,15 @@ export class SettingsComponent implements OnInit {
   }
 
   public testDownloadPath(): void {
+    const settingDownloadPath = this.tabs
+      .first((m) => m.key === 'DownloadClient')
+      .settings.first((m) => m.key === 'DownloadClient:DownloadPath').value as string;
+
     this.saving = true;
     this.testPathError = null;
     this.testPathSuccess = false;
 
-    this.settingsService.testPath(this.settingDownloadPath).subscribe(
+    this.settingsService.testPath(settingDownloadPath).subscribe(
       () => {
         this.saving = false;
         this.testPathSuccess = true;
@@ -278,11 +116,18 @@ export class SettingsComponent implements OnInit {
   }
 
   public testAria2cConnection(): void {
+    const settingAria2cUrl = this.tabs
+      .first((m) => m.key === 'DownloadClient')
+      .settings.first((m) => m.key === 'DownloadClient:Aria2cUrl').value as string;
+    const settingAria2cSecret = this.tabs
+      .first((m) => m.key === 'DownloadClient')
+      .settings.first((m) => m.key === 'DownloadClient:Aria2cSecret').value as string;
+
     this.saving = true;
     this.testAria2cConnectionError = null;
     this.testAria2cConnectionSuccess = null;
 
-    this.settingsService.testAria2cConnection(this.settingAria2cUrl, this.settingAria2cSecret).subscribe(
+    this.settingsService.testAria2cConnection(settingAria2cUrl, settingAria2cSecret).subscribe(
       (result) => {
         this.saving = false;
         this.testAria2cConnectionSuccess = result.version;
@@ -292,15 +137,5 @@ export class SettingsComponent implements OnInit {
         this.saving = false;
       }
     );
-  }
-
-  private getSetting(settings: Setting[], key: string): string {
-    const setting = settings.filter((m) => m.settingId === key);
-
-    if (setting.length !== 1) {
-      throw new Error(`Unable to find setting with key ${key}`);
-    }
-
-    return setting[0].value;
   }
 }

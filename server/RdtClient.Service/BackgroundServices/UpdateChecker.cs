@@ -20,6 +20,11 @@ public class UpdateChecker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        while (!Startup.Ready)
+        {
+            await Task.Delay(1000, stoppingToken);
+        }
+
         var version = Assembly.GetEntryAssembly()?.GetName().Version?.ToString();
 
         if (String.IsNullOrWhiteSpace(version))

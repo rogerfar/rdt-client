@@ -44,8 +44,8 @@ public class TorrentRunner
 
         if (settingsCopy != null)
         {
-            settingsCopy.RealDebridApiKey = "*****";
-            settingsCopy.Aria2cSecret = "*****";
+            settingsCopy.Provider.ApiKey = "*****";
+            settingsCopy.DownloadClient.Aria2cSecret = "*****";
 
             Log(JsonSerializer.Serialize(settingsCopy));
         }
@@ -82,25 +82,25 @@ public class TorrentRunner
 
     public async Task Tick()
     {
-        if (String.IsNullOrWhiteSpace(Settings.Get.RealDebridApiKey))
+        if (String.IsNullOrWhiteSpace(Settings.Get.Provider.ApiKey))
         {
             Log($"No RealDebridApiKey set in settings");
             return;
         }
             
-        var settingDownloadLimit = Settings.Get.DownloadLimit;
+        var settingDownloadLimit = Settings.Get.General.DownloadLimit;
         if (settingDownloadLimit < 1)
         {
             settingDownloadLimit = 1;
         }
 
-        var settingUnpackLimit = Settings.Get.UnpackLimit;
+        var settingUnpackLimit = Settings.Get.General.UnpackLimit;
         if (settingUnpackLimit < 1)
         {
             settingUnpackLimit = 1;
         }
 
-        var settingDownloadPath = Settings.Get.DownloadPath;
+        var settingDownloadPath = Settings.Get.DownloadClient.DownloadPath;
         if (String.IsNullOrWhiteSpace(settingDownloadPath))
         {
             _logger.LogError("No DownloadPath set in settings");
@@ -115,11 +115,11 @@ public class TorrentRunner
             Log($"TorrentRunner Tick Start, {ActiveDownloadClients.Count} active downloads, {ActiveUnpackClients.Count} active unpacks");
         }
 
-        if (ActiveDownloadClients.Any(m => m.Value.Type == "Aria2c"))
+        if (ActiveDownloadClients.Any(m => m.Value.Type == Data.Enums.DownloadClient.Aria2c))
         {
             Log("Updating Aria2 status");
 
-            var aria2NetClient = new Aria2NetClient(Settings.Get.Aria2cUrl, Settings.Get.Aria2cSecret, _httpClient, 1);
+            var aria2NetClient = new Aria2NetClient(Settings.Get.DownloadClient.Aria2cUrl, Settings.Get.DownloadClient.Aria2cSecret, _httpClient, 1);
 
             var allDownloads = await aria2NetClient.TellAll();
 

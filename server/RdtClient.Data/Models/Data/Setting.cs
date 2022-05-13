@@ -8,6 +8,4 @@ public class Setting
     public String SettingId { get; set; }
 
     public String Value { get; set; }
-
-    public String Type { get; set; }
 }

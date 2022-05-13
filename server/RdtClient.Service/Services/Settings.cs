@@ -1,9 +1,11 @@
 ﻿using System.Diagnostics;
 using Aria2NET;
 using RdtClient.Data.Data;
+using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Helpers;
+using RdtClient.Service.Services.Downloaders;
 using Serilog.Core;
 using Serilog.Events;
 
@@ -22,19 +24,19 @@ public class Settings
 
     public static DbSettings Get => SettingData.Get;
 
-    public async Task<IList<Setting>> GetAll()
+    public IList<SettingProperty> GetAll()
     {
-        return await _settingData.GetAll();
+        return _settingData.GetAll();
     }
 
-    public async Task Update(IList<Setting> settings)
+    public async Task Update(IList<SettingProperty> settings)
     {
         await _settingData.Update(settings);
     }
 
-    public async Task UpdateString(String key, String value)
+    public async Task Update(String settingId, Object value)
     {
-        await _settingData.UpdateString(key, value);
+        await _settingData.Update(settingId, value);
     }
 
     public async Task TestPath(String path)
@@ -60,7 +62,7 @@ public class Settings
 
     public async Task<Double> TestDownloadSpeed(CancellationToken cancellationToken)
     {
-        var downloadPath = Get.DownloadPath;
+        var downloadPath = Get.DownloadClient.DownloadPath;
 
         var testFilePath = Path.Combine(downloadPath, "testDefault.rar");
 
@@ -79,18 +81,29 @@ public class Settings
 
         await downloadClient.Start(Get);
 
+        var httpClient = new HttpClient
+        {
+            Timeout = TimeSpan.FromSeconds(10)
+        };
+
         while (!downloadClient.Finished)
         {
-#pragma warning disable CA2016 // Forward the 'CancellationToken' parameter to methods that take one
-            // ReSharper disable once MethodSupportsCancellation
-            await Task.Delay(10);
-#pragma warning restore CA2016 // Forward the 'CancellationToken' parameter to methods that take one
-                
+            await Task.Delay(1000, CancellationToken.None);
+
             if (cancellationToken.IsCancellationRequested)
             {
                 await downloadClient.Cancel();
             }
 
+            if (downloadClient.Downloader is Aria2cDownloader aria2Downloader)
+            {
+                var aria2NetClient = new Aria2NetClient(Settings.Get.DownloadClient.Aria2cUrl, Settings.Get.DownloadClient.Aria2cSecret, httpClient, 1);
+
+                var allDownloads = await aria2NetClient.TellAll(cancellationToken);
+
+                await aria2Downloader.Update(allDownloads);
+            }
+            
             if (downloadClient.BytesDone > 1024 * 1024 * 50)
             {
                 await downloadClient.Cancel();
@@ -108,7 +121,7 @@ public class Settings
 
     public async Task<Double> TestWriteSpeed()
     {
-        var downloadPath = Get.DownloadPath;
+        var downloadPath = Get.DownloadClient.DownloadPath;
 
         var testFilePath = Path.Combine(downloadPath, "test.tmp");
 
@@ -155,7 +168,7 @@ public class Settings
     {
         try
         {
-            var tempPath = Get.TempPath;
+            var tempPath = Get.DownloadClient.TempPath;
 
             if (!String.IsNullOrWhiteSpace(tempPath))
             {
@@ -173,8 +186,22 @@ public class Settings
         }
     }
 
+    public async Task Seed()
+    {
+        await _settingData.Seed();
+    }
+
     public async Task ResetCache()
     {
         await _settingData.ResetCache();
+
+        LoggingLevelSwitch.MinimumLevel = Settings.Get.General.LogLevel switch
+        {
+            LogLevel.Debug => LogEventLevel.Debug,
+            LogLevel.Information => LogEventLevel.Information,
+            LogLevel.Warning => LogEventLevel.Warning,
+            LogLevel.Error => LogEventLevel.Error,
+            _ => LogEventLevel.Warning
+        };
     }
 }

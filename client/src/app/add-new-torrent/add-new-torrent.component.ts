@@ -17,17 +17,14 @@ export class AddNewTorrentComponent implements OnInit {
   public provider: string;
 
   public category: string;
-  public priority: number;
-
   public downloadAction: number = 0;
   public finishedAction: number = 0;
-
   public downloadMinSize: number = 0;
-
-  public downloadRetryAttempts: number = 3;
   public torrentRetryAttempts: number = 1;
+  public downloadRetryAttempts: number = 3;
   public torrentDeleteOnError: number = 0;
   public torrentLifetime: number = 0;
+  public priority: number;
 
   public availableFiles: TorrentFileAvailability[];
   public downloadFiles: { [key: string]: boolean } = {};
@@ -44,7 +41,20 @@ export class AddNewTorrentComponent implements OnInit {
     private settingsService: SettingsService
   ) {
     this.settingsService.get().subscribe((settings) => {
-      this.provider = settings.firstOrDefault((m) => m.settingId === 'Provider')?.value;
+      const providerSetting = settings.first((m) => m.key === 'Provider:Provider');
+      this.provider = providerSetting.enumValues[providerSetting.value as number];
+
+      this.category = settings.first((m) => m.key === 'Gui:Default:Category')?.value as string;
+      this.downloadAction =
+        settings.first((m) => m.key === 'Gui:Default:OnlyDownloadAvailableFiles')?.value === true ? 1 : 0;
+      this.finishedAction = settings.first((m) => m.key === 'Gui:Default:FinishedAction')?.value as number;
+      this.downloadMinSize = settings.first((m) => m.key === 'Gui:Default:MinFileSize')?.value as number;
+      this.torrentRetryAttempts = settings.first((m) => m.key === 'Gui:Default:TorrentRetryAttempts')?.value as number;
+      this.downloadRetryAttempts = settings.first((m) => m.key === 'Gui:Default:DownloadRetryAttempts')
+        ?.value as number;
+      this.torrentDeleteOnError = settings.first((m) => m.key === 'Gui:Default:DeleteOnError')?.value as number;
+      this.torrentLifetime = settings.first((m) => m.key === 'Gui:Default:TorrentLifetime')?.value as number;
+      this.priority = settings.first((m) => m.key === 'Gui:Default:Priority')?.value as number;
     });
   }
 

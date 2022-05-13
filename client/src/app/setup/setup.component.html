@@ -43,23 +43,23 @@
               To be able to use the Real-Debrid Client you need a premium subscription to download torrents.
               <br /><br />
               Not premium yet? You have the choice of 2 providers:
-              <br/>
+              <br />
               <a href="https://real-debrid.com/?id=1348683" target="_blank" rel="noopener"
                 >Use this link to sign up to Real-Debrid.</a
               >
-              <br/>
+              <br />
               <a href="https://alldebrid.com/?uid=2v91l&lang=en" target="_blank" rel="noopener"
                 >Use this link to sign up to AllDebrid.</a
               >
-              <br/>
+              <br />
               <small>(Referal links)</small>
             </div>
             <div class="field">
               <label class="label">Provider</label>
               <div class="control select is-fullwidth">
                 <select [(ngModel)]="provider">
-                  <option value="RealDebrid">Real-Debrid</option>
-                  <option value="AllDebrid">AllDebrid</option>
+                  <option [value]="0">Real-Debrid</option>
+                  <option [value]="1">AllDebrid</option>
                 </select>
               </div>
             </div>

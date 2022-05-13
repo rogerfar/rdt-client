@@ -38,10 +38,10 @@ public class Torrents
         _torrentData = torrentData;
         _downloads = downloads;
             
-        _torrentClient = Settings.Get.Provider switch
+        _torrentClient = Settings.Get.Provider.Provider switch
         {
-            "RealDebrid" => realDebridTorrentClient,
-            "AllDebrid" => allDebridTorrentClient,
+            Provider.RealDebrid => realDebridTorrentClient,
+            Provider.AllDebrid => allDebridTorrentClient,
             _ => null
         };
     }
@@ -329,7 +329,7 @@ public class Torrents
 
         var profile = new Profile
         {
-            Provider = Settings.Get.Provider,
+            Provider = Enum.GetName(Settings.Get.Provider.Provider),
             UserName = user.Username,
             Expiration = user.Expiration,
             CurrentVersion = UpdateChecker.CurrentVersion,
@@ -354,19 +354,19 @@ public class Torrents
                 var torrent = torrents.FirstOrDefault(m => m.RdId == rdTorrent.Id);
 
                 // Auto import torrents only torrents that have their files selected
-                if (torrent == null && Settings.Get.ProviderAutoImport == 1)
+                if (torrent == null && Settings.Get.Provider.AutoImport)
                 {
                     var newTorrent = new Torrent
                     {
-                        Category = Settings.Get.ProviderAutoImportCategory,
-                        DownloadAction = TorrentDownloadAction.DownloadManual,
-                        FinishedAction = TorrentFinishedAction.None,
-                        DownloadMinSize = 0,
-                        TorrentRetryAttempts = 0,
-                        DownloadRetryAttempts = Settings.Get.DownloadRetryAttempts,
-                        DeleteOnError = Settings.Get.DeleteOnError,
-                        Lifetime = Settings.Get.TorrentLifetime,
-                        Priority = 0,
+                        Category = Settings.Get.Provider.Default.Category,
+                        DownloadAction = Settings.Get.Provider.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
+                        FinishedAction = Settings.Get.Provider.Default.FinishedAction,
+                        DownloadMinSize = Settings.Get.Provider.Default.MinFileSize,
+                        TorrentRetryAttempts = Settings.Get.Provider.Default.TorrentRetryAttempts,
+                        DownloadRetryAttempts = Settings.Get.Provider.Default.DownloadRetryAttempts,
+                        DeleteOnError = Settings.Get.Provider.Default.DeleteOnError,
+                        Lifetime = Settings.Get.Provider.Default.TorrentLifetime,
+                        Priority = Settings.Get.Provider.Default.Priority > 0 ? Settings.Get.Provider.Default.Priority : null,
                         RdId = rdTorrent.Id
                     };
 
@@ -389,7 +389,7 @@ public class Torrents
             {
                 var rdTorrent = rdTorrents.FirstOrDefault(m => m.Id == torrent.RdId);
 
-                if (rdTorrent == null && Settings.Get.ProviderAutoDelete == 1)
+                if (rdTorrent == null && Settings.Get.Provider.AutoDelete)
                 {
                     await Delete(torrent.TorrentId, true, false, true);
                 }
@@ -574,7 +574,7 @@ public class Torrents
 
     private static String DownloadPath(Torrent torrent)
     {
-        var settingDownloadPath = Settings.Get.DownloadPath;
+        var settingDownloadPath = Settings.Get.DownloadClient.DownloadPath;
 
         if (!String.IsNullOrWhiteSpace(torrent.Category))
         {
@@ -624,7 +624,7 @@ public class Torrents
 
     public async Task RunTorrentComplete(Guid torrentId)
     {
-        if (String.IsNullOrWhiteSpace(Settings.Get.RunOnTorrentCompleteFileName))
+        if (String.IsNullOrWhiteSpace(Settings.Get.General.RunOnTorrentCompleteFileName))
         {
             return;
         }
@@ -632,8 +632,8 @@ public class Torrents
         var torrent = await _torrentData.GetById(torrentId);
         var downloads = await _downloads.GetForTorrent(torrentId);
 
-        var fileName = Settings.Get.RunOnTorrentCompleteFileName;
-        var arguments = Settings.Get.RunOnTorrentCompleteArguments ?? "";
+        var fileName = Settings.Get.General.RunOnTorrentCompleteFileName;
+        var arguments = Settings.Get.General.RunOnTorrentCompleteArguments ?? "";
 
         Log($"Parsing external program {fileName} with arguments {arguments}", torrent);
 

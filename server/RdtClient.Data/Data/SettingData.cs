@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.ComponentModel;
+using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.Internal;
 using Serilog;
@@ -7,128 +9,200 @@ namespace RdtClient.Data.Data;
 
 public class SettingData
 {
-    private static readonly SemaphoreSlim _settingCacheLock = new(1);
-
     private readonly DataContext _dataContext;
+
+    public static DbSettings Get { get; } = new DbSettings();
 
     public SettingData(DataContext dataContext)
     {
         _dataContext = dataContext;
     }
 
-    public static DbSettings Get { get; private set; }
+    public IList<SettingProperty> GetAll()
+    {
+        return GetSettings(Get, null).ToList();
+    }
+
+    public async Task Update(IList<SettingProperty> settings)
+    {
+        var dbSettings = await _dataContext.Settings.ToListAsync();
+
+        foreach (var dbSetting in dbSettings)
+        {
+            var setting = settings.FirstOrDefault(m => m.Key == dbSetting.SettingId);
+
+            if (setting != null)
+            {
+                dbSetting.Value = setting.Value.ToString();
+            }
+        }
+
+        await _dataContext.SaveChangesAsync();
+
+        await ResetCache();
+    }
+
+    public async Task Update(String settingId, Object value)
+    {
+        var dbSetting = await _dataContext.Settings.FirstOrDefaultAsync(m => m.SettingId == settingId);
+
+        if (dbSetting == null)
+        {
+            return;
+        }
+
+        dbSetting.Value = value.ToString();
+
+        await _dataContext.SaveChangesAsync();
+
+        await ResetCache();
+    }
 
     public async Task ResetCache()
     {
-        var allSettings = await _dataContext.Settings.AsNoTracking().ToListAsync();
+        var settings = await _dataContext.Settings.AsNoTracking().ToListAsync();
 
-        String GetString(String name)
+        if (settings.Count == 0)
         {
-            return allSettings.FirstOrDefault(m => m.SettingId == name)?.Value;
+            throw new Exception("No settings found, please restart");
         }
 
-        Int32 GetInt32(String name)
-        {
-            var strVal = GetString(name);
+        SetSettings(settings, Get, null);
+    }
 
-            if (!Int32.TryParse(strVal, out var intVal))
+    public async Task Seed()
+    {
+        var dbSettings = await _dataContext.Settings.AsNoTracking().ToListAsync();
+
+        var expectedSettings = GetSettings(Get, null).Where(m => m.Type != "Object").Select(m => new Setting
+        {
+            SettingId = m.Key,
+            Value = m.Value?.ToString()
+        }).ToList();
+
+        var newSettings = expectedSettings.Where(m => dbSettings.All(p => p.SettingId != m.SettingId)).ToList();
+
+        if (newSettings.Any())
+        {
+            await _dataContext.Settings.AddRangeAsync(newSettings);
+            await _dataContext.SaveChangesAsync();
+        }
+
+        var oldSettings = dbSettings.Where(m => expectedSettings.All(p => p.SettingId != m.SettingId)).ToList();
+
+        if (oldSettings.Any())
+        {
+            _dataContext.Settings.RemoveRange(oldSettings);
+            await _dataContext.SaveChangesAsync();
+        }
+    }
+
+    private static IEnumerable<SettingProperty> GetSettings(Object defaultSetting, String parent)
+    {
+        var result = new List<SettingProperty>();
+
+        var properties = defaultSetting.GetType().GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance);
+
+        foreach (var property in properties)
+        {
+            var displayName = (DisplayNameAttribute) Attribute.GetCustomAttribute(property, typeof(DisplayNameAttribute));
+            var description = (DescriptionAttribute) Attribute.GetCustomAttribute(property, typeof(DescriptionAttribute));
+            var propertyName = property.Name;
+
+            if (parent != null)
             {
-                Log.Error("Unable to parse setting {name} to Int32", name);
-                return 0;
+                propertyName = $"{parent}:{propertyName}";
             }
 
-            return intVal;
+            var settingProperty = new SettingProperty
+            {
+                Key = propertyName,
+                DisplayName = displayName?.DisplayName,
+                Description = description?.Description,
+                Type = property.PropertyType.Name
+            };
 
+            if (property.PropertyType.IsEnum ||
+                property.PropertyType.IsValueType ||
+                property.PropertyType == typeof(String))
+            {
+                settingProperty.Value = property.GetValue(defaultSetting);
+
+                if (property.PropertyType.IsEnum)
+                {
+                    settingProperty.Type = "Enum";
+                    settingProperty.EnumValues = new Dictionary<Int32, String>();
+
+                    foreach (var e in Enum.GetValues(property.PropertyType).Cast<Enum>())
+                    {
+                        var enumMember = property.PropertyType.GetMember(e.ToString()).First();
+                        var enumDescriptionAttribute = enumMember.GetCustomAttribute<DescriptionAttribute>();
+                        var enumName = enumDescriptionAttribute?.Description ?? Enum.GetName(property.PropertyType, e);
+                        settingProperty.EnumValues.Add((Int32)(Object)e, enumName);
+                    }
+                }
+
+                result.Add(settingProperty);
+            }
+            else
+            {
+                settingProperty.Type = "Object";
+                result.Add(settingProperty);
+
+                var childResults = GetSettings(property.GetValue(defaultSetting), propertyName);
+                result.AddRange(childResults);
+            }
         }
 
-        Get = new DbSettings
-        {
-            Provider = GetString("Provider"),
-            ProviderAutoImport = GetInt32("ProviderAutoImport"),
-            ProviderAutoImportCategory = GetString("ProviderAutoImportCategory"),
-            ProviderAutoDelete = GetInt32("ProviderAutoDelete"),
-            ProviderTimeout = GetInt32("ProviderTimeout"),
-            ProviderCheckInterval = GetInt32("ProviderCheckInterval"),
-            RealDebridApiKey = GetString("RealDebridApiKey"),
-            DownloadPath = GetString("DownloadPath"),
-            DownloadClient = GetString("DownloadClient"),
-            TempPath = GetString("TempPath"),
-            MappedPath = GetString("MappedPath"),
-            DownloadLimit = GetInt32("DownloadLimit"),
-            UnpackLimit = GetInt32("UnpackLimit"),
-            MinFileSize = GetInt32("MinFileSize"),
-            OnlyDownloadAvailableFiles = GetInt32("OnlyDownloadAvailableFiles"),
-            DownloadChunkCount = GetInt32("DownloadChunkCount"),
-            DownloadMaxSpeed = GetInt32("DownloadMaxSpeed"),
-            ProxyServer = GetString("ProxyServer"),
-            LogLevel = GetString("LogLevel"),
-            Categories = GetString("Categories"),
-            Aria2cUrl = GetString("Aria2cUrl"),
-            Aria2cSecret = GetString("Aria2cSecret"),
-            DownloadRetryAttempts = GetInt32("DownloadRetryAttempts"),
-            TorrentRetryAttempts = GetInt32("TorrentRetryAttempts"),
-            DeleteOnError = GetInt32("DeleteOnError"),
-            TorrentLifetime = GetInt32("TorrentLifetime"),
-            RunOnTorrentCompleteFileName = GetString("RunOnTorrentCompleteFileName"),
-            RunOnTorrentCompleteArguments = GetString("RunOnTorrentCompleteArguments")
-        };
+        return result;
     }
 
-    public async Task<IList<Setting>> GetAll()
+    private static void SetSettings(IList<Setting> settings, Object defaultSetting, String parent)
     {
-        return await _dataContext.Settings.AsNoTracking().ToListAsync();
-    }
+        var properties = defaultSetting.GetType().GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance);
 
-    public async Task Update(IList<Setting> settings)
-    {
-        await _settingCacheLock.WaitAsync();
-
-        try
+        foreach (var property in properties)
         {
-            var dbSettings = await _dataContext.Settings.ToListAsync();
+            var propertyName = property.Name;
 
-            foreach (var dbSetting in dbSettings)
+            if (parent != null)
             {
-                var setting = settings.FirstOrDefault(m => m.SettingId == dbSetting.SettingId);
+                propertyName = $"{parent}:{propertyName}";
+            }
+
+            if (property.PropertyType.IsEnum ||
+                property.PropertyType.IsValueType ||
+                property.PropertyType == typeof(String))
+            {
+                var setting = settings.FirstOrDefault(m => m.SettingId == propertyName);
 
                 if (setting != null)
                 {
-                    dbSetting.Value = setting.Value;
+                    if (property.PropertyType.IsEnum)
+                    {
+                        var newValue = Enum.Parse(property.PropertyType, setting.Value);
+                        property.SetValue(defaultSetting, newValue);
+                    }
+                    else
+                    {
+                        var converter = TypeDescriptor.GetConverter(property.PropertyType);
+
+                        if (converter.IsValid(setting.Value))
+                        {
+                            var newValue = converter.ConvertFrom(setting.Value);
+                            property.SetValue(defaultSetting, newValue);
+                        }
+                        else
+                        {
+                            Log.Warning($"Invalid value for setting {propertyName}: {setting.Value}");
+                        }
+                    }
                 }
             }
-
-            await _dataContext.SaveChangesAsync();
-
-            await ResetCache();
-        }
-        finally
-        {
-            _settingCacheLock.Release();
-        }
-    }
-
-    public async Task UpdateString(String key, String value)
-    {
-        await _settingCacheLock.WaitAsync();
-
-        try
-        {
-            var dbSetting = await _dataContext.Settings.FirstOrDefaultAsync(m => m.SettingId == key);
-
-            if (dbSetting == null)
+            else
             {
-                throw new Exception($"Cannot find setting with key {key}");
+                SetSettings(settings, property.GetValue(defaultSetting), propertyName);
             }
-                
-            dbSetting.Value = value;
-
-            await _dataContext.SaveChangesAsync();
-
-            await ResetCache();
-        }
-        finally
-        {
-            _settingCacheLock.Release();
         }
     }
 }

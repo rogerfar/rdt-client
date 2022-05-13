@@ -18,7 +18,10 @@ public class TaskRunner : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+        while (!Startup.Ready)
+        {
+            await Task.Delay(1000, stoppingToken);
+        }
 
         using var scope = _serviceProvider.CreateScope();
         var torrentRunner = scope.ServiceProvider.GetRequiredService<TorrentRunner>();

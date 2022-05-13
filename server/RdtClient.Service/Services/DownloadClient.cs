@@ -21,7 +21,7 @@ public class DownloadClient
         _destinationPath = destinationPath;
     }
 
-    public String Type { get; set; }
+    public Data.Enums.DownloadClient Type { get; set; }
 
     public Boolean Finished { get; private set; }
 
@@ -48,13 +48,13 @@ public class DownloadClient
                 
             await FileHelper.Delete(filePath);
 
-            Type = settings.DownloadClient;
+            Type = settings.DownloadClient.Client;
 
-            Downloader = settings.DownloadClient switch
+            Downloader = settings.DownloadClient.Client switch
             {
-                "Simple" => new SimpleDownloader(_download.Link, filePath),
-                "MultiPart" => new MultiDownloader(_download.Link, filePath, settings),
-                "Aria2c" => new Aria2cDownloader(_download.RemoteId, _download.Link, filePath, settings),
+                Data.Enums.DownloadClient.Simple => new SimpleDownloader(_download.Link, filePath),
+                Data.Enums.DownloadClient.MultiPart => new MultiDownloader(_download.Link, filePath, settings),
+                Data.Enums.DownloadClient.Aria2c => new Aria2cDownloader(_download.RemoteId, _download.Link, filePath, settings),
                 _ => throw new Exception($"Unknown download client {settings.DownloadClient}")
             };
 

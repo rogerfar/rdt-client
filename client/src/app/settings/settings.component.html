@@ -1,373 +1,67 @@
 <div class="tabs">
   <ul>
-    <li [ngClass]="{ 'is-active': activeTab === 0 }" (click)="activeTab = 0">
-      <a>General</a>
+    <li [ngClass]="{ 'is-active': activeTab === i }" (click)="activeTab = i" *ngFor="let tab of tabs; let i = index">
+      <a>{{ tab.displayName }}</a>
     </li>
-    <li [ngClass]="{ 'is-active': activeTab === 4 }" (click)="activeTab = 4">
-      <a>Provider</a>
-    </li>
-    <li [ngClass]="{ 'is-active': activeTab === 1 }" (click)="activeTab = 1">
-      <a>Download Client</a>
-    </li>
-    <li [ngClass]="{ 'is-active': activeTab === 2 }" (click)="activeTab = 2">
-      <a>Radarr/Sonarr</a>
-    </li>
-    <li [ngClass]="{ 'is-active': activeTab === 5 }" (click)="activeTab = 5">
-      <a>Watch</a>
-    </li>
-    <li [ngClass]="{ 'is-active': activeTab === 3 }" (click)="activeTab = 3">
-      <a>Tests</a>
+    <li [ngClass]="{ 'is-active': activeTab === 99 }" (click)="activeTab = 99">
+      <a>Speed Tests</a>
     </li>
   </ul>
 </div>
 
-<div *ngIf="activeTab === 4">
-  <div class="field">
-    <label class="label">Provider</label>
-    <div class="control select is-fullwidth">
-      <select [(ngModel)]="settingProvider">
-        <option value="RealDebrid">Real-Debrid</option>
-        <option value="AllDebrid">AllDebrid</option>
-      </select>
-    </div>
-    <p class="help">
-      The following 2 providers are supported:
-      <br />
-      <a href="https://real-debrid.com/?id=1348683" target="_blank" rel="noopener">https://real-debrid.com</a>
-      <br />
-      <a href="https://alldebrid.com/?uid=2v91l&lang=en" target="_blank" rel="noopener">https://alldebrid.com</a>
-      <br />
-      At this point only 1 provider can be used at the time.
-    </p>
-  </div>
-  <div class="field" *ngIf="settingProvider === 'RealDebrid'">
-    <label class="label">Real-Debrid API Key</label>
-    <div class="control">
-      <input class="input" type="text" maxlength="100" [(ngModel)]="settingRealDebridApiKey" />
-    </div>
-    <p class="help">
-      You can find your API key here:
-      <a href="https://real-debrid.com/apitoken" target="_blank" rel="noopener">https://real-debrid.com/apitoken</a>.
-    </p>
-  </div>
-  <div class="field" *ngIf="settingProvider === 'AllDebrid'">
-    <label class="label">AllDebrid API Key</label>
-    <div class="control">
-      <input class="input" type="text" maxlength="100" [(ngModel)]="settingRealDebridApiKey" />
-    </div>
-    <p class="help">
-      You can find your API key here:
-      <a href="https://alldebrid.com/apikeys/" target="_blank" rel="noopener">https://alldebrid.com/apikeys/</a>.
-    </p>
-  </div>
-  <div class="field">
-    <div class="control">
-      <label class="checkbox">
-        <input type="checkbox" [(ngModel)]="settingProviderAutoImport" />
-        Automatically import and process torrents added to provider.
-      </label>
-      <div class="help">
-        When selected, import downloads that are not added through RealDebridClient but have been directly added to
-        Real-Debrid or AllDebrid.
-      </div>
-    </div>
-  </div>
-  <div class="field">
-    <label class="label">Automatically import category</label>
-    <div class="control">
-      <input class="input" type="text" maxlength="100" [(ngModel)]="settingProviderAutoImportCategory" />
-    </div>
-    <p class="help">When a torrent is imported assign it this category.</p>
-  </div>
-  <div class="field">
-    <div class="control">
-      <label class="checkbox">
-        <input type="checkbox" [(ngModel)]="settingProviderAutoDelete" />
-        Automatically delete downloads removed from provider.
-      </label>
-      <div class="help">
-        When selected, cancel and delete downloads that have been removed from Real-Debrid or AllDebrid.
-      </div>
-    </div>
-  </div>
-  <div class="field">
-    <label class="label">Connection Timeout</label>
-    <div class="control">
-      <input class="input" type="number" min="1" max="9999" [(ngModel)]="settingProviderTimeout" />
-    </div>
-    <p class="help">
-      The timeout to use to connect to the provider in seconds, with a minimum of 5 seconds. Increase if you experience
-      timeout errors in the log. This setting is only used when there is a user connected to the web interface or if
-      AutoImport/AutoDelete has been enabled.
-    </p>
-  </div>
-  <div class="field">
-    <label class="label">Check Interval</label>
-    <div class="control">
-      <input class="input" type="number" min="10" max="9999" [(ngModel)]="settingProviderCheckInterval" />
-    </div>
-    <p class="help">
-      This interval is used to check Real-Debrid or AllDebrid for updates. This setting is only used when there are
-      active downloads. If there are no active downloads it will use this setting * 3, with a minimum of 30 seconds.
-    </p>
-  </div>
-</div>
-
-<div *ngIf="activeTab === 0">
-  <div class="field">
-    <label class="label">Log level</label>
-    <div class="control select is-fullwidth">
-      <select [(ngModel)]="settingLogLevel">
-        <option value="Verbose">Verbose</option>
-        <option value="Debug">Debug</option>
-        <option value="Information">Information</option>
-        <option value="Warning">Warning</option>
-        <option value="Error">Error</option>
-        <option value="Fatal">Fatal</option>
-      </select>
-    </div>
-    <p class="help">Recommended level is Warning, set to Debug to get the most info.</p>
-  </div>
-  <div class="field">
-    <label class="label">Download path</label>
-    <div class="control">
-      <input class="input" type="text" maxlength="1000" [(ngModel)]="settingDownloadPath" />
-    </div>
-    <p class="help">Path in the docker container to download files to (i.e. /data/downloads).</p>
-  </div>
-  <div class="field">
-    <label class="label">Mapped path</label>
-    <div class="control">
-      <input class="input" type="text" maxlength="1000" [(ngModel)]="settingMappedPath" />
-    </div>
-    <p class="help">
-      Path where files are downloaded to on your host (i.e. D:\Downloads). This path is used for Radarr and Sonarr to
-      find your downloads.
-    </p>
-  </div>
-
-  <div class="field">
-    <label class="label">Maximum unpack processes</label>
-    <div class="control">
-      <input class="input" type="number" max="100" min="1" step="1" [(ngModel)]="settingUnpackLimit" />
-    </div>
-    <p class="help">Maximum amount of downloads that get unpacked on your host at the same time.</p>
-  </div>
-
-  <div class="field">
-    <label class="label">Run external program on torrent completion</label>
-    <div class="control">
-      <input class="input" type="text" [(ngModel)]="settingRunOnTorrentCompleteFileName" />
-    </div>
-    <p class="help">
-      Path to the executable to run when the torrent and all downloads are finished. No arguments should be passed here.
-      <br />
-      <strong>When running in Docker, this command will run on your docker instance!</strong>
-    </p>
-  </div>
-
-  <div class="field">
-    <label class="label">External program arguments</label>
-    <div class="control">
-      <input class="input" type="text" [(ngModel)]="settingRunOnTorrentCompleteArguments" />
-    </div>
-    <p class="help">
-      When the executable above is executed, use these parameters.
-      <br />
-      Supports the following parameters:
-    </p>
-    <ul class="help">
-      <li>%N: Torrent name</li>
-      <li>%L: Category</li>
-      <li>%F: Content path (same as root path for multifile torrent)</li>
-      <li>%R: Root path (first torrent subdirectory path)</li>
-      <li>%D: Save path</li>
-      <li>%C: Number of files</li>
-      <li>%Z: Torrent size (bytes)</li>
-      <li>%I: Info hash</li>
-    </ul>
-  </div>
-</div>
-
-<div *ngIf="activeTab === 1">
-  <div class="field">
-    <label class="label">Download client</label>
-    <div class="control select is-fullwidth">
-      <select [(ngModel)]="settingDownloadClient">
-        <option value="Simple">Simple Downloader</option>
-        <option value="MultiPart">Multi Part Downloader</option>
-        <option value="Aria2c">Aria2c</option>
-      </select>
-    </div>
-    <p class="help">
-      Select which download client to use, see the
-      <a href="https://github.com/rogerfar/rdt-client/" target="_blank">README</a> for the various options.
-    </p>
-  </div>
-
-  <div class="field" *ngIf="settingDownloadClient === 'MultiPart'">
-    <label class="label">Temp Download path</label>
-    <div class="control">
-      <input class="input" type="text" maxlength="1000" [(ngModel)]="settingTempPath" />
-    </div>
-    <p class="help">
-      Path in the docker container to temporarily download to (i.e. /data/temp). Make sure the docker container has
-      enough disk space if using a path inside the container.
-    </p>
-  </div>
-
-  <div class="field">
-    <label class="label">Maximum parallel downloads</label>
-    <div class="control">
-      <input class="input" type="number" max="100" min="1" step="1" [(ngModel)]="settingDownloadLimit" />
-    </div>
-    <p class="help">Maximum amount of torrents that get downloaded to your host at the same time.</p>
-  </div>
-
-  <div class="field" *ngIf="settingDownloadClient === 'MultiPart'">
-    <label class="label">Parallel connections per download</label>
-    <div class="control">
-      <input class="input" type="number" max="100" min="0" step="1" [(ngModel)]="settingDownloadChunkCount" />
-    </div>
-    <p class="help">
-      Maximum amount of parallel threads that are used to download a single torrent to your host. If set to 1 no
-      parallel downloading will be done.
-    </p>
-  </div>
-
-  <div class="field" *ngIf="settingDownloadClient === 'MultiPart' || settingDownloadClient === 'Simple'">
-    <label class="label">Download speed (in MB/s)</label>
-    <div class="control">
-      <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="settingDownloadMaxSpeed" />
-    </div>
-    <p class="help">Maximum download speed in Megabytes per second. When set to 0 unlimited speed is used.</p>
-  </div>
-
-  <div class="field" *ngIf="settingDownloadClient === 'MultiPart'">
-    <label class="label">Proxy Server</label>
-    <div class="control">
-      <input class="input" type="text" maxlength="1000" [(ngModel)]="settingProxyServer" />
-    </div>
-    <p class="help">Address of a proxy server.</p>
-  </div>
-
-  <div class="field" *ngIf="settingDownloadClient === 'Aria2c'">
-    <label class="label">Aria2c URL</label>
-    <div class="control">
-      <input class="input" type="text" maxlength="1000" [(ngModel)]="settingAria2cUrl" />
-    </div>
-    <p class="help">
-      This is the URL to your Aria2c instance. It must end in /jsonrpc. A common URL is
-      http://192.168.10.2:6800/jsonrpc.
-    </p>
-  </div>
-
-  <div class="field" *ngIf="settingDownloadClient === 'Aria2c'">
-    <label class="label">Aria2c Secret</label>
-    <div class="control">
-      <input class="input" type="text" maxlength="1000" [(ngModel)]="settingAria2cSecret" />
-    </div>
-    <p class="help">The secret of your Aria2c instance. Optional.</p>
-  </div>
-
-  <button
-    class="button is-warning"
-    (click)="testAria2cConnection()"
-    [disabled]="saving"
-    [ngClass]="{ 'is-loading': saving }"
-    *ngIf="settingDownloadClient === 'Aria2c'"
-  >
-    Test aria2 connection
-  </button>
-
-  <div class="notification is-danger is-light" *ngIf="testAria2cConnectionError">
-    Could connect to Aria2 client<br />
-    {{ testAria2cConnectionError }}
-  </div>
-
-  <div class="notification is-success is-light" *ngIf="testAria2cConnectionSuccess">
-    Found Aria2 client version {{ testAria2cConnectionSuccess }}
-  </div>
-</div>
-
-<div *ngIf="activeTab === 2">
-  <h3 class="subtitle">
-    The following settings only apply when a torrent gets added through the qbittorrent API, usually Radarr or Sonarr.
-  </h3>
-  <div class="field">
-    <label class="label">Minimum file size to download</label>
-    <div class="control">
-      <div class="field has-addons" style="margin-bottom: 0">
-        <div class="control is-expanded">
-          <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="settingMinFileSize" />
+<div *ngFor="let tab of tabs; let i = index" [hidden]="activeTab !== i">
+  <h3>{{ tab.description }}</h3>
+  <ng-container *ngFor="let setting of tab.settings">
+    <h3 *ngIf="setting.type === 'Object'" class="title is-3" style="margin-top: 1.2rem">{{ setting.displayName }}</h3>
+    <div class="field">
+      <label class="label" *ngIf="setting.type !== 'Boolean' && setting.type !== 'Object'">{{
+        setting.displayName
+      }}</label>
+      <ng-container [ngSwitch]="setting.type">
+        <div class="control" *ngSwitchCase="'String'">
+          <input class="input" type="text" maxlength="100" [(ngModel)]="setting.value" />
         </div>
-        <div class="control">
-          <a class="button is-static">MB</a>
+        <div class="control" *ngSwitchCase="'Int32'">
+          <input class="input" type="number" [(ngModel)]="setting.value" />
         </div>
-      </div>
-      <div class="help">
-        Files that are smaller than this setting are skipped and not downloaded. When set to 0 all files are downloaded.
-        When downloading from Radarr or Sonarr it's recommended to keep this setting at atleast a few MB to avoid
-        Real-Debrid having to re-download the torrent.
-      </div>
-    </div>
-  </div>
+        <label class="checkbox" *ngSwitchCase="'Boolean'">
+          <input type="checkbox" [(ngModel)]="setting.value" />
+          {{ setting.displayName }}
+        </label>
+        <div class="control select is-fullwidth" *ngSwitchCase="'Enum'">
+          <select [(ngModel)]="setting.value">
+            <option [value]="kvp.key" *ngFor="let kvp of setting.enumValues | keyvalue">{{ kvp.value }}</option>
+          </select>
+        </div>
+        <ng-container *ngSwitchCase="'Object'"></ng-container>
+        <div class="control" *ngSwitchDefault>Invalid setting type {{ setting.type }}</div>
+      </ng-container>
 
-  <div class="field">
-    <div class="control">
-      <label class="checkbox">
-        <input type="checkbox" [(ngModel)]="settingOnlyDownloadAvailableFiles" />
-        Only download available files on Real-Debrid
-      </label>
-      <div class="help">
-        When selected, it will only download files in the torrent that have been download by Real-Debrid. You can use
-        this in combination with the Min File size setting above.
-      </div>
-    </div>
-  </div>
+      <p class="help" [innerHtml]="setting.description | nl2br"></p>
 
-  <div class="field">
-    <label class="label">Automatic retry downloads</label>
-    <div class="control">
-      <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="settingDownloadRetryAttempts" />
-    </div>
-    <p class="help">When a single download fails it will retry it this many times before marking it as failed.</p>
-  </div>
+      <ng-container *ngIf="setting.key === 'DownloadClient:Aria2cSecret'">
+        <button
+          class="button is-warning"
+          (click)="testAria2cConnection()"
+          [disabled]="saving"
+          [ngClass]="{ 'is-loading': saving }"
+        >
+          Test aria2 connection
+        </button>
+        <div class="notification is-danger is-light" style="margin-top: 1rem" *ngIf="testAria2cConnectionError">
+          Could connect to Aria2 client<br />
+          {{ testAria2cConnectionError }}
+        </div>
 
-  <div class="field">
-    <label class="label">Automatic retry torrent</label>
-    <div class="control">
-      <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="settingTorrentRetryAttempts" />
+        <div class="notification is-success is-light" style="margin-top: 1rem" *ngIf="testAria2cConnectionSuccess">
+          Found Aria2 client version {{ testAria2cConnectionSuccess }}
+        </div>
+      </ng-container>
     </div>
-    <p class="help">
-      When a single download has failed multiple times (see setting above) or when the torrent itself received an error
-      it will retry the full torrent this many times before marking it failed.
-    </p>
-  </div>
-
-  <div class="field">
-    <label class="label">Delete download when in error</label>
-    <div class="control">
-      <input class="input" type="number" max="100000" min="0" step="1" [(ngModel)]="settingDeleteOnError" />
-    </div>
-    <p class="help">
-      When a download has been in error for this many minutes, delete it from the provider and the client. 0 to disable.
-    </p>
-  </div>
-
-  <div class="field">
-    <label class="label">Torrent maximum lifetime</label>
-    <div class="control">
-      <input class="input" type="number" max="100000" min="0" step="1" [(ngModel)]="settingTorrentLifetime" />
-    </div>
-    <p class="help">
-      The maximum lifetime of a torrent in minutes. When this time has passed, mark the torrent as error. If the torrent
-      is completed and has downloads, the lifetime setting will not apply. 0 to disable.
-    </p>
-  </div>
+  </ng-container>
 </div>
 
-<div *ngIf="activeTab === 3">
+<div *ngIf="activeTab === 99">
   <div class="field">
     <label class="label">Test download path permissions</label>
     <div class="control">
@@ -441,57 +135,13 @@
   </div>
 </div>
 
-<div *ngIf="activeTab === 5">
-  <div class="field">
-    <label class="label">Watch Path</label>
-    <div class="control">
-      <input class="input" type="text" maxlength="100" [(ngModel)]="settingWatchPath" />
-    </div>
-    <p class="help">
-      Watch this path for .torrent or .magnet files. When a file is found it will be automatically imported.
-    </p>
-  </div>
-  <div class="field">
-    <div class="control">
-      <label class="checkbox">
-        <input type="checkbox" [(ngModel)]="settingProviderAutoDelete" />
-        Automatically delete downloads removed from provider.
-      </label>
-      <div class="help">
-        When selected, cancel and delete downloads that have been removed from Real-Debrid or AllDebrid.
-      </div>
-    </div>
-  </div>
-  <div class="field">
-    <label class="label">Connection Timeout</label>
-    <div class="control">
-      <input class="input" type="number" min="1" max="9999" [(ngModel)]="settingProviderTimeout" />
-    </div>
-    <p class="help">
-      The timeout to use to connect to the provider in seconds, with a minimum of 5 seconds. Increase if you experience
-      timeout errors in the log. This setting is only used when there is a user connected to the web interface or if
-      AutoImport/AutoDelete has been enabled.
-    </p>
-  </div>
-  <div class="field">
-    <label class="label">Check Interval</label>
-    <div class="control">
-      <input class="input" type="number" min="10" max="9999" [(ngModel)]="settingProviderCheckInterval" />
-    </div>
-    <p class="help">
-      This interval is used to check Real-Debrid or AllDebrid for updates. This setting is only used when there are
-      active downloads. If there are no active downloads it will use this setting * 3, with a minimum of 30 seconds.
-    </p>
-  </div>
-</div>
-
 <div class="field">
   <div class="control">
     <div class="notification is-danger is-light" *ngIf="error?.length > 0">Error saving settings: {{ error }}</div>
   </div>
 </div>
 
-<div class="field" *ngIf="activeTab != 3">
+<div class="field" *ngIf="activeTab < 99">
   <div class="control">
     <button class="button is-success" (click)="ok()" [disabled]="saving" [ngClass]="{ 'is-loading': saving }">
       Save Settings

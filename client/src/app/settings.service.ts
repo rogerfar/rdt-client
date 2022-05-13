@@ -15,7 +15,7 @@ export class SettingsService {
   }
 
   public update(settings: Setting[]): Observable<void> {
-    return this.http.put<void>(`/Api/Settings`, { settings });
+    return this.http.put<void>(`/Api/Settings`, settings);
   }
 
   public getProfile(): Observable<Profile> {

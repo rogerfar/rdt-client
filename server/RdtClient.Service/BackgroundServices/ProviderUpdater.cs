@@ -20,7 +20,10 @@ public class ProviderUpdater : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+        while (!Startup.Ready)
+        {
+            await Task.Delay(1000, stoppingToken);
+        }
 
         using var scope = _serviceProvider.CreateScope();
         var torrentService = scope.ServiceProvider.GetRequiredService<Torrents>();
@@ -33,11 +36,11 @@ public class ProviderUpdater : BackgroundService
             {
                 var torrents = await torrentService.Get();
                 
-                if (_nextUpdate < DateTime.UtcNow && ((torrents.Count > 0 && Settings.Get.ProviderAutoImport == 0) || Settings.Get.ProviderAutoImport == 1))
+                if (_nextUpdate < DateTime.UtcNow && ((torrents.Count > 0 && Settings.Get.Provider.AutoImport) || Settings.Get.Provider.AutoImport))
                 {
                     _logger.LogDebug($"Updating torrent info from Real-Debrid");
                     
-                    var updateTime = Settings.Get.ProviderCheckInterval * 3;
+                    var updateTime = Settings.Get.Provider.CheckInterval * 3;
 
                     if (updateTime < 30)
                     {
@@ -46,7 +49,7 @@ public class ProviderUpdater : BackgroundService
 
                     if (RdtHub.HasConnections)
                     {
-                        updateTime = Settings.Get.ProviderCheckInterval;
+                        updateTime = Settings.Get.Provider.CheckInterval;
 
                         if (updateTime < 5)
                         {

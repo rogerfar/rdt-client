@@ -23,21 +23,21 @@ public class MultiDownloader : IDownloader
         _uri = uri;
         _filePath = filePath;
 
-        var settingTempPath = settings.TempPath;
+        var settingTempPath = settings.DownloadClient.TempPath;
 
         if (String.IsNullOrWhiteSpace(settingTempPath))
         {
             settingTempPath = Path.GetTempPath();
         }
 
-        var settingDownloadChunkCount = settings.DownloadChunkCount;
+        var settingDownloadChunkCount = settings.DownloadClient.ChunkCount;
 
         if (settingDownloadChunkCount <= 0)
         {
             settingDownloadChunkCount = 1;
         }
 
-        var settingDownloadMaxSpeed = settings.DownloadMaxSpeed;
+        var settingDownloadMaxSpeed = settings.DownloadClient.MaxSpeed;
 
         if (settingDownloadMaxSpeed <= 0)
         {
@@ -46,7 +46,7 @@ public class MultiDownloader : IDownloader
 
         settingDownloadMaxSpeed = settingDownloadMaxSpeed * 1024 * 1024;
 
-        var settingProxyServer = settings.ProxyServer;
+        var settingProxyServer = settings.DownloadClient.ProxyServer;
 
         var downloadOpt = new DownloadConfiguration
         {

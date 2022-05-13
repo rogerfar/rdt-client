@@ -26,7 +26,7 @@ public class AllDebridTorrentClient : ITorrentClient
     {
         try
         {
-            var apiKey = Settings.Get.RealDebridApiKey;
+            var apiKey = Settings.Get.Provider.ApiKey;
 
             if (String.IsNullOrWhiteSpace(apiKey))
             {

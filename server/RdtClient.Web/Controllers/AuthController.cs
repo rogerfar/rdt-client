@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RdtClient.Data.Models.Data;
+using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Services;
 
 namespace RdtClient.Web.Controllers;
@@ -8,10 +10,12 @@ namespace RdtClient.Web.Controllers;
 public class AuthController : Controller
 {
     private readonly Authentication _authentication;
+    private readonly Settings _settings;
 
-    public AuthController(Authentication authentication)
+    public AuthController(Authentication authentication, Settings settings)
     {
         _authentication = authentication;
+        _settings = settings;
     }
         
     [AllowAnonymous]
@@ -33,7 +37,7 @@ public class AuthController : Controller
             
         return Ok();
     }
-        
+
     [AllowAnonymous]
     [Route("Create")]
     [HttpPost]
@@ -54,6 +58,22 @@ public class AuthController : Controller
         }
             
         await _authentication.Login(request.UserName, request.Password);
+
+        return Ok();
+    }
+
+    [AllowAnonymous]
+    [Route("SetupProvider")]
+    [HttpPost]
+    public async Task<ActionResult> SetupProvider([FromBody] AuthControllerSetupProviderRequest request)
+    {
+        if (!String.IsNullOrEmpty(Settings.Get.Provider.ApiKey))
+        {
+            return StatusCode(401);
+        }
+
+        await _settings.Update("Provider:Provider", request.Provider);
+        await _settings.Update("Provider:ApiKey", request.Token);
 
         return Ok();
     }
@@ -107,6 +127,12 @@ public class AuthControllerLoginRequest
 {
     public String UserName { get; set; }
     public String Password { get; set; }
+}
+
+public class AuthControllerSetupProviderRequest
+{
+    public Int32 Provider { get; set; }
+    public String Token { get; set; }
 }
 
 public class AuthControllerUpdateRequest

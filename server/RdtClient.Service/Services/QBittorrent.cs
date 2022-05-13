@@ -1,5 +1,6 @@
 ﻿using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
+using RdtClient.Data.Models.Internal;
 using RdtClient.Data.Models.QBittorrent;
 
 namespace RdtClient.Service.Services;
@@ -194,7 +195,7 @@ public class QBittorrent
 
     public String AppDefaultSavePath()
     {
-        var downloadPath = Settings.Get.MappedPath;
+        var downloadPath = Settings.Get.DownloadClient.MappedPath;
 
         downloadPath = downloadPath.TrimEnd('\\')
                                    .TrimEnd('/');
@@ -431,15 +432,15 @@ public class QBittorrent
     {
         var torrent = new Torrent
         {
-            Category = category,
-            DownloadAction = Settings.Get.OnlyDownloadAvailableFiles == 1 ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
-            FinishedAction = TorrentFinishedAction.None,
-            DownloadMinSize = Settings.Get.MinFileSize,
-            TorrentRetryAttempts = Settings.Get.TorrentRetryAttempts,
-            DownloadRetryAttempts = Settings.Get.DownloadRetryAttempts,
-            DeleteOnError = Settings.Get.DeleteOnError,
-            Lifetime = Settings.Get.TorrentLifetime,
-            Priority = priority
+            Category = category ?? Settings.Get.Integrations.Default.Category,
+            DownloadAction = Settings.Get.Integrations.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
+            FinishedAction = Settings.Get.Integrations.Default.FinishedAction,
+            DownloadMinSize = Settings.Get.Integrations.Default.MinFileSize,
+            TorrentRetryAttempts = Settings.Get.Integrations.Default.TorrentRetryAttempts,
+            DownloadRetryAttempts = Settings.Get.Integrations.Default.DownloadRetryAttempts,
+            DeleteOnError = Settings.Get.Integrations.Default.DeleteOnError,
+            Lifetime = Settings.Get.Integrations.Default.TorrentLifetime,
+            Priority = priority ?? (Settings.Get.Integrations.Default.Priority > 0 ? Settings.Get.Integrations.Default.Priority : null)
         };
 
         await _torrents.UploadMagnet(magnetLink, torrent);
@@ -449,15 +450,15 @@ public class QBittorrent
     {
         var torrent = new Torrent
         {
-            Category = category,
-            DownloadAction = Settings.Get.OnlyDownloadAvailableFiles == 1 ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
-            FinishedAction = TorrentFinishedAction.None,
-            DownloadMinSize = Settings.Get.MinFileSize,
-            TorrentRetryAttempts = Settings.Get.TorrentRetryAttempts,
-            DownloadRetryAttempts = Settings.Get.DownloadRetryAttempts,
-            DeleteOnError = Settings.Get.DeleteOnError,
-            Lifetime = Settings.Get.TorrentLifetime,
-            Priority = priority
+            Category = category ?? Settings.Get.Integrations.Default.Category,
+            DownloadAction = Settings.Get.Integrations.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
+            FinishedAction = Settings.Get.Integrations.Default.FinishedAction,
+            DownloadMinSize = Settings.Get.Integrations.Default.MinFileSize,
+            TorrentRetryAttempts = Settings.Get.Integrations.Default.TorrentRetryAttempts,
+            DownloadRetryAttempts = Settings.Get.Integrations.Default.DownloadRetryAttempts,
+            DeleteOnError = Settings.Get.Integrations.Default.DeleteOnError,
+            Lifetime = Settings.Get.Integrations.Default.TorrentLifetime,
+            Priority = priority ?? (Settings.Get.Integrations.Default.Priority > 0 ? Settings.Get.Integrations.Default.Priority : null)
         };
 
         await _torrents.UploadFile(fileBytes, torrent);
@@ -476,11 +477,13 @@ public class QBittorrent
                                       .Select(m => m.Category.ToLower())
                                       .ToList();
 
-        var categories = Settings.Get
-                                 .Categories
-                                 .Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var categoryList = (Settings.Get.General.Categories ?? "")
+                           .Split(",", StringSplitOptions.RemoveEmptyEntries)
+                           .Distinct(StringComparer.CurrentCultureIgnoreCase)
+                           .Select(m => m.Trim())
+                           .ToList();
 
-        torrentsToGroup.AddRange(categories);
+        torrentsToGroup.AddRange(categoryList);
 
         var results = new Dictionary<String, TorrentCategory>();
 
@@ -500,48 +503,53 @@ public class QBittorrent
 
     public async Task CategoryCreate(String category)
     {
-        var categoriesSetting = Settings.Get.Categories;
-
-        if (String.IsNullOrWhiteSpace(categoriesSetting))
-        {
-            categoriesSetting = category;
-        }
-        else
-        {
-            var categoryList = categoriesSetting
-                               .Split(",", StringSplitOptions.RemoveEmptyEntries)
-                               .Distinct(StringComparer.CurrentCultureIgnoreCase)
-                               .ToList();
-
-            if (!categoryList.Contains(category))
-            {
-                categoryList.Add(category);
-            }
-
-            categoriesSetting = String.Join(",", categoryList);
-        }
-
-        await _settings.UpdateString("Categories", categoriesSetting);
-    }
-
-    public async Task CategoryRemove(String category)
-    {
-        var categoriesSetting = Settings.Get.Categories;
-
-        if (String.IsNullOrWhiteSpace(categoriesSetting))
+        if (category == null)
         {
             return;
         }
 
-        var categoryList = categoriesSetting.Split(",", StringSplitOptions.RemoveEmptyEntries)
-                                            .Distinct(StringComparer.CurrentCultureIgnoreCase)
-                                            .ToList();
+        category = category.Trim();
+
+        var categoriesSetting = Settings.Get.General.Categories;
+
+        var categoryList = (categoriesSetting ?? "")
+                           .Split(",", StringSplitOptions.RemoveEmptyEntries)
+                           .Distinct(StringComparer.CurrentCultureIgnoreCase)
+                           .Select(m => m.Trim())
+                           .ToList();
+
+        if (!categoryList.Contains(category))
+        {
+            categoryList.Add(category);
+        }
+
+        categoriesSetting = String.Join(",", categoryList);
+
+        await _settings.Update("General:Categories", categoriesSetting);
+    }
+
+    public async Task CategoryRemove(String category)
+    {
+        if (category == null)
+        {
+            return;
+        }
+
+        category = category.Trim();
+
+        var categoriesSetting = Settings.Get.General.Categories;
+
+        var categoryList = (categoriesSetting ?? "")
+                           .Split(",", StringSplitOptions.RemoveEmptyEntries)
+                           .Distinct(StringComparer.CurrentCultureIgnoreCase)
+                           .Select(m => m.Trim())
+                           .ToList();
 
         categoryList = categoryList.Where(m => m != category).ToList();
 
         categoriesSetting = String.Join(",", categoryList);
 
-        await _settings.UpdateString("Categories", categoriesSetting);
+        await _settings.Update("General:Categories", categoriesSetting);
     }
 
     public async Task TorrentsTopPrio(String hash)
