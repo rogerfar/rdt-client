@@ -20,7 +20,7 @@ public class DownloadData
                                  .ToListAsync();
     }
 
-    public async Task<Download> GetById(Guid downloadId)
+    public async Task<Download?> GetById(Guid downloadId)
     {
         return await _dataContext.Downloads
                                  .Include(m => m.Torrent)
@@ -28,7 +28,7 @@ public class DownloadData
                                  .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
     }
 
-    public async Task<Download> Get(Guid torrentId, String path)
+    public async Task<Download?> Get(Guid torrentId, String path)
     {
         return await _dataContext.Downloads
                                  .Include(m => m.Torrent)
@@ -176,7 +176,7 @@ public class DownloadData
         await TorrentData.VoidCache();
     }
 
-    public async Task UpdateError(Guid downloadId, String error)
+    public async Task UpdateError(Guid downloadId, String? error)
     {
         var dbDownload = await _dataContext.Downloads
                                            .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
@@ -242,6 +242,11 @@ public class DownloadData
     {
         var dbDownload = await _dataContext.Downloads
                                            .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+        if (dbDownload == null)
+        {
+            throw new Exception($"Cannot find download with ID {downloadId}");
+        }
 
         dbDownload.RetryCount = 0;
         dbDownload.Link = null;

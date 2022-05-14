@@ -6,8 +6,8 @@ namespace RdtClient.Service.Services.Downloaders;
 
 public class Aria2cDownloader : IDownloader
 {
-    public event EventHandler<DownloadCompleteEventArgs> DownloadComplete;
-    public event EventHandler<DownloadProgressEventArgs> DownloadProgress;
+    public event EventHandler<DownloadCompleteEventArgs>? DownloadComplete;
+    public event EventHandler<DownloadProgressEventArgs>? DownloadProgress;
 
     private const Int32 RetryCount = 5;
 
@@ -17,9 +17,9 @@ public class Aria2cDownloader : IDownloader
     private readonly String _uri;
     private readonly String _filePath;
 
-    private String _gid;
+    private String? _gid;
 
-    public Aria2cDownloader(String gid, String uri, String filePath, DbSettings settings)
+    public Aria2cDownloader(String? gid, String uri, String filePath, DbSettings settings)
     {
         _logger = Log.ForContext<Aria2cDownloader>();
         _gid = gid;
@@ -34,9 +34,15 @@ public class Aria2cDownloader : IDownloader
         _aria2NetClient = new Aria2NetClient(settings.DownloadClient.Aria2cUrl, settings.DownloadClient.Aria2cSecret, httpClient, 10);
     }
         
-    public async Task<String> Download()
+    public async Task<String?> Download()
     {
         var path = Path.GetDirectoryName(_filePath);
+
+        if (path == null)
+        {
+            throw new Exception($"Invalid file path {_filePath}");
+        }
+
         var fileName = Path.GetFileName(_filePath);
 
         _logger.Debug($"Starting download of {_uri}, writing to path: {path}, fileName: {fileName}");
@@ -60,7 +66,7 @@ public class Aria2cDownloader : IDownloader
                 {
                     try
                     {
-                        await _aria2NetClient.TellStatus(_gid);
+                        await _aria2NetClient.TellStatusAsync(_gid);
 
                         return _gid;
                     }
@@ -70,23 +76,23 @@ public class Aria2cDownloader : IDownloader
                     }
                 }
                     
-                _gid ??= await _aria2NetClient.AddUri(new List<String>
-                                                      {
-                                                          _uri
-                                                      },
-                                                      new Dictionary<String, Object>
-                                                      {
-                                                          {
-                                                              "dir", path
-                                                          },
-                                                          {
-                                                              "out", fileName
-                                                          }
-                                                      });
+                _gid ??= await _aria2NetClient.AddUriAsync(new List<String>
+                                                           {
+                                                               _uri
+                                                           },
+                                                           new Dictionary<String, Object>
+                                                           {
+                                                               {
+                                                                   "dir", path
+                                                               },
+                                                               {
+                                                                   "out", fileName
+                                                               }
+                                                           });
 
                 _logger.Debug($"Added download to Aria2, received ID {_gid}");
 
-                await _aria2NetClient.TellStatus(_gid);
+                await _aria2NetClient.TellStatusAsync(_gid);
 
                 _logger.Debug($"Download with ID {_gid} found in Aria2");
 
@@ -124,7 +130,7 @@ public class Aria2cDownloader : IDownloader
 
         try
         {
-            await _aria2NetClient.Pause(_gid);
+            await _aria2NetClient.PauseAsync(_gid);
         }
         catch
         {
@@ -143,7 +149,7 @@ public class Aria2cDownloader : IDownloader
 
         try
         {
-            await _aria2NetClient.Unpause(_gid);
+            await _aria2NetClient.UnpauseAsync(_gid);
         }
         catch
         {
@@ -228,7 +234,7 @@ public class Aria2cDownloader : IDownloader
 
         try
         {
-            await _aria2NetClient.ForceRemove(_gid);
+            await _aria2NetClient.ForceRemoveAsync(_gid);
         }
         catch
         {
@@ -237,7 +243,7 @@ public class Aria2cDownloader : IDownloader
 
         try
         {
-            await _aria2NetClient.RemoveDownloadResult(_gid);
+            await _aria2NetClient.RemoveDownloadResultAsync(_gid);
         }
         catch
         {
@@ -247,11 +253,11 @@ public class Aria2cDownloader : IDownloader
 
     private async Task<Boolean> CheckIfAdded()
     {
-        var allDownloads = await _aria2NetClient.TellAll();
+        var allDownloads = await _aria2NetClient.TellAllAsync();
 
-        foreach (var download in allDownloads.Where(m => m.Files != null))
+        foreach (var download in allDownloads)
         {
-            foreach (var file in download.Files.Where(m => m.Uris != null))
+            foreach (var file in download.Files)
             {
                 if (file.Uris.Any(uri => uri.Uri == _uri))
                 {

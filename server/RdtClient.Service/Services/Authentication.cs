@@ -37,7 +37,7 @@ public class Authentication
         return result;
     }
 
-    public async Task<IdentityUser> GetUser()
+    public async Task<IdentityUser?> GetUser()
     {
         return await _userData.GetUser();
     }

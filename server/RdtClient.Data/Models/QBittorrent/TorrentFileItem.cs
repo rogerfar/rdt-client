@@ -5,5 +5,5 @@ namespace RdtClient.Data.Models.QBittorrent;
 public class TorrentFileItem
 {
     [JsonPropertyName("name")]
-    public String Name { get; set; }
+    public String? Name { get; set; }
 }

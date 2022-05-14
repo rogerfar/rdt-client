@@ -4,6 +4,8 @@ using RdtClient.Data.Models.Data;
 
 namespace RdtClient.Data.Data;
 
+#nullable disable
+
 public class DataContext : IdentityDbContext
 {
     public DataContext(DbContextOptions options) : base(options)

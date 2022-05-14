@@ -15,7 +15,7 @@ public class RdtHub : Hub
         await base.OnConnectedAsync();
     }
 
-    public override async Task OnDisconnectedAsync(Exception exception)
+    public override async Task OnDisconnectedAsync(Exception? exception)
     {
         Users.TryRemove(Context.ConnectionId, out _);
         await base.OnDisconnectedAsync(exception);

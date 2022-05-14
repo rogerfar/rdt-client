@@ -5,7 +5,8 @@ namespace RdtClient.Data.Data;
 
 public class TorrentData
 {
-    private static IList<Torrent> _torrentCache;
+    private static IList<Torrent>? _torrentCache;
+
     private static readonly SemaphoreSlim TorrentCacheLock = new(1, 1);
 
     private readonly DataContext _dataContext;
@@ -34,7 +35,7 @@ public class TorrentData
         }
     }
 
-    public async Task<Torrent> GetById(Guid torrentId)
+    public async Task<Torrent?> GetById(Guid torrentId)
     {
         var dbTorrent = await _dataContext.Torrents
                                           .AsNoTracking()
@@ -54,7 +55,7 @@ public class TorrentData
         return dbTorrent;
     }
 
-    public async Task<Torrent> GetByHash(String hash)
+    public async Task<Torrent?> GetByHash(String hash)
     {
         var dbTorrent = await _dataContext.Torrents
                                           .AsNoTracking()
@@ -76,7 +77,7 @@ public class TorrentData
 
     public async Task<Torrent> Add(String realDebridId,
                                    String hash,
-                                   String fileOrMagnetContents,
+                                   String? fileOrMagnetContents,
                                    Boolean isFile,
                                    Torrent torrent)
     {
@@ -129,12 +130,8 @@ public class TorrentData
         dbTorrent.RdEnded = torrent.RdEnded;
         dbTorrent.RdSpeed = torrent.RdSpeed;
         dbTorrent.RdSeeders = torrent.RdSeeders;
-
-        if (torrent.Files != null)
-        {
-            dbTorrent.RdFiles = torrent.RdFiles;
-        }
-
+        dbTorrent.RdFiles = torrent.RdFiles;
+        
         await _dataContext.SaveChangesAsync();
 
         await VoidCache();
@@ -160,7 +157,7 @@ public class TorrentData
         await VoidCache();
     }
 
-    public async Task UpdateCategory(Guid torrentId, String category)
+    public async Task UpdateCategory(Guid torrentId, String? category)
     {
         var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
 
@@ -176,7 +173,7 @@ public class TorrentData
         await VoidCache();
     }
 
-    public async Task UpdateComplete(Guid torrentId, String error, DateTimeOffset? datetime, Boolean retry)
+    public async Task UpdateComplete(Guid torrentId, String? error, DateTimeOffset? datetime, Boolean retry)
     {
         var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
 

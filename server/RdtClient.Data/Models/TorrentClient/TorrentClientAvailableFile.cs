@@ -2,7 +2,7 @@
 
 public class TorrentClientAvailableFile
 {
-    public String Filename { get; set; }
+    public String Filename { get; set; } = default!;
 
     public Int64 Filesize { get; set; }
 }

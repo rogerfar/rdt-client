@@ -141,11 +141,11 @@ public class RealDebridTorrentClient : ITorrentClient
 
         var files = result.SelectMany(m => m.Value).SelectMany(m => m.Value).SelectMany(m => m.Values);
 
-        var groups = files.GroupBy(m => $"{m.Filename}-{m.Filesize}");
+        var groups = files.Where(m => m.Filename != null).GroupBy(m => $"{m.Filename}-{m.Filesize}");
 
         var torrentClientAvailableFiles = groups.Select(m => new TorrentClientAvailableFile
         {
-            Filename = m.First().Filename,
+            Filename = m.First().Filename!,
             Filesize = m.First().Filesize
         } ).ToList();
 
@@ -211,7 +211,7 @@ public class RealDebridTorrentClient : ITorrentClient
 
         Log("", torrent);
 
-        await GetClient().Torrents.SelectFilesAsync(torrent.RdId, fileIds.ToArray());
+        await GetClient().Torrents.SelectFilesAsync(torrent.RdId!, fileIds.ToArray());
     }
 
     public async Task<TorrentClientTorrent> GetInfo(String torrentId)
@@ -230,23 +230,28 @@ public class RealDebridTorrentClient : ITorrentClient
     {
         var result = await GetClient().Unrestrict.LinkAsync(link);
 
+        if (result.Download == null)
+        {
+            throw new Exception($"Unrestrict returned an invalid download");
+        }
+
         return result.Download;
     }
 
-    public async Task<Data.Models.Data.Torrent> UpdateData(Data.Models.Data.Torrent torrent, TorrentClientTorrent torrentClientTorrent)
+    public async Task<Data.Models.Data.Torrent> UpdateData(Data.Models.Data.Torrent torrent, TorrentClientTorrent? torrentClientTorrent)
     {
         try
         {
-            if (torrent == null)
+            if (torrent.RdId == null)
             {
-                return null;
+                return torrent;
             }
 
             var rdTorrent = await GetInfo(torrent.RdId);
 
             if (rdTorrent == null)
             {
-                return torrent;
+                throw new Exception($"Resource not found");
             }
 
             if (!String.IsNullOrWhiteSpace(rdTorrent.Filename))
@@ -302,10 +307,7 @@ public class RealDebridTorrentClient : ITorrentClient
         {
             if (ex.Message == "Resource not found")
             {
-                if (torrent != null)
-                {
-                    torrent.RdStatusRaw = "deleted";
-                }
+                torrent.RdStatusRaw = "deleted";
             }
             else
             {
@@ -316,9 +318,19 @@ public class RealDebridTorrentClient : ITorrentClient
         return torrent;
     }
 
-    public async Task<IList<String>> GetDownloadLinks(Data.Models.Data.Torrent torrent)
+    public async Task<IList<String>?> GetDownloadLinks(Data.Models.Data.Torrent torrent)
     {
+        if (torrent.RdId == null)
+        {
+            return null;
+        }
+
         var rdTorrent = await GetInfo(torrent.RdId);
+
+        if (rdTorrent.Links == null)
+        {
+            return null;
+        }
 
         var downloadLinks = rdTorrent.Links.Where(m => !String.IsNullOrWhiteSpace(m)).ToList();
 
@@ -360,7 +372,7 @@ public class RealDebridTorrentClient : ITorrentClient
         return dateTimeOffset?.Subtract(_offset.Value).ToOffset(_offset.Value);
     }
 
-    private void Log(String message, Data.Models.Data.Torrent torrent = null)
+    private void Log(String message, Data.Models.Data.Torrent? torrent = null)
     {
         if (torrent != null)
         {

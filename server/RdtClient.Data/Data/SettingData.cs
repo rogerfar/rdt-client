@@ -13,14 +13,14 @@ public class SettingData
 
     public static DbSettings Get { get; } = new DbSettings();
 
+    public static IList<SettingProperty> GetAll()
+    {
+        return GetSettings(Get, null).ToList();
+    }
+
     public SettingData(DataContext dataContext)
     {
         _dataContext = dataContext;
-    }
-
-    public IList<SettingProperty> GetAll()
-    {
-        return GetSettings(Get, null).ToList();
     }
 
     public async Task Update(IList<SettingProperty> settings)
@@ -33,7 +33,7 @@ public class SettingData
 
             if (setting != null)
             {
-                dbSetting.Value = setting.Value.ToString();
+                dbSetting.Value = setting.Value?.ToString();
             }
         }
 
@@ -42,7 +42,7 @@ public class SettingData
         await ResetCache();
     }
 
-    public async Task Update(String settingId, Object value)
+    public async Task Update(String settingId, Object? value)
     {
         var dbSetting = await _dataContext.Settings.FirstOrDefaultAsync(m => m.SettingId == settingId);
 
@@ -51,7 +51,7 @@ public class SettingData
             return;
         }
 
-        dbSetting.Value = value.ToString();
+        dbSetting.Value = value?.ToString();
 
         await _dataContext.SaveChangesAsync();
 
@@ -97,7 +97,7 @@ public class SettingData
         }
     }
 
-    private static IEnumerable<SettingProperty> GetSettings(Object defaultSetting, String parent)
+    private static IEnumerable<SettingProperty> GetSettings(Object defaultSetting, String? parent)
     {
         var result = new List<SettingProperty>();
 
@@ -105,8 +105,8 @@ public class SettingData
 
         foreach (var property in properties)
         {
-            var displayName = (DisplayNameAttribute) Attribute.GetCustomAttribute(property, typeof(DisplayNameAttribute));
-            var description = (DescriptionAttribute) Attribute.GetCustomAttribute(property, typeof(DescriptionAttribute));
+            var displayName = Attribute.GetCustomAttribute(property, typeof(DisplayNameAttribute)) as DisplayNameAttribute;
+            var description = Attribute.GetCustomAttribute(property, typeof(DescriptionAttribute)) as DescriptionAttribute;
             var propertyName = property.Name;
 
             if (parent != null)
@@ -137,7 +137,7 @@ public class SettingData
                     {
                         var enumMember = property.PropertyType.GetMember(e.ToString()).First();
                         var enumDescriptionAttribute = enumMember.GetCustomAttribute<DescriptionAttribute>();
-                        var enumName = enumDescriptionAttribute?.Description ?? Enum.GetName(property.PropertyType, e);
+                        var enumName = enumDescriptionAttribute?.Description ?? Enum.GetName(property.PropertyType, e) ?? "Unknown value";
                         settingProperty.EnumValues.Add((Int32)(Object)e, enumName);
                     }
                 }
@@ -149,7 +149,7 @@ public class SettingData
                 settingProperty.Type = "Object";
                 result.Add(settingProperty);
 
-                var childResults = GetSettings(property.GetValue(defaultSetting), propertyName);
+                var childResults = GetSettings(property.GetValue(defaultSetting)!, propertyName);
                 result.AddRange(childResults);
             }
         }
@@ -157,7 +157,7 @@ public class SettingData
         return result;
     }
 
-    private static void SetSettings(IList<Setting> settings, Object defaultSetting, String parent)
+    private static void SetSettings(IList<Setting> settings, Object defaultSetting, String? parent)
     {
         var properties = defaultSetting.GetType().GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance);
 
@@ -180,14 +180,18 @@ public class SettingData
                 {
                     if (property.PropertyType.IsEnum)
                     {
-                        var newValue = Enum.Parse(property.PropertyType, setting.Value);
+                        var newValue = Enum.Parse(property.PropertyType, setting.Value ?? "0");
                         property.SetValue(defaultSetting, newValue);
                     }
                     else
                     {
                         var converter = TypeDescriptor.GetConverter(property.PropertyType);
 
-                        if (converter.IsValid(setting.Value))
+                        if (setting.Value == null)
+                        {
+                            property.SetValue(defaultSetting, null);
+                        }
+                        else if (converter.IsValid(setting.Value))
                         {
                             var newValue = converter.ConvertFrom(setting.Value);
                             property.SetValue(defaultSetting, newValue);
@@ -201,7 +205,7 @@ public class SettingData
             }
             else
             {
-                SetSettings(settings, property.GetValue(defaultSetting), propertyName);
+                SetSettings(settings, property.GetValue(defaultSetting)!, propertyName);
             }
         }
     }

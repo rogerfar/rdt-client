@@ -12,7 +12,17 @@ public class DownloadClient
     private readonly Download _download;
     private readonly Torrent _torrent;
 
-    public IDownloader Downloader;
+    public IDownloader? Downloader;
+
+    public Data.Enums.DownloadClient Type { get; set; }
+
+    public Boolean Finished { get; private set; }
+
+    public String? Error { get; private set; }
+
+    public Int64 Speed { get; private set; }
+    public Int64 BytesTotal { get; private set; }
+    public Int64 BytesDone { get; private set; }
 
     public DownloadClient(Download download, Torrent torrent, String destinationPath)
     {
@@ -21,17 +31,7 @@ public class DownloadClient
         _destinationPath = destinationPath;
     }
 
-    public Data.Enums.DownloadClient Type { get; set; }
-
-    public Boolean Finished { get; private set; }
-
-    public String Error { get; private set; }
-
-    public Int64 Speed { get; private set; }
-    public Int64 BytesTotal { get; private set; }
-    public Int64 BytesDone { get; private set; }
-
-    public async Task<String> Start(DbSettings settings)
+    public async Task<String?> Start(DbSettings settings)
     {
         BytesDone = 0;
         BytesTotal = 0;
@@ -39,13 +39,18 @@ public class DownloadClient
 
         try
         {
+            if (_download.Link == null)
+            {
+                throw new Exception($"Invalid download link");
+            }
+
             var filePath = DownloadHelper.GetDownloadPath(_destinationPath, _torrent, _download);
 
             if (filePath == null)
             {
                 throw new Exception("Invalid download path");
             }
-                
+
             await FileHelper.Delete(filePath);
 
             Type = settings.DownloadClient.Client;

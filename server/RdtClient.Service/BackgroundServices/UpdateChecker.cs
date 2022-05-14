@@ -8,8 +8,8 @@ namespace RdtClient.Service.BackgroundServices;
 
 public class UpdateChecker : BackgroundService
 {
-    public static String CurrentVersion { get; private set; }
-    public static String LatestVersion { get; private set; }
+    public static String? CurrentVersion { get; private set; }
+    public static String? LatestVersion { get; private set; }
 
     private readonly ILogger<UpdateChecker> _logger;
 
@@ -53,7 +53,13 @@ public class UpdateChecker : BackgroundService
                     return;
                 }
 
-                var latestRelease = gitHubReleases.First().Name;
+                var latestRelease = gitHubReleases.FirstOrDefault(m => m.Name != null)?.Name;
+
+                if (latestRelease == null)
+                {
+                    _logger.LogWarning($"Unable to find latest version on GitHub");
+                    return;
+                }
 
                 if (latestRelease != CurrentVersion)
                 {
@@ -77,5 +83,5 @@ public class UpdateChecker : BackgroundService
 public class GitHubReleasesResponse 
 {
     [JsonProperty("name")]
-    public String Name { get; set; }
+    public String? Name { get; set; }
 }

@@ -12,7 +12,7 @@ public class UserData
         _dataContext = dataContext;
     }
 
-    public async Task<IdentityUser> GetUser()
+    public async Task<IdentityUser?> GetUser()
     {
         return await _dataContext.Users.FirstOrDefaultAsync();
     }

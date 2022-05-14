@@ -70,14 +70,14 @@ public class AllDebridTorrentClient : ITorrentClient
             Status = torrent.Status,
             StatusCode = torrent.StatusCode,
             Added = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(torrent.UploadDate),
-            Files = (torrent.Links ?? new List<Link>()).Select((m, i) => new TorrentClientFile
+            Files = torrent.Links.Select((m, i) => new TorrentClientFile
             {
                 Path = m.Filename,
                 Bytes = m.Size,
                 Id = i,
                 Selected = true,
             }).ToList(),
-            Links = (torrent.Links ?? new List<Link>()).Select(m => m.LinkUrl.ToString()).ToList(),
+            Links = torrent.Links.Select(m => m.LinkUrl.ToString()).ToList(),
             Ended = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(torrent.CompletionDate),
             Speed = torrent.DownloadSpeed,
             Seeders = torrent.Seeders
@@ -94,6 +94,11 @@ public class AllDebridTorrentClient : ITorrentClient
     {
         var user = await GetClient().User.GetAsync();
 
+        if (user == null)
+        {
+            throw new Exception("Unable to get user");
+        }
+
         return new TorrentClientUser
         {
             Username = user.Username,
@@ -105,14 +110,38 @@ public class AllDebridTorrentClient : ITorrentClient
     {
         var result = await GetClient().Magnet.UploadMagnetAsync(magnetLink);
 
-        return result.Id.ToString();
+        if (result?.Id == null)
+        {
+            throw new Exception("Unable to add magnet link");
+        }
+
+        var resultId = result.Id.ToString();
+
+        if (resultId == null)
+        {
+            throw new Exception($"Invalid responseID {result.Id}");
+        }
+
+        return resultId;
     }
 
     public async Task<String> AddFile(Byte[] bytes)
     {
         var result = await GetClient().Magnet.UploadFileAsync(bytes);
 
-        return result.Id.ToString();
+        if (result?.Id == null)
+        {
+            throw new Exception("Unable to add torrent file");
+        }
+
+        var resultId = result.Id.ToString();
+
+        if (resultId == null)
+        {
+            throw new Exception($"Invalid responseID {result.Id}");
+        }
+
+        return resultId;
     }
 
     public async Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
@@ -143,6 +172,11 @@ public class AllDebridTorrentClient : ITorrentClient
     {
         var result = await GetClient().Magnet.StatusAsync(torrentId);
 
+        if (result == null)
+        {
+            throw new Exception($"Unable to find magnet with ID {torrentId}");
+        }
+
         return Map(result);
     }
 
@@ -155,13 +189,23 @@ public class AllDebridTorrentClient : ITorrentClient
     {
         var result = await GetClient().Links.DownloadLinkAsync(link);
 
+        if (result.Link == null)
+        {
+            throw new Exception("Invalid result link");
+        }
+
         return result.Link;
     }
 
-    public async Task<Torrent> UpdateData(Torrent torrent, TorrentClientTorrent torrentClientTorrent)
+    public async Task<Torrent> UpdateData(Torrent torrent, TorrentClientTorrent? torrentClientTorrent)
     {
         try
         {
+            if (torrent.RdId == null)
+            {
+                return torrent;
+            }
+
             torrentClientTorrent ??= await GetInfo(torrent.RdId);
 
             if (!String.IsNullOrWhiteSpace(torrentClientTorrent.Filename))
@@ -231,9 +275,19 @@ public class AllDebridTorrentClient : ITorrentClient
         return torrent;
     }
 
-    public async Task<IList<String>> GetDownloadLinks(Torrent torrent)
+    public async Task<IList<String>?> GetDownloadLinks(Torrent torrent)
     {
+        if (torrent.RdId == null)
+        {
+            return null;
+        }
+
         var magnet = await GetClient().Magnet.StatusAsync(torrent.RdId);
+
+        if (magnet == null)
+        {
+            return null;
+        }
 
         var links = magnet.Links;
 
@@ -262,11 +316,6 @@ public class AllDebridTorrentClient : ITorrentClient
 
         foreach (var link in links)
         {
-            if (link.Files == null)
-            {
-                continue;
-            }
-
             var fileList = GetFiles(link.Files, "");
 
             Log($"{link.Filename} ({link.Size}b) {link.LinkUrl}, contains files:{Environment.NewLine}{String.Join(Environment.NewLine, fileList)}");
@@ -332,7 +381,7 @@ public class AllDebridTorrentClient : ITorrentClient
         return result;
     }
 
-    private void Log(String message, Torrent torrent = null)
+    private void Log(String message, Torrent? torrent = null)
     {
         if (torrent != null)
         {

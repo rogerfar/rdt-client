@@ -5,11 +5,11 @@ namespace RdtClient.Service.Helpers;
 
 public static class DownloadHelper
 {
-    public static String GetDownloadPath(String downloadPath, Torrent torrent, Download download)
+    public static String? GetDownloadPath(String downloadPath, Torrent torrent, Download download)
     {
         var fileUrl = download.Link;
 
-        if (String.IsNullOrWhiteSpace(fileUrl))
+        if (String.IsNullOrWhiteSpace(fileUrl) || torrent.RdName == null)
         {
             return null;
         }

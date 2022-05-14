@@ -32,7 +32,7 @@ public class Startup : IHostedService
         var settings = scope.ServiceProvider.GetRequiredService<Settings>();
         await settings.Seed();
         await settings.ResetCache();
-        await settings.Clean();
+        await Settings.Clean();
 
         Ready = true;
     }

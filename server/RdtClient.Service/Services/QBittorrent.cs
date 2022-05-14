@@ -1,6 +1,5 @@
 ﻿using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
-using RdtClient.Data.Models.Internal;
 using RdtClient.Data.Models.QBittorrent;
 
 namespace RdtClient.Service.Services;
@@ -178,7 +177,7 @@ public class QBittorrent
             WebUiUsername = ""
         };
 
-        var savePath = AppDefaultSavePath();
+        var savePath = Settings.AppDefaultSavePath;
 
         preferences.SavePath = savePath;
         preferences.TempPath = $"{savePath}temp{Path.DirectorySeparatorChar}";
@@ -193,21 +192,9 @@ public class QBittorrent
         return preferences;
     }
 
-    public String AppDefaultSavePath()
-    {
-        var downloadPath = Settings.Get.DownloadClient.MappedPath;
-
-        downloadPath = downloadPath.TrimEnd('\\')
-                                   .TrimEnd('/');
-
-        downloadPath += Path.DirectorySeparatorChar;
-
-        return downloadPath;
-    }
-
     public async Task<IList<TorrentInfo>> TorrentInfo()
     {
-        var savePath = AppDefaultSavePath();
+        var savePath = Settings.AppDefaultSavePath;
 
         var results = new List<TorrentInfo>();
 
@@ -241,9 +228,9 @@ public class QBittorrent
                 speed = (Int32) torrent.Downloads.Average(m => m.Speed);
             }
 
-            var progress = (bytesDone / (Single)bytesTotal);
+            var progress = (bytesDone / (Single?)bytesTotal);
 
-            if (!Single.IsNormal(progress))
+            if (progress == null || !Single.IsNormal(progress.Value))
             {
                 progress = 0;
             }
@@ -276,7 +263,7 @@ public class QBittorrent
                 NumLeechs = 100,
                 NumSeeds = 100,
                 Priority = ++prio,
-                Progress = progress,
+                Progress = (Single) progress,
                 Ratio = 1,
                 RatioLimit = 1,
                 SavePath = downloadPath,
@@ -325,7 +312,7 @@ public class QBittorrent
         return results;
     }
 
-    public async Task<IList<TorrentFileItem>> TorrentFileContents(String hash)
+    public async Task<IList<TorrentFileItem>?> TorrentFileContents(String hash)
     {
         var results = new List<TorrentFileItem>();
 
@@ -349,9 +336,9 @@ public class QBittorrent
         return results;
     }
 
-    public async Task<TorrentProperties> TorrentProperties(String hash)
+    public async Task<TorrentProperties?> TorrentProperties(String hash)
     {
-        var savePath = AppDefaultSavePath();
+        var savePath = Settings.AppDefaultSavePath;
 
         var torrent = await _torrents.GetByHash(hash);
 
@@ -428,7 +415,7 @@ public class QBittorrent
         await _torrents.Delete(torrent.TorrentId, true, true, deleteFiles);
     }
 
-    public async Task TorrentsAddMagnet(String magnetLink, String category, Int32? priority)
+    public async Task TorrentsAddMagnet(String magnetLink, String? category, Int32? priority)
     {
         var torrent = new Torrent
         {
@@ -446,7 +433,7 @@ public class QBittorrent
         await _torrents.UploadMagnet(magnetLink, torrent);
     }
 
-    public async Task TorrentsAddFile(Byte[] fileBytes, String category, Int32? priority)
+    public async Task TorrentsAddFile(Byte[] fileBytes, String? category, Int32? priority)
     {
         var torrent = new Torrent
         {
@@ -464,7 +451,7 @@ public class QBittorrent
         await _torrents.UploadFile(fileBytes, torrent);
     }
 
-    public async Task TorrentsSetCategory(String hash, String category)
+    public async Task TorrentsSetCategory(String hash, String? category)
     {
         await _torrents.UpdateCategory(hash, category);
     }
@@ -474,7 +461,7 @@ public class QBittorrent
         var torrents = await _torrents.Get();
 
         var torrentsToGroup = torrents.Where(m => !String.IsNullOrWhiteSpace(m.Category))
-                                      .Select(m => m.Category.ToLower())
+                                      .Select(m => m.Category!.ToLower())
                                       .ToList();
 
         var categoryList = (Settings.Get.General.Categories ?? "")
@@ -494,14 +481,14 @@ public class QBittorrent
                                                    m => new TorrentCategory
                                                    {
                                                        Name = m,
-                                                       SavePath = Path.Combine(AppDefaultSavePath(), m)
+                                                       SavePath = Path.Combine(Settings.AppDefaultSavePath, m)
                                                    });
         }
 
         return results;
     }
 
-    public async Task CategoryCreate(String category)
+    public async Task CategoryCreate(String? category)
     {
         if (category == null)
         {
@@ -528,7 +515,7 @@ public class QBittorrent
         await _settings.Update("General:Categories", categoriesSetting);
     }
 
-    public async Task CategoryRemove(String category)
+    public async Task CategoryRemove(String? category)
     {
         if (category == null)
         {

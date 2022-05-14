@@ -2,7 +2,7 @@
 
 public class DownloadCompleteEventArgs
 {
-    public String Error { get; set; }
+    public String? Error { get; set; }
 }
 
 public class DownloadProgressEventArgs
@@ -14,9 +14,9 @@ public class DownloadProgressEventArgs
 
 public interface IDownloader
 {
-    event EventHandler<DownloadCompleteEventArgs> DownloadComplete;
-    event EventHandler<DownloadProgressEventArgs> DownloadProgress;
-    Task<String> Download();
+    event EventHandler<DownloadCompleteEventArgs>? DownloadComplete;
+    event EventHandler<DownloadProgressEventArgs>? DownloadProgress;
+    Task<String?> Download();
     Task Cancel();
     Task Pause();
     Task Resume();

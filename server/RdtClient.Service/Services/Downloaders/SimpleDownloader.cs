@@ -7,8 +7,8 @@ public class SimpleDownloader : IDownloader
 {
     private const Int32 BufferSize = 8 * 1024;
 
-    public event EventHandler<DownloadCompleteEventArgs> DownloadComplete;
-    public event EventHandler<DownloadProgressEventArgs> DownloadProgress;
+    public event EventHandler<DownloadCompleteEventArgs>? DownloadComplete;
+    public event EventHandler<DownloadProgressEventArgs>? DownloadProgress;
 
     private readonly String _uri;
     private readonly String _filePath;
@@ -30,7 +30,7 @@ public class SimpleDownloader : IDownloader
         _filePath = filePath;
     }
 
-    public Task<String> Download()
+    public Task<String?> Download()
     {
         _logger.Debug($"Starting download of {_uri}, writing to path: {_filePath}");
 
@@ -39,7 +39,7 @@ public class SimpleDownloader : IDownloader
             await StartDownloadTask();
         });
             
-        return Task.FromResult<String>(null);
+        return Task.FromResult<String?>(null);
     }
 
     public Task Cancel()
@@ -86,6 +86,7 @@ public class SimpleDownloader : IDownloader
                     while (readSize > 0 && !_cancelled)
                     {
                         // ReSharper disable once ConvertToUsingDeclaration
+#pragma warning disable IDE0063 // Use simple 'using' statement
                         using (var innerCts = new CancellationTokenSource(1000))
                         {
                             readSize = await destinationStream.ReadAsync(buffer.AsMemory(0, buffer.Length), innerCts.Token).ConfigureAwait(false);
@@ -115,6 +116,7 @@ public class SimpleDownloader : IDownloader
                                 }
                             }
                         }
+#pragma warning restore IDE0063 // Use simple 'using' statement
                     }
 
                     break;

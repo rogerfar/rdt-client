@@ -42,7 +42,7 @@ public class Torrents
         {
             Provider.RealDebrid => realDebridTorrentClient,
             Provider.AllDebrid => allDebridTorrentClient,
-            _ => null
+            _ => throw new Exception("Invalid Provider")
         };
     }
 
@@ -72,7 +72,7 @@ public class Torrents
         return torrents;
     }
 
-    public async Task<Torrent> GetByHash(String hash)
+    public async Task<Torrent?> GetByHash(String hash)
     {
         var torrent = await _torrentData.GetByHash(hash);
 
@@ -84,7 +84,7 @@ public class Torrents
         return torrent;
     }
 
-    public async Task UpdateCategory(String hash, String category)
+    public async Task UpdateCategory(String hash, String? category)
     {
         var torrent = await _torrentData.GetByHash(hash);
 
@@ -256,7 +256,7 @@ public class Torrents
             await _torrentData.Delete(torrentId);
         }
 
-        if (deleteRdTorrent)
+        if (deleteRdTorrent && torrent.RdId != null)
         {
             Log($"Deleting RealDebrid Torrent", torrent);
 
@@ -495,14 +495,17 @@ public class Torrents
             await Task.Delay(100);
         }
 
-        var downloadPath = DownloadPath(download.Torrent);
+        var downloadPath = DownloadPath(download.Torrent!);
             
-        var filePath = DownloadHelper.GetDownloadPath(downloadPath, download.Torrent, download);
+        var filePath = DownloadHelper.GetDownloadPath(downloadPath, download.Torrent!, download);
 
-        Log($"Deleting {filePath}", download, download.Torrent);
-            
-        await FileHelper.Delete(filePath);
-            
+        if (filePath != null)
+        {
+            Log($"Deleting {filePath}", download, download.Torrent);
+
+            await FileHelper.Delete(filePath);
+        }
+
         Log($"Resetting", download, download.Torrent);
 
         await _downloads.Reset(downloadId);
@@ -510,7 +513,7 @@ public class Torrents
         await _torrentData.UpdateComplete(download.TorrentId, null, null, false);
     }
         
-    public async Task UpdateComplete(Guid torrentId, String error, DateTimeOffset datetime, Boolean retry)
+    public async Task UpdateComplete(Guid torrentId, String? error, DateTimeOffset datetime, Boolean retry)
     {
         await _torrentData.UpdateComplete(torrentId, error, datetime, retry);
     }
@@ -542,7 +545,7 @@ public class Torrents
         await _torrentData.UpdateError(torrentId, error);
     }
 
-    public async Task<Torrent> GetById(Guid torrentId)
+    public async Task<Torrent?> GetById(Guid torrentId)
     {
         var torrent = await _torrentData.GetById(torrentId);
 
@@ -630,6 +633,12 @@ public class Torrents
         }
 
         var torrent = await _torrentData.GetById(torrentId);
+
+        if (torrent == null)
+        {
+            throw new Exception($"Cannot find Torrent with ID {torrentId}");
+        }
+
         var downloads = await _downloads.GetForTorrent(torrentId);
 
         var fileName = Settings.Get.General.RunOnTorrentCompleteFileName;
@@ -638,7 +647,7 @@ public class Torrents
         Log($"Parsing external program {fileName} with arguments {arguments}", torrent);
 
         var downloadPath = DownloadPath(torrent);
-        var torrentPath = Path.Combine(downloadPath, torrent.RdName);
+        var torrentPath = Path.Combine(downloadPath, torrent.RdName ?? "Unknown");
 
         arguments = arguments.Replace("%N", $"\"{torrent.RdName}\"");
         arguments = arguments.Replace("%L", $"\"{torrent.Category}\"");
@@ -646,7 +655,7 @@ public class Torrents
         arguments = arguments.Replace("%R", $"\"{downloadPath}\"");
         arguments = arguments.Replace("%D", $"\"{torrentPath}\"");
         arguments = arguments.Replace("%C", downloads.Count.ToString(CultureInfo.InvariantCulture).Replace(",", "").Replace(".", ""));
-        arguments = arguments.Replace("%Z", torrent.RdSize.ToString(CultureInfo.InvariantCulture).Replace(",", "").Replace(".", ""));
+        arguments = arguments.Replace("%Z", torrent.RdSize?.ToString(CultureInfo.InvariantCulture).Replace(",", "").Replace(".", ""));
         arguments = arguments.Replace("%I", torrent.Hash);
 
         Log($"Executing external program {fileName} with arguments {arguments}", torrent);
@@ -707,7 +716,7 @@ public class Torrents
         }
     }
 
-    private async Task UpdateTorrentClientData(Torrent torrent, TorrentClientTorrent torrentClientTorrent = null)
+    private async Task UpdateTorrentClientData(Torrent torrent, TorrentClientTorrent? torrentClientTorrent = null)
     {
         try
         {
@@ -736,7 +745,7 @@ public class Torrents
         }
     }
 
-    private void Log(String message, Data.Models.Data.Download download, Torrent torrent)
+    private void Log(String message, Data.Models.Data.Download? download, Torrent? torrent)
     {
         if (download != null)
         {
@@ -751,7 +760,7 @@ public class Torrents
         _logger.LogDebug(message);
     }
 
-    private void Log(String message, Torrent torrent = null)
+    private void Log(String message, Torrent? torrent = null)
     {
         if (torrent != null)
         {

@@ -23,5 +23,6 @@ public static class DiConfig
         services.AddHostedService<Startup>();
         services.AddHostedService<TaskRunner>();
         services.AddHostedService<UpdateChecker>();
+        services.AddHostedService<WatchFolderChecker>();
     }
 }

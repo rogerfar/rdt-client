@@ -16,7 +16,7 @@ public class JsonModelBinder : IModelBinder
         {
             bindingContext.ModelState.SetModelValue(bindingContext.ModelName, valueProviderResult);
 
-            var valueAsString = valueProviderResult.FirstValue;
+            var valueAsString = valueProviderResult.FirstValue ?? "";
             var result = Newtonsoft.Json.JsonConvert.DeserializeObject(valueAsString, bindingContext.ModelType);
             if (result != null)
             {

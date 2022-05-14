@@ -67,22 +67,25 @@ public class TorrentsController : Controller
 
     [HttpPost]
     [Route("UploadFile")]
-    public async Task<ActionResult> UploadFile([FromForm] IFormFile file,
+    public async Task<ActionResult> UploadFile([FromForm] IFormFile? file,
                                                [ModelBinder(BinderType = typeof(JsonModelBinder))]
-                                               TorrentControllerUploadFileRequest formData)
+                                               TorrentControllerUploadFileRequest? formData)
     {
         if (!ModelState.IsValid)
         {
-            var errors = ModelState.Select(x => x.Value.Errors)
-                                   .Where(y => y.Count > 0)
-                                   .ToList();
-
+            var errors = ModelState.Select(x => x.Value?.Errors.Select(m => m.ErrorMessage)).ToList();
             return BadRequest(errors);
         }
 
+
         if (file == null || file.Length <= 0)
         {
-            throw new Exception("Invalid torrent file");
+            return BadRequest("Invalid torrent file");
+        }
+
+        if (formData?.Torrent == null)
+        {
+            return BadRequest("Invalid Torrent");
         }
 
         var fileStream = file.OpenReadStream();
@@ -100,15 +103,27 @@ public class TorrentsController : Controller
 
     [HttpPost]
     [Route("UploadMagnet")]
-    public async Task<ActionResult> UploadMagnet([FromBody] TorrentControllerUploadMagnetRequest request)
+    public async Task<ActionResult> UploadMagnet([FromBody] TorrentControllerUploadMagnetRequest? request)
     {
+        if (request == null)
+        {
+            return BadRequest();
+        }
+
         if (!ModelState.IsValid)
         {
-            var errors = ModelState.Select(x => x.Value.Errors)
-                                   .Where(y => y.Count > 0)
-                                   .ToList();
-
+            var errors = ModelState.Select(x => x.Value?.Errors.Select(m => m.ErrorMessage)).ToList();
             return BadRequest(errors);
+        }
+
+        if (String.IsNullOrEmpty(request.MagnetLink))
+        {
+            return BadRequest("Invalid magnet link");
+        }
+
+        if (request.Torrent == null)
+        {
+            return BadRequest("Invalid Torrent");
         }
 
         await _torrents.UploadMagnet(request.MagnetLink, request.Torrent);
@@ -118,11 +133,11 @@ public class TorrentsController : Controller
 
     [HttpPost]
     [Route("CheckFiles")]
-    public async Task<ActionResult> CheckFiles([FromForm] IFormFile file)
+    public async Task<ActionResult> CheckFiles([FromForm] IFormFile? file)
     {
         if (file == null || file.Length <= 0)
         {
-            throw new Exception("Invalid torrent file");
+            return BadRequest("Invalid torrent file");
         }
 
         var fileStream = file.OpenReadStream();
@@ -142,8 +157,13 @@ public class TorrentsController : Controller
 
     [HttpPost]
     [Route("CheckFilesMagnet")]
-    public async Task<ActionResult> CheckFilesMagnet([FromBody] TorrentControllerCheckFilesRequest request)
+    public async Task<ActionResult> CheckFilesMagnet([FromBody] TorrentControllerCheckFilesRequest? request)
     {
+        if (request == null)
+        {
+            return BadRequest();
+        }
+
         var magnet = MagnetLink.Parse(request.MagnetLink);
 
         var result = await _torrents.GetAvailableFiles(magnet.InfoHash.ToHex());
@@ -153,8 +173,13 @@ public class TorrentsController : Controller
 
     [HttpPost]
     [Route("Delete/{torrentId:guid}")]
-    public async Task<ActionResult> Delete(Guid torrentId, [FromBody] TorrentControllerDeleteRequest request)
+    public async Task<ActionResult> Delete(Guid torrentId, [FromBody] TorrentControllerDeleteRequest? request)
     {
+        if (request == null)
+        {
+            return BadRequest();
+        }
+
         await _torrents.Delete(torrentId, request.DeleteData, request.DeleteRdTorrent, request.DeleteLocalFiles);
 
         return Ok();
@@ -181,8 +206,13 @@ public class TorrentsController : Controller
         
     [HttpPut]
     [Route("Update")]
-    public async Task<ActionResult> Update([FromBody] Torrent torrent)
+    public async Task<ActionResult> Update([FromBody] Torrent? torrent)
     {
+        if (torrent == null)
+        {
+            return BadRequest();
+        }
+
         await _torrents.Update(torrent);
 
         return Ok();
@@ -191,13 +221,13 @@ public class TorrentsController : Controller
 
 public class TorrentControllerUploadFileRequest
 {
-    public Torrent Torrent { get; set; }
+    public Torrent? Torrent { get; set; }
 }
 
 public class TorrentControllerUploadMagnetRequest
 {
-    public String MagnetLink { get; set; }
-    public Torrent Torrent { get; set; }
+    public String? MagnetLink { get; set; }
+    public Torrent? Torrent { get; set; }
 }
 
 public class TorrentControllerDeleteRequest
@@ -209,5 +239,5 @@ public class TorrentControllerDeleteRequest
 
 public class TorrentControllerCheckFilesRequest
 {
-    public String MagnetLink { get; set; }
+    public String? MagnetLink { get; set; }
 }

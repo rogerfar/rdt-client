@@ -10,7 +10,7 @@ public class UnpackClient
 {
     public Boolean Finished { get; private set; }
         
-    public String Error { get; private set; }
+    public String? Error { get; private set; }
         
     public Int64 BytesTotal { get; private set; }
     public Int64 BytesDone { get; private set; }
@@ -21,14 +21,14 @@ public class UnpackClient
 
     private Boolean _cancelled;
         
-    private RarArchiveEntry _rarCurrentEntry;
-    private Dictionary<String, Int64> _rarfileStatus;
+    private RarArchiveEntry? _rarCurrentEntry;
+    private Dictionary<String, Int64>? _rarfileStatus;
 
     public UnpackClient(Download download, String destinationPath)
     {
         _download = download;
         _destinationPath = destinationPath;
-        _torrent = download.Torrent;
+        _torrent = download.Torrent ?? throw new Exception($"Torrent is null");
     }
 
     public void Start()
@@ -91,7 +91,7 @@ public class UnpackClient
 
                 if (!entries.Any(m => m.Key.StartsWith(_torrent.RdName + @"\")) && !entries.Any(m => m.Key.StartsWith(_torrent.RdName + @"/")))
                 {
-                    extractPath = Path.Combine(_destinationPath, _torrent.RdName);
+                    extractPath = Path.Combine(_destinationPath, _torrent.RdName!);
                 }
 
                 if (entries.Any(m => m.Key.Contains(".r00")))
@@ -129,14 +129,14 @@ public class UnpackClient
         }
     }
 
-    private void ArchiveOnCompressedBytesRead(Object sender, CompressedBytesReadEventArgs e)
+    private void ArchiveOnCompressedBytesRead(Object? sender, CompressedBytesReadEventArgs e)
     {
         if (_rarCurrentEntry == null)
         {
             return;
         }
 
-        _rarfileStatus[_rarCurrentEntry.Key] = e.CompressedBytesRead;
+        _rarfileStatus![_rarCurrentEntry.Key] = e.CompressedBytesRead;
 
         BytesDone = _rarfileStatus.Sum(m => m.Value);
     }

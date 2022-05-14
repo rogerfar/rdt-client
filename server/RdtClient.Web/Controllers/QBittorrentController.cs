@@ -26,6 +26,11 @@ public class QBittorrentController : Controller
     [HttpGet]
     public async Task<ActionResult> AuthLogin([FromQuery] QBAuthLoginRequest request)
     {
+        if (String.IsNullOrWhiteSpace(request.UserName) || String.IsNullOrEmpty(request.Password))
+        {
+            return Ok("Fails.");
+        }
+
         var result = await _qBittorrent.AuthLogin(request.UserName, request.Password);
 
         if (result)
@@ -121,7 +126,7 @@ public class QBittorrentController : Controller
     [HttpPost]
     public ActionResult<AppPreferences> AppDefaultSavePath()
     {
-        var result = _qBittorrent.AppDefaultSavePath();
+        var result = Settings.AppDefaultSavePath;
         return Ok(result);
     }
         
@@ -154,6 +159,11 @@ public class QBittorrentController : Controller
     [HttpGet]
     public async Task<ActionResult<IList<TorrentFileItem>>> TorrentsFiles([FromQuery] QBTorrentsHashRequest request)
     {
+        if (String.IsNullOrWhiteSpace(request.Hash))
+        {
+            return BadRequest();
+        }
+
         var result = await _qBittorrent.TorrentFileContents(request.Hash);
 
         if (result == null)
@@ -177,6 +187,11 @@ public class QBittorrentController : Controller
     [HttpGet]
     public async Task<ActionResult<IList<TorrentInfo>>> TorrentsProperties([FromQuery] QBTorrentsHashRequest request)
     {
+        if (String.IsNullOrWhiteSpace(request.Hash))
+        {
+            return BadRequest();
+        }
+
         var result = await _qBittorrent.TorrentProperties(request.Hash);
 
         if (result == null)
@@ -200,6 +215,11 @@ public class QBittorrentController : Controller
     [HttpGet]
     public async Task<ActionResult> TorrentsPause([FromQuery] QBTorrentsHashesRequest request)
     {
+        if (String.IsNullOrWhiteSpace(request.Hashes))
+        {
+            return BadRequest();
+        }
+
         var hashes = request.Hashes.Split("|");
 
         foreach (var hash in hashes)
@@ -223,6 +243,11 @@ public class QBittorrentController : Controller
     [HttpGet]
     public async Task<ActionResult> TorrentsResume([FromQuery] QBTorrentsHashesRequest request)
     {
+        if (String.IsNullOrWhiteSpace(request.Hashes))
+        {
+            return BadRequest();
+        }
+
         var hashes = request.Hashes.Split("|");
 
         foreach (var hash in hashes)
@@ -255,6 +280,11 @@ public class QBittorrentController : Controller
     [HttpGet]
     public async Task<ActionResult> TorrentsDelete([FromQuery] QBTorrentsDeleteRequest request)
     {
+        if (String.IsNullOrWhiteSpace(request.Hashes))
+        {
+            return BadRequest();
+        }
+
         var hashes = request.Hashes.Split("|");
 
         foreach (var hash in hashes)
@@ -278,6 +308,11 @@ public class QBittorrentController : Controller
     [HttpGet]
     public async Task<ActionResult> TorrentsAdd([FromQuery] QBTorrentsAddRequest request)
     {
+        if (String.IsNullOrWhiteSpace(request.Urls))
+        {
+            return BadRequest();
+        }
+
         var urls = request.Urls.Split("\n");
 
         foreach (var url in urls)
@@ -294,7 +329,7 @@ public class QBittorrentController : Controller
             }
             else
             {
-                throw new Exception($"Invalid torrent link format {url}");
+                return BadRequest($"Invalid torrent link format {url}");
             }
         }
 
@@ -332,6 +367,11 @@ public class QBittorrentController : Controller
     [HttpGet]
     public async Task<ActionResult> TorrentsSetCategory([FromQuery] QBTorrentsSetCategoryRequest request)
     {
+        if (String.IsNullOrWhiteSpace(request.Hashes))
+        {
+            return BadRequest();
+        }
+
         var hashes = request.Hashes.Split("|");
 
         foreach (var hash in hashes)
@@ -412,6 +452,11 @@ public class QBittorrentController : Controller
     [HttpGet]
     public async Task<ActionResult> TorrentsTopPrio([FromQuery] QBTorrentsHashesRequest request)
     {
+        if (String.IsNullOrWhiteSpace(request.Hashes))
+        {
+            return BadRequest();
+        }
+
         var hashes = request.Hashes.Split("|");
 
         foreach (var hash in hashes)
@@ -451,51 +496,50 @@ public class QBittorrentController : Controller
 
 public class QBAuthLoginRequest
 {
-    public String UserName { get; set; }
-    public String Password { get; set; }
+    public String? UserName { get; set; }
+    public String? Password { get; set; }
 }
 
 public class QBTorrentsInfoRequest
 {
-    public String Category { get; set; }
+    public String? Category { get; set; }
 }
     
 public class QBTorrentsHashRequest
 {
-    public String Hash { get; set; }
-    public String Category { get; set; }
+    public String? Hash { get; set; }
 }
 
 public class QBTorrentsDeleteRequest
 {
-    public String Hashes { get; set; }
+    public String? Hashes { get; set; }
     public Boolean DeleteFiles { get; set; }
 }
 
 public class QBTorrentsAddRequest
 {
-    public String Urls { get; set; }
-    public String Category { get; set; }
+    public String? Urls { get; set; }
+    public String? Category { get; set; }
     public Int32? Priority { get; set; }
 }
 
 public class QBTorrentsSetCategoryRequest
 {
-    public String Hashes { get; set; }
-    public String Category { get; set; }
+    public String? Hashes { get; set; }
+    public String? Category { get; set; }
 }
     
 public class QBTorrentsCreateCategoryRequest
 {
-    public String Category { get; set; }
+    public String? Category { get; set; }
 }
 
 public class QBTorrentsRemoveCategoryRequest
 {
-    public String Categories { get; set; }
+    public String? Categories { get; set; }
 }
 
 public class QBTorrentsHashesRequest
 {
-    public String Hashes { get; set; }
+    public String? Hashes { get; set; }
 }

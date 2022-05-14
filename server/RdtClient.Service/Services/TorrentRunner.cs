@@ -121,7 +121,7 @@ public class TorrentRunner
 
             var aria2NetClient = new Aria2NetClient(Settings.Get.DownloadClient.Aria2cUrl, Settings.Get.DownloadClient.Aria2cSecret, _httpClient, 1);
 
-            var allDownloads = await aria2NetClient.TellAll();
+            var allDownloads = await aria2NetClient.TellAllAsync();
 
             Log($"Found {allDownloads.Count} Aria2 downloads");
 
@@ -162,7 +162,7 @@ public class TorrentRunner
                 {
                     // Retry the download if an error is encountered.
                     Log($"Download reported an error: {downloadClient.Error}", download, download.Torrent);
-                    Log($"Download retry count {download.RetryCount}/{download.Torrent.DownloadRetryAttempts}, torrent retry count {download.Torrent.RetryCount}/{download.Torrent.TorrentRetryAttempts}", download, download.Torrent);
+                    Log($"Download retry count {download.RetryCount}/{download.Torrent!.DownloadRetryAttempts}, torrent retry count {download.Torrent.RetryCount}/{download.Torrent.TorrentRetryAttempts}", download, download.Torrent);
                         
                     if (download.RetryCount < download.Torrent.DownloadRetryAttempts)
                     {
@@ -570,7 +570,7 @@ public class TorrentRunner
         }
     }
 
-    private void Log(String message, Download download, Torrent torrent)
+    private void Log(String message, Download? download, Torrent? torrent)
     {
         if (download != null)
         {
@@ -585,7 +585,7 @@ public class TorrentRunner
         _logger.LogDebug(message);
     }
 
-    private void Log(String message, Torrent torrent = null)
+    private void Log(String message, Torrent? torrent = null)
     {
         if (torrent != null)
         {

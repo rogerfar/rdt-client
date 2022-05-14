@@ -17,12 +17,12 @@ public class Downloads
         return await _downloadData.GetForTorrent(torrentId);
     }
 
-    public async Task<Download> GetById(Guid downloadId)
+    public async Task<Download?> GetById(Guid downloadId)
     {
         return await _downloadData.GetById(downloadId);
     }
 
-    public async Task<Download> Get(Guid torrentId, String path)
+    public async Task<Download?> Get(Guid torrentId, String path)
     {
         return await _downloadData.Get(torrentId, path);
     }
@@ -67,7 +67,7 @@ public class Downloads
         await _downloadData.UpdateCompleted(downloadId, dateTime);
     }
 
-    public async Task UpdateError(Guid downloadId, String error)
+    public async Task UpdateError(Guid downloadId, String? error)
     {
         await _downloadData.UpdateError(downloadId, error);
     }

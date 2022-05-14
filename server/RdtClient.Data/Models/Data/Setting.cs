@@ -5,7 +5,7 @@ namespace RdtClient.Data.Models.Data;
 public class Setting
 {
     [Key]
-    public String SettingId { get; set; }
+    public String SettingId { get; set; } = null!;
 
-    public String Value { get; set; }
+    public String? Value { get; set; }
 }

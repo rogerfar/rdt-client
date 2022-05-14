@@ -6,9 +6,9 @@
 /// </summary>
 public class ThrottledStream : Stream
 {
-    public Int64 Speed => (Int64)_bandwidth.AverageSpeed;
+    public Int64 Speed => (Int64) (_bandwidth?.AverageSpeed ?? 0);
 
-    private Bandwidth _bandwidth;
+    private Bandwidth? _bandwidth;
     private Int64 _bandwidthLimit;
     private readonly Stream _baseStream;
 
@@ -90,7 +90,6 @@ public class ThrottledStream : Stream
     public override Int32 Read(Byte[] buffer, Int32 offset, Int32 count)
     {
         Throttle(count).Wait();
-
         return _baseStream.Read(buffer, offset, count);
     }
 
@@ -100,8 +99,13 @@ public class ThrottledStream : Stream
                                                 CancellationToken cancellationToken)
     {
         await Throttle(count).ConfigureAwait(false);
+        return await _baseStream.ReadAsync(new Memory<Byte>(buffer, offset, count), cancellationToken).ConfigureAwait(false);
+    }
 
-        return await _baseStream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+    public override async ValueTask<Int32> ReadAsync(Memory<Byte> buffer, CancellationToken cancellationToken = new CancellationToken())
+    {
+        await Throttle(buffer.Length).ConfigureAwait(false);
+        return await base.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -115,7 +119,13 @@ public class ThrottledStream : Stream
     public override async Task WriteAsync(Byte[] buffer, Int32 offset, Int32 count, CancellationToken cancellationToken)
     {
         await Throttle(count).ConfigureAwait(false);
-        await _baseStream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+        await _baseStream.WriteAsync(new ReadOnlyMemory<Byte>(buffer, offset, count), cancellationToken).ConfigureAwait(false);
+    }
+
+    public override async ValueTask WriteAsync(ReadOnlyMemory<Byte> buffer, CancellationToken cancellationToken = new CancellationToken())
+    {
+        await Throttle(buffer.Length).ConfigureAwait(false);
+        await base.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task Throttle(Int32 transmissionVolume)
@@ -124,9 +134,8 @@ public class ThrottledStream : Stream
         if (BandwidthLimit > 0 && transmissionVolume > 0)
         {
             // Calculate the time to sleep.
-            _bandwidth.CalculateSpeed(transmissionVolume);
-
-            await Sleep(_bandwidth.PopSpeedRetrieveTime()).ConfigureAwait(false);
+            _bandwidth!.CalculateSpeed(transmissionVolume);
+            await Sleep(_bandwidth!.PopSpeedRetrieveTime()).ConfigureAwait(false);
         }
     }
 
@@ -139,7 +148,7 @@ public class ThrottledStream : Stream
     }
 
     /// <inheritdoc />
-    public override String ToString()
+    public override String? ToString()
     {
         return _baseStream.ToString();
     }

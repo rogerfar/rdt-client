@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RdtClient.Data.Models.Data;
-using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Services;
 
 namespace RdtClient.Web.Controllers;
@@ -41,13 +39,23 @@ public class AuthController : Controller
     [AllowAnonymous]
     [Route("Create")]
     [HttpPost]
-    public async Task<ActionResult> Create([FromBody] AuthControllerLoginRequest request)
+    public async Task<ActionResult> Create([FromBody] AuthControllerLoginRequest? request)
     {
+        if (request == null)
+        {
+            return BadRequest();
+        }
+
         var user = await _authentication.GetUser();
 
         if (user != null)
         {
             return StatusCode(401);
+        }
+        
+        if (String.IsNullOrEmpty(request.UserName) || String.IsNullOrEmpty(request.Password))
+        {
+            return BadRequest("Invalid UserName or Password");
         }
 
         var registerResult = await _authentication.Register(request.UserName, request.Password);
@@ -65,8 +73,13 @@ public class AuthController : Controller
     [AllowAnonymous]
     [Route("SetupProvider")]
     [HttpPost]
-    public async Task<ActionResult> SetupProvider([FromBody] AuthControllerSetupProviderRequest request)
+    public async Task<ActionResult> SetupProvider([FromBody] AuthControllerSetupProviderRequest? request)
     {
+        if (request == null)
+        {
+            return BadRequest();
+        }
+
         if (!String.IsNullOrEmpty(Settings.Get.Provider.ApiKey))
         {
             return StatusCode(401);
@@ -81,13 +94,23 @@ public class AuthController : Controller
     [AllowAnonymous]
     [Route("Login")]
     [HttpPost]
-    public async Task<ActionResult> Login([FromBody] AuthControllerLoginRequest request)
+    public async Task<ActionResult> Login([FromBody] AuthControllerLoginRequest? request)
     {
+        if (request == null)
+        {
+            return BadRequest();
+        }
+
         var user = await _authentication.GetUser();
 
         if (user == null)
         {
             return StatusCode(402);
+        }
+
+        if (String.IsNullOrEmpty(request.UserName) || String.IsNullOrEmpty(request.Password))
+        {
+            return BadRequest("Invalid credentials");
         }
 
         var result = await _authentication.Login(request.UserName, request.Password);
@@ -110,8 +133,18 @@ public class AuthController : Controller
                 
     [Route("Update")]
     [HttpPost]
-    public async Task<ActionResult> Update([FromBody] AuthControllerUpdateRequest request)
+    public async Task<ActionResult> Update([FromBody] AuthControllerUpdateRequest? request)
     {
+        if (request == null)
+        {
+            return BadRequest();
+        }
+
+        if (String.IsNullOrEmpty(request.UserName) || String.IsNullOrEmpty(request.Password))
+        {
+            return BadRequest("Invalid UserName or Password");
+        }
+
         var updateResult = await _authentication.Update(request.UserName, request.Password);
 
         if (!updateResult.Succeeded)
@@ -125,18 +158,18 @@ public class AuthController : Controller
 
 public class AuthControllerLoginRequest
 {
-    public String UserName { get; set; }
-    public String Password { get; set; }
+    public String? UserName { get; set; }
+    public String? Password { get; set; }
 }
 
 public class AuthControllerSetupProviderRequest
 {
     public Int32 Provider { get; set; }
-    public String Token { get; set; }
+    public String? Token { get; set; }
 }
 
 public class AuthControllerUpdateRequest
 {
-    public String UserName { get; set; }
-    public String Password { get; set; }
+    public String? UserName { get; set; }
+    public String? Password { get; set; }
 }

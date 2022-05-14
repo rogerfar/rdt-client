@@ -32,17 +32,20 @@ builder.WebHost.ConfigureKestrel(options =>
     options.ListenAnyIP(appSettings.Port);
 });
 
-builder.Host.UseSerilog((_, lc) => lc.Enrich.FromLogContext()
-                                     .Enrich.WithExceptionDetails()
-                                     .WriteTo.File(appSettings.Logging.File.Path, 
-                                                   rollOnFileSizeLimit: true, 
-                                                   fileSizeLimitBytes: appSettings.Logging.File.FileSizeLimitBytes, 
-                                                   retainedFileCountLimit: appSettings.Logging.File.MaxRollingFiles,
-                                                   outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
-                                     .WriteTo.Console()
-                                     .MinimumLevel.ControlledBy(Settings.LoggingLevelSwitch)
-                                     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-                                     .MinimumLevel.Override("System.Net.Http", LogEventLevel.Warning));
+if (appSettings.Logging?.File?.Path != null)
+{
+    builder.Host.UseSerilog((_, lc) => lc.Enrich.FromLogContext()
+                                         .Enrich.WithExceptionDetails()
+                                         .WriteTo.File(appSettings.Logging.File.Path,
+                                                       rollOnFileSizeLimit: true,
+                                                       fileSizeLimitBytes: appSettings.Logging.File.FileSizeLimitBytes,
+                                                       retainedFileCountLimit: appSettings.Logging.File.MaxRollingFiles,
+                                                       outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
+                                         .WriteTo.Console()
+                                         .MinimumLevel.ControlledBy(Settings.LoggingLevelSwitch)
+                                         .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                                         .MinimumLevel.Override("System.Net.Http", LogEventLevel.Warning));
+}
 
 Serilog.Debugging.SelfLog.Enable(msg =>
 {

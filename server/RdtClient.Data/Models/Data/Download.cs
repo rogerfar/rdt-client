@@ -11,10 +11,10 @@ public class Download
     public Guid TorrentId { get; set; }
 
     [ForeignKey("TorrentId")]
-    public Torrent Torrent { get; set; }
+    public Torrent? Torrent { get; set; }
 
-    public String Path { get; set; }
-    public String Link { get; set; }
+    public String Path { get; set; } = null!;
+    public String? Link { get; set; }
 
     public DateTimeOffset Added { get; set; }
     public DateTimeOffset? DownloadQueued { get; set; }
@@ -27,9 +27,9 @@ public class Download
 
     public Int32 RetryCount { get; set; }
         
-    public String Error { get; set; }
+    public String? Error { get; set; }
 
-    public String RemoteId { get; set; }
+    public String? RemoteId { get; set; }
 
     [NotMapped]
     public Int64 BytesTotal { get; set; }

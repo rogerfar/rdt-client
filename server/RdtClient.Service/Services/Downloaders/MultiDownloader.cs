@@ -7,8 +7,8 @@ namespace RdtClient.Service.Services.Downloaders;
 
 public class MultiDownloader : IDownloader
 {
-    public event EventHandler<DownloadCompleteEventArgs> DownloadComplete;
-    public event EventHandler<DownloadProgressEventArgs> DownloadProgress;
+    public event EventHandler<DownloadCompleteEventArgs>? DownloadComplete;
+    public event EventHandler<DownloadProgressEventArgs>? DownloadProgress;
 
     private readonly DownloadService _downloadService;
     private readonly String _filePath;
@@ -94,7 +94,7 @@ public class MultiDownloader : IDownloader
 
         _downloadService.DownloadFileCompleted += (_, args) =>
         {
-            String error = null;
+            String? error = null;
 
             if (args.Cancelled)
             {
@@ -113,7 +113,7 @@ public class MultiDownloader : IDownloader
         };
     }
 
-    public async Task<String> Download()
+    public async Task<String?> Download()
     {
         _logger.Debug($"Starting download of {_uri}, writing to path: {_filePath}");
 
