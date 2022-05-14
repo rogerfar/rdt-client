@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.13] - 2022-05-14
+### Changed
+- Rewrote the settings storage. Added more settings to set defaults for importing.
+- Fixed filtering of torrents when a category is passed to the TorrentsInfo endpoint, fixing Radarr/Sonarr integrations.
+### Added
+- Added settings to control the timeout and polling interval to RealDebrid/AllDebrid.
+
 ## [2.0.12] - 2022-03-20
 ### Changed
 - Fixed the AllDebrid client.
