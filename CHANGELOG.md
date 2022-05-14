@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.14] - 2022-05-14
+### Changed
+- Fixed Windows Service issue
+- For service users: the appsettings.json is slightly changed: HostUrl is now Port. Important if you used a non standard (6500) port.
+
 ## [2.0.13] - 2022-05-14
 ### Changed
 - Rewrote the settings storage. Added more settings to set defaults for importing.

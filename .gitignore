@@ -4,3 +4,4 @@ build/
 publish/
 node_modules/
 RealDebridClient.zip
+server/RdtClient.Web/appsettings.Development.json
