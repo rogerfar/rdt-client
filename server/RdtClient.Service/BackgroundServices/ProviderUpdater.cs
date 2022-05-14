@@ -36,7 +36,7 @@ public class ProviderUpdater : BackgroundService
             {
                 var torrents = await torrentService.Get();
                 
-                if (_nextUpdate < DateTime.UtcNow && ((torrents.Count > 0 && Settings.Get.Provider.AutoImport) || Settings.Get.Provider.AutoImport))
+                if (_nextUpdate < DateTime.UtcNow && ((torrents.Count > 0 && !Settings.Get.Provider.AutoImport) || Settings.Get.Provider.AutoImport))
                 {
                     _logger.LogDebug($"Updating torrent info from Real-Debrid");
                     

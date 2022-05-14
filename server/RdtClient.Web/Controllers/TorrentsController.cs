@@ -71,13 +71,6 @@ public class TorrentsController : Controller
                                                [ModelBinder(BinderType = typeof(JsonModelBinder))]
                                                TorrentControllerUploadFileRequest? formData)
     {
-        if (!ModelState.IsValid)
-        {
-            var errors = ModelState.Select(x => x.Value?.Errors.Select(m => m.ErrorMessage)).ToList();
-            return BadRequest(errors);
-        }
-
-
         if (file == null || file.Length <= 0)
         {
             return BadRequest("Invalid torrent file");
@@ -109,13 +102,7 @@ public class TorrentsController : Controller
         {
             return BadRequest();
         }
-
-        if (!ModelState.IsValid)
-        {
-            var errors = ModelState.Select(x => x.Value?.Errors.Select(m => m.ErrorMessage)).ToList();
-            return BadRequest(errors);
-        }
-
+        
         if (String.IsNullOrEmpty(request.MagnetLink))
         {
             return BadRequest("Invalid magnet link");

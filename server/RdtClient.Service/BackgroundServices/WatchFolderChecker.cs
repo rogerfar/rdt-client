@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Service.Services;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace RdtClient.Service.BackgroundServices;
 
@@ -30,7 +31,7 @@ public class WatchFolderChecker : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var torrentService = scope.ServiceProvider.GetRequiredService<Torrents>();
             
-        _logger.LogInformation("ProviderUpdater started.");
+        _logger.LogInformation("WatchFolderChecker started.");
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -43,6 +44,13 @@ public class WatchFolderChecker : BackgroundService
                     continue;
                 }
 
+                var processedStorePath = Path.Combine(Settings.Get.Watch.Path, "processed");
+
+                if (!Directory.Exists(processedStorePath))
+                {
+                    Directory.CreateDirectory(processedStorePath);
+                }
+
                 var nextCheck = _prevCheck.AddSeconds(Settings.Get.Watch.Interval);
 
                 if (DateTime.UtcNow < nextCheck)
@@ -52,16 +60,23 @@ public class WatchFolderChecker : BackgroundService
 
                 _prevCheck = DateTime.UtcNow;
 
-                var torrentFiles = Directory.GetFiles(Settings.Get.Watch.Path, "*.torrent,*.magnet", SearchOption.TopDirectoryOnly);
+                var torrentFiles = Directory.GetFiles(Settings.Get.Watch.Path, "*.*", SearchOption.TopDirectoryOnly);
 
                 foreach (var torrentFile in torrentFiles)
                 {
                     var fileInfo = new FileInfo(torrentFile);
 
+                    if (fileInfo.Extension != ".magnet" && fileInfo.Extension != ".torrent")
+                    {
+                        continue;
+                    }
+
                     if (IsFileLocked(fileInfo))
                     {
                         continue;
                     }
+
+                    _logger.Log(LogLevel.Debug, "Processing {torrentFile}", torrentFile);
 
                     var torrent = new Torrent
                     {
@@ -86,8 +101,12 @@ public class WatchFolderChecker : BackgroundService
                         var magnetLink = await File.ReadAllTextAsync(torrentFile, stoppingToken);
                         await torrentService.UploadMagnet(magnetLink, torrent);
                     }
-                }
 
+                    var processedPath = Path.Combine(processedStorePath, fileInfo.Name);
+                    File.Move(torrentFile, processedPath);
+
+                    _logger.Log(LogLevel.Debug, "Moved {torrentFile} to {processedPath}", torrentFile, processedPath);
+                }
             }
             catch (Exception ex)
             {
