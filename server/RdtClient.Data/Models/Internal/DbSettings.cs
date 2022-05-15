@@ -9,27 +9,27 @@ public class DbSettings
 {
     [DisplayName("General")]
     [Description("")]
-    public DbSettingsGeneral General { get; set; } = new DbSettingsGeneral();
+    public DbSettingsGeneral General { get; set; } = new();
 
     [DisplayName("Download Client")]
     [Description("")]
-    public DbSettingsDownloadClient DownloadClient { get; set; } = new DbSettingsDownloadClient();
+    public DbSettingsDownloadClient DownloadClient { get; set; } = new();
 
     [DisplayName("Provider")]
     [Description("")]
-    public DbSettingsProvider Provider { get; set; } = new DbSettingsProvider();
+    public DbSettingsProvider Provider { get; set; } = new();
 
-    [DisplayName("qBittorrent")]
+    [DisplayName("qBittorrent / *darr")]
     [Description("The following settings only apply when a torrent gets added through the qbittorrent API, usually Radarr or Sonarr.")]
-    public DbSettingsIntegrations Integrations { get; set; } = new DbSettingsIntegrations();
+    public DbSettingsIntegrations Integrations { get; set; } = new();
 
     [DisplayName("GUI Defaults")]
     [Description("Settings used when adding a torrent through the web interface.")]
-    public DbSettingsGui Gui { get; set; } = new DbSettingsGui();
+    public DbSettingsGui Gui { get; set; } = new();
 
     [DisplayName("Watch")]
     [Description("The following settings only apply when a torrent gets through the watch folder.")]
-    public DbSettingsWatch Watch { get; set; } = new DbSettingsWatch();
+    public DbSettingsWatch Watch { get; set; } = new();
 }
 
 public class DbSettingsGeneral
@@ -142,17 +142,17 @@ or
     public Int32 CheckInterval { get; set; } = 10;
 
     [DisplayName("Auto Import Defaults")]
-    public DbSettingsDefaults Default { get; set; } = new DbSettingsDefaults();
+    public DbSettingsDefaultsWithCategory Default { get; set; } = new();
 }
 
 public class DbSettingsIntegrations
 {
-    public DbSettingsDefaults Default { get; set; } = new DbSettingsDefaults();
+    public DbSettingsDefaults Default { get; set; } = new();
 }
 
 public class DbSettingsGui
 {
-    public DbSettingsDefaults Default { get; set; } = new DbSettingsDefaults();
+    public DbSettingsDefaultsWithCategory Default { get; set; } = new();
 }
 
 public class DbSettingsWatch
@@ -166,22 +166,25 @@ public class DbSettingsWatch
     public Int32 Interval { get; set; } = 60;
 
     [DisplayName("Import Defaults")]
-    public DbSettingsDefaults Default { get; set; } = new DbSettingsDefaults();
+    public DbSettingsDefaultsWithCategory Default { get; set; } = new();
 }
 
-public class DbSettingsDefaults
+public class DbSettingsDefaultsWithCategory : DbSettingsDefaults
 {
     [DisplayName("Category")]
     [Description("When a torrent is imported assign it this category.")]
     public String? Category { get; set; } = null;
 
-    [DisplayName("Only download available files on debrid provider")]
-    [Description("When selected, it will only download files in the torrent that have been download by Real-Debrid. You can use this in combination with the Min File size setting above.")]
-    public Boolean OnlyDownloadAvailableFiles { get; set; } = true;
-
     [DisplayName("Finished Action")]
     [Description("When a torrent is finished, perform this action.")]
     public TorrentFinishedAction FinishedAction { get; set; } = TorrentFinishedAction.RemoveAllTorrents;
+}
+
+public class DbSettingsDefaults
+{
+    [DisplayName("Only download available files on debrid provider")]
+    [Description("When selected, it will only download files in the torrent that have been download by Real-Debrid. You can use this in combination with the Min File size setting above.")]
+    public Boolean OnlyDownloadAvailableFiles { get; set; } = true;
 
     [DisplayName("Minimum file size to download")]
     [Description("Files that are smaller than this setting are skipped and not downloaded. When set to 0 all files are downloaded. When downloading from Radarr or Sonarr it's recommended to keep this setting at atleast a few MB to avoid the debrid provider having to re-download the torrent.")]

@@ -419,9 +419,9 @@ public class QBittorrent
     {
         var torrent = new Torrent
         {
-            Category = category ?? Settings.Get.Integrations.Default.Category,
+            Category = category,
             DownloadAction = Settings.Get.Integrations.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
-            FinishedAction = Settings.Get.Integrations.Default.FinishedAction,
+            FinishedAction = TorrentFinishedAction.None,
             DownloadMinSize = Settings.Get.Integrations.Default.MinFileSize,
             TorrentRetryAttempts = Settings.Get.Integrations.Default.TorrentRetryAttempts,
             DownloadRetryAttempts = Settings.Get.Integrations.Default.DownloadRetryAttempts,
@@ -437,9 +437,9 @@ public class QBittorrent
     {
         var torrent = new Torrent
         {
-            Category = category ?? Settings.Get.Integrations.Default.Category,
+            Category = category,
             DownloadAction = Settings.Get.Integrations.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
-            FinishedAction = Settings.Get.Integrations.Default.FinishedAction,
+            FinishedAction = TorrentFinishedAction.None,
             DownloadMinSize = Settings.Get.Integrations.Default.MinFileSize,
             TorrentRetryAttempts = Settings.Get.Integrations.Default.TorrentRetryAttempts,
             DownloadRetryAttempts = Settings.Get.Integrations.Default.DownloadRetryAttempts,

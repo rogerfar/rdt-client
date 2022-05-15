@@ -101,7 +101,7 @@ public class SettingData
     {
         var result = new List<SettingProperty>();
 
-        var properties = defaultSetting.GetType().GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance);
+        var properties = defaultSetting.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
         foreach (var property in properties)
         {
