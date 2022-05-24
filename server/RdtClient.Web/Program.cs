@@ -94,6 +94,11 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.Name = "SID";
 });
 
+builder.Services.Configure<HostOptions>(hostOptions =>
+{
+    hostOptions.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+});
+
 // Configure development cors.
 builder.Services.AddCors(options =>
 {
