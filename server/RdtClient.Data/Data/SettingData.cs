@@ -159,7 +159,7 @@ public class SettingData
 
     private static void SetSettings(IList<Setting> settings, Object defaultSetting, String? parent)
     {
-        var properties = defaultSetting.GetType().GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance);
+        var properties = defaultSetting.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
         foreach (var property in properties)
         {
