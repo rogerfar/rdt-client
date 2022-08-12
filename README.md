@@ -76,6 +76,54 @@ Instead of running in Docker you can install it as a service in Windows or Linux
 1. In `appsettings.json` replace the `Database` `Path` to a path on your host.
 1. When using Windows paths, make sure to escape the slashes. For example: `D:\\RdtClient\\db\\rdtclient.db`
 
+## Linux Service
+
+Instead of running in Docker you can install it as a service in Linux.
+
+1. Install .NET: [https://docs.microsoft.com/en-us/dotnet/core/install/linux](https://docs.microsoft.com/en-us/dotnet/core/install/linux)
+
+    Ubuntu 20.04 example:  
+    ```wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb```  
+    
+    ```sudo dpkg -i packages-microsoft-prod.deb```  
+
+    ```rm packages-microsoft-prod.deb```  
+
+    ```sudo apt-get update && sudo apt-get install -y dotnet-sdk-6.0```  
+
+2. Get latest archive from [releases](https://github.com/rogerfar/rdt-client/releases):  
+```wget <zip_url>```
+3. Extract to path of your choice (~/rtdc in this example):  
+```unzip RealDebridClient.zip -d ~/rdtc && cd ~/rdtc```
+4. In appsettings.json replace the Database Path to a path on your host. Any directories in path must already exist. Or just remove "/data/db/" for ease.
+5. Test rdt client runs ok:  
+```dotnet RdtClient.Web.dll```   
+navigate to http://<ipaddress>:6500, if all is good then we'll create a service
+6. Create a service (systemd in this example):  
+```sudo nano /etc/systemd/system/rdtc.service```  
+
+    paste in this service file content and edit path of your directory:
+
+    ```
+    [Unit]
+    Description=RdtClient Service
+
+    [Service]
+
+    WorkingDirectory=/home/<username>/rdtc
+    ExecStart=/usr/bin/dotnet RdtClient.Web.dll
+    SyslogIdentifier=RdtClient
+    User=<username>
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+
+7. enable and start the service:   
+```sudo systemctl daemon-reload```  
+```sudo systemctl enable rdtc```  
+```sudo systemctl start rdtc```  
+
 ## Setup
 
 ### First Login
