@@ -45,6 +45,7 @@ public class WatchFolderChecker : BackgroundService
                 }
 
                 var processedStorePath = Path.Combine(Settings.Get.Watch.Path, "processed");
+                var errorStorePath = Path.Combine(Settings.Get.Watch.Path, "error");
 
                 if (!Directory.Exists(processedStorePath))
                 {
@@ -76,37 +77,52 @@ public class WatchFolderChecker : BackgroundService
                         continue;
                     }
 
-                    _logger.Log(LogLevel.Debug, "Processing {torrentFile}", torrentFile);
-
-                    var torrent = new Torrent
+                    try
                     {
-                        Category = Settings.Get.Watch.Default.Category,
-                        HostDownloadAction = Settings.Get.Watch.Default.HostDownloadAction,
-                        DownloadAction = Settings.Get.Watch.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
-                        FinishedAction = Settings.Get.Watch.Default.FinishedAction,
-                        DownloadMinSize = Settings.Get.Watch.Default.MinFileSize,
-                        TorrentRetryAttempts = Settings.Get.Watch.Default.TorrentRetryAttempts,
-                        DownloadRetryAttempts = Settings.Get.Watch.Default.DownloadRetryAttempts,
-                        DeleteOnError = Settings.Get.Watch.Default.DeleteOnError,
-                        Lifetime = Settings.Get.Watch.Default.TorrentLifetime,
-                        Priority = Settings.Get.Watch.Default.Priority > 0 ? Settings.Get.Watch.Default.Priority : null
-                    };
+                        _logger.Log(LogLevel.Debug, "Processing {torrentFile}", torrentFile);
 
-                    if (fileInfo.Extension == ".torrent")
-                    {
-                        var torrentFileContents = await File.ReadAllBytesAsync(torrentFile, stoppingToken);
-                        await torrentService.UploadFile(torrentFileContents, torrent);
+                        var torrent = new Torrent
+                        {
+                            Category = Settings.Get.Watch.Default.Category,
+                            HostDownloadAction = Settings.Get.Watch.Default.HostDownloadAction,
+                            DownloadAction = Settings.Get.Watch.Default.OnlyDownloadAvailableFiles
+                                ? TorrentDownloadAction.DownloadAvailableFiles
+                                : TorrentDownloadAction.DownloadAll,
+                            FinishedAction = Settings.Get.Watch.Default.FinishedAction,
+                            DownloadMinSize = Settings.Get.Watch.Default.MinFileSize,
+                            TorrentRetryAttempts = Settings.Get.Watch.Default.TorrentRetryAttempts,
+                            DownloadRetryAttempts = Settings.Get.Watch.Default.DownloadRetryAttempts,
+                            DeleteOnError = Settings.Get.Watch.Default.DeleteOnError,
+                            Lifetime = Settings.Get.Watch.Default.TorrentLifetime,
+                            Priority = Settings.Get.Watch.Default.Priority > 0 ? Settings.Get.Watch.Default.Priority : null
+                        };
+
+                        if (fileInfo.Extension == ".torrent")
+                        {
+                            var torrentFileContents = await File.ReadAllBytesAsync(torrentFile, stoppingToken);
+                            await torrentService.UploadFile(torrentFileContents, torrent);
+                        }
+                        else if (fileInfo.Extension == ".magnet")
+                        {
+                            var magnetLink = await File.ReadAllTextAsync(torrentFile, stoppingToken);
+                            await torrentService.UploadMagnet(magnetLink, torrent);
+                        }
+
+                        var processedPath = Path.Combine(processedStorePath, fileInfo.Name);
+                        File.Move(torrentFile, processedPath);
+
+                        _logger.Log(LogLevel.Debug, "Moved {torrentFile} to {processedPath}", torrentFile, processedPath);
                     }
-                    else if (fileInfo.Extension == ".magnet")
+                    catch
                     {
-                        var magnetLink = await File.ReadAllTextAsync(torrentFile, stoppingToken);
-                        await torrentService.UploadMagnet(magnetLink, torrent);
+                        if (!Directory.Exists(errorStorePath))
+                        {
+                            Directory.CreateDirectory(errorStorePath);
+                        }
+
+                        var processedPath = Path.Combine(errorStorePath, fileInfo.Name);
+                        File.Move(torrentFile, processedPath);
                     }
-
-                    var processedPath = Path.Combine(processedStorePath, fileInfo.Name);
-                    File.Move(torrentFile, processedPath);
-
-                    _logger.Log(LogLevel.Debug, "Moved {torrentFile} to {processedPath}", torrentFile, processedPath);
                 }
             }
             catch (Exception ex)
