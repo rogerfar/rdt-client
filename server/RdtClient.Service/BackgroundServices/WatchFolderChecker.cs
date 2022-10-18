@@ -81,6 +81,7 @@ public class WatchFolderChecker : BackgroundService
                     var torrent = new Torrent
                     {
                         Category = Settings.Get.Watch.Default.Category,
+                        HostDownloadAction = Settings.Get.Watch.Default.HostDownloadAction,
                         DownloadAction = Settings.Get.Watch.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
                         FinishedAction = Settings.Get.Watch.Default.FinishedAction,
                         DownloadMinSize = Settings.Get.Watch.Default.MinFileSize,

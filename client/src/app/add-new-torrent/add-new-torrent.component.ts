@@ -17,6 +17,7 @@ export class AddNewTorrentComponent implements OnInit {
   public provider: string;
 
   public category: string;
+  public hostDownloadAction: number = 0;
   public downloadAction: number = 0;
   public finishedAction: number = 0;
   public downloadMinSize: number = 0;
@@ -47,6 +48,8 @@ export class AddNewTorrentComponent implements OnInit {
       this.provider = providerSetting.enumValues[providerSetting.value as number];
 
       this.category = settings.first((m) => m.key === 'Gui:Default:Category')?.value as string;
+      this.hostDownloadAction = this.downloadAction = settings.first((m) => m.key === 'Gui:Default:HostDownloadAction')
+        ?.value as number;
       this.downloadAction =
         settings.first((m) => m.key === 'Gui:Default:OnlyDownloadAvailableFiles')?.value === true ? 1 : 0;
       this.finishedAction = settings.first((m) => m.key === 'Gui:Default:FinishedAction')?.value as number;
@@ -119,6 +122,7 @@ export class AddNewTorrentComponent implements OnInit {
 
     const torrent = new Torrent();
     torrent.category = this.category;
+    torrent.hostDownloadAction = this.hostDownloadAction;
     torrent.downloadAction = this.downloadAction;
     torrent.finishedAction = this.finishedAction;
     torrent.downloadMinSize = this.downloadMinSize;

@@ -501,12 +501,16 @@ public class TorrentRunner
                     {
                         Log($"Creating downloads", torrent);
 
-                        await _torrents.CreateDownloads(torrent.TorrentId);
+                        if (torrent.HostDownloadAction == TorrentHostDownloadAction.DownloadAll)
+                        {
+                            await _torrents.CreateDownloads(torrent.TorrentId);
+                        }
                     }
                 }
 
-                // Check if torrent is complete
-                if (torrent.Downloads.Count > 0)
+                // Check if torrent is complete, or if we don't want to download any files to the host.
+                if ((torrent.Downloads.Count > 0) || 
+                    torrent.RdStatus == TorrentStatus.Finished && torrent.HostDownloadAction == TorrentHostDownloadAction.DownloadNone)
                 {
                     var allComplete = torrent.Downloads.Count(m => m.Completed != null);
 

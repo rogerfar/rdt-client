@@ -5,8 +5,8 @@ This is a web interface to manage your torrents on Real-Debrid or AllDebrid. It 
 - Add new torrents through magnets or files
 - Download all files from Real-Debrid or AllDebrid to your local machine automatically
 - Unpack all files when finished downloading
-- Implements a fake qBittorrent API so you can hook up other applications like Sonarr or Couchpotato.
-- Built with Angular 13 and .NET 6
+- Implements a fake qBittorrent API so you can hook up other applications like Sonarr, Radarr or Couchpotato.
+- Built with Angular 14 and .NET 6
 
 **You will need a Premium service at Real-Debrid or AllDebrid!**
 

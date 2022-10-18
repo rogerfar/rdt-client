@@ -147,12 +147,12 @@ or
 
 public class DbSettingsIntegrations
 {
-    public DbSettingsDefaults Default { get; set; } = new();
+    public DbSettingsDefaultsWithDownload Default { get; set; } = new();
 }
 
 public class DbSettingsGui
 {
-    public DbSettingsDefaultsWithCategory Default { get; set; } = new();
+    public DbSettingsDefaultsWithDownload Default { get; set; } = new();
 }
 
 public class DbSettingsWatch
@@ -166,7 +166,14 @@ public class DbSettingsWatch
     public Int32 Interval { get; set; } = 60;
 
     [DisplayName("Import Defaults")]
-    public DbSettingsDefaultsWithCategory Default { get; set; } = new();
+    public DbSettingsDefaultsWithDownload Default { get; set; } = new();
+}
+
+public class DbSettingsDefaultsWithDownload : DbSettingsDefaultsWithCategory
+{
+    [DisplayName("Post Torrent Download Action")]
+    [Description("When a torrent is finished downloading on the provider, perform this action. Use this setting if you only want to add files to Real-Debrid but not download them to the host.")]
+    public TorrentHostDownloadAction HostDownloadAction { get; set; }
 }
 
 public class DbSettingsDefaultsWithCategory : DbSettingsDefaults
@@ -175,8 +182,8 @@ public class DbSettingsDefaultsWithCategory : DbSettingsDefaults
     [Description("When a torrent is imported assign it this category.")]
     public String? Category { get; set; } = null;
 
-    [DisplayName("Finished Action")]
-    [Description("When a torrent is finished, perform this action.")]
+    [DisplayName("Post Download Action")]
+    [Description("When all files are downloaded from the provider to the host, perform this action.")]
     public TorrentFinishedAction FinishedAction { get; set; } = TorrentFinishedAction.RemoveAllTorrents;
 }
 

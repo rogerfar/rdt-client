@@ -88,6 +88,7 @@ public class TorrentData
             RdId = realDebridId,
             Hash = hash.ToLower(),
             Category = torrent.Category,
+            HostDownloadAction = torrent.HostDownloadAction,
             DownloadAction = torrent.DownloadAction,
             FinishedAction = torrent.FinishedAction,
             DownloadMinSize = torrent.DownloadMinSize,

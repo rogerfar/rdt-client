@@ -147,7 +147,7 @@ public class RealDebridTorrentClient : ITorrentClient
         {
             Filename = m.First().Filename!,
             Filesize = m.First().Filesize
-        } ).ToList();
+        }).ToList();
 
         return torrentClientAvailableFiles;
     }

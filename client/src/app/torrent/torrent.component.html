@@ -52,7 +52,14 @@
         {{ torrent.category || "(no category set)" }}
       </div>
       <div class="field">
-        <label class="label">Download action</label>
+        <label class="label">Post Download Action</label>
+        <ng-container [ngSwitch]="torrent.hostDownloadAction">
+          <ng-container *ngSwitchCase="0">Download all files to host</ng-container>
+          <ng-container *ngSwitchCase="1">Don't download files to host</ng-container>
+        </ng-container>
+      </div>
+      <div class="field">
+        <label class="label">Post Torrent Download Action</label>
         <ng-container [ngSwitch]="torrent.downloadAction">
           <ng-container *ngSwitchCase="0">Download all files above a certain size</ng-container>
           <ng-container *ngSwitchCase="1"
