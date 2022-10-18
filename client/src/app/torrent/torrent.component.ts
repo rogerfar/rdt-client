@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { saveAs } from 'file-saver';
+import { saveAs } from 'file-saver-es';
 import { Torrent } from '../models/torrent.model';
 import { TorrentService } from '../torrent.service';
 
