@@ -35,6 +35,8 @@ export class TorrentComponent implements OnInit {
   public downloadRetryId: string;
 
   public isUpdateSettingsModalActive: boolean;
+
+  public updateSettingsCategory: string;
   public updateSettingsPriority: number;
   public updateSettingsDownloadRetryAttempts: number;
   public updateSettingsTorrentRetryAttempts: number;
@@ -174,6 +176,7 @@ export class TorrentComponent implements OnInit {
   }
 
   public showUpdateSettingsModal(): void {
+    this.updateSettingsCategory = this.torrent.category;
     this.updateSettingsPriority = this.torrent.priority;
     this.updateSettingsDownloadRetryAttempts = this.torrent.downloadRetryAttempts;
     this.updateSettingsTorrentRetryAttempts = this.torrent.torrentRetryAttempts;
@@ -190,6 +193,7 @@ export class TorrentComponent implements OnInit {
   public updateSettingsOk(): void {
     this.updating = true;
 
+    this.torrent.category = this.updateSettingsCategory;
     this.torrent.priority = this.updateSettingsPriority;
     this.torrent.downloadRetryAttempts = this.updateSettingsDownloadRetryAttempts;
     this.torrent.torrentRetryAttempts = this.updateSettingsTorrentRetryAttempts;
