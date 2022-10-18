@@ -10,7 +10,7 @@
           <input
             type="checkbox"
             (click)="toggleSelectAll($event)"
-            [checked]="selectedTorrents.length === torrents.length"
+            [checked]="selectedTorrents.length > 0 && selectedTorrents.length === torrents.length"
           />
         </th>
         <th>Name</th>
