@@ -528,6 +528,11 @@ public class TorrentRunner
                                 await _torrents.Delete(torrent.TorrentId, false, true, false);
 
                                 break;
+                            case TorrentFinishedAction.RemoveClient:
+                                Log($"Removing torrents from client, no files", torrent);
+                                await _torrents.Delete(torrent.TorrentId, true, false, false);
+
+                                break;
                             case TorrentFinishedAction.None:
                                 Log($"Not removing torrents or files", torrent);
 
