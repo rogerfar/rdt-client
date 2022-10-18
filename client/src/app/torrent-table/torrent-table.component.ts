@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Torrent } from '../models/torrent.model';
 import { TorrentService } from '../torrent.service';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
 
 @Component({
   selector: 'app-torrent-table',
@@ -21,8 +21,7 @@ export class TorrentTableComponent implements OnInit {
   public deleteRdTorrent: boolean;
   public deleteLocalFiles: boolean;
 
-  constructor(private router: Router, private torrentService: TorrentService) {
-  }
+  constructor(private router: Router, private torrentService: TorrentService) {}
 
   ngOnInit(): void {
     this.torrentService.getList().subscribe(
@@ -50,9 +49,9 @@ export class TorrentTableComponent implements OnInit {
   public toggleSelectAll(event: any) {
     this.selectedTorrents = [];
 
-    if(event.target.checked){
+    if (event.target.checked) {
       this.torrents.map((torrent) => {
-        this.selectedTorrents.push(torrent.torrentId)
+        this.selectedTorrents.push(torrent.torrentId);
       });
     }
   }
@@ -62,8 +61,7 @@ export class TorrentTableComponent implements OnInit {
 
     if (index > -1) {
       this.selectedTorrents.splice(index, 1);
-    }
-    else {
+    } else {
       this.selectedTorrents.push(torrentId);
     }
   }
@@ -84,12 +82,10 @@ export class TorrentTableComponent implements OnInit {
   public deleteOk(): void {
     this.deleting = true;
 
-    let calls: any[] = [];
+    let calls: Observable<void>[] = [];
 
-    this.selectedTorrents.forEach((torrentId) =>
-    {
-      calls.push(this.torrentService
-        .delete(torrentId, this.deleteData, this.deleteRdTorrent, this.deleteLocalFiles));
+    this.selectedTorrents.forEach((torrentId) => {
+      calls.push(this.torrentService.delete(torrentId, this.deleteData, this.deleteRdTorrent, this.deleteLocalFiles));
     });
 
     forkJoin(calls).subscribe({
@@ -99,10 +95,10 @@ export class TorrentTableComponent implements OnInit {
 
         this.selectedTorrents = [];
       },
-      error: err => {
-        this.deleteError = err.error
+      error: (err) => {
+        this.deleteError = err.error;
         this.deleting = false;
-      }
-    })
+      },
+    });
   }
 }

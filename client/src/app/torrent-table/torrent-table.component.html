@@ -6,7 +6,13 @@
   <table class="table is-fullwidth is-hoverable">
     <thead>
       <tr>
-        <th><input type="checkbox" (click)="toggleSelectAll($event)" [checked]="selectedTorrents.length == torrents.length"></th>
+        <th>
+          <input
+            type="checkbox"
+            (click)="toggleSelectAll($event)"
+            [checked]="selectedTorrents.length === torrents.length"
+          />
+        </th>
         <th>Name</th>
         <th>Category</th>
         <th>Priority</th>
@@ -19,7 +25,11 @@
     <tbody>
       <tr *ngFor="let torrent of torrents; trackBy: trackByMethod">
         <td>
-          <input type="checkbox" (click)="toggleSelect(torrent.torrentId)" [checked]="selectedTorrents.contains(torrent.torrentId)">
+          <input
+            type="checkbox"
+            (click)="toggleSelect(torrent.torrentId)"
+            [checked]="selectedTorrents.contains(torrent.torrentId)"
+          />
         </td>
         <td (click)="openTorrent(torrent.torrentId)">
           {{ torrent.rdName }}
@@ -46,7 +56,14 @@
     </tbody>
   </table>
 
-  <button class="button is-danger" (click)="showDeleteModal()" [disabled]="selectedTorrents.length == 0" *ngIf="torrents.length > 0">Delete Selected</button>
+  <button
+    class="button is-danger"
+    (click)="showDeleteModal()"
+    [disabled]="selectedTorrents.length === 0"
+    *ngIf="torrents.length > 0"
+  >
+    Delete Selected
+  </button>
 </div>
 
 <div class="modal" [class.is-active]="isDeleteModalActive">

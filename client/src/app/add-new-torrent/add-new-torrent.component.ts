@@ -39,7 +39,9 @@ export class AddNewTorrentComponent implements OnInit {
     private router: Router,
     private torrentService: TorrentService,
     private settingsService: SettingsService
-  ) {
+  ) {}
+
+  ngOnInit(): void {
     this.settingsService.get().subscribe((settings) => {
       const providerSetting = settings.first((m) => m.key === 'Provider:Provider');
       this.provider = providerSetting.enumValues[providerSetting.value as number];
@@ -57,8 +59,6 @@ export class AddNewTorrentComponent implements OnInit {
       this.priority = settings.first((m) => m.key === 'Gui:Default:Priority')?.value as number;
     });
   }
-
-  ngOnInit(): void {}
 
   public pickFile(evt: Event): void {
     const files = (evt.target as HTMLInputElement).files;

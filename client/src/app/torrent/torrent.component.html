@@ -12,12 +12,12 @@
   </ul>
 </div>
 
-<div *ngIf="torrent == null">
+<div *ngIf="torrent === null || torrent === undefined">
   <div class="fa-3x">
     <i class="fas fa-spinner fa-spin"></i>
   </div>
 </div>
-<div *ngIf="torrent != null">
+<div *ngIf="torrent !== null && torrent !== undefined">
   <div fxLayout.lt-lg="column" fxLayout.gt-sm="row" fxLayoutGap="20px" *ngIf="activeTab === 0">
     <div fxFlex>
       <div class="field is-grouped">
@@ -90,15 +90,15 @@
       </div>
       <div class="field">
         <label class="label">Files selected on</label>
-        <ng-container *ngIf="torrent.filesSelected == null">(no files selected yet) </ng-container>
-        <ng-container *ngIf="torrent.filesSelected != null">
+        <ng-container *ngIf="torrent.filesSelected === null">(no files selected yet) </ng-container>
+        <ng-container *ngIf="torrent.filesSelected !== null">
           {{ torrent.filesSelected | date: "fullDate" }} {{ torrent.filesSelected | date: "mediumTime" }}
         </ng-container>
       </div>
       <div class="field">
         <label class="label">Completed on</label>
-        <ng-container *ngIf="torrent.completed == null">(not completed yet) </ng-container>
-        <ng-container *ngIf="torrent.completed != null">
+        <ng-container *ngIf="torrent.completed === null">(not completed yet) </ng-container>
+        <ng-container *ngIf="torrent.completed !== null">
           {{ torrent.completed | date: "fullDate" }} {{ torrent.completed | date: "mediumTime" }}
         </ng-container>
       </div>

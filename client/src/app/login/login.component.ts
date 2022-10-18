@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 
@@ -7,15 +7,13 @@ import { AuthService } from '../auth.service';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent {
   public userName: string;
   public password: string;
   public error: string;
   public loggingIn: boolean;
 
   constructor(private authService: AuthService, private router: Router) {}
-
-  ngOnInit(): void {}
 
   public setUserName(event: Event): void {
     this.userName = (event.target as any).value;

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 
@@ -7,7 +7,7 @@ import { AuthService } from '../auth.service';
   templateUrl: './setup.component.html',
   styleUrls: ['./setup.component.scss'],
 })
-export class SetupComponent implements OnInit {
+export class SetupComponent {
   public userName: string;
   public password: string;
   public provider = 'RealDebrid';
@@ -19,8 +19,6 @@ export class SetupComponent implements OnInit {
   public step: number = 1;
 
   constructor(private authService: AuthService, private router: Router) {}
-
-  ngOnInit(): void {}
 
   public setup(): void {
     this.error = null;

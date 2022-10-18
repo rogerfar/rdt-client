@@ -144,8 +144,8 @@
         <input class="input" type="number" max="100000" min="0" step="1" [(ngModel)]="torrentLifetime" />
       </div>
       <p class="help">
-        The maximum lifetime of a torrent in minutes. When this time has passed, mark the torrent as error. If the torrent
-      is completed and has downloads, the lifetime setting will not apply. 0 to disable.
+        The maximum lifetime of a torrent in minutes. When this time has passed, mark the torrent as error. If the
+        torrent is completed and has downloads, the lifetime setting will not apply. 0 to disable.
       </p>
     </div>
   </div>
@@ -163,7 +163,7 @@
             Select all
           </label>
         </div>
-        <div class="field" *ngIf="downloadAction === 2 && availableFiles != null">
+        <div class="field" *ngIf="downloadAction === 2 && availableFiles !== null">
           <label class="checkbox is-fullwidth-label" *ngFor="let file of availableFiles">
             <input
               type="checkbox"
@@ -173,7 +173,7 @@
             {{ file.filename }} ({{ file.filesize | filesize }})
           </label>
         </div>
-        <div class="field" *ngIf="downloadAction !== 2 && availableFiles != null">
+        <div class="field" *ngIf="downloadAction !== 2 && availableFiles !== null">
           <label class="is-fullwidth-label is-block" *ngFor="let file of availableFiles">
             {{ file.filename }}
             <span *ngIf="file.filesize > 0">({{ file.filesize | filesize }})</span>

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { AuthService } from '../auth.service';
 
 @Component({
@@ -6,7 +6,7 @@ import { AuthService } from '../auth.service';
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
 })
-export class ProfileComponent implements OnInit {
+export class ProfileComponent {
   constructor(private authService: AuthService) {}
 
   public username: string;
@@ -15,10 +15,6 @@ export class ProfileComponent implements OnInit {
   public saving = false;
   public success: boolean;
   public error: string;
-
-  ngOnInit(): void {
-
-  }
 
   public save(): void {
     this.success = false;
