@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.18] - 2022-10-18
+### Added
+- Added the option to bulk delete torrents, thanks kanazaca!
+- Added option to remove the torrent only from the client after downloads are completed.
+- Added option to change the category of an existing torrent.
+- Added option to not download files to the host.
+### Changed
+- If a watched file gives an error when adding, move it to an error folder.
+  
 ## [2.0.17] - 2022-05-24
 ### Changed
 - Fixed issue with some settings not saving.
