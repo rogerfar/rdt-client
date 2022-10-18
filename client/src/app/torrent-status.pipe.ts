@@ -9,7 +9,6 @@ export class TorrentStatusPipe implements PipeTransform {
   constructor(private pipe: FileSizePipe) {}
 
   transform(torrent: Torrent): string {
-
     if (torrent.error) {
       return torrent.error;
     }

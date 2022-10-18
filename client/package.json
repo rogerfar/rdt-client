@@ -7,7 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "update": "ng update --force --allow-dirty @angular/cli @angular/core @angular/cdk @angular/flex-layout",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "prettier": "prettier --write \"./**/*.{ts,html,json}\""
   },
   "private": true,
   "dependencies": {
@@ -46,6 +47,7 @@
     "@typescript-eslint/eslint-plugin": "5.37.0",
     "@typescript-eslint/parser": "5.37.0",
     "eslint": "^8.23.1",
+    "prettier": "^2.7.1",
     "typescript": "~4.8.4"
   }
 }
