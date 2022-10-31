@@ -12,7 +12,7 @@ This is a web interface to manage your torrents on Real-Debrid or AllDebrid. It 
 
 [Click here to sign up at Real-Debrid.](https://real-debrid.com/?id=1348683)
 
-[Click here to sign up AllDebrid.](https://real-debrid.com/?id=1348683)
+[Click here to sign up AllDebrid.](https://alldebrid.com/?uid=2v91l)
 
 <sub>(referal links so I can get a few free premium days)</sub>
 
