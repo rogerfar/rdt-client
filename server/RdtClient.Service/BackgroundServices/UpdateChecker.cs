@@ -70,7 +70,7 @@ public class UpdateChecker : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error occurred in TorrentDownloadManager.Tick");
+                _logger.LogDebug(ex, "Unexpected error occurred while checking for updates. This error is safe to ignore.");
             }
 
             await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
