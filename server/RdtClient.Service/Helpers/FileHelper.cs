@@ -37,4 +37,40 @@ public static class FileHelper
             }
         }
     }
+
+    public static async Task DeleteDirectory(String path)
+    {
+        if (String.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        if (!Directory.Exists(path))
+        {
+            return;
+        }
+
+        var retry = 0;
+
+        while (true)
+        {
+            try
+            {
+                Directory.Delete(path, true);
+
+                break;
+            }
+            catch
+            {
+                if (retry >= 3)
+                {
+                    throw;
+                }
+
+                retry++;
+
+                await Task.Delay(1000 * retry);
+            }
+        }
+    }
 }

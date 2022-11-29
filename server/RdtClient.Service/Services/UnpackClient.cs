@@ -74,50 +74,52 @@ public class UnpackClient
                 return;
             }
 
-            await using (Stream stream = File.OpenRead(filePath))
+            var extractPath = _destinationPath;
+            String? extractPathTemp = null;
+
+            var archiveEntries = await GetArchiveFiles(filePath);
+
+            if (!archiveEntries.Any(m => m.StartsWith(_torrent.RdName + @"\")) && !archiveEntries.Any(m => m.StartsWith(_torrent.RdName + @"/")))
             {
-                using var archive = RarArchive.Open(stream);
-
-                BytesTotal = archive.TotalSize;
-
-                var entries = archive.Entries.Where(entry => !entry.IsDirectory)
-                                     .ToList();
-
-                _rarfileStatus = entries.ToDictionary(entry => entry.Key, _ => 0L);
-                _rarCurrentEntry = null;
-                archive.CompressedBytesRead += ArchiveOnCompressedBytesRead;
-
-                var extractPath = _destinationPath;
-
-                if (!entries.Any(m => m.Key.StartsWith(_torrent.RdName + @"\")) && !entries.Any(m => m.Key.StartsWith(_torrent.RdName + @"/")))
-                {
-                    extractPath = Path.Combine(_destinationPath, _torrent.RdName!);
-                }
-
-                if (entries.Any(m => m.Key.Contains(".r00")))
-                {
-                    extractPath = Path.Combine(extractPath, "Temp");
-                }
-
-                foreach (var entry in entries)
-                {
-                    if (_cancelled)
-                    {
-                        return;
-                    }
-                        
-                    _rarCurrentEntry = entry;
-
-                    entry.WriteToDirectory(extractPath,
-                                           new ExtractionOptions
-                                           {
-                                               ExtractFullPath = true,
-                                               Overwrite = true
-                                           });
-                }
+                extractPath = Path.Combine(_destinationPath, _torrent.RdName!);
             }
 
-            await FileHelper.Delete(filePath);
+            if (archiveEntries.Any(m => m.Contains(".r00")))
+            {
+                extractPathTemp = Path.Combine(extractPath, Guid.NewGuid().ToString());
+                
+                if (!Directory.Exists(extractPathTemp))
+                {
+                    Directory.CreateDirectory(extractPathTemp);
+                }
+            }
+            
+            if (extractPathTemp != null)
+            {
+                Extract(filePath, extractPathTemp);
+
+                await FileHelper.Delete(filePath);
+
+                var rarFiles = Directory.GetFiles(extractPathTemp, "*.r00", SearchOption.TopDirectoryOnly);
+
+                foreach (var rarFile in rarFiles)
+                {
+                    var mainRarFile = Path.ChangeExtension(rarFile, ".rar");
+
+                    if (File.Exists(mainRarFile))
+                    {
+                        Extract(mainRarFile, extractPath);
+                    }
+
+                    await FileHelper.DeleteDirectory(extractPathTemp);
+                }
+            }
+            else
+            {
+                Extract(filePath, extractPath);
+
+                await FileHelper.Delete(filePath);
+            }
         }
         catch (Exception ex)
         {
@@ -126,6 +128,58 @@ public class UnpackClient
         finally
         {
             Finished = true;
+        }
+    }
+
+    private async Task<IList<String>> GetArchiveFiles(String filePath)
+    {
+        await using Stream stream = File.OpenRead(filePath);
+
+        using var archive = RarArchive.Open(stream);
+
+        BytesTotal = archive.TotalSize;
+
+        var entries = archive.Entries
+                             .Where(entry => !entry.IsDirectory)
+                             .Select(m => m.Key)
+                             .ToList();
+
+        return entries;
+    }
+
+    private void Extract(String filePath, String extractPath)
+    {
+        var parts = ArchiveFactory.GetFileParts(filePath);
+
+        using var archive = RarArchive.Open(parts.Select(m => new FileInfo(m)));
+
+        if (archive.IsComplete)
+        {
+            BytesTotal = archive.TotalSize;
+        }
+
+        var entries = archive.Entries.Where(entry => !entry.IsDirectory)
+                             .ToList();
+
+        _rarfileStatus = entries.ToDictionary(entry => entry.Key, _ => 0L);
+        _rarCurrentEntry = null;
+        archive.CompressedBytesRead += ArchiveOnCompressedBytesRead;
+
+        foreach (var entry in entries)
+        {
+            if (_cancelled)
+            {
+                throw new Exception("Task was cancelled");
+            }
+                        
+            _rarCurrentEntry = entry;
+
+            entry.WriteToDirectory(extractPath,
+                                   new ExtractionOptions
+                                   {
+                                       ExtractFullPath = true,
+                                       Overwrite = true
+                                   });
         }
     }
 
