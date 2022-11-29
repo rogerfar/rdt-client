@@ -1,5 +1,4 @@
 ﻿using Aria2NET;
-using RdtClient.Data.Models.Internal;
 using Serilog;
 
 namespace RdtClient.Service.Services.Downloaders;
@@ -19,7 +18,7 @@ public class Aria2cDownloader : IDownloader
 
     private String? _gid;
 
-    public Aria2cDownloader(String? gid, String uri, String filePath, DbSettings settings)
+    public Aria2cDownloader(String? gid, String uri, String filePath)
     {
         _logger = Log.ForContext<Aria2cDownloader>();
         _gid = gid;
@@ -31,7 +30,7 @@ public class Aria2cDownloader : IDownloader
             Timeout = TimeSpan.FromSeconds(10)
         };
 
-        _aria2NetClient = new Aria2NetClient(settings.DownloadClient.Aria2cUrl, settings.DownloadClient.Aria2cSecret, httpClient, 10);
+        _aria2NetClient = new Aria2NetClient(Settings.Get.DownloadClient.Aria2cUrl, Settings.Get.DownloadClient.Aria2cSecret, httpClient, 10);
     }
         
     public async Task<String?> Download()

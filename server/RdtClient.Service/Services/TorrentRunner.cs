@@ -368,7 +368,7 @@ public class TorrentRunner
                     {
                         Log($"Starting download", download, torrent);
 
-                        var remoteId = await downloadClient.Start(Settings.Get);
+                        var remoteId = await downloadClient.Start();
 
                         if (!String.IsNullOrWhiteSpace(remoteId) && download.RemoteId != remoteId)
                         {

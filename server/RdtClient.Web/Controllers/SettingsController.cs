@@ -105,7 +105,7 @@ public class SettingsController : Controller
 
         var downloadClient = new DownloadClient(download, download.Torrent, downloadPath);
 
-        await downloadClient.Start(Settings.Get);
+        await downloadClient.Start();
 
         var httpClient = new HttpClient
         {
@@ -139,8 +139,6 @@ public class SettingsController : Controller
         }
 
         await FileHelper.Delete(testFilePath);
-
-        await Settings.Clean();
 
         return Ok(downloadClient.Speed);
     }

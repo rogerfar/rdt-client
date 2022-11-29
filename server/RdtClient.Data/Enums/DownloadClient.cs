@@ -4,11 +4,8 @@ namespace RdtClient.Data.Enums;
 
 public enum DownloadClient
 {
-    [Description("Simple Downloader")]
-    Simple,
-
-    [Description("Multi-Part Downloader")]
-    MultiPart,
+    [Description("Internal Downloader")]
+    Internal,
 
     [Description("Aria2c")]
     Aria2c

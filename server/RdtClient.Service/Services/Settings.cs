@@ -1,7 +1,6 @@
 ﻿using RdtClient.Data.Data;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Internal;
-using RdtClient.Service.Helpers;
 using Serilog.Core;
 using Serilog.Events;
 
@@ -43,28 +42,6 @@ public class Settings
     public async Task Update(String settingId, Object? value)
     {
         await _settingData.Update(settingId, value);
-    }
-
-    public static async Task Clean()
-    {
-        try
-        {
-            var tempPath = Get.DownloadClient.TempPath;
-
-            if (!String.IsNullOrWhiteSpace(tempPath))
-            {
-                var files = Directory.GetFiles(tempPath, "*.dsc", SearchOption.TopDirectoryOnly);
-
-                foreach (var file in files)
-                {
-                    await FileHelper.Delete(file);
-                }
-            }
-        }
-        catch
-        {
-            // ignored
-        }
     }
 
     public async Task Seed()

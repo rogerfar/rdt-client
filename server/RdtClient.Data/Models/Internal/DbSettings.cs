@@ -73,7 +73,7 @@ public class DbSettingsDownloadClient
     [DisplayName("Download client")]
     [Description(@"Select which download client to use, see the
 <a href=""https://github.com/rogerfar/rdt-client/"" target=""_blank"">README</a> for the various options.")]
-    public DownloadClient Client { get; set; } = DownloadClient.Simple;
+    public DownloadClient Client { get; set; } = DownloadClient.Internal;
 
     [DisplayName("Download path")]
     [Description("Path in the docker container to download files to (i.e. /data/downloads), or a local path when using as a service.")]
@@ -83,9 +83,25 @@ public class DbSettingsDownloadClient
     [Description("Path where files are downloaded to on your host (i.e. D:\\Downloads). This path is used for *arr to find your downloads.")]
     public String MappedPath { get; set; } = @"C:\Downloads";
 
-    [DisplayName("Download speed (in MB/s) (only used for the Simple and Multi Downloader)")]
+    [DisplayName("Download speed (in MB/s) (only used for the Internal Downloader)")]
     [Description("Maximum download speed in Megabytes per second. When set to 0 unlimited speed is used.")]
     public Int32 MaxSpeed { get; set; } = 0;
+
+    [DisplayName("Parallel connections per download (only used for the Internal Downloader)")]
+    [Description("Maximum amount of parallel threads that are used to download a single file to your host. If set to 0 no parallel downloading will be done.")]
+    public Int32 ParallelCount { get; set; } = 0;
+
+    [DisplayName("Parallel chunks per download (only used for the Internal Downloader)")]
+    [Description("Split each parallel download in chunks.")]
+    public Int32 ChunkCount { get; set; } = 1;
+
+    [DisplayName("Connection Timeout (only used for the Internal Downloader)")]
+    [Description("Timeout in milliseconds before the downloader times out.")]
+    public Int32 Timeout { get; set; } = 5000;
+
+    [DisplayName("Proxy Server (only used for the Internal Downloader)")]
+    [Description("Address of a proxy server to download through (only used for the Internal Downloader).")]
+    public String? ProxyServer { get; set; } = null;
 
     [DisplayName("Aria2c URL (only used for the Aria2c Downloader)")]
     [Description(@"This is the URL to your Aria2c instance. It must end in /jsonrpc. A common URL is
@@ -95,18 +111,6 @@ http://127.0.0.1:6800/jsonrpc.")]
     [DisplayName("Aria2c Secret (only used for the Aria2c Downloader)")]
     [Description("The secret of your Aria2c instance. Optional.")]
     public String Aria2cSecret { get; set; } = "mysecret123";
-
-    [DisplayName("Temp Download path (only used for the Multi Downloader)")]
-    [Description("Path in the docker container to temporarily download to (i.e. /data/temp). Make sure the docker container has enough disk space if using a path inside the container.")]
-    public String TempPath { get; set; } = "/data/downloads";
-    
-    [DisplayName("Parallel connections per download (only used for the Multi Downloader)")]
-    [Description("Maximum amount of parallel threads that are used to download a single torrent to your host. If set to 1 no parallel downloading will be done.")]
-    public Int32 ChunkCount { get; set; } = 8;
-
-    [DisplayName("Proxy Server")]
-    [Description("Address of a proxy server to download through (only used for the Multi Downloader).")]
-    public String? ProxyServer { get; set; } = null;
 }
 
 public class DbSettingsProvider

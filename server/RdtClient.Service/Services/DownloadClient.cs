@@ -1,5 +1,4 @@
 ﻿using RdtClient.Data.Models.Data;
-using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Helpers;
 using RdtClient.Service.Services.Downloaders;
 
@@ -31,7 +30,7 @@ public class DownloadClient
         _destinationPath = destinationPath;
     }
 
-    public async Task<String?> Start(DbSettings settings)
+    public async Task<String?> Start()
     {
         BytesDone = 0;
         BytesTotal = 0;
@@ -53,14 +52,13 @@ public class DownloadClient
 
             await FileHelper.Delete(filePath);
 
-            Type = settings.DownloadClient.Client;
+            Type = Settings.Get.DownloadClient.Client;
 
-            Downloader = settings.DownloadClient.Client switch
+            Downloader = Settings.Get.DownloadClient.Client switch
             {
-                Data.Enums.DownloadClient.Simple => new SimpleDownloader(_download.Link, filePath),
-                Data.Enums.DownloadClient.MultiPart => new MultiDownloader(_download.Link, filePath, settings),
-                Data.Enums.DownloadClient.Aria2c => new Aria2cDownloader(_download.RemoteId, _download.Link, filePath, settings),
-                _ => throw new Exception($"Unknown download client {settings.DownloadClient}")
+                Data.Enums.DownloadClient.Internal => new InternalDownloader(_download.Link, filePath),
+                Data.Enums.DownloadClient.Aria2c => new Aria2cDownloader(_download.RemoteId, _download.Link, filePath),
+                _ => throw new Exception($"Unknown download client {Settings.Get.DownloadClient}")
             };
 
             Downloader.DownloadComplete += (_, args) =>

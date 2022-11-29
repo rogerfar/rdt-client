@@ -140,24 +140,16 @@ navigate to http://<ipaddress>:6500, if all is good then we'll create a service
 
 Currently there 2 available download clients:
 
-#### Simple Downloader
+#### Internal Downloader
 
-This is a simple 1 connection only download manager. It uses less resources than the multi-part downloader. It downloads straight to the download path.
-
-It has the following options:
-
-- Maximum parallel downloads: This number indicates how many completed torrents from Real-Debrid can be downloaded at the same time. On low powered systems it is recommended to keep this number low.
-
-#### Multi Part Downloader
-
-This [downloader](https://github.com/bezzad/Downloader) as more options and such uses more resources (memory, CPU) to download files. Recommended more powerful systems.
+This [downloader](https://github.com/bezzad/Downloader) can be used to download files in parallel and with multiple chunks.
 
 It has the following options:
 
-- Temp Download path: Set this path to where the downloader temporarily stores chunks. This path can be an internal path in Docker (i.e. `/data/temp`) but make sure you have enough disk space to complete the whole download. When all chunks are completed the completed file is copied to your download folder.
-- Maximum parallel downloads: This number indicates how many completed torrents from Real-Debrid can be downloaded at the same time.
-- Parallel connections per download: This number indicates how many threads/connections/parts/chunks it will use per download. This can increase speed, recommended is no more than 8.
-- Download speed (in MB/s): This number indicates the speed in MB/s per download. If you set this to 10 and `Maximum parallel downloads` to 2, you can download with a maximum of 20MB/s.
+- Download speed (in MB/s): This number indicates the speed in MB/s per download over all parallel downloads and chunks.
+- Parallel connections per download: This number indicates how many parallel it will use per download. This can increase speed, recommended is no more than 8.
+- Parallel chunks per download: This number indicates in how many chunks each download is split, recommended is no more than 8.
+- Connection Timeout: This number indicates the timeout in milliseconds before a download chunk times out. It will retry each chunk 5 times before completely failing.
 
 #### Aria2c downloader
 
@@ -167,6 +159,8 @@ It has the following options:
 
 - Url: The full URL to your Aria2c service. This must end in /jsonrpc. A standard path is `http://192.168.10.2:6800/jsonrpc`.
 - Secret: Optional secret to connecto to your Aria2c service.
+
+If Aria2c is selected, none of the above options for `Internal Downloader` are used, you have to configure Aria2c manually.
 
 ### Troubleshooting
 
