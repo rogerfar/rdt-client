@@ -9,7 +9,6 @@ using RdtClient.Service.Middleware;
 using RdtClient.Service.Services;
 using Serilog;
 using Serilog.Events;
-using Serilog.Exceptions;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -40,7 +39,6 @@ builder.WebHost.ConfigureKestrel(options =>
 if (appSettings.Logging?.File?.Path != null)
 {
     builder.Host.UseSerilog((_, lc) => lc.Enrich.FromLogContext()
-                                         .Enrich.WithExceptionDetails()
                                          .WriteTo.File(appSettings.Logging.File.Path,
                                                        rollOnFileSizeLimit: true,
                                                        fileSizeLimitBytes: appSettings.Logging.File.FileSizeLimitBytes,
