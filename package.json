@@ -4,7 +4,7 @@
   "description": "This is a web interface to manage your torrents on Real-Debrid.",
   "main": "index.js",
   "dependencies": {
-    "gh-release": "^5.0.2"
+    "gh-release": "^7.0.2"
   },
   "devDependencies": {},
   "repository": {
