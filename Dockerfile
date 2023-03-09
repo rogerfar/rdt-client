@@ -72,8 +72,8 @@ RUN \
     echo "**** Installing dotnet ****" && \
     wget -q https://dot.net/v1/dotnet-install.sh && \
     chmod +x ./dotnet-install.sh && \
-    bash ./dotnet-install.sh -c Current --runtime dotnet --install-dir /usr/share/dotnet && \
-    bash ./dotnet-install.sh -c Current --runtime aspnetcore --install-dir /usr/share/dotnet && \
+    bash ./dotnet-install.sh -c LTS -v latest --runtime dotnet --install-dir /usr/share/dotnet && \
+    bash ./dotnet-install.sh -c LTS -v latest --runtime aspnetcore --install-dir /usr/share/dotnet && \
     echo "**** Cleaning image ****" && \
     apt-get -y -qq -o Dpkg::Use-Pty=0 clean && apt-get -y -qq -o Dpkg::Use-Pty=0 purge && \
     echo "**** Setting permissions ****" && \
