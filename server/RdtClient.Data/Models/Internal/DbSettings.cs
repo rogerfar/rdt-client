@@ -165,6 +165,14 @@ public class DbSettingsWatch
     [Description("Watch this path for .torrent or .magnet files. When a file is found it will be automatically imported.")]
     public String? Path { get; set; } = null;
 
+    [DisplayName("Error Path")]
+    [Description("When an error occurs the torrent file is moved to this directory. When unset it will be moved to /error in the watchpath.")]
+    public String? ErrorPath { get; set; } = null;
+
+    [DisplayName("Processed Path")]
+    [Description("When a torrent file is added succesfully it will be moved to this directory. When unset it will be moved to /processed in the watchpath.")]
+    public String? ProcessedPath { get; set; } = null;
+
     [DisplayName("Check  Interval")]
     [Description("Time in seconds to check the folder for new files.")]
     public Int32 Interval { get; set; } = 60;

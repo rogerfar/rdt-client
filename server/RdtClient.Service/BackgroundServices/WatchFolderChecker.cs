@@ -47,9 +47,14 @@ public class WatchFolderChecker : BackgroundService
                 var processedStorePath = Path.Combine(Settings.Get.Watch.Path, "processed");
                 var errorStorePath = Path.Combine(Settings.Get.Watch.Path, "error");
 
-                if (!Directory.Exists(processedStorePath))
+                if (!String.IsNullOrWhiteSpace(Settings.Get.Watch.ProcessedPath))
                 {
-                    Directory.CreateDirectory(processedStorePath);
+                    processedStorePath = Settings.Get.Watch.ProcessedPath;
+                }
+
+                if (!String.IsNullOrWhiteSpace(Settings.Get.Watch.ErrorPath))
+                {
+                    errorStorePath = Settings.Get.Watch.ErrorPath;
                 }
 
                 var nextCheck = _prevCheck.AddSeconds(Settings.Get.Watch.Interval);
@@ -109,6 +114,12 @@ public class WatchFolderChecker : BackgroundService
                         }
 
                         var processedPath = Path.Combine(processedStorePath, fileInfo.Name);
+
+                        if (!Directory.Exists(processedStorePath))
+                        {
+                            Directory.CreateDirectory(processedStorePath);
+                        }
+
                         File.Move(torrentFile, processedPath);
 
                         _logger.Log(LogLevel.Debug, "Moved {torrentFile} to {processedPath}", torrentFile, processedPath);
