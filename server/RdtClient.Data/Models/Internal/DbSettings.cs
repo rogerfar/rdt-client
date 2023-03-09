@@ -66,6 +66,10 @@ Supports the following parameters:
 %Z: Torrent size (bytes)
 %I: Info hash")]
     public String? RunOnTorrentCompleteArguments { get; set; } = null;
+
+    [DisplayName("Authentication Type")]
+    [Description("How to authenticate with the client. WARNING: when set to None anyone with access to the URL can use the client without any credentials.")]
+    public AuthenticationType AuthenticationType { get; set; } = AuthenticationType.UserNamePassword;
 }
 
 public class DbSettingsDownloadClient

@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.DependencyInjection;
 using RdtClient.Service.BackgroundServices;
+using RdtClient.Service.Middleware;
 using RdtClient.Service.Services;
 using RdtClient.Service.Services.TorrentClients;
 
@@ -18,6 +20,8 @@ public static class DiConfig
         services.AddScoped<Settings>();
         services.AddScoped<Torrents>();
         services.AddScoped<TorrentRunner>();
+
+        services.AddSingleton<IAuthorizationHandler, AuthSettingHandler>();
             
         services.AddHostedService<ProviderUpdater>();
         services.AddHostedService<Startup>();

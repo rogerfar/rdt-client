@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RdtClient.Data.Enums;
 using RdtClient.Service.Services;
 
 namespace RdtClient.Web.Controllers;
@@ -21,6 +22,11 @@ public class AuthController : Controller
     [HttpGet]
     public async Task<ActionResult> IsLoggedIn()
     {
+        if (Settings.Get.General.AuthenticationType == AuthenticationType.None)
+        {
+            return Ok();
+        }
+
         if (User.Identity?.IsAuthenticated == false)
         {
             var user = await _authentication.GetUser();

@@ -7,7 +7,7 @@ using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Web.Controllers;
 
-[Authorize]
+[Authorize(Policy = "AuthSetting")]
 [Route("Api/Torrents")]
 public class TorrentsController : Controller
 {

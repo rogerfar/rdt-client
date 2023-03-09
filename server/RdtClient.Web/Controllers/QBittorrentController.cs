@@ -49,7 +49,7 @@ public class QBittorrentController : Controller
         return await AuthLogin(request);
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("auth/logout")]
     [HttpGet]
     [HttpPost]
@@ -92,7 +92,7 @@ public class QBittorrentController : Controller
         return Ok(result);
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("app/shutdown")]
     [HttpGet]
     [HttpPost]
@@ -111,7 +111,7 @@ public class QBittorrentController : Controller
         return Ok(result);
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("app/setPreferences")]
     [HttpGet]
     [HttpPost]
@@ -120,7 +120,7 @@ public class QBittorrentController : Controller
         return Ok();
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("app/defaultSavePath")]
     [HttpGet]
     [HttpPost]
@@ -130,7 +130,7 @@ public class QBittorrentController : Controller
         return Ok(result);
     }
         
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/info")]
     [HttpGet]
     [HttpPost]
@@ -146,7 +146,7 @@ public class QBittorrentController : Controller
         return Ok(results);
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/info")]
     [HttpPost]
     public async Task<ActionResult<IList<TorrentInfo>>> TorrentsFilesPost([FromForm] QBTorrentsInfoRequest request)
@@ -154,7 +154,7 @@ public class QBittorrentController : Controller
         return await TorrentsInfo(request);
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/files")]
     [HttpGet]
     public async Task<ActionResult<IList<TorrentFileItem>>> TorrentsFiles([FromQuery] QBTorrentsHashRequest request)
@@ -174,7 +174,7 @@ public class QBittorrentController : Controller
         return Ok(result);
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/files")]
     [HttpPost]
     public async Task<ActionResult<IList<TorrentFileItem>>> TorrentsFilesPost([FromForm] QBTorrentsHashRequest request)
@@ -182,7 +182,7 @@ public class QBittorrentController : Controller
         return await TorrentsFiles(request);
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/properties")]
     [HttpGet]
     public async Task<ActionResult<IList<TorrentInfo>>> TorrentsProperties([FromQuery] QBTorrentsHashRequest request)
@@ -202,7 +202,7 @@ public class QBittorrentController : Controller
         return Ok(result);
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/properties")]
     [HttpPost]
     public async Task<ActionResult<IList<TorrentInfo>>> TorrentsPropertiesPost([FromForm] QBTorrentsHashRequest request)
@@ -210,7 +210,7 @@ public class QBittorrentController : Controller
         return await TorrentsProperties(request);
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/pause")]
     [HttpGet]
     public async Task<ActionResult> TorrentsPause([FromQuery] QBTorrentsHashesRequest request)
@@ -230,7 +230,7 @@ public class QBittorrentController : Controller
         return Ok();
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/topPrio")]
     [HttpPost]
     public async Task<ActionResult> TorrentsPausePost([FromForm] QBTorrentsHashesRequest request)
@@ -238,7 +238,7 @@ public class QBittorrentController : Controller
         return await TorrentsPause(request);
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/resume")]
     [HttpGet]
     public async Task<ActionResult> TorrentsResume([FromQuery] QBTorrentsHashesRequest request)
@@ -258,7 +258,7 @@ public class QBittorrentController : Controller
         return Ok();
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/topPrio")]
     [HttpPost]
     public async Task<ActionResult> TorrentsResumePost([FromForm] QBTorrentsHashesRequest request)
@@ -266,7 +266,7 @@ public class QBittorrentController : Controller
         return await TorrentsResume(request);
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/setShareLimits")]
     [HttpGet]
     [HttpPost]
@@ -275,7 +275,7 @@ public class QBittorrentController : Controller
         return Ok();
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/delete")]
     [HttpGet]
     public async Task<ActionResult> TorrentsDelete([FromQuery] QBTorrentsDeleteRequest request)
@@ -295,7 +295,7 @@ public class QBittorrentController : Controller
         return Ok();
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/delete")]
     [HttpPost]
     public async Task<ActionResult> TorrentsDeletePost([FromForm] QBTorrentsDeleteRequest request)
@@ -303,7 +303,7 @@ public class QBittorrentController : Controller
         return await TorrentsDelete(request);
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/add")]
     [HttpGet]
     public async Task<ActionResult> TorrentsAdd([FromQuery] QBTorrentsAddRequest request)
@@ -336,7 +336,7 @@ public class QBittorrentController : Controller
         return Ok();
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/add")]
     [HttpPost]
     public async Task<ActionResult> TorrentsAddPost([FromForm] QBTorrentsAddRequest request)
@@ -362,7 +362,7 @@ public class QBittorrentController : Controller
         return Ok();
     }
         
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/setCategory")]
     [HttpGet]
     public async Task<ActionResult> TorrentsSetCategory([FromQuery] QBTorrentsSetCategoryRequest request)
@@ -382,7 +382,7 @@ public class QBittorrentController : Controller
         return Ok();
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/setCategory")]
     [HttpPost]
     public async Task<ActionResult> TorrentsSetCategoryPost([FromForm] QBTorrentsSetCategoryRequest request)
@@ -390,7 +390,7 @@ public class QBittorrentController : Controller
         return await TorrentsSetCategory(request);
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/categories")]
     [HttpGet]
     [HttpPost]
@@ -401,7 +401,7 @@ public class QBittorrentController : Controller
         return Ok(categories);
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/createCategory")]
     [HttpGet]
     [HttpPost]
@@ -417,7 +417,7 @@ public class QBittorrentController : Controller
         return Ok();
     }
         
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/removeCategories")]
     [HttpGet]
     [HttpPost]
@@ -438,7 +438,7 @@ public class QBittorrentController : Controller
         return Ok();
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/setForcestart")]
     [HttpGet]
     [HttpPost]
@@ -447,7 +447,7 @@ public class QBittorrentController : Controller
         return Ok();
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/topPrio")]
     [HttpGet]
     public async Task<ActionResult> TorrentsTopPrio([FromQuery] QBTorrentsHashesRequest request)
@@ -467,7 +467,7 @@ public class QBittorrentController : Controller
         return Ok();
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("torrents/topPrio")]
     [HttpPost]
     public async Task<ActionResult> TorrentsTopPrioPost([FromForm] QBTorrentsHashesRequest request)
@@ -475,7 +475,7 @@ public class QBittorrentController : Controller
         return await TorrentsTopPrio(request);
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("sync/maindata")]
     [HttpGet]
     public async Task<ActionResult> SyncMainData()
@@ -485,7 +485,7 @@ public class QBittorrentController : Controller
         return Ok(result);
     }
 
-    [Authorize]
+    [Authorize(Policy = "AuthSetting")]
     [Route("sync/maindata")]
     [HttpPost]
     public async Task<ActionResult> SyncMainDataPost()

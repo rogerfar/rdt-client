@@ -11,7 +11,7 @@ using RdtClient.Service.Services.Downloaders;
 
 namespace RdtClient.Web.Controllers;
 
-[Authorize]
+[Authorize(Policy = "AuthSetting")]
 [Route("Api/Settings")]
 public class SettingsController : Controller
 {

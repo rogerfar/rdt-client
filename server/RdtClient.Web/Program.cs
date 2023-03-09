@@ -68,7 +68,15 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
            options.SlidingExpiration = true;
        });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization( options => 
+{ 
+    options.AddPolicy("AuthSetting",
+                      policyCorrectUser =>
+                      {
+                          policyCorrectUser.Requirements.Add(new AuthSettingRequirement());
+                      }); 
+});
+
 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
        {
