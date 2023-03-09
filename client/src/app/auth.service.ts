@@ -8,8 +8,8 @@ import { Observable } from 'rxjs/internal/Observable';
 export class AuthService {
   constructor(private http: HttpClient) {}
 
-  public isLoggedIn(): Observable<void> {
-    return this.http.get<void>(`/Api/Authentication/IsLoggedIn`);
+  public isLoggedIn(): Observable<boolean> {
+    return this.http.get<boolean>(`/Api/Authentication/IsLoggedIn`);
   }
 
   public create(userName: string, password: string): Observable<void> {
