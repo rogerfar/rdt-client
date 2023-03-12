@@ -52,6 +52,10 @@
                 >Use this link to sign up to AllDebrid.</a
               >
               <br />
+			  <a href="https://www.premiumize.me/" target="_blank" rel="noopener"
+                >Use this link to sign up to Premiumize.</a
+              >
+              <br />
               <small>(Referal links)</small>
             </div>
             <div class="field">
@@ -60,6 +64,7 @@
                 <select [(ngModel)]="provider">
                   <option [value]="0">Real-Debrid</option>
                   <option [value]="1">AllDebrid</option>
+				  <option [value]="2">Premiumize</option>
                 </select>
               </div>
             </div>
@@ -78,6 +83,12 @@
                 You can find your API key here:
                 <a href="https://alldebrid.com/apikeys/" target="_blank" rel="noopener"
                   >https://alldebrid.com/apikeys/</a
+                >.
+              </p>
+			  <p class="help" *ngIf="provider === 'Premiumize'">
+                You can find your API key here:
+                <a href="https://www.premiumize.me/account" target="_blank" rel="noopener"
+                  >https://www.premiumize.me/account</a
                 >.
               </p>
             </div>

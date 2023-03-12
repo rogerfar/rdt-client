@@ -14,6 +14,7 @@ public static class DiConfig
         services.AddScoped<AllDebridTorrentClient>();
         services.AddScoped<Authentication>();
         services.AddScoped<Downloads>();
+        services.AddScoped<PremiumizeTorrentClient>();
         services.AddScoped<QBittorrent>();
         services.AddScoped<RemoteService>();
         services.AddScoped<RealDebridTorrentClient>();

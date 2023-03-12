@@ -1,18 +1,20 @@
 # Real-Debrid Torrent Client
 
-This is a web interface to manage your torrents on Real-Debrid or AllDebrid. It supports the following features:
+This is a web interface to manage your torrents on Real-Debrid, AllDebrid or Premiumize. It supports the following features:
 
 - Add new torrents through magnets or files
-- Download all files from Real-Debrid or AllDebrid to your local machine automatically
+- Download all files from Real-Debrid, AllDebrid or Premiumize to your local machine automatically
 - Unpack all files when finished downloading
 - Implements a fake qBittorrent API so you can hook up other applications like Sonarr, Radarr or Couchpotato.
-- Built with Angular 14 and .NET 6
+- Built with Angular 15 and .NET 6
 
-**You will need a Premium service at Real-Debrid or AllDebrid!**
+**You will need a Premium service at Real-Debrid, AllDebrid or Premiumize!**
 
-[Click here to sign up at Real-Debrid.](https://real-debrid.com/?id=1348683)
+[Click here to sign up for Real-Debrid.](https://real-debrid.com/?id=1348683)
 
-[Click here to sign up AllDebrid.](https://alldebrid.com/?uid=2v91l)
+[Click here to sign up for AllDebrid.](https://alldebrid.com/?uid=2v91l)
+
+[Click here to sign up for Premiumize.](https://www.premiumize.me/)
 
 <sub>(referal links so I can get a few free premium days)</sub>
 

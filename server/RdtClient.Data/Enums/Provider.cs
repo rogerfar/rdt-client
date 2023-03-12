@@ -8,5 +8,8 @@ public enum Provider
     RealDebrid,
 
     [Description("AllDebrid")]
-    AllDebrid
+    AllDebrid,
+
+    [Description("Premiumize")]
+    Premiumize
 }

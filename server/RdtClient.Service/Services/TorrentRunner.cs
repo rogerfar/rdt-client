@@ -413,7 +413,7 @@ public class TorrentRunner
 
                     var extension = Path.GetExtension(fileName);
 
-                    if (extension != ".rar")
+                    if (extension != ".rar" && extension != ".zip")
                     {
                         Log($"No need to unpack, setting it as unpacked", download, torrent);
 

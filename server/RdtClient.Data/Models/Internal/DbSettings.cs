@@ -123,6 +123,7 @@ public class DbSettingsProvider
     [Description(@"The following 2 providers are supported:
 <a href=""https://real-debrid.com/?id=1348683"" target=""_blank"" rel=""noopener"">https://real-debrid.com</a>
 <a href=""https://alldebrid.com/?uid=2v91l&lang=en"" target=""_blank"" rel=""noopener"">https://alldebrid.com</a>
+<a href=""https://www.premiumize.me/"" target=""_blank"" rel=""noopener"">https://www.premiumize.me/</a>
 At this point only 1 provider can be used at the time.")]
     public Provider Provider { get; set; } = Provider.RealDebrid;
 
@@ -130,15 +131,17 @@ At this point only 1 provider can be used at the time.")]
     [Description(@"You can find your API key here:
 <a href=""https://real-debrid.com/apitoken"" target=""_blank"" rel=""noopener"">https://real-debrid.com/apitoken</a>
 or
-<a href=""https://alldebrid.com/apikeys/"" target=""_blank"" rel=""noopener"">https://alldebrid.com/apikeys/</a>.")]
+<a href=""""https://alldebrid.com/apikeys/"""" target=""""_blank"""" rel=""""noopener"""">https://alldebrid.com/apikeys/</a>
+or
+<a href=""https://www.premiumize.me/account/"" target=""_blank"" rel=""noopener"">https://www.premiumize.me/account/</a>")]
     public String ApiKey { get; set; } = "";
 
     [DisplayName("Automatically import and process torrents added to provider")]
-    [Description("When selected, import downloads that are not added through RealDebridClient but have been directly added to Real-Debrid or AllDebrid.")]
+    [Description("When selected, import downloads that are not added through RealDebridClient but have been directly added to Real-Debrid, AllDebrid or Premiumize.")]
     public Boolean AutoImport { get; set; } = false;
 
     [DisplayName("Automatically delete downloads removed from provider")]
-    [Description("When selected, cancel and delete downloads that have been removed from Real-Debrid or AllDebrid.")]
+    [Description("When selected, cancel and delete downloads that have been removed from Real-Debrid, AllDebrid or Premiumize.")]
     public Boolean AutoDelete { get; set; } = false;
 
     [DisplayName("Connection Timeout")]

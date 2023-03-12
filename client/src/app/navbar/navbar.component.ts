@@ -28,6 +28,9 @@ export class NavbarComponent implements OnInit {
         case 'AllDebrid':
           this.providerLink = 'https://alldebrid.com/?uid=2v91l&lang=en';
           break;
+        case 'Premiumize':
+          this.providerLink = 'https://www.premiumize.me/';
+          break;
       }
     });
   }

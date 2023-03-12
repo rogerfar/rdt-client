@@ -32,6 +32,7 @@ public class Torrents
                     TorrentData torrentData, 
                     Downloads downloads,
                     AllDebridTorrentClient allDebridTorrentClient,
+                    PremiumizeTorrentClient premiumizeTorrentClient,
                     RealDebridTorrentClient realDebridTorrentClient)
     {
         _logger = logger;
@@ -40,6 +41,7 @@ public class Torrents
             
         _torrentClient = Settings.Get.Provider.Provider switch
         {
+            Provider.Premiumize => premiumizeTorrentClient,
             Provider.RealDebrid => realDebridTorrentClient,
             Provider.AllDebrid => allDebridTorrentClient,
             _ => throw new Exception("Invalid Provider")

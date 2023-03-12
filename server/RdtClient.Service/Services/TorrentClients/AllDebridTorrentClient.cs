@@ -1,8 +1,6 @@
 ﻿using AllDebridNET;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using RDNET;
-using RDNET.Exceptions;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
@@ -36,19 +34,19 @@ public class AllDebridTorrentClient : ITorrentClient
             var httpClient = _httpClientFactory.CreateClient();
             httpClient.Timeout = TimeSpan.FromSeconds(10);
 
-            var allDebridNetClient = new AllDebridNETClient("RealDebridClient", apiKey);
+            var allDebridNetClient = new AllDebridNETClient("RealDebridClient", apiKey, httpClient);
 
             return allDebridNetClient;
         }
         catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
         {
-            _logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
+            _logger.LogError(ex, $"The connection to AllDebrid has timed out: {ex.Message}");
 
             throw;
         }
         catch (TaskCanceledException ex)
         {
-            _logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
+            _logger.LogError(ex, $"The connection to AllDebrid has timed out: {ex.Message}");
 
             throw; 
         }
@@ -152,7 +150,7 @@ public class AllDebridTorrentClient : ITorrentClient
         {
             return new List<TorrentClientAvailableFile>
             {
-                new TorrentClientAvailableFile
+                new()
                 {
                     Filename = "All files",
                     Filesize = 0
@@ -166,18 +164,6 @@ public class AllDebridTorrentClient : ITorrentClient
     public Task SelectFiles(Torrent torrent)
     {
         return Task.CompletedTask;
-    }
-
-    public async Task<TorrentClientTorrent> GetInfo(String torrentId)
-    {
-        var result = await GetClient().Magnet.StatusAsync(torrentId);
-
-        if (result == null)
-        {
-            throw new Exception($"Unable to find magnet with ID {torrentId}");
-        }
-
-        return Map(result);
     }
 
     public async Task Delete(String torrentId)
@@ -260,17 +246,6 @@ public class AllDebridTorrentClient : ITorrentClient
                 throw;
             }
         }
-        catch (RealDebridException ex)
-        {
-            if (ex.ErrorCode == 7)
-            {
-                torrent.RdStatusRaw = "deleted";
-            }
-            else
-            {
-                throw;
-            }
-        }
 
         return torrent;
     }
@@ -324,6 +299,18 @@ public class AllDebridTorrentClient : ITorrentClient
         Log("", torrent);
 
         return links.Select(m => m.LinkUrl.ToString()).ToList();
+    }
+
+    private async Task<TorrentClientTorrent> GetInfo(String torrentId)
+    {
+        var result = await GetClient().Magnet.StatusAsync(torrentId);
+
+        if (result == null)
+        {
+            throw new Exception($"Unable to find magnet with ID {torrentId}");
+        }
+
+        return Map(result);
     }
 
     private static IEnumerable<String> GetFiles(IList<File> files, String parent)

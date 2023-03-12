@@ -2,6 +2,7 @@
 using RdtClient.Service.Helpers;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
+using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 
 namespace RdtClient.Service.Services;
@@ -21,7 +22,7 @@ public class UnpackClient
 
     private Boolean _cancelled;
         
-    private RarArchiveEntry? _rarCurrentEntry;
+    private IArchiveEntry? _rarCurrentEntry;
     private Dictionary<String, Int64>? _rarfileStatus;
 
     public UnpackClient(Download download, String destinationPath)
@@ -135,7 +136,17 @@ public class UnpackClient
     {
         await using Stream stream = File.OpenRead(filePath);
 
-        using var archive = RarArchive.Open(stream);
+        var extension = Path.GetExtension(filePath);
+
+        IArchive archive;
+        if (extension == ".zip")
+        {
+            archive = ZipArchive.Open(stream);
+        }
+        else
+        {
+            archive = RarArchive.Open(stream);
+        }
 
         BytesTotal = archive.TotalSize;
 
@@ -144,6 +155,8 @@ public class UnpackClient
                              .Select(m => m.Key)
                              .ToList();
 
+        archive.Dispose();
+
         return entries;
     }
 
@@ -151,8 +164,20 @@ public class UnpackClient
     {
         var parts = ArchiveFactory.GetFileParts(filePath);
 
-        using var archive = RarArchive.Open(parts.Select(m => new FileInfo(m)));
+        var fi = parts.Select(m => new FileInfo(m));
 
+        var extension = Path.GetExtension(filePath);
+
+        IArchive archive;
+        if (extension == ".zip")
+        {
+            archive = ZipArchive.Open(fi);
+        }
+        else
+        {
+            archive = RarArchive.Open(fi);
+        }
+        
         if (archive.IsComplete)
         {
             BytesTotal = archive.TotalSize;
@@ -181,6 +206,8 @@ public class UnpackClient
                                        Overwrite = true
                                    });
         }
+
+        archive.Dispose();
     }
 
     private void ArchiveOnCompressedBytesRead(Object? sender, CompressedBytesReadEventArgs e)

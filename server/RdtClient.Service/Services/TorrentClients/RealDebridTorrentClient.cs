@@ -214,13 +214,6 @@ public class RealDebridTorrentClient : ITorrentClient
         await GetClient().Torrents.SelectFilesAsync(torrent.RdId!, fileIds.ToArray());
     }
 
-    public async Task<TorrentClientTorrent> GetInfo(String torrentId)
-    {
-        var result = await GetClient().Torrents.GetInfoAsync(torrentId);
-
-        return Map(result);
-    }
-
     public async Task Delete(String torrentId)
     {
         await GetClient().Torrents.DeleteAsync(torrentId);
@@ -361,7 +354,7 @@ public class RealDebridTorrentClient : ITorrentClient
             
         return null;
     }
-        
+
     private DateTimeOffset? ChangeTimeZone(DateTimeOffset? dateTimeOffset)
     {
         if (_offset == null)
@@ -370,6 +363,13 @@ public class RealDebridTorrentClient : ITorrentClient
         }
 
         return dateTimeOffset?.Subtract(_offset.Value).ToOffset(_offset.Value);
+    }
+
+    private async Task<TorrentClientTorrent> GetInfo(String torrentId)
+    {
+        var result = await GetClient().Torrents.GetInfoAsync(torrentId);
+
+        return Map(result);
     }
 
     private void Log(String message, Data.Models.Data.Torrent? torrent = null)
