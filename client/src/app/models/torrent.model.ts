@@ -4,9 +4,27 @@ export class Torrent {
   public torrentId: string;
   public hash: string;
   public category: string;
+  public hostDownloadAction: number;
+  public downloadAction: number;
+  public finishedAction: number;
+  public downloadMinSize: number;
+  public downloadManualFiles: string;
+
   public added: Date;
+  public filesSelected: Date;
   public completed: Date;
-  public autoDelete: boolean;
+
+  public fileOrMagnet: string;
+  public isFile: boolean;
+
+  public retryCount: number;
+  public downloadRetryAttempts: number;
+  public torrentRetryAttempts: number;
+  public deleteOnError: number;
+  public lifetime: number;
+
+  public priority: number;
+  public error: string;
 
   public rdId: string;
   public rdName: string;
@@ -35,11 +53,17 @@ export class TorrentFile {
   public download: Download;
 }
 
+export class TorrentFileAvailability {
+  public filename: string;
+  public filesize: number;
+}
+
 export enum RealDebridStatus {
   Processing = 0,
   WaitingForFileSelection = 1,
   Downloading = 2,
   Finished = 3,
+  Uploading = 4,
 
   Error = 99,
 }

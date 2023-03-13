@@ -1,16 +1,25 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using RdtClient.Data.Data;
+using RdtClient.Data.Models.Internal;
 
-namespace RdtClient.Data
+namespace RdtClient.Data;
+
+public static class DiConfig
 {
-    public static class DiConfig
+    public static void Config(IServiceCollection services, AppSettings appSettings)
     {
-        public static void Config(IServiceCollection services)
+        if (String.IsNullOrWhiteSpace(appSettings.Database?.Path))
         {
-            services.AddScoped<IDownloadData, DownloadData>();
-            services.AddScoped<ISettingData, SettingData>();
-            services.AddScoped<ITorrentData, TorrentData>();
-            services.AddScoped<IUserData, UserData>();
+            throw new Exception("Invalid database path found in appSettings");
         }
+
+        var connectionString = $"Data Source={appSettings.Database.Path}";
+        services.AddDbContext<DataContext>(options => options.UseSqlite(connectionString));
+
+        services.AddScoped<DownloadData>();
+        services.AddScoped<SettingData>();
+        services.AddScoped<TorrentData>();
+        services.AddScoped<UserData>();
     }
 }

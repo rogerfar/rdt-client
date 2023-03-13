@@ -1,55 +1,76 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using RdtClient.Data.Data;
 
-namespace RdtClient.Service.Services
+namespace RdtClient.Service.Services;
+
+public class Authentication 
 {
-    public interface IAuthentication
+    private readonly SignInManager<IdentityUser> _signInManager;
+    private readonly UserManager<IdentityUser> _userManager;
+    private readonly UserData _userData;
+
+    public Authentication(SignInManager<IdentityUser> signInManager, UserManager<IdentityUser> userManager, UserData userData)
     {
-        Task<IdentityResult> Register(String userName, String password);
-        Task<SignInResult> Login(String userName, String password);
-        Task<IdentityUser> GetUser();
-        Task Logout();
+        _signInManager = signInManager;
+        _userManager = userManager;
+        _userData = userData;
     }
 
-    public class Authentication : IAuthentication
+    public async Task<IdentityResult> Register(String userName, String password)
     {
-        private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly IUserData _userData;
+        var user = new IdentityUser(userName);
 
-        public Authentication(SignInManager<IdentityUser> signInManager, UserManager<IdentityUser> userManager, IUserData userData)
+        var result = await _userManager.CreateAsync(user, password);
+
+        return result;
+    }
+
+    public async Task<SignInResult> Login(String userName, String password)
+    {
+        if (String.IsNullOrWhiteSpace(userName) || String.IsNullOrWhiteSpace(password))
         {
-            _signInManager = signInManager;
-            _userManager = userManager;
-            _userData = userData;
+            return SignInResult.Failed;
         }
 
-        public async Task<IdentityResult> Register(String userName, String password)
-        {
-            var user = new IdentityUser(userName);
+        var result = await _signInManager.PasswordSignInAsync(userName, password, true, false);
 
-            var result = await _userManager.CreateAsync(user, password);
+        return result;
+    }
+
+    public async Task<IdentityUser?> GetUser()
+    {
+        return await _userData.GetUser();
+    }
+
+    public async Task Logout()
+    {
+        await _signInManager.SignOutAsync();
+    }
+
+    public async Task<IdentityResult> Update(String newUserName, String newPassword)
+    {
+        var user = await GetUser();
+
+        if (user == null)
+        {
+            throw new Exception("No logged in user found");
+        }
+
+        if (!String.IsNullOrWhiteSpace(newUserName))
+        {
+            user.UserName = newUserName;
+        }
+
+        await _userManager.UpdateAsync(user);
+
+        if (!String.IsNullOrWhiteSpace(newPassword))
+        {
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
 
             return result;
         }
 
-        public async Task<SignInResult> Login(String userName, String password)
-        {
-            var result = await _signInManager.PasswordSignInAsync(userName, password, true, false);
-
-            return result;
-        }
-
-        public async Task<IdentityUser> GetUser()
-        {
-            return await _userData.GetUser();
-        }
-
-        public async Task Logout()
-        {
-            await _signInManager.SignOutAsync();
-        }
+        return IdentityResult.Success;
     }
 }

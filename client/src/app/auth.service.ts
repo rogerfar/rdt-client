@@ -8,14 +8,21 @@ import { Observable } from 'rxjs/internal/Observable';
 export class AuthService {
   constructor(private http: HttpClient) {}
 
-  public isLoggedIn(): Observable<void> {
-    return this.http.get<void>(`/Api/Authentication/IsLoggedIn`);
+  public isLoggedIn(): Observable<boolean> {
+    return this.http.get<boolean>(`/Api/Authentication/IsLoggedIn`);
   }
 
   public create(userName: string, password: string): Observable<void> {
     return this.http.post<void>(`/Api/Authentication/Create`, {
       userName,
       password,
+    });
+  }
+
+  public setupProvider(provider: string, token: string): Observable<void> {
+    return this.http.post<void>(`/Api/Authentication/SetupProvider`, {
+      provider,
+      token,
     });
   }
 
@@ -28,5 +35,12 @@ export class AuthService {
 
   public logout() {
     return this.http.post<void>(`/Api/Authentication/Logout`, {});
+  }
+
+  public update(userName: string, password: string): Observable<void> {
+    return this.http.post<void>(`/Api/Authentication/Update`, {
+      userName,
+      password,
+    });
   }
 }

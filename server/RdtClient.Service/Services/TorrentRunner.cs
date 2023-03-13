@@ -1,141 +1,179 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Text.Json;
 using System.Web;
+using Aria2NET;
+using Microsoft.Extensions.Logging;
 using RdtClient.Data.Enums;
+using RdtClient.Data.Models.Data;
+using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Helpers;
-using Serilog;
+using RdtClient.Service.Services.Downloaders;
 
-namespace RdtClient.Service.Services
+namespace RdtClient.Service.Services;
+
+public class TorrentRunner
 {
-    public interface ITorrentRunner
+    public static readonly ConcurrentDictionary<Guid, DownloadClient> ActiveDownloadClients = new();
+    public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new();
+
+    private readonly ILogger<TorrentRunner> _logger;
+    private readonly Torrents _torrents;
+    private readonly Downloads _downloads;
+    private readonly RemoteService _remoteService;
+    private readonly HttpClient _httpClient;
+
+    public TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Downloads downloads, RemoteService remoteService)
     {
-        Task Initialize();
-        Task Tick();
+        _logger = logger;
+        _torrents = torrents;
+        _downloads = downloads;
+        _remoteService = remoteService;
+
+        _httpClient = new HttpClient
+        {
+            Timeout = TimeSpan.FromSeconds(10)
+        };
     }
 
-    public class TorrentRunner : ITorrentRunner
+    public async Task Initialize()
     {
-        private const Int32 RetryCount = 3;
+        Log("Initializing TorrentRunner");
 
-        private static DateTime _nextUpdate = DateTime.UtcNow;
+        var settingsCopy = JsonSerializer.Deserialize<DbSettings>(JsonSerializer.Serialize(Settings.Get));
 
-        public static readonly ConcurrentDictionary<Guid, DownloadClient> ActiveDownloadClients = new ConcurrentDictionary<Guid, DownloadClient>();
-        public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new ConcurrentDictionary<Guid, UnpackClient>();
-        private readonly IDownloads _downloads;
-        private readonly IRemoteService _remoteService;
-
-        private readonly ISettings _settings;
-        private readonly ITorrents _torrents;
-
-        public TorrentRunner(ISettings settings, ITorrents torrents, IDownloads downloads, IRemoteService remoteService)
+        if (settingsCopy != null)
         {
-            _settings = settings;
-            _torrents = torrents;
-            _downloads = downloads;
-            _remoteService = remoteService;
+            settingsCopy.Provider.ApiKey = "*****";
+            settingsCopy.DownloadClient.Aria2cSecret = "*****";
+
+            Log(JsonSerializer.Serialize(settingsCopy));
         }
 
-        public async Task Initialize()
+        // When starting up reset any pending downloads or unpackings so that they are restarted.
+        var torrents = await _torrents.Get();
+            
+        torrents = torrents.Where(m => m.Completed == null).ToList();
+
+        Log($"Found {torrents.Count} not completed torrents");
+
+        foreach (var torrent in torrents)
         {
-            // When starting up reset any pending downloads or unpackings so that they are restarted.
-            var torrents = await _torrents.Get();
-            
-            torrents = torrents.Where(m => m.Completed == null).ToList();
-            
-            var downloads = torrents.SelectMany(m => m.Downloads)
-                                    .Where(m => m.DownloadQueued != null && m.DownloadStarted != null && m.DownloadFinished == null)
-                                    .OrderBy(m => m.DownloadQueued);
-
-            foreach (var download in downloads)
+            foreach (var download in torrent.Downloads)
             {
-                await _downloads.UpdateDownloadStarted(download.DownloadId, null);
-            }
+                if (download.DownloadQueued != null && download.DownloadStarted != null && download.DownloadFinished == null && download.Error == null)
+                {
+                    Log("Resetting download status", download, torrent);
 
-            var unpacks = torrents.SelectMany(m => m.Downloads)
-                                  .Where(m => m.UnpackingQueued != null && m.UnpackingStarted != null && m.UnpackingFinished == null)
-                                  .OrderBy(m => m.DownloadQueued);
+                    await _downloads.UpdateDownloadStarted(download.DownloadId, null);
+                }
 
-            foreach (var download in unpacks)
-            {
-                await _downloads.UpdateUnpackingStarted(download.DownloadId, null);
+                if (download.UnpackingQueued != null && download.UnpackingStarted != null && download.UnpackingFinished == null && download.Error == null)
+                {
+                    Log("Resetting unpack status", download, torrent);
+
+                    await _downloads.UpdateUnpackingStarted(download.DownloadId, null);
+                }
             }
         }
 
-        public async Task Tick()
+        Log("TorrentRunner Initialized");
+    }
+
+    public async Task Tick()
+    {
+        if (String.IsNullOrWhiteSpace(Settings.Get.Provider.ApiKey))
         {
-            var sw = new Stopwatch();
-            sw.Start();
-
-            Log.Debug("TorrentRunner Tick Start");
-
-            var settings = await _settings.GetAll();
+            Log($"No RealDebridApiKey set in settings");
+            return;
+        }
             
-            var settingApiKey = settings.GetString("RealDebridApiKey");
-            if (String.IsNullOrWhiteSpace(settingApiKey))
+        var settingDownloadLimit = Settings.Get.General.DownloadLimit;
+        if (settingDownloadLimit < 1)
+        {
+            settingDownloadLimit = 1;
+        }
+
+        var settingUnpackLimit = Settings.Get.General.UnpackLimit;
+        if (settingUnpackLimit < 1)
+        {
+            settingUnpackLimit = 1;
+        }
+
+        var settingDownloadPath = Settings.Get.DownloadClient.DownloadPath;
+        if (String.IsNullOrWhiteSpace(settingDownloadPath))
+        {
+            _logger.LogError("No DownloadPath set in settings");
+            return;
+        }
+
+        var sw = new Stopwatch();
+        sw.Start();
+
+        if (!ActiveDownloadClients.IsEmpty || !ActiveUnpackClients.IsEmpty)
+        {
+            Log($"TorrentRunner Tick Start, {ActiveDownloadClients.Count} active downloads, {ActiveUnpackClients.Count} active unpacks");
+        }
+
+        if (ActiveDownloadClients.Any(m => m.Value.Type == Data.Enums.DownloadClient.Aria2c))
+        {
+            Log("Updating Aria2 status");
+
+            var aria2NetClient = new Aria2NetClient(Settings.Get.DownloadClient.Aria2cUrl, Settings.Get.DownloadClient.Aria2cSecret, _httpClient, 1);
+
+            var allDownloads = await aria2NetClient.TellAllAsync();
+
+            Log($"Found {allDownloads.Count} Aria2 downloads");
+
+            foreach (var activeDownload in ActiveDownloadClients)
             {
-                Log.Debug($"No RealDebridApiKey set!");
-                return;
+                if (activeDownload.Value.Downloader is Aria2cDownloader aria2Downloader)
+                {
+                    await aria2Downloader.Update(allDownloads);
+                }
             }
 
-            var settingMinFileSize = settings.GetNumber("MinFileSize");
-            if (settingMinFileSize <= 0)
-            {
-                settingMinFileSize = 0;
-            }
+            Log("Finished updating Aria2 status");
+        }
 
-            settingMinFileSize = settingMinFileSize * 1024 * 1024;
+        // Check if any torrents are finished downloading to the host, remove them from the active download list.
+        var completedActiveDownloads = ActiveDownloadClients.Where(m => m.Value.Finished).ToList();
 
-            var settingOnlyDownloadAvailableFilesRaw = settings.GetNumber("OnlyDownloadAvailableFiles");
-            var settingOnlyDownloadAvailableFiles = settingOnlyDownloadAvailableFilesRaw == 1;
-
-            var settingDownloadLimit = settings.GetNumber("DownloadLimit");
-            if (settingDownloadLimit < 1)
-            {
-                settingDownloadLimit = 1;
-            }
-
-            var settingUnpackLimit = settings.GetNumber("UnpackLimit");
-            if (settingUnpackLimit < 1)
-            {
-                settingUnpackLimit = 1;
-            }
-
-            var settingDownloadPath = settings.GetString("DownloadPath");
-            if (String.IsNullOrWhiteSpace(settingDownloadPath))
-            {
-                return;
-            }
-
-            Log.Debug($"Currently {ActiveDownloadClients.Count} active downloads");
-            Log.Debug($"Currently {ActiveUnpackClients.Count} active unpacks");
-
-            // Check if any torrents are finished downloading to the host, remove them from the active download list.
-            var completedActiveDownloads = ActiveDownloadClients.Where(m => m.Value.Finished).ToList();
-
-            Log.Debug($"Processing {completedActiveDownloads.Count} completed downloads");
+        if (completedActiveDownloads.Count > 0)
+        {
+            Log($"Processing {completedActiveDownloads.Count} completed downloads");
 
             foreach (var (downloadId, downloadClient) in completedActiveDownloads)
             {
-                if (downloadClient.Error != null)
+                var download = await _downloads.GetById(downloadId);
+
+                if (download == null)
                 {
-                    // Retry the download
-                    Log.Debug($"Processing active download {downloadId}: error {downloadClient.Error}");
-                    var download = await _downloads.GetById(downloadId);
+                    ActiveDownloadClients.TryRemove(downloadId, out _);
 
-                    if (download.RetryCount < RetryCount)
+                    Log($"Download with ID {downloadId} not found! Removed from download queue");
+
+                    continue;
+                }
+
+                Log("Processing download", download, download.Torrent);
+
+                if (!String.IsNullOrWhiteSpace(downloadClient.Error))
+                {
+                    // Retry the download if an error is encountered.
+                    Log($"Download reported an error: {downloadClient.Error}", download, download.Torrent);
+                    Log($"Download retry count {download.RetryCount}/{download.Torrent!.DownloadRetryAttempts}, torrent retry count {download.Torrent.RetryCount}/{download.Torrent.TorrentRetryAttempts}", download, download.Torrent);
+                        
+                    if (download.RetryCount < download.Torrent.DownloadRetryAttempts)
                     {
-                        Log.Debug($"Processing active download {downloadId}: error {downloadClient.Error}, retry count {download.RetryCount}/{RetryCount}");
+                        Log($"Retrying download", download, download.Torrent);
 
+                        await _downloads.Reset(downloadId);
                         await _downloads.UpdateRetryCount(downloadId, download.RetryCount + 1);
-                        await _torrents.Download(downloadId);
                     }
                     else
                     {
-                        Log.Debug($"Processing active download {downloadId}: error {downloadClient.Error}, not retrying");
+                        Log($"Not retrying download", download, download.Torrent);
 
                         await _downloads.UpdateError(downloadId, downloadClient.Error);
                         await _downloads.UpdateCompleted(downloadId, DateTimeOffset.UtcNow);
@@ -143,7 +181,7 @@ namespace RdtClient.Service.Services
                 }
                 else
                 {
-                    Log.Debug($"Processing active download {downloadId}: finished succesfully");
+                    Log($"Download finished successfully", download, download.Torrent);
 
                     await _downloads.UpdateDownloadFinished(downloadId, DateTimeOffset.UtcNow);
                     await _downloads.UpdateUnpackingQueued(downloadId, DateTimeOffset.UtcNow);
@@ -151,26 +189,40 @@ namespace RdtClient.Service.Services
 
                 ActiveDownloadClients.TryRemove(downloadId, out _);
 
-                Log.Debug($"Removed active download {downloadId} from queue");
+                Log($"Removed from ActiveDownloadClients", download, download.Torrent);
             }
-            
-            // Check if any torrents are finished unpacking, remove them from the active unpack list.
-            var completedUnpacks = ActiveUnpackClients.Where(m => m.Value.Finished).ToList();
-            
-            Log.Debug($"Processing {completedUnpacks.Count} completed extractions");
+        }
+
+        // Check if any torrents are finished unpacking, remove them from the active unpack list.
+        var completedUnpacks = ActiveUnpackClients.Where(m => m.Value.Finished).ToList();
+
+        if (completedUnpacks.Count > 0)
+        {
+            Log($"Processing {completedUnpacks.Count} completed unpacks");
 
             foreach (var (downloadId, unpackClient) in completedUnpacks)
             {
+                var download = await _downloads.GetById(downloadId);
+
+                if (download == null)
+                {
+                    ActiveUnpackClients.TryRemove(downloadId, out _);
+
+                    Log($"Download with ID {downloadId} not found! Removed from unpack queue");
+
+                    continue;
+                }
+
                 if (unpackClient.Error != null)
                 {
-                    Log.Debug($"Processing active unpack {downloadId}: error {unpackClient.Error}");
-
+                    Log($"Unpack reported an error: {unpackClient.Error}", download, download.Torrent);
+                        
                     await _downloads.UpdateError(downloadId, unpackClient.Error);
                     await _downloads.UpdateCompleted(downloadId, DateTimeOffset.UtcNow);
                 }
                 else
                 {
-                    Log.Debug($"Processing active unpack {downloadId}: finished succesfully");
+                    Log($"Unpack finished successfully", download, download.Torrent);
 
                     await _downloads.UpdateUnpackingFinished(downloadId, DateTimeOffset.UtcNow);
                     await _downloads.UpdateCompleted(downloadId, DateTimeOffset.UtcNow);
@@ -178,307 +230,377 @@ namespace RdtClient.Service.Services
 
                 ActiveUnpackClients.TryRemove(downloadId, out _);
 
-                Log.Debug($"Removed active unpack {downloadId} from queue");
+                Log($"Removed from ActiveUnpackClients", download, download.Torrent);
             }
+        }
+
+        var torrents = await _torrents.Get();
+
+        // Process torrent retries
+        foreach (var torrent in torrents.Where(m => m.Retry != null))
+        {
+            try
+            {
+                Log($"Retrying torrent {torrent.RetryCount}/{torrent.TorrentRetryAttempts}", torrent);
+
+                if (torrent.RetryCount > torrent.TorrentRetryAttempts)
+                {
+                    await _torrents.UpdateRetry(torrent.TorrentId, null, torrent.RetryCount);
+                    Log($"Torrent reach max retry count");
+                    continue;
+                }
+
+                await _torrents.RetryTorrent(torrent.TorrentId, torrent.RetryCount);
+            }
+            catch (Exception ex)
+            {
+                await _torrents.UpdateRetry(torrent.TorrentId, null, torrent.RetryCount);
+                await _torrents.UpdateError(torrent.TorrentId, ex.Message);
+            }
+        }
+
+        // Process torrent errors
+        foreach (var torrent in torrents.Where(m => m.Error != null && m.DeleteOnError > 0))
+        {
+            if (torrent.Completed == null)
+            {
+                continue;
+            }
+
+            if (torrent.Completed.Value.AddMinutes(torrent.DeleteOnError) > DateTime.UtcNow)
+            {
+                continue;
+            }
+
+            Log($"Removing torrent because it has been {torrent.DeleteOnError} minutes in the error state", torrent);
+
+            await _torrents.Delete(torrent.TorrentId, true, true, true);
+        }
             
-            var torrents = await _torrents.Get();
-
-            Log.Debug($"Found {torrents.Count} torrents");
-
-            // Only poll RealDebrid every second when a hub is connected, otherwise every 30 seconds
-            if (_nextUpdate < DateTime.UtcNow && torrents.Count > 0)
+        // Process torrent lifetime
+        foreach (var torrent in torrents.Where(m => m.Downloads.Count == 0 && m.Completed == null && m.Lifetime > 0))
+        {
+            if (torrent.Added.AddMinutes(torrent.Lifetime) > DateTime.UtcNow)
             {
-                Log.Debug($"Updating torrent info from RealDebrid");
-
-                var updateTime = 30;
-
-                if (RdtHub.HasConnections)
-                {
-                    updateTime = 1;
-                }
-
-                _nextUpdate = DateTime.UtcNow.AddSeconds(updateTime);
-
-                await _torrents.Update();
-                
-                // Re-get torrents to account for updated info
-                torrents = await _torrents.Get();
-
-                Log.Debug($"Finished updating torrent info from RealDebrid, next update in {updateTime} seconds");
+                continue;
             }
 
-            torrents = torrents.Where(m => m.Completed == null).ToList();
+            Log($"Torrent has reached its {torrent.Lifetime} minutes lifetime, marking as error", torrent);
 
-            // Check if there are any downloads that are queued and can be started.
-            var queuedDownloads = torrents.SelectMany(m => m.Downloads)
-                                          .Where(m => m.Completed == null && m.DownloadQueued != null && m.DownloadStarted == null)
-                                          .OrderBy(m => m.DownloadQueued)
-                                          .ToList();
+            await _torrents.UpdateRetry(torrent.TorrentId, null, torrent.TorrentRetryAttempts);
+            await _torrents.UpdateComplete(torrent.TorrentId, $"Torrent lifetime of {torrent.Lifetime} minutes reached", DateTimeOffset.UtcNow, false);
+        }
 
-            Log.Debug($"Found {queuedDownloads.Count} torrents queued for download");
+        torrents = await _torrents.Get();
 
-            foreach (var download in queuedDownloads)
+        torrents = torrents.Where(m => m.Completed == null).ToList();
+
+        if (torrents.Count > 0)
+        {
+            Log($"Processing {torrents.Count} torrents");
+        }
+
+        foreach (var torrent in torrents)
+        {
+            try
             {
-                Log.Debug($"Starting download {download.DownloadId}");
+                // Check if there are any downloads that are queued and can be started.
+                var queuedDownloads = torrent.Downloads
+                                             .Where(m => m.Completed == null && m.DownloadQueued != null && m.DownloadStarted == null && m.Error == null)
+                                             .OrderBy(m => m.DownloadQueued)
+                                             .ToList();
 
-                if (TorrentRunner.ActiveDownloadClients.Count >= settingDownloadLimit)
+                foreach (var download in queuedDownloads)
                 {
-                    Log.Debug($"Not starting download {download.DownloadId} because there are already the max number of downloads active");
+                    Log($"Processing to download", download, torrent);
 
-                    continue;
+                    if (ActiveDownloadClients.Count >= settingDownloadLimit)
+                    {
+                        Log($"Not starting download because there are already the max number of downloads active", download, torrent);
+
+                        continue;
+                    }
+
+                    if (ActiveDownloadClients.ContainsKey(download.DownloadId))
+                    {
+                        Log($"Not starting download because this download is already active", download, torrent);
+
+                        continue;
+                    }
+
+                    try
+                    {
+                        Log($"Unrestricting links", download, torrent);
+
+                        var downloadLink = await _torrents.UnrestrictLink(download.DownloadId);
+                        download.Link = downloadLink;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Cannot unrestrict link: {ex.Message}", ex.Message);
+
+                        await _downloads.UpdateError(download.DownloadId, ex.Message);
+                        await _downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
+                        download.Error = ex.Message;
+                        download.Completed = DateTimeOffset.UtcNow;
+
+                        continue;
+                    }
+
+                    Log($"Marking download as started", download, torrent);
+
+                    download.DownloadStarted = DateTime.UtcNow;
+                    await _downloads.UpdateDownloadStarted(download.DownloadId, download.DownloadStarted);
+
+                    var downloadPath = settingDownloadPath;
+
+                    if (!String.IsNullOrWhiteSpace(torrent.Category))
+                    {
+                        downloadPath = Path.Combine(downloadPath, torrent.Category);
+                    }
+
+                    Log($"Setting download path to {downloadPath}", download, torrent);
+
+                    // Start the download process
+                    var downloadClient = new DownloadClient(download, torrent, downloadPath);
+
+                    if (ActiveDownloadClients.TryAdd(download.DownloadId, downloadClient))
+                    {
+                        Log($"Starting download", download, torrent);
+
+                        var remoteId = await downloadClient.Start();
+
+                        if (!String.IsNullOrWhiteSpace(remoteId) && download.RemoteId != remoteId)
+                        {
+                            Log($"Received ID {remoteId}", download, torrent);
+
+                            await _downloads.UpdateRemoteId(download.DownloadId, remoteId);
+                        }
+                        else
+                        {
+                            Log($"No ID received", download, torrent);
+                        }
+                    }
                 }
 
-                if (TorrentRunner.ActiveDownloadClients.ContainsKey(download.DownloadId))
+                // Check if there are any unpacks that are queued and can be started.
+                var queuedUnpacks = torrent.Downloads
+                                           .Where(m => m.Completed == null && m.UnpackingQueued != null && m.UnpackingStarted == null && m.Error == null)
+                                           .OrderBy(m => m.DownloadQueued)
+                                           .ToList();
+
+                foreach (var download in queuedUnpacks)
                 {
-                    Log.Debug($"Not starting download {download.DownloadId} because this download is already active");
+                    Log($"Starting unpack", download, torrent);
 
-                    continue;
-                }
+                    if (download.Link == null)
+                    {
+                        Log($"No download link found", download, torrent);
 
-                var downloadLink = await _torrents.UnrestrictLink(download.DownloadId);
-                download.Link = downloadLink;
+                        await _downloads.UpdateError(download.DownloadId, "Download Link cannot be null");
+                        await _downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
 
-                download.DownloadStarted = DateTime.UtcNow;
-                await _downloads.UpdateDownloadStarted(download.DownloadId, download.DownloadStarted);
+                        continue;
+                    }
 
-                var downloadPath = settingDownloadPath;
-                
-                if (!String.IsNullOrWhiteSpace(download.Torrent.Category))
-                {
-                    downloadPath = Path.Combine(downloadPath, download.Torrent.Category);
-                }
+                    // Check if the unpacking process is even needed
+                    var uri = new Uri(download.Link);
+                    var fileName = uri.Segments.Last();
 
-                Log.Debug($"Setting download path for {download.DownloadId} to {downloadPath}");
+                    fileName = HttpUtility.UrlDecode(fileName);
 
-                // Start the download process
-                var downloadClient = new DownloadClient(download, downloadPath);
-                
-                if (TorrentRunner.ActiveDownloadClients.TryAdd(download.DownloadId, downloadClient))
-                {
-                    Log.Debug($"Added download {download.DownloadId} to active downloads");
+                    Log($"Found file name {fileName}", download, torrent);
 
-                    await downloadClient.Start(settings);
+                    var extension = Path.GetExtension(fileName);
 
-                    Log.Debug($"Download {download.DownloadId} started");
-                }
-            }
+                    if (extension != ".rar" && extension != ".zip")
+                    {
+                        Log($"No need to unpack, setting it as unpacked", download, torrent);
 
-            // Check if there are any unpacks that are queued and can be started.
-            var queuedUnpacks = torrents.SelectMany(m => m.Downloads)
-                                        .Where(m => m.Completed == null && m.UnpackingQueued != null && m.UnpackingStarted == null)
-                                        .OrderBy(m => m.DownloadQueued)
-                                        .ToList();
+                        download.UnpackingStarted = DateTimeOffset.UtcNow;
+                        download.UnpackingFinished = DateTimeOffset.UtcNow;
+                        download.Completed = DateTimeOffset.UtcNow;
 
-            Log.Debug($"Found {queuedUnpacks.Count} torrents queued for unpacking");
+                        await _downloads.UpdateUnpackingStarted(download.DownloadId, download.UnpackingStarted);
+                        await _downloads.UpdateUnpackingFinished(download.DownloadId, download.UnpackingFinished);
+                        await _downloads.UpdateCompleted(download.DownloadId, download.Completed);
 
-            foreach (var download in queuedUnpacks)
-            {
-                Log.Debug($"Starting unpack {download.DownloadId}");
+                        continue;
+                    }
 
-                // Check if the unpacking process is even needed
-                var uri = new Uri(download.Link);
-                var fileName = uri.Segments.Last();
+                    // Check if we have reached the download limit, if so queue the download, but don't start it.
+                    if (TorrentRunner.ActiveUnpackClients.Count >= settingUnpackLimit)
+                    {
+                        Log($"Not starting unpack because there are already the max number of unpacks active", download, torrent);
 
-                fileName = HttpUtility.UrlDecode(fileName);
+                        continue;
+                    }
 
-                Log.Debug($"Found file name {fileName} for {download.DownloadId}");
+                    if (TorrentRunner.ActiveUnpackClients.ContainsKey(download.DownloadId))
+                    {
+                        Log($"Not starting unpack because this download is already active", download, torrent);
 
-                var extension = Path.GetExtension(fileName);
-                        
-                if (extension != ".rar")
-                {
-                    Log.Debug($"No need to unpack {download.DownloadId}, setting it as unpacked");
+                        continue;
+                    }
 
                     download.UnpackingStarted = DateTimeOffset.UtcNow;
-                    download.UnpackingFinished = DateTimeOffset.UtcNow;
-                    download.Completed = DateTimeOffset.UtcNow;
-
                     await _downloads.UpdateUnpackingStarted(download.DownloadId, download.UnpackingStarted);
-                    await _downloads.UpdateUnpackingFinished(download.DownloadId, download.UnpackingFinished);
-                    await _downloads.UpdateCompleted(download.DownloadId, download.Completed);
-                    
-                    continue;
-                }
-                
-                // Check if we have reached the download limit, if so queue the download, but don't start it.
-                if (TorrentRunner.ActiveUnpackClients.Count >= settingUnpackLimit)
-                {
-                    Log.Debug($"Not starting unpack {download.DownloadId} because there are already the max number of unpacks active");
 
-                    continue;
-                }
-            
-                if (TorrentRunner.ActiveUnpackClients.ContainsKey(download.DownloadId))
-                {
-                    Log.Debug($"Not starting unpack {download.DownloadId} because this download is already active");
+                    var downloadPath = settingDownloadPath;
 
-                    continue;
-                }
+                    if (!String.IsNullOrWhiteSpace(torrent.Category))
+                    {
+                        downloadPath = Path.Combine(downloadPath, torrent.Category);
+                    }
 
-                download.UnpackingStarted = DateTimeOffset.UtcNow;
-                await _downloads.UpdateUnpackingStarted(download.DownloadId, download.UnpackingStarted);
-                
-                var downloadPath = settingDownloadPath;
-                
-                if (!String.IsNullOrWhiteSpace(download.Torrent.Category))
-                {
-                    downloadPath = Path.Combine(downloadPath, download.Torrent.Category);
+                    Log($"Setting unpack path to {downloadPath}", download, torrent);
+
+                    // Start the unpacking process
+                    var unpackClient = new UnpackClient(download, downloadPath);
+
+                    if (TorrentRunner.ActiveUnpackClients.TryAdd(download.DownloadId, unpackClient))
+                    {
+                        Log($"Starting unpack", download, torrent);
+
+                        unpackClient.Start();
+                    }
                 }
 
-                Log.Debug($"Setting unpack path for {download.DownloadId} to {downloadPath}");
+                Log("Processing", torrent);
 
-                // Start the unpacking process
-                var unpackClient = new UnpackClient(download, downloadPath);
-
-                if (TorrentRunner.ActiveUnpackClients.TryAdd(download.DownloadId, unpackClient))
+                // If torrent is erroring out on the Real-Debrid side.
+                if (torrent.RdStatus == TorrentStatus.Error)
                 {
-                    Log.Debug($"Added unpack {download.DownloadId} to active unpacks");
+                    Log($"Torrent reported an error: {torrent.RdStatusRaw}", torrent);
+                    Log($"Torrent retry count {torrent.RetryCount}/{torrent.TorrentRetryAttempts}", torrent);
 
-                    await unpackClient.Start();
+                    Log($"Received RealDebrid error: {torrent.RdStatusRaw}, not processing further", torrent);
 
-                    Log.Debug($"Unpack {download.DownloadId} started");
-                }
-            }
-
-            foreach (var torrent in torrents)
-            {
-                // If torrent is erroring out on the RealDebrid side, skip processing this torrent.
-                if (torrent.RdStatus == RealDebridStatus.Error)
-                {
-                    Log.Debug($"Torrent {torrent.RdId} has an error: {torrent.RdStatusRaw}, not processing further");
+                    await _torrents.UpdateComplete(torrent.TorrentId, $"Received RealDebrid error: {torrent.RdStatusRaw}.", DateTimeOffset.UtcNow, true);
 
                     continue;
                 }
 
-                // RealDebrid is waiting for file selection, select which files to download.
-                if ((torrent.RdStatus == RealDebridStatus.WaitingForFileSelection || torrent.RdStatus == RealDebridStatus.Finished) &&
+                // Real-Debrid is waiting for file selection, select which files to download.
+                if ((torrent.RdStatus == TorrentStatus.WaitingForFileSelection || torrent.RdStatus == TorrentStatus.Finished) &&
+                    torrent.FilesSelected == null &&
                     torrent.Downloads.Count == 0)
                 {
-                    Log.Debug($"Torrent {torrent.RdId} selecting files");
+                    Log($"Selecting files", torrent);
 
-                    var files = torrent.Files;
+                    await _torrents.SelectFiles(torrent.TorrentId);
 
-                    if (settingOnlyDownloadAvailableFiles)
-                    {
-                        Log.Debug($"Torrent {torrent.RdId} determining which files are already available");
-
-                        var availableFiles = await _torrents.GetAvailableFiles(torrent.Hash);
-
-                        Log.Debug($"Found {availableFiles.Count} available files for torrent {torrent.RdId}");
-
-                        if (availableFiles.Count > 0)
-                        {
-                            files = torrent.Files.Where(m => availableFiles.Any(f => m.Path.EndsWith(f))).ToList();
-
-                            Log.Debug($"Selecting {files.Count} available files for torrent {torrent.RdId}");
-                        }
-                    }
-
-                    if (settingMinFileSize > 0)
-                    {
-                        Log.Debug($"Torrent {torrent.RdId} determining which files are over {settingMinFileSize} bytes");
-
-                        files = files.Where(m => m.Bytes > settingMinFileSize).ToList();
-
-                        Log.Debug($"Found {files.Count} files that match the minimum file size criterea for torrent {torrent.RdId}");
-                    }
-
-                    if (files.Count == 0)
-                    {
-                        Log.Debug($"Filtered all files out for {torrent.RdId}! Downloading ALL files!");
-
-                        files = torrent.Files;
-                    }
-
-                    var fileIds = files.Select(m => m.Id.ToString()).ToArray();
-
-                    Log.Debug($"Selecting files for torrent {torrent.RdId}: {String.Join(", ", fileIds)}");
-
-                    await _torrents.SelectFiles(torrent.TorrentId, fileIds);
+                    await _torrents.UpdateFilesSelected(torrent.TorrentId, DateTime.UtcNow);
                 }
 
-                // If the torrent doesn't have any files at this point, don't process it further.
-                if (torrent.Files.Count == 0)
+                // Real-Debrid finished downloading the torrent, process the file to host.
+                if (torrent.RdStatus == TorrentStatus.Finished)
                 {
-                    Log.Debug($"No files found for torrent {torrent.RdId}!");
-                    continue;
-                }
-
-                // RealDebrid finished downloading the torrent, process the file to host.
-                if (torrent.RdStatus == RealDebridStatus.Finished)
-                {
-                    // If the torrent has any files that need starting to be downloaded, download them.
-                    var downloadsPending = torrent.Downloads
-                                                  .Where(m => m.Completed == null &&
-                                                              m.DownloadStarted == null &&
-                                                              m.DownloadFinished == null)
-                                                  .OrderBy(m => m.Added)
-                                                  .ToList();
-
-                    Log.Debug($"Torrent {torrent.RdId} found {downloadsPending.Count} downloads pending");
-
-                    if (downloadsPending.Count > 0)
+                    // The files are selected but there are no downloads yet, check if Real-Debrid has generated links yet.
+                    if (torrent.Downloads.Count == 0 && torrent.FilesSelected != null)
                     {
-                        foreach (var download in downloadsPending)
+                        Log($"Creating downloads", torrent);
+
+                        if (torrent.HostDownloadAction == TorrentHostDownloadAction.DownloadAll)
                         {
-                            Log.Debug($"Torrent {torrent.RdId} starting download {download.DownloadId}");
-
-                            await _torrents.Download(download.DownloadId);
+                            await _torrents.CreateDownloads(torrent.TorrentId);
                         }
-
-                        continue;
-                    }
-
-                    // If all files are finished downloading, move to the unpacking step.
-                    var unpackingPending = torrent.Downloads
-                                                  .Where(m => m.Completed == null &&
-                                                              m.DownloadFinished != null &&
-                                                              m.UnpackingStarted == null &&
-                                                              m.UnpackingFinished == null)
-                                                  .ToList();
-
-                    Log.Debug($"Torrent {torrent.RdId} found {unpackingPending.Count} unpacks pending");
-
-                    if (unpackingPending.Count > 0)
-                    {
-                        foreach (var download in unpackingPending)
-                        {
-                            Log.Debug($"Torrent {torrent.RdId} starting unpack {download.DownloadId}");
-
-                            await _torrents.Unpack(download.DownloadId);
-                        }
-
-                        continue;
                     }
                 }
 
-                // Check if torrent is complete
-                if (torrent.Downloads.Count > 0)
+                // Check if torrent is complete, or if we don't want to download any files to the host.
+                if ((torrent.Downloads.Count > 0) || 
+                    torrent.RdStatus == TorrentStatus.Finished && torrent.HostDownloadAction == TorrentHostDownloadAction.DownloadNone)
                 {
-                    var allComplete = torrent.Downloads.All(m => m.Completed != null);
+                    var allComplete = torrent.Downloads.Count(m => m.Completed != null);
 
-                    if (allComplete)
+                    if (allComplete == torrent.Downloads.Count)
                     {
-                        Log.Debug($"Torrent {torrent.RdId} all downloads complete");
+                        Log($"All downloads complete, marking torrent as complete", torrent);
 
-                        await _torrents.UpdateComplete(torrent.TorrentId, DateTimeOffset.UtcNow);
+                        await _torrents.UpdateComplete(torrent.TorrentId, null, DateTimeOffset.UtcNow, true);
 
-                        // Remove the torrent from RealDebrid
-                        if (torrent.AutoDelete)
+                        switch (torrent.FinishedAction)
                         {
-                            Log.Debug($"Torrent {torrent.RdId} removing");
+                            case TorrentFinishedAction.RemoveAllTorrents:
+                                Log($"Removing torrents from Real-Debrid and Real-Debrid Client, no files", torrent);
+                                await _torrents.Delete(torrent.TorrentId, true, true, false);
 
-                            await _torrents.Delete(torrent.TorrentId, true, true, false);
+                                break;
+                            case TorrentFinishedAction.RemoveRealDebrid:
+                                Log($"Removing torrents from Real-Debrid, no files", torrent);
+                                await _torrents.Delete(torrent.TorrentId, false, true, false);
+
+                                break;
+                            case TorrentFinishedAction.RemoveClient:
+                                Log($"Removing torrents from client, no files", torrent);
+                                await _torrents.Delete(torrent.TorrentId, true, false, false);
+
+                                break;
+                            case TorrentFinishedAction.None:
+                                Log($"Not removing torrents or files", torrent);
+
+                                break;
+                            default:
+                                Log($"Invalid torrent FinishedAction {torrent.FinishedAction}", torrent);
+
+                                break;
                         }
+
+                        try
+                        {
+                            await _torrents.RunTorrentComplete(torrent.TorrentId);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex.Message, "Unable to run post process: {Message}", ex.Message);
+                        }
+                    }
+                    else
+                    {
+                        Log($"Waiting for downloads to complete. {allComplete}/{torrent.Downloads.Count} complete", torrent);
                     }
                 }
             }
-            
-            await _remoteService.Update();
-
-            sw.Stop();
-
-            Log.Debug($"TorrentRunner Tick End (took {sw.ElapsedMilliseconds}ms)");
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, "Torrent processing result in an unexpected exception: {Message}", ex.Message);
+                await _torrents.UpdateComplete(torrent.TorrentId, ex.Message, DateTimeOffset.UtcNow, true);
+            }
         }
+            
+        await _remoteService.Update();
+
+        sw.Stop();
+
+        if (sw.ElapsedMilliseconds > 1000)
+        {
+            Log($"TorrentRunner Tick End (took {sw.ElapsedMilliseconds}ms)");
+        }
+    }
+
+    private void Log(String message, Download? download, Torrent? torrent)
+    {
+        if (download != null)
+        {
+            message = $"{message} {download.ToLog()}";
+        }
+
+        if (torrent != null)
+        {
+            message = $"{message} {torrent.ToLog()}";
+        }
+
+        _logger.LogDebug(message);
+    }
+
+    private void Log(String message, Torrent? torrent = null)
+    {
+        if (torrent != null)
+        {
+            message = $"{message} {torrent.ToLog()}";
+        }
+
+        _logger.LogDebug(message);
     }
 }

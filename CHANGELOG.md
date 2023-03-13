@@ -4,6 +4,260 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.22] - 2023-03-11
+### Added
+- Add support for Premiumize
+
+## [2.0.21] - 2023-03-09
+### Changed
+- Fixed docker build by pinning the .NET version to LTS.
+
+## [2.0.20] - 2023-03-08
+### Added
+- Add support for multi-level unpacking.
+- Add settings to specify the Error and Processed paths for the watch folders.
+- Option to disable authentication completely.
+
+### Changed
+- Removed the Simple Downloader and replaced it with https://github.com/bezzad/Downloader as the Internal Downloader.
+- Fixed setting the Base Href for sub folder hosting.
+
+## [2.0.19] - 2022-10-18
+### Changed
+- Changed the AllDebrid provider to use HTTPS instead of HTTP.
+
+## [2.0.18] - 2022-10-18
+### Added
+- Added the option to bulk delete torrents, thanks kanazaca!
+- Added option to remove the torrent only from the client after downloads are completed.
+- Added option to change the category of an existing torrent.
+- Added option to not download files to the host.
+### Changed
+- If a watched file gives an error when adding, move it to an error folder.
+  
+## [2.0.17] - 2022-05-24
+### Changed
+- Fixed issue with some settings not saving.
+
+## [2.0.16] - 2022-05-24
+### Changed
+- Fixed MacOS pre-fill on the login screen.
+
+## [2.0.15] - 2022-05-15
+### Changed
+- Remove settings for Finish Action and Category for the qBittorrent integration, these should always be set to None and the category comes from the integration.
+
+## [2.0.14] - 2022-05-14
+### Changed
+- Fixed Windows Service issue
+- For service users: the appsettings.json is slightly changed: HostUrl is now Port. Important if you used a non standard (6500) port.
+
+## [2.0.13] - 2022-05-14
+### Changed
+- Rewrote the settings storage. Added more settings to set defaults for importing.
+- Fixed filtering of torrents when a category is passed to the TorrentsInfo endpoint, fixing Radarr/Sonarr integrations.
+### Added
+- Added settings to control the timeout and polling interval to RealDebrid/AllDebrid.
+
+## [2.0.12] - 2022-03-20
+### Changed
+- Fixed the AllDebrid client.
+
+## [2.0.11] - 2022-03-19
+### Changed
+- Fixed the "Progress" for the AllDebrid client, thanks @23doors.
+
+## [2.0.10] - 2022-03-19
+### Added
+- When changing the download speed setting for the simple downloader it will apply the setting to active downloads.
+- Add running of external applications when the torrent is finished.
+### Changed
+- Fixed deserialization of the availability check for RealDebrid.
+- Fixed the simple downloader download limiter.
+
+## [2.0.9] - 2022-03-12
+### Changed
+- Updated packages, added logging to the RD and AD providers when serialization fails.
+
+## [2.0.8] - 2022-02-28
+### Changed
+- Fixed issue with AllDebrid sometimes returning NULL links.
+
+## [2.0.7] - 2022-02-06
+### Changed
+- Added setting to set the category when a torrent is imported from RealDebrid or other provider.
+
+## [2.0.6] - 2022-02-06
+### Added
+- Added setting to automatically delete torrents in the state of error after a certain amount of time.
+- Added lifetime setting to automatically expire torrents after a certain amount of time.
+
+## [2.0.5] - 2022-01-11
+### Changed
+- Updated AllDebrid provider to fix issue with ID's not being a number.
+
+## [2.0.4] - 2022-01-08
+### Changed
+- Fixed bug where the QBittorrent API didn't report the error state correctly when an error ocurred in the debrid provider.
+
+## [2.0.3] - 2022-01-02
+### Changed
+- Fixed automatic adding of AllDebrid torrents.
+### Added
+- Added update notification.
+
+## [2.0.2] - 2021-11-24
+### Changed
+- Fixed update timer for providers.
+
+## [2.0.1] - 2021-11-24
+### Changed
+- Fixed potential issue with the Real-Debrid mapper.
+- Fixed serialization issue for AllDebrid.
+
+## [2.0.0] - 2021-11-21
+### Changed
+- Update projects to .NET6 and Angular 13.
+### Added
+- Added setting to automatically import torrents from RealDebrid / AllDebrid.
+- Added setting to automatically delete torrents from RealDebridClient when they have been removed from RealDebrid / AllDebrid.
+
+## [1.9.8] - 2021-10-30
+### Added
+- Add speed limit setting on the Simple downloader.
+
+## [1.9.7] - 2021-10-30
+### Added
+- Add AllDebrid support.
+
+## [1.9.6] - 2021-10-30
+### Added
+- Improved handling of errors on the torrent itself
+- Added retry counts when adding torrents
+- Added retry counts on the Sonarr/Radarr settings page
+
+## [1.9.5] - 2021-10-28
+### Changed
+- Fixed issues with the simple downloader.
+- Fixed issue with retrying downloads.
+
+### Added
+- Added torrent uploading status from Real Debrid.
+- Restored removing of torrents when deleted from Real Debrid.
+
+## [1.9.4] - 2021-10-28
+### Changed
+- Fixed issues retrying torrents after multiple failed downloads in large torrents.
+
+## [1.9.3] - 2021-10-27
+### Changed
+- Fixed issue with the unpack queue.
+
+## [1.9.2] - 2021-10-27
+### Changed
+- Fixed issue where not the correct torrent was used for a download.
+
+## [1.9.1] - 2021-10-27
+### Added
+- Added automatic torrent retrying when RealDebrid reports an error on the torrent.
+
+### Changed
+- Changed how Aria2 is polled, this will result in less RPC calls for a large amount of torrents.
+- Add more and better logging for the torrent runner in Debug.
+- Add Aria2 checks to see if links get added properly.
+- Update Aria2.NET and RD.NET, added automatic retrying in case of server failures.
+
+## [1.9.0] - 2021-10-24
+### Added
+- Add priorty for torrents. You can set the priority when adding a new torrent. When added from Sonarr/Radarr it will assume no priority.
+- Added support for the Sonarr/Radarr/qBittorrent setPrio command. It will set the priority of a torrent to 1.
+- Added support for the Sonarr/Radarr/qBittorrent pause and resume commands. This only works with the Aria2 downloader.
+
+### Changed
+- Fixed issues when downloads get deleted when they are still being checked.
+- Improved timings and retrying of adding of downloads to Aria2. Will now try 5 times before failing.
+
+## [1.8.9] - 2021-10-23
+### Changed
+- Add delays between adding downloads to Aria2 to avoid Aria2 going down when adding a large amount of downloads.
+
+## [1.8.8] - 2021-10-21
+### Changed
+- Fixed starting downloads when RealDebrid reports ghost links in torrents.
+
+## [1.8.7] - 2021-10-11
+### Added
+- Add Aria2 test connection button.
+- Add full torrent retry mechanism, by default it will now retry the torrent 2 times when a download fails for more than 3 times.
+
+### Changed
+- Improved Aria2 download handling.
+
+## [1.8.6] - 2021-10-09
+### Added
+- Experimental support for a Aria2 download client. Check the readme for usage.
+
+### Changed
+- Fixed potential error when sonarr is querying and the torrent isn't added to RealDebrid yet.
+- Fixed interface randomly stop updating.
+- Upgrade dependencies.
+
+## [1.8.5] - 2021-10-07
+### Changed
+- Fixed issue where deleting a torrent could error out.
+
+## [1.8.4] - 2021-08-05
+### Changed
+- Changed the default timeout for Real-Debrid communication to 10 seconds instead of 100 seconds.
+
+## [1.8.3] - 2021-08-05
+### Changed
+- Fixed potential issue with duplicates categories.
+
+## [1.8.2] - 2021-08-02
+### Changed
+- Fixed issue with starting downloads.
+
+## [1.8.1] - 2021-07-31
+### Changed
+- Fixed issue where downloads were hanging the full interface.
+
+## [1.8.0] - 2021-07-18
+### Added
+- Fixed support for categories. They are now saved persistently in the database.
+- Added new "settings" page.
+- Added new "add new" page. Added more options when manually adding a torrent, including the ability to manually select files.
+- Added dedicated torrent pages with more information when selecting a torrent on the main page.
+- Add ability to retry individual downloads.
+
+### Changed
+- Fixed enter key on the login and setup screen.
+- Fixed an issue with selecting files and getting the links. This process could take a long time and would hang the client while waiting for a response.
+
+### Removed
+- Removed the retry and delete button from the main page and moved them to the torrent page.
+- Removed the ability to retry all downloads.
+
+## [1.7.8] - 2021-06-17
+### Changed
+- Fixed issue for real this time with a broken response from RDT when the available files returns in a format different than normal.
+
+## [1.7.7] - 2021-06-09
+### Changed
+- Fixed some issues with download error handling.
+- Fixed issue where files aren't always properly selected.
+
+## [1.7.6] - 2021-06-05
+### Changed
+- Fixed build for Raspberry PI.
+
+## [1.7.5] - 2021-06-05
+### Changed
+- Reduced the frequency of database reads and writes by adding caches for settings and torrents.
+- Updated dependency of RD.NET to improve serialization error reporting.
+- Changed how the base href is determined to support path proxies.
+- Fixed issue with handling of renamed torrents.
+
 ## [1.7.4] - 2021-04-22
 ### Changed
 - Changed how the docker is built.

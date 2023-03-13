@@ -1,171 +1,224 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Web;
-using RdtClient.Data.Models.Data;
+﻿using RdtClient.Data.Models.Data;
+using RdtClient.Service.Helpers;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
+using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 
-namespace RdtClient.Service.Services
+namespace RdtClient.Service.Services;
+
+public class UnpackClient
 {
-    public class UnpackClient
+    public Boolean Finished { get; private set; }
+        
+    public String? Error { get; private set; }
+        
+    public Int64 BytesTotal { get; private set; }
+    public Int64 BytesDone { get; private set; }
+        
+    private readonly Download _download;
+    private readonly String _destinationPath;
+    private readonly Torrent _torrent;
+
+    private Boolean _cancelled;
+        
+    private IArchiveEntry? _rarCurrentEntry;
+    private Dictionary<String, Int64>? _rarfileStatus;
+
+    public UnpackClient(Download download, String destinationPath)
     {
-        public Boolean Finished { get; private set; }
-        
-        public String Error { get; private set; }
-        
-        public Int64 BytesTotal { get; private set; }
-        public Int64 BytesDone { get; private set; }
-        
-        private readonly Download _download;
-        private readonly String _destinationPath;
-        private readonly Torrent _torrent;
+        _download = download;
+        _destinationPath = destinationPath;
+        _torrent = download.Torrent ?? throw new Exception($"Torrent is null");
+    }
 
-        private Boolean _cancelled = false;
-        
-        private RarArchiveEntry _rarCurrentEntry;
-        private Dictionary<String, Int64> _rarfileStatus;
+    public void Start()
+    {
+        BytesDone = 0;
+        BytesTotal = 0;
 
-        public UnpackClient(Download download, String destinationPath)
+        try
         {
-            _download = download;
-            _destinationPath = destinationPath;
-            _torrent = download.Torrent;
-        }
+            var filePath = DownloadHelper.GetDownloadPath(_destinationPath, _torrent, _download);
 
-        public async Task Start()
-        {
-            BytesDone = 0;
-            BytesTotal = 0;
-
-            try
+            if (filePath == null)
             {
-                var fileUrl = _download.Link;
+                throw new Exception("Invalid download path");
+            }
 
-                if (String.IsNullOrWhiteSpace(fileUrl))
+            Task.Run(async delegate
+            {
+                if (!_cancelled)
                 {
-                    throw new Exception("File URL is empty");
+                    await Unpack(filePath);
                 }
-
-                var uri = new Uri(fileUrl);
-                var torrentPath = Path.Combine(_destinationPath, _torrent.RdName);
-
-                var fileName = uri.Segments.Last();
-
-                fileName = HttpUtility.UrlDecode(fileName);
-
-                var filePath = Path.Combine(torrentPath, fileName);
-                
-                if (!File.Exists(filePath))
-                {
-                    throw new Exception($"File {filePath} could not be extracted because it is missing");
-                }
-
-                await Task.Factory.StartNew(async delegate
-                {
-                    if (!_cancelled)
-                    {
-                        await Unpack(filePath);
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                Error = $"An unexpected error occurred preparing download {_download.Link} for torrent {_torrent.RdName}: {ex.Message}";
-                Finished = true;
-            }
+            });
         }
-
-        public void Cancel()
+        catch (Exception ex)
         {
-            _cancelled = true;
+            Error = $"An unexpected error occurred preparing download {_download.Link} for torrent {_torrent.RdName}: {ex.Message}";
+            Finished = true;
         }
+    }
 
-        private async Task Unpack(String filePath)
+    public void Cancel()
+    {
+        _cancelled = true;
+    }
+
+    private async Task Unpack(String filePath)
+    {
+        try
         {
-            try
-            {
-                await using (Stream stream = File.OpenRead(filePath))
-                {
-                    using var archive = RarArchive.Open(stream);
-
-                    BytesTotal = archive.TotalSize;
-
-                    var entries = archive.Entries.Where(entry => !entry.IsDirectory)
-                                         .ToList();
-
-                    _rarfileStatus = entries.ToDictionary(entry => entry.Key, entry => 0L);
-                    _rarCurrentEntry = null;
-                    archive.CompressedBytesRead += ArchiveOnCompressedBytesRead;
-
-                    var extractPath = _destinationPath;
-
-                    if (!entries.Any(m => m.Key.StartsWith(_torrent.RdName + @"\")) && !entries.Any(m => m.Key.StartsWith(_torrent.RdName + @"/")))
-                    {
-                        extractPath = Path.Combine(_destinationPath, _torrent.RdName);
-                    }
-
-                    if (entries.Any(m => m.Key.Contains(".r00")))
-                    {
-                        extractPath = Path.Combine(extractPath, "Temp");
-                    }
-
-                    foreach (var entry in entries)
-                    {
-                        if (_cancelled)
-                        {
-                            return;
-                        }
-                        
-                        _rarCurrentEntry = entry;
-
-                        entry.WriteToDirectory(extractPath,
-                                               new ExtractionOptions
-                                               {
-                                                   ExtractFullPath = true,
-                                                   Overwrite = true
-                                               });
-                    }
-                }
-
-                var retryCount = 0;
-                while (File.Exists(filePath) && retryCount < 10)
-                {
-                    retryCount++;
-
-                    try
-                    {
-                        File.Delete(filePath);
-                    }
-                    catch
-                    {
-                        await Task.Delay(1000);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Error = $"An unexpected error occurred downloading {_download.Link} for torrent {_torrent.RdName}: {ex.Message}";
-            }
-            finally
-            {
-                Finished = true;
-            }
-        }
-
-        private void ArchiveOnCompressedBytesRead(Object sender, CompressedBytesReadEventArgs e)
-        {
-            if (_rarCurrentEntry == null)
+            if (!File.Exists(filePath))
             {
                 return;
             }
 
-            _rarfileStatus[_rarCurrentEntry.Key] = e.CompressedBytesRead;
+            var extractPath = _destinationPath;
+            String? extractPathTemp = null;
 
-            BytesDone = _rarfileStatus.Sum(m => m.Value);
+            var archiveEntries = await GetArchiveFiles(filePath);
+
+            if (!archiveEntries.Any(m => m.StartsWith(_torrent.RdName + @"\")) && !archiveEntries.Any(m => m.StartsWith(_torrent.RdName + @"/")))
+            {
+                extractPath = Path.Combine(_destinationPath, _torrent.RdName!);
+            }
+
+            if (archiveEntries.Any(m => m.Contains(".r00")))
+            {
+                extractPathTemp = Path.Combine(extractPath, Guid.NewGuid().ToString());
+                
+                if (!Directory.Exists(extractPathTemp))
+                {
+                    Directory.CreateDirectory(extractPathTemp);
+                }
+            }
+            
+            if (extractPathTemp != null)
+            {
+                Extract(filePath, extractPathTemp);
+
+                await FileHelper.Delete(filePath);
+
+                var rarFiles = Directory.GetFiles(extractPathTemp, "*.r00", SearchOption.TopDirectoryOnly);
+
+                foreach (var rarFile in rarFiles)
+                {
+                    var mainRarFile = Path.ChangeExtension(rarFile, ".rar");
+
+                    if (File.Exists(mainRarFile))
+                    {
+                        Extract(mainRarFile, extractPath);
+                    }
+
+                    await FileHelper.DeleteDirectory(extractPathTemp);
+                }
+            }
+            else
+            {
+                Extract(filePath, extractPath);
+
+                await FileHelper.Delete(filePath);
+            }
         }
+        catch (Exception ex)
+        {
+            Error = $"An unexpected error occurred unpacking {_download.Link} for torrent {_torrent.RdName}: {ex.Message}";
+        }
+        finally
+        {
+            Finished = true;
+        }
+    }
+
+    private async Task<IList<String>> GetArchiveFiles(String filePath)
+    {
+        await using Stream stream = File.OpenRead(filePath);
+
+        var extension = Path.GetExtension(filePath);
+
+        IArchive archive;
+        if (extension == ".zip")
+        {
+            archive = ZipArchive.Open(stream);
+        }
+        else
+        {
+            archive = RarArchive.Open(stream);
+        }
+
+        BytesTotal = archive.TotalSize;
+
+        var entries = archive.Entries
+                             .Where(entry => !entry.IsDirectory)
+                             .Select(m => m.Key)
+                             .ToList();
+
+        archive.Dispose();
+
+        return entries;
+    }
+
+    private void Extract(String filePath, String extractPath)
+    {
+        var parts = ArchiveFactory.GetFileParts(filePath);
+
+        var fi = parts.Select(m => new FileInfo(m));
+
+        var extension = Path.GetExtension(filePath);
+
+        IArchive archive;
+        if (extension == ".zip")
+        {
+            archive = ZipArchive.Open(fi);
+        }
+        else
+        {
+            archive = RarArchive.Open(fi);
+        }
+        
+        if (archive.IsComplete)
+        {
+            BytesTotal = archive.TotalSize;
+        }
+
+        var entries = archive.Entries.Where(entry => !entry.IsDirectory)
+                             .ToList();
+
+        _rarfileStatus = entries.ToDictionary(entry => entry.Key, _ => 0L);
+        _rarCurrentEntry = null;
+        archive.CompressedBytesRead += ArchiveOnCompressedBytesRead;
+
+        foreach (var entry in entries)
+        {
+            if (_cancelled)
+            {
+                throw new Exception("Task was cancelled");
+            }
+                        
+            _rarCurrentEntry = entry;
+
+            entry.WriteToDirectory(extractPath,
+                                   new ExtractionOptions
+                                   {
+                                       ExtractFullPath = true,
+                                       Overwrite = true
+                                   });
+        }
+
+        archive.Dispose();
+    }
+
+    private void ArchiveOnCompressedBytesRead(Object? sender, CompressedBytesReadEventArgs e)
+    {
+        if (_rarCurrentEntry == null)
+        {
+            return;
+        }
+
+        _rarfileStatus![_rarCurrentEntry.Key] = e.CompressedBytesRead;
+
+        BytesDone = _rarfileStatus.Sum(m => m.Value);
     }
 }

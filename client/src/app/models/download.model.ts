@@ -15,4 +15,5 @@ export class Download {
   public bytesTotal: number;
   public bytesDone: number;
   public speed: number;
+  public retryCount: number;
 }

@@ -1,19 +1,33 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.DependencyInjection;
+using RdtClient.Service.BackgroundServices;
+using RdtClient.Service.Middleware;
 using RdtClient.Service.Services;
+using RdtClient.Service.Services.TorrentClients;
 
-namespace RdtClient.Service
+namespace RdtClient.Service;
+
+public static class DiConfig
 {
-    public static class DiConfig
+    public static void Config(IServiceCollection services)
     {
-        public static void Config(IServiceCollection services)
-        {
-            services.AddScoped<IAuthentication, Authentication>();
-            services.AddScoped<IDownloads, Downloads>();
-            services.AddScoped<IQBittorrent, QBittorrent>();
-            services.AddScoped<IRemoteService, RemoteService>();
-            services.AddScoped<ISettings, Settings>();
-            services.AddScoped<ITorrents, Torrents>();
-            services.AddScoped<ITorrentRunner, TorrentRunner>();
-        }
+        services.AddScoped<AllDebridTorrentClient>();
+        services.AddScoped<Authentication>();
+        services.AddScoped<Downloads>();
+        services.AddScoped<PremiumizeTorrentClient>();
+        services.AddScoped<QBittorrent>();
+        services.AddScoped<RemoteService>();
+        services.AddScoped<RealDebridTorrentClient>();
+        services.AddScoped<Settings>();
+        services.AddScoped<Torrents>();
+        services.AddScoped<TorrentRunner>();
+
+        services.AddSingleton<IAuthorizationHandler, AuthSettingHandler>();
+            
+        services.AddHostedService<ProviderUpdater>();
+        services.AddHostedService<Startup>();
+        services.AddHostedService<TaskRunner>();
+        services.AddHostedService<UpdateChecker>();
+        services.AddHostedService<WatchFolderChecker>();
     }
 }

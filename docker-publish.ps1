@@ -39,12 +39,14 @@ param(
 
 $imageName = "$($DockerAccount)/rdtclient"
 
-$dockerArgs = @( "buildx", "build", "--push", "--platform", $Platforms, "--tag", "$($imageName):latest", "." )
+$dockerArgs = @( "buildx", "build", "--no-cache", "--push", "--platform", $Platforms, "--tag", "$($imageName):latest", "." )
 
-if (![string]::IsNullOrEmpty($Version)) { 
-    $dockerArgs += @("--tag", "$($imageName):$($Version)" )
-    $dockerApps += @("--build-arg", "VERSION=$($Version)" )
+if ([string]::IsNullOrEmpty($Version)) { 
+	$Version = (Get-Content "package.json" | ConvertFrom-Json).version
 }
+
+$dockerArgs += @("--tag", "$($imageName):$($Version)" )
+$dockerApps += @("--build-arg", "VERSION=$($Version)" )
 
 Write-Host "Generating docker image $imageName for $Platforms"
 & docker $dockerArgs

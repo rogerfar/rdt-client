@@ -14,7 +14,7 @@ export class DownloadStatusPipe implements PipeTransform {
     }
 
     if (value.error) {
-      return `Error: ${value.error}`;
+      return value.error;
     }
 
     if (value.completed != null) {
@@ -26,8 +26,13 @@ export class DownloadStatusPipe implements PipeTransform {
     }
 
     if (value.unpackingStarted) {
-      const progress = ((value.bytesDone / value.bytesTotal) * 100).toFixed(2);
-      return `Unpacking ${progress || 0}%`;
+      let progress = (value.bytesDone / value.bytesTotal) * 100;
+
+      if (isNaN(progress)) {
+        progress = 0;
+      }
+
+      return `Unpacking ${progress.toFixed(2)}%`;
     }
 
     if (value.unpackingQueued) {
@@ -39,10 +44,15 @@ export class DownloadStatusPipe implements PipeTransform {
     }
 
     if (value.downloadStarted) {
-      const progress = ((value.bytesDone / value.bytesTotal) * 100).toFixed(2);
+      let progress = (value.bytesDone / value.bytesTotal) * 100;
+
+      if (isNaN(progress)) {
+        progress = 0;
+      }
+
       const speed = this.pipe.transform(value.speed, 'filesize');
 
-      return `Downloading ${progress || 0}% (${speed}/s)`;
+      return `Downloading ${progress.toFixed(2)}% (${speed}/s)`;
     }
 
     if (value.downloadQueued) {

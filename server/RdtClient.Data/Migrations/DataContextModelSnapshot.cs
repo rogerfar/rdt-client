@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RdtClient.Data.Data;
 
+#nullable disable
+
 namespace RdtClient.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
@@ -13,8 +15,7 @@ namespace RdtClient.Data.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "5.0.3");
+            modelBuilder.HasAnnotation("ProductVersion", "6.0.10");
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
@@ -39,7 +40,7 @@ namespace RdtClient.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("RoleNameIndex");
 
-                    b.ToTable("AspNetRoles");
+                    b.ToTable("AspNetRoles", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -62,7 +63,7 @@ namespace RdtClient.Data.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("AspNetRoleClaims");
+                    b.ToTable("AspNetRoleClaims", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUser", b =>
@@ -126,7 +127,7 @@ namespace RdtClient.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
 
-                    b.ToTable("AspNetUsers");
+                    b.ToTable("AspNetUsers", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
@@ -149,7 +150,7 @@ namespace RdtClient.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AspNetUserClaims");
+                    b.ToTable("AspNetUserClaims", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
@@ -171,7 +172,7 @@ namespace RdtClient.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AspNetUserLogins");
+                    b.ToTable("AspNetUserLogins", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
@@ -186,7 +187,7 @@ namespace RdtClient.Data.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("AspNetUserRoles");
+                    b.ToTable("AspNetUserRoles", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
@@ -205,7 +206,7 @@ namespace RdtClient.Data.Migrations
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
-                    b.ToTable("AspNetUserTokens");
+                    b.ToTable("AspNetUserTokens", (string)null);
                 });
 
             modelBuilder.Entity("RdtClient.Data.Models.Data.Download", b =>
@@ -236,6 +237,10 @@ namespace RdtClient.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Path")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RemoteId")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("RetryCount")
@@ -265,9 +270,6 @@ namespace RdtClient.Data.Migrations
                     b.Property<string>("SettingId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Type")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Value")
                         .HasColumnType("TEXT");
 
@@ -285,25 +287,56 @@ namespace RdtClient.Data.Migrations
                     b.Property<DateTimeOffset>("Added")
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("AutoDelete")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Category")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset?>("Completed")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("DeleteOnError")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DownloadAction")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("DownloadManualFiles")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DownloadMinSize")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DownloadRetryAttempts")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("FileOrMagnet")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Hash")
+                    b.Property<DateTimeOffset?>("FilesSelected")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("FinishedAction")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("HostDownloadAction")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsFile")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTimeOffset>("RdAdded")
+                    b.Property<int>("Lifetime")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Priority")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset?>("RdAdded")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset?>("RdEnded")
@@ -321,26 +354,35 @@ namespace RdtClient.Data.Migrations
                     b.Property<string>("RdName")
                         .HasColumnType("TEXT");
 
-                    b.Property<long>("RdProgress")
+                    b.Property<long?>("RdProgress")
                         .HasColumnType("INTEGER");
 
                     b.Property<long?>("RdSeeders")
                         .HasColumnType("INTEGER");
 
-                    b.Property<long>("RdSize")
+                    b.Property<long?>("RdSize")
                         .HasColumnType("INTEGER");
 
                     b.Property<long?>("RdSpeed")
                         .HasColumnType("INTEGER");
 
-                    b.Property<long>("RdSplit")
+                    b.Property<long?>("RdSplit")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("RdStatus")
+                    b.Property<int?>("RdStatus")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("RdStatusRaw")
                         .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("Retry")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TorrentRetryAttempts")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("TorrentId");
 

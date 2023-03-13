@@ -1,5 +1,5 @@
 # Stage 1 - Build the frontend
-FROM node:15.5-buster AS node-build-env
+FROM node:16-buster AS node-build-env
 ARG TARGETPLATFORM
 ENV TARGETPLATFORM=${TARGETPLATFORM:-linux/amd64}
 ARG BUILDPLATFORM
@@ -9,17 +9,17 @@ RUN mkdir /appclient
 WORKDIR /appclient
 
 RUN \
-   echo "**** Cloning Source Code ****" && \ 
+   echo "**** Cloning Source Code ****" && \
    git clone https://github.com/rogerfar/rdt-client.git . && \
    cd client && \
-   echo "**** Building Code  ****" && \ 
+   echo "**** Building Code  ****" && \
    npm ci && \
-   npx ng build --prod --output-path=out
+   npx ng build --output-path=out
 
 RUN ls -FCla /appclient/root
 
 # Stage 2 - Build the backend
-FROM mcr.microsoft.com/dotnet/sdk:5.0-buster-slim-amd64 AS dotnet-build-env
+FROM mcr.microsoft.com/dotnet/sdk:6.0-bullseye-slim-amd64 AS dotnet-build-env
 ARG TARGETPLATFORM
 ENV TARGETPLATFORM=${TARGETPLATFORM:-linux/amd64}
 ARG BUILDPLATFORM
@@ -29,15 +29,18 @@ RUN mkdir /appserver
 WORKDIR /appserver
 
 RUN \
-   echo "**** Cloning Source Code ****" && \ 
+   echo "**** Cloning Source Code ****" && \
    git clone https://github.com/rogerfar/rdt-client.git . && \
-   echo "**** Building Source Code for $TARGETPLATFORM on $BUILDPLATFORM ****" && \ 
+   echo "**** Building Source Code for $TARGETPLATFORM on $BUILDPLATFORM ****" && \
    cd server && \
-   if [ "$TARGETPLATFORM" = "linux/arm/v7" -o "$TARGETPLATFORM" = "linux/arm64" ] ; then \
-      echo "**** Building $TARGETPLATFORM arm version" && \
+   if [ "$TARGETPLATFORM" = "linux/arm/v7" ] ; then \
+      echo "**** Building $TARGETPLATFORM arm v7 version" && \
       dotnet restore -r linux-arm RdtClient.sln && dotnet publish -r linux-arm -c Release -o out ; \
+   elif [ "$TARGETPLATFORM" = "linux/arm/v8"] ; then \
+      echo "**** Building $TARGETPLATFORM arm v8 version" && \
+      dotnet restore -r linux-arm64 RdtClient.sln && dotnet publish -r linux-arm64 -c Release -o out ; \
    else \
-      echo "**** Building $TARGETPLATFORM x86 version" && \
+      echo "**** Building $TARGETPLATFORM x64 version" && \
       dotnet restore RdtClient.sln && dotnet publish -c Release -o out ; \
    fi
 
@@ -61,16 +64,16 @@ ENV RDTCLIENT_BRANCH="main"
 
 RUN \
     mkdir -p /data/downloads /data/db || true && \
-    echo "**** Updating package information ****" && \ 
+    echo "**** Updating package information ****" && \
     apt-get update -y -qq && \
-    echo "**** Install pre-reqs ****" && \ 
+    echo "**** Install pre-reqs ****" && \
     apt-get install -y -qq wget dos2unix && \
     apt-get install -y libc6 libgcc1 libgssapi-krb5-2 libssl1.1 libstdc++6 zlib1g libicu66 && \
     echo "**** Installing dotnet ****" && \
     wget -q https://dot.net/v1/dotnet-install.sh && \
     chmod +x ./dotnet-install.sh && \
-    bash ./dotnet-install.sh -c Current --runtime dotnet --install-dir /usr/share/dotnet && \
-    bash ./dotnet-install.sh -c Current --runtime aspnetcore --install-dir /usr/share/dotnet && \
+    bash ./dotnet-install.sh -c LTS -v latest --runtime dotnet --install-dir /usr/share/dotnet && \
+    bash ./dotnet-install.sh -c LTS -v latest --runtime aspnetcore --install-dir /usr/share/dotnet && \
     echo "**** Cleaning image ****" && \
     apt-get -y -qq -o Dpkg::Use-Pty=0 clean && apt-get -y -qq -o Dpkg::Use-Pty=0 purge && \
     echo "**** Setting permissions ****" && \

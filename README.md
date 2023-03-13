@@ -1,16 +1,22 @@
 # Real-Debrid Torrent Client
 
-This is a web interface to manage your torrents on Real-Debrid. It supports the following features:
+This is a web interface to manage your torrents on Real-Debrid, AllDebrid or Premiumize. It supports the following features:
 
 - Add new torrents through magnets or files
-- Download all files from Real Debrid to your local machine automatically
+- Download all files from Real-Debrid, AllDebrid or Premiumize to your local machine automatically
 - Unpack all files when finished downloading
-- Implements a fake qBittorrent API so you can hook up other applications like Sonarr or Couchpotato.
-- Built with Angular 11 and .NET 5
+- Implements a fake qBittorrent API so you can hook up other applications like Sonarr, Radarr or Couchpotato.
+- Built with Angular 15 and .NET 6
 
-**You will need a Premium service at Real-Debrid!**
+**You will need a Premium service at Real-Debrid, AllDebrid or Premiumize!**
 
-[Click here to sign up (referal link so I can get a few free premium days).](https://real-debrid.com/?id=1348683)
+[Click here to sign up for Real-Debrid.](https://real-debrid.com/?id=1348683)
+
+[Click here to sign up for AllDebrid.](https://alldebrid.com/?uid=2v91l)
+
+[Click here to sign up for Premiumize.](https://www.premiumize.me/)
+
+<sub>(referal links so I can get a few free premium days)</sub>
 
 ## Docker Setup
 
@@ -62,14 +68,64 @@ docker-compose up -d
 
 Replace the paths in `volumes` as in the above step.
 
+## Run as a Service
+
+Instead of running in Docker you can install it as a service in Windows or Linux.
 ## Windows Service
 
-Instead of running in Docker you can install it as a service in Windows or Linux (not tested).
-
+1. Make sure you have the ASP.NET Core Runtime 6 installed: [https://dotnet.microsoft.com/download/dotnet/6.0](https://dotnet.microsoft.com/download/dotnet/6.0)
 1. Get the latest zip file from the Releases page and extract it to your host.
 1. Open the `appsettings.json` file and replace the `LogLevel` `Path` to a path on your host.
 1. In `appsettings.json` replace the `Database` `Path` to a path on your host.
 1. When using Windows paths, make sure to escape the slashes. For example: `D:\\RdtClient\\db\\rdtclient.db`
+
+## Linux Service
+
+Instead of running in Docker you can install it as a service in Linux.
+
+1. Install .NET: [https://docs.microsoft.com/en-us/dotnet/core/install/linux](https://docs.microsoft.com/en-us/dotnet/core/install/linux)
+
+    Ubuntu 20.04 example:  
+    ```wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb```  
+    
+    ```sudo dpkg -i packages-microsoft-prod.deb```  
+
+    ```rm packages-microsoft-prod.deb```  
+
+    ```sudo apt-get update && sudo apt-get install -y dotnet-sdk-6.0```  
+
+2. Get latest archive from [releases](https://github.com/rogerfar/rdt-client/releases):  
+```wget <zip_url>```
+3. Extract to path of your choice (~/rtdc in this example):  
+```unzip RealDebridClient.zip -d ~/rdtc && cd ~/rdtc```
+4. In appsettings.json replace the Database Path to a path on your host. Any directories in path must already exist. Or just remove "/data/db/" for ease.
+5. Test rdt client runs ok:  
+```dotnet RdtClient.Web.dll```   
+navigate to http://<ipaddress>:6500, if all is good then we'll create a service
+6. Create a service (systemd in this example):  
+```sudo nano /etc/systemd/system/rdtc.service```  
+
+    paste in this service file content and edit path of your directory:
+
+    ```
+    [Unit]
+    Description=RdtClient Service
+
+    [Service]
+
+    WorkingDirectory=/home/<username>/rdtc
+    ExecStart=/usr/bin/dotnet RdtClient.Web.dll
+    SyslogIdentifier=RdtClient
+    User=<username>
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+
+7. enable and start the service:   
+```sudo systemctl daemon-reload```  
+```sudo systemctl enable rdtc```  
+```sudo systemctl start rdtc```  
 
 ## Setup
 
@@ -86,24 +142,27 @@ Instead of running in Docker you can install it as a service in Windows or Linux
 
 Currently there 2 available download clients:
 
-#### Simple Downloader
+#### Internal Downloader
 
-This is a simple 1 connection only download manager. It uses less resources than the multi-part downloader. It downloads straight to the download path.
-
-It has the following options:
-
-- Maximum parallel downloads: This number indicates how many completed torrents from Real Debrid can be downloaded at the same time. On low powered systems it is recommended to keep this number low.
-
-#### Multi Part Downloader
-
-This [downloader](https://github.com/bezzad/Downloader) as more options and such uses more resources (memory, CPU) to download files. Recommended more powerful systems.
+This [downloader](https://github.com/bezzad/Downloader) can be used to download files in parallel and with multiple chunks.
 
 It has the following options:
 
-- Temp Download path: Set this path to where the downloader temporarily stores chunks. This path can be an internal path in Docker (i.e. `/data/temp`) but make sure you have enough disk space to complete the whole download. When all chunks are completed the completed file is copied to your download folder.
-- Maximum parallel downloads: This number indicates how many completed torrents from Real Debrid can be downloaded at the same time.
-- Parallel connections per download: This number indicates how many threads/connections/parts/chunks it will use per download. This can increase speed, recommended is no more than 8.
-- Download speed (in MB/s): This number indicates the speed in MB/s per download. If you set this to 10 and `Maximum parallel downloads` to 2, you can download with a maximum of 20MB/s.
+- Download speed (in MB/s): This number indicates the speed in MB/s per download over all parallel downloads and chunks.
+- Parallel connections per download: This number indicates how many parallel it will use per download. This can increase speed, recommended is no more than 8.
+- Parallel chunks per download: This number indicates in how many chunks each download is split, recommended is no more than 8.
+- Connection Timeout: This number indicates the timeout in milliseconds before a download chunk times out. It will retry each chunk 5 times before completely failing.
+
+#### Aria2c downloader
+
+This will use an external Aria2c downloader client. You will need to install this client yourself on your host, it is not included in the docker image.
+
+It has the following options:
+
+- Url: The full URL to your Aria2c service. This must end in /jsonrpc. A standard path is `http://192.168.10.2:6800/jsonrpc`.
+- Secret: Optional secret to connecto to your Aria2c service.
+
+If Aria2c is selected, none of the above options for `Internal Downloader` are used, you have to configure Aria2c manually.
 
 ### Troubleshooting
 
@@ -136,8 +195,8 @@ Notice: the progress and ETA reported in Sonarr's Activity tab will not be accur
 - NodeJS
 - NPM
 - Angular CLI
-- .NET 5
-- Visual Studio 2019
+- .NET 6
+- Visual Studio 2022
 - (optional) Resharper
 
 1. Open the client folder project in VS Code and run `npm install`.

@@ -1,26 +1,19 @@
-﻿using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace RdtClient.Data.Data
+namespace RdtClient.Data.Data;
+
+public class UserData
 {
-    public interface IUserData
+    private readonly DataContext _dataContext;
+
+    public UserData(DataContext dataContext)
     {
-        Task<IdentityUser> GetUser();
+        _dataContext = dataContext;
     }
 
-    public class UserData : IUserData
+    public async Task<IdentityUser?> GetUser()
     {
-        private readonly DataContext _dataContext;
-
-        public UserData(DataContext dataContext)
-        {
-            _dataContext = dataContext;
-        }
-
-        public async Task<IdentityUser> GetUser()
-        {
-            return await _dataContext.Users.FirstOrDefaultAsync();
-        }
+        return await _dataContext.Users.FirstOrDefaultAsync();
     }
 }

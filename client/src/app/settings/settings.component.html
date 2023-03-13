@@ -1,0 +1,150 @@
+<div class="tabs">
+  <ul>
+    <li [ngClass]="{ 'is-active': activeTab === i }" (click)="activeTab = i" *ngFor="let tab of tabs; let i = index">
+      <a>{{ tab.displayName }}</a>
+    </li>
+    <li [ngClass]="{ 'is-active': activeTab === 99 }" (click)="activeTab = 99">
+      <a>Speed Tests</a>
+    </li>
+  </ul>
+</div>
+
+<div *ngFor="let tab of tabs; let i = index" [hidden]="activeTab !== i">
+  <h3>{{ tab.description }}</h3>
+  <ng-container *ngFor="let setting of tab.settings">
+    <h3 *ngIf="setting.type === 'Object'" class="title is-3" style="margin-top: 1.2rem">{{ setting.displayName }}</h3>
+    <div class="field">
+      <label class="label" *ngIf="setting.type !== 'Boolean' && setting.type !== 'Object'">{{
+        setting.displayName
+      }}</label>
+      <ng-container [ngSwitch]="setting.type">
+        <div class="control" *ngSwitchCase="'String'">
+          <input class="input" type="text" maxlength="100" [(ngModel)]="setting.value" />
+        </div>
+        <div class="control" *ngSwitchCase="'Int32'">
+          <input class="input" type="number" [(ngModel)]="setting.value" />
+        </div>
+        <label class="checkbox" *ngSwitchCase="'Boolean'">
+          <input type="checkbox" [(ngModel)]="setting.value" />
+          {{ setting.displayName }}
+        </label>
+        <div class="control select is-fullwidth" *ngSwitchCase="'Enum'">
+          <select [(ngModel)]="setting.value">
+            <option [value]="kvp.key" *ngFor="let kvp of setting.enumValues | keyvalue">{{ kvp.value }}</option>
+          </select>
+        </div>
+        <ng-container *ngSwitchCase="'Object'"></ng-container>
+        <div class="control" *ngSwitchDefault>Invalid setting type {{ setting.type }}</div>
+      </ng-container>
+
+      <p class="help" [innerHtml]="setting.description | nl2br"></p>
+
+      <ng-container *ngIf="setting.key === 'DownloadClient:Aria2cSecret'">
+        <button
+          class="button is-warning"
+          (click)="testAria2cConnection()"
+          [disabled]="saving"
+          [ngClass]="{ 'is-loading': saving }"
+        >
+          Test aria2 connection
+        </button>
+        <div class="notification is-danger is-light" style="margin-top: 1rem" *ngIf="testAria2cConnectionError">
+          Could connect to Aria2 client<br />
+          {{ testAria2cConnectionError }}
+        </div>
+
+        <div class="notification is-success is-light" style="margin-top: 1rem" *ngIf="testAria2cConnectionSuccess">
+          Found Aria2 client version {{ testAria2cConnectionSuccess }}
+        </div>
+      </ng-container>
+    </div>
+  </ng-container>
+</div>
+
+<div *ngIf="activeTab === 99">
+  <div class="field">
+    <label class="label">Test download path permissions</label>
+    <div class="control">
+      <button
+        class="button is-warning"
+        (click)="testDownloadPath()"
+        [disabled]="saving"
+        [ngClass]="{ 'is-loading': saving }"
+        *ngIf="!testPathError && !testPathSuccess"
+      >
+        Test permissions
+      </button>
+      <div class="notification is-danger is-light" *ngIf="testPathError">
+        Could not test your download path<br />
+        {{ testPathError }}
+      </div>
+
+      <div class="notification is-success is-light" *ngIf="testPathSuccess">Your download path looks good!</div>
+    </div>
+    <div class="help">This will check if the download folder has write permissions.</div>
+  </div>
+
+  <div class="field">
+    <label class="label">Test Real-Debrid download speed</label>
+    <div class="control">
+      <button
+        class="button is-warning"
+        (click)="testDownloadSpeed()"
+        [disabled]="saving"
+        [ngClass]="{ 'is-loading': saving }"
+        *ngIf="!testDownloadSpeedError && !testDownloadSpeedSuccess"
+      >
+        Test download speed
+      </button>
+      <div class="notification is-danger is-light" *ngIf="testDownloadSpeedError">
+        Could not test your download speed<br />
+        {{ testDownloadSpeedError }}
+      </div>
+
+      <div class="notification is-success is-light" *ngIf="testDownloadSpeedSuccess">
+        Download speed {{ testDownloadSpeedSuccess | filesize }}/s
+      </div>
+    </div>
+    <div class="help">
+      This will attempt to download a 10GB file from Real-Debrid. When 50MB has been downloaded the test will stop.
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="label">Test download folder write speed</label>
+    <div class="control">
+      <button
+        class="button is-warning"
+        (click)="testWriteSpeed()"
+        [disabled]="saving"
+        [ngClass]="{ 'is-loading': saving }"
+        *ngIf="!testWriteSpeedError && !testWriteSpeedSuccess"
+      >
+        Test write speed
+      </button>
+      <div class="notification is-danger is-light" *ngIf="testWriteSpeedError">
+        Could not test your download speed<br />
+        {{ testWriteSpeedError }}
+      </div>
+
+      <div class="notification is-success is-light" *ngIf="testWriteSpeedSuccess">
+        Write speed {{ testWriteSpeedSuccess | filesize }}/s
+      </div>
+    </div>
+    <div class="help">This will write a small file to your download folder to see how fast it can write to it.</div>
+  </div>
+</div>
+
+<div class="field">
+  <div class="control">
+    <div class="notification is-danger is-light" *ngIf="error?.length > 0">Error saving settings: {{ error }}</div>
+  </div>
+</div>
+
+<div class="field" *ngIf="activeTab < 99">
+  <div class="control">
+    <button class="button is-success" (click)="ok()" [disabled]="saving" [ngClass]="{ 'is-loading': saving }">
+      Save Settings
+    </button>
+  </div>
+</div>

@@ -1,0 +1,38 @@
+<div class="field">
+  <label class="label">Login username</label>
+  <div class="control">
+    <input class="input" type="text" minlength="1" maxlength="100" [(ngModel)]="username" />
+  </div>
+  <p class="help">
+    This is the username you use to login Real-Debrid Client. Only change this if you want to change the username.
+  </p>
+</div>
+<div class="field">
+  <label class="label">Login password</label>
+  <div class="control">
+    <input class="input" type="password" minlength="1" maxlength="100" [(ngModel)]="password" />
+  </div>
+  <p class="help">
+    This is the password you use to login Real-Debrid Client. Only change this if you want to change the password.
+  </p>
+</div>
+
+<div class="field">
+  <div class="control">
+    <div class="notification is-danger is-light" *ngIf="error !== null">Error saving: {{ error }}</div>
+  </div>
+</div>
+
+<div class="field">
+  <div class="control">
+    <div class="notification is-success is-light" *ngIf="success">Your profile has been updated</div>
+  </div>
+</div>
+
+<div class="field">
+  <div class="control">
+    <button class="button is-success" (click)="save()" [disabled]="saving" [ngClass]="{ 'is-loading': saving }">
+      Save Profile
+    </button>
+  </div>
+</div>

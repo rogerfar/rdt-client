@@ -6,58 +6,86 @@
   <table class="table is-fullwidth is-hoverable">
     <thead>
       <tr>
+        <th>
+          <input
+            type="checkbox"
+            (click)="toggleSelectAll($event)"
+            [checked]="selectedTorrents.length > 0 && selectedTorrents.length === torrents.length"
+          />
+        </th>
         <th>Name</th>
+        <th>Category</th>
+        <th>Priority</th>
         <th>Files</th>
         <th>Downloads</th>
-        <th>Auto</th>
         <th>Size</th>
         <th>Status</th>
-        <th>Action</th>
       </tr>
     </thead>
     <tbody>
-      <ng-container *ngFor="let torrent of torrents; trackBy: trackByMethod">
-        <tr
-          app-torrent-row
-          [torrent]="torrent"
-          (click)="selectTorrent(torrent)"
-          (delete)="showDeleteModal($event)"
-          (retry)="showRetryModal($event)"
-        ></tr>
-        <ng-container *ngIf="showFiles[torrent.torrentId]">
-          <tr class="separator">
-            <td colspan="10">Downloads</td>
-          </tr>
-          <tr app-torrent-download [download]="download" *ngFor="let download of torrent.downloads"></tr>
-          <tr class="separator">
-            <td colspan="10">Files in torrent</td>
-          </tr>
-          <tr app-torrent-file [file]="file" *ngFor="let file of torrent.files"></tr>
-        </ng-container>
-      </ng-container>
+      <tr *ngFor="let torrent of torrents; trackBy: trackByMethod">
+        <td>
+          <input
+            type="checkbox"
+            (click)="toggleSelect(torrent.torrentId)"
+            [checked]="selectedTorrents.contains(torrent.torrentId)"
+          />
+        </td>
+        <td (click)="openTorrent(torrent.torrentId)">
+          {{ torrent.rdName }}
+        </td>
+        <td>
+          {{ torrent.category }}
+        </td>
+        <td>
+          {{ torrent.priority }}
+        </td>
+        <td>
+          {{ torrent.files.length | number }}
+        </td>
+        <td>
+          {{ torrent.downloads.length | number }}
+        </td>
+        <td>
+          {{ torrent.rdSize | filesize }}
+        </td>
+        <td>
+          {{ torrent | status }}
+        </td>
+      </tr>
     </tbody>
   </table>
+
+  <button
+    class="button is-danger"
+    (click)="showDeleteModal()"
+    [disabled]="selectedTorrents.length === 0"
+    *ngIf="torrents.length > 0"
+  >
+    Delete Selected
+  </button>
 </div>
 
 <div class="modal" [class.is-active]="isDeleteModalActive">
   <div class="modal-background"></div>
   <div class="modal-card">
     <header class="modal-card-head">
-      <p class="modal-card-title">Delete torrent</p>
+      <p class="modal-card-title">Delete selected torrents</p>
       <button class="delete" aria-label="close" (click)="deleteCancel()"></button>
     </header>
     <section class="modal-card-body">
+      <p>Are you sure you want to delete these torrent?</p>
       <div class="field">
         <label class="label"></label>
         <div class="control">
           <label class="checkbox">
             <input type="checkbox" [(ngModel)]="deleteData" />
-            Delete Torrent from local RealDebrid Client
+            Delete Torrents from client
           </label>
           <br />
           <label class="checkbox">
             <input type="checkbox" [(ngModel)]="deleteRdTorrent" />
-            Delete Torrent from RealDebrid
+            Delete Torrents from provider
           </label>
           <br />
           <label class="checkbox">
@@ -67,7 +95,7 @@
         </div>
       </div>
       <div class="notification is-primary">
-        Deleting a torrent from RealDebrid will automatically delete it here too.
+        Deleting a torrent from Real-Debrid will automatically delete it here too.
       </div>
       <div class="notification is-danger is-light" *ngIf="deleteError?.length > 0">
         Error deleting torrent: {{ deleteError }}
@@ -80,51 +108,9 @@
         [disabled]="deleting"
         [ngClass]="{ 'is-loading': deleting }"
       >
-        Delete
+        Delete selected
       </button>
       <button class="button" (click)="deleteCancel()" [disabled]="deleting" [ngClass]="{ 'is-loading': deleting }">
-        Cancel
-      </button>
-    </footer>
-  </div>
-</div>
-
-<div class="modal" [class.is-active]="isRetryModalActive">
-  <div class="modal-background"></div>
-  <div class="modal-card">
-    <header class="modal-card-head">
-      <p class="modal-card-title">Retry torrent</p>
-      <button class="delete" aria-label="close" (click)="retryCancel()"></button>
-    </header>
-    <section class="modal-card-body">
-      <div class="field">
-        <label class="label">Retry</label>
-        <div class="control">
-          <label class="radio">
-            <input type="radio" name="retry" [value]="0" [(ngModel)]="retry" />
-            Retry on Real-Debrid
-          </label>
-          <br />
-          <label class="radio">
-            <input type="radio" name="retry" [value]="1" [(ngModel)]="retry" />
-            Retry downloading locally
-          </label>
-        </div>
-      </div>
-      <div class="notification is-danger is-light" *ngIf="retryError?.length > 0">
-        Error retrying torrent: {{ retryError }}
-      </div>
-    </section>
-    <footer class="modal-card-foot">
-      <button
-        class="button is-success"
-        (click)="retryOk()"
-        [disabled]="retrying"
-        [ngClass]="{ 'is-loading': retrying }"
-      >
-        Retry
-      </button>
-      <button class="button" (click)="retryCancel()" [disabled]="retrying" [ngClass]="{ 'is-loading': retrying }">
         Cancel
       </button>
     </footer>

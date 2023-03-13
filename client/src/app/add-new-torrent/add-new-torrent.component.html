@@ -1,0 +1,215 @@
+<div fxLayout.lt-lg="column" fxLayout.gt-sm="row" fxLayoutGap="20px" class="field">
+  <div fxFlex>
+    <div class="field">
+      <label class="label">Torrent file</label>
+      <div class="file has-name">
+        <label class="file-label">
+          <input class="file-input" type="file" name="resume" (change)="pickFile($event)" [disabled]="saving" />
+          <span class="file-cta">
+            <span class="file-icon">
+              <i class="fas fa-upload"></i>
+            </span>
+            <span class="file-label"> Pick a torrent file... </span>
+          </span>
+          <span class="file-name">
+            {{ fileName }}
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <hr />
+
+    <div class="field">
+      <label class="label">Magnet Link</label>
+      <div class="control">
+        <textarea
+          class="textarea"
+          placeholder="Paste your magnet link here"
+          [(ngModel)]="magnetLink"
+          [disabled]="saving"
+          (blur)="checkFiles()"
+          (paste)="onPaste()"
+        ></textarea>
+      </div>
+    </div>
+
+    <hr />
+
+    <div class="field">
+      <label class="label">Post Download Action</label>
+      <div class="control select is-fullwidth">
+        <select [(ngModel)]="hostDownloadAction">
+          <option [ngValue]="0">Download all files to host</option>
+          <option [ngValue]="1">Don't download any files to host</option>
+        </select>
+      </div>
+      <p class="help">
+        When a torrent is finished downloading on the provider, perform this action. Use this setting if you only want
+        to add files to Real-Debrid but not download them to the host.
+      </p>
+    </div>
+
+    <div class="field">
+      <label class="label">Post Torrent Download Action</label>
+      <div class="control select is-fullwidth">
+        <select [(ngModel)]="downloadAction" [disabled]="provider === 'AllDebrid' || provider === 'Premiumize'">
+          <option [ngValue]="0">Download all files</option>
+          <option [ngValue]="1">Download all available files</option>
+          <option [ngValue]="2">Manually pick files</option>
+        </select>
+      </div>
+      <p class="help">When a torrent is fully downloaded on the provider, perform this action.</p>
+      <p class="help" *ngIf="provider === 'AllDebrid'">
+        This option is only available for RealDebrid. AllDebrid and Premiumize will always download the full torrent.
+      </p>
+    </div>
+
+    <div
+      class="notification is-success is-light"
+      *ngIf="provider === 'AllDebrid' && availableFiles && availableFiles.length > 0"
+    >
+      This torrent is available for immediate download.
+    </div>
+
+    <div
+      class="notification is-warning is-light"
+      *ngIf="provider === 'AllDebrid' && availableFiles && availableFiles.length === 0"
+    >
+      This torrent is not available for immediate download.
+    </div>
+
+    <div class="field">
+      <label class="label">Minimum file size to download</label>
+      <div class="control">
+        <div class="field has-addons" style="margin-bottom: 0">
+          <div class="control is-expanded">
+            <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="downloadMinSize" />
+          </div>
+          <div class="control">
+            <a class="button is-static">MB</a>
+          </div>
+        </div>
+      </div>
+      <p class="help" *ngIf="provider === 'AllDebrid'">
+        When downloading with AllDebrid it cannot be guaranteed that only files above this limit will be download as
+        some files are grouped together in 1 large archive.
+      </p>
+      <p class="help" *ngIf="downloadAction === 2">This setting does not apply to manually selected files.</p>
+    </div>
+
+    <div class="field">
+      <label class="label">Finished action</label>
+      <div class="control select is-fullwidth">
+        <select [(ngModel)]="finishedAction">
+          <option [ngValue]="0">Do nothing</option>
+          <option [ngValue]="1">Remove torrent from provider and client</option>
+          <option [ngValue]="2">Remove torrent from provider</option>
+          <option [ngValue]="3">Remove torrent from client</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="label">Category</label>
+      <div class="control">
+        <input class="input" type="text" maxlength="100" [(ngModel)]="category" />
+      </div>
+      <p class="help">The category becomes a sub-folder in your main download path.</p>
+    </div>
+
+    <div class="field">
+      <label class="label">Priority</label>
+      <div class="control">
+        <input class="input" type="number" step="1" [(ngModel)]="priority" />
+      </div>
+      <p class="help">
+        Set the priority for this torrent where 1 is the highest. When empty it will be assigned the lowest priority.
+      </p>
+    </div>
+    <div class="field">
+      <label class="label">Automatic retry downloads</label>
+      <div class="control">
+        <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="downloadRetryAttempts" />
+      </div>
+      <p class="help">When a single download fails it will retry it this many times before marking it as failed.</p>
+    </div>
+    <div class="field">
+      <label class="label">Automatic retry torrent</label>
+      <div class="control">
+        <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="torrentRetryAttempts" />
+      </div>
+      <p class="help">
+        When a single download has failed multiple times (see setting above) or when the torrent itself received an
+        error it will retry the full torrent this many times before marking it failed.
+      </p>
+    </div>
+    <div class="field">
+      <label class="label">Delete download when in error</label>
+      <div class="control">
+        <input class="input" type="number" max="100000" min="0" step="1" [(ngModel)]="torrentDeleteOnError" />
+      </div>
+      <p class="help">
+        When a download has been in error for this many minutes, delete it from the provider and the client. 0 to
+        disable.
+      </p>
+    </div>
+    <div class="field">
+      <label class="label">Torrent maximum lifetime</label>
+      <div class="control">
+        <input class="input" type="number" max="100000" min="0" step="1" [(ngModel)]="torrentLifetime" />
+      </div>
+      <p class="help">
+        The maximum lifetime of a torrent in minutes. When this time has passed, mark the torrent as error. If the
+        torrent is completed and has downloads, the lifetime setting will not apply. 0 to disable.
+      </p>
+    </div>
+  </div>
+  <div fxFlex *ngIf="provider === 'RealDebrid'">
+    <div class="field">
+      <label class="label">Available files</label>
+      <p class="help">
+        These files are available for immediate download from Real-Debrid. <br />
+        It is possible that there are more files in the torrent, which are not shown here.<br />
+      </p>
+      <div class="scroll-container">
+        <div class="field" *ngIf="downloadAction === 2">
+          <label class="checkbox is-fullwidth-label">
+            <input type="checkbox" [checked]="allSelected" (change)="downloadFileCheckedAll()" />
+            Select all
+          </label>
+        </div>
+        <div class="field" *ngIf="downloadAction === 2 && availableFiles !== null">
+          <label class="checkbox is-fullwidth-label" *ngFor="let file of availableFiles">
+            <input
+              type="checkbox"
+              [checked]="downloadFiles[file.filename]"
+              (change)="downloadFileChecked(file.filename)"
+            />
+            {{ file.filename }} ({{ file.filesize | filesize }})
+          </label>
+        </div>
+        <div class="field" *ngIf="downloadAction !== 2 && availableFiles !== null">
+          <label class="is-fullwidth-label is-block" *ngFor="let file of availableFiles">
+            {{ file.filename }}
+            <span *ngIf="file.filesize > 0">({{ file.filesize | filesize }})</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="field">
+  <div class="control">
+    <div class="notification is-danger is-light" *ngIf="error">{{ error }}</div>
+  </div>
+</div>
+
+<div class="field">
+  <div class="control">
+    <button class="button is-success" [disabled]="saving" [ngClass]="{ 'is-loading': saving }" (click)="ok()">
+      <span>Add Torrent</span>
+    </button>
+  </div>
+</div>

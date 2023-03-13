@@ -1,100 +1,181 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RdtClient.Data.Enums;
 using RdtClient.Service.Services;
 
-namespace RdtClient.Web.Controllers
+namespace RdtClient.Web.Controllers;
+
+[Route("Api/Authentication")]
+public class AuthController : Controller
 {
-    [Route("Api/Authentication")]
-    public class AuthController : Controller
+    private readonly Authentication _authentication;
+    private readonly Settings _settings;
+
+    public AuthController(Authentication authentication, Settings settings)
     {
-        private readonly IAuthentication _authentication;
-
-        public AuthController(IAuthentication authentication)
-        {
-            _authentication = authentication;
-        }
+        _authentication = authentication;
+        _settings = settings;
+    }
         
-        [AllowAnonymous]
-        [Route("IsLoggedIn")]
-        [HttpGet]
-        public async Task<ActionResult> IsLoggedIn()
+    [AllowAnonymous]
+    [Route("IsLoggedIn")]
+    [HttpGet]
+    public async Task<ActionResult> IsLoggedIn()
+    {
+        if (Settings.Get.General.AuthenticationType == AuthenticationType.None)
         {
-            if (User.Identity?.IsAuthenticated == false)
-            {
-                var user = await _authentication.GetUser();
-
-                if (user == null)
-                {
-                    return StatusCode(402, "Setup required");
-                }
-                
-                return Unauthorized();
-            }
-            
-            return Ok();
-        }
-        
-        [AllowAnonymous]
-        [Route("Create")]
-        [HttpPost]
-        public async Task<ActionResult> Create([FromBody] AuthControllerLoginRequest request)
-        {
-            var user = await _authentication.GetUser();
-
-            if (user != null)
-            {
-                return StatusCode(401);
-            }
-
-            var registerResult = await _authentication.Register(request.UserName, request.Password);
-
-            if (!registerResult.Succeeded)
-            {
-                return BadRequest(registerResult.Errors.First().Description);
-            }
-            
-            await _authentication.Login(request.UserName, request.Password);
-
             return Ok();
         }
 
-        [AllowAnonymous]
-        [Route("Login")]
-        [HttpPost]
-        public async Task<ActionResult> Login([FromBody] AuthControllerLoginRequest request)
+        if (User.Identity?.IsAuthenticated == false)
         {
             var user = await _authentication.GetUser();
 
             if (user == null)
             {
-                return StatusCode(402);
+                return StatusCode(402, "Setup required");
             }
+                
+            return Unauthorized();
+        }
+            
+        return Ok();
+    }
 
-            var result = await _authentication.Login(request.UserName, request.Password);
+    [AllowAnonymous]
+    [Route("Create")]
+    [HttpPost]
+    public async Task<ActionResult> Create([FromBody] AuthControllerLoginRequest? request)
+    {
+        if (request == null)
+        {
+            return BadRequest();
+        }
 
-            if (!result.Succeeded)
-            {
-                return BadRequest("Invalid credentials");
-            }
+        var user = await _authentication.GetUser();
 
-            return Ok();
+        if (user != null)
+        {
+            return StatusCode(401);
         }
         
-        [Route("Logout")]
-        [HttpPost]
-        public async Task<ActionResult> Logout()
+        if (String.IsNullOrEmpty(request.UserName) || String.IsNullOrEmpty(request.Password))
         {
-            await _authentication.Logout();
-            return Ok();
+            return BadRequest("Invalid UserName or Password");
         }
+
+        var registerResult = await _authentication.Register(request.UserName, request.Password);
+
+        if (!registerResult.Succeeded)
+        {
+            return BadRequest(registerResult.Errors.First().Description);
+        }
+            
+        await _authentication.Login(request.UserName, request.Password);
+
+        return Ok();
     }
 
-    public class AuthControllerLoginRequest
+    [AllowAnonymous]
+    [Route("SetupProvider")]
+    [HttpPost]
+    public async Task<ActionResult> SetupProvider([FromBody] AuthControllerSetupProviderRequest? request)
     {
-        public String UserName { get; set; }
-        public String Password { get; set; }
+        if (request == null)
+        {
+            return BadRequest();
+        }
+
+        if (!String.IsNullOrEmpty(Settings.Get.Provider.ApiKey))
+        {
+            return StatusCode(401);
+        }
+
+        await _settings.Update("Provider:Provider", request.Provider);
+        await _settings.Update("Provider:ApiKey", request.Token);
+
+        return Ok();
     }
+
+    [AllowAnonymous]
+    [Route("Login")]
+    [HttpPost]
+    public async Task<ActionResult> Login([FromBody] AuthControllerLoginRequest? request)
+    {
+        if (request == null)
+        {
+            return BadRequest();
+        }
+
+        var user = await _authentication.GetUser();
+
+        if (user == null)
+        {
+            return StatusCode(402);
+        }
+
+        if (String.IsNullOrEmpty(request.UserName) || String.IsNullOrEmpty(request.Password))
+        {
+            return BadRequest("Invalid credentials");
+        }
+
+        var result = await _authentication.Login(request.UserName, request.Password);
+
+        if (!result.Succeeded)
+        {
+            return BadRequest("Invalid credentials");
+        }
+
+        return Ok();
+    }
+        
+    [Route("Logout")]
+    [HttpPost]
+    public async Task<ActionResult> Logout()
+    {
+        await _authentication.Logout();
+        return Ok();
+    }
+                
+    [Route("Update")]
+    [HttpPost]
+    public async Task<ActionResult> Update([FromBody] AuthControllerUpdateRequest? request)
+    {
+        if (request == null)
+        {
+            return BadRequest();
+        }
+
+        if (String.IsNullOrEmpty(request.UserName) || String.IsNullOrEmpty(request.Password))
+        {
+            return BadRequest("Invalid UserName or Password");
+        }
+
+        var updateResult = await _authentication.Update(request.UserName, request.Password);
+
+        if (!updateResult.Succeeded)
+        {
+            return BadRequest(updateResult.Errors.First().Description);
+        }
+
+        return Ok();
+    }
+}
+
+public class AuthControllerLoginRequest
+{
+    public String? UserName { get; set; }
+    public String? Password { get; set; }
+}
+
+public class AuthControllerSetupProviderRequest
+{
+    public Int32 Provider { get; set; }
+    public String? Token { get; set; }
+}
+
+public class AuthControllerUpdateRequest
+{
+    public String? UserName { get; set; }
+    public String? Password { get; set; }
 }

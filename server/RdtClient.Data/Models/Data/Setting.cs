@@ -1,15 +1,11 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace RdtClient.Data.Models.Data
+namespace RdtClient.Data.Models.Data;
+
+public class Setting
 {
-    public class Setting
-    {
-        [Key]
-        public String SettingId { get; set; }
+    [Key]
+    public String SettingId { get; set; } = null!;
 
-        public String Value { get; set; }
-
-        public String Type { get; set; }
-    }
+    public String? Value { get; set; }
 }

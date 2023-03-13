@@ -1,39 +1,32 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { Torrent } from '../models/torrent.model';
 import { TorrentService } from '../torrent.service';
+import { forkJoin, Observable } from 'rxjs';
 
 @Component({
   selector: 'app-torrent-table',
   templateUrl: './torrent-table.component.html',
   styleUrls: ['./torrent-table.component.scss'],
 })
-export class TorrentTableComponent implements OnInit, OnDestroy {
+export class TorrentTableComponent implements OnInit {
   public torrents: Torrent[] = [];
+  public selectedTorrents: string[] = [];
   public error: string;
-  public showFiles: { [key: string]: boolean } = {};
 
   public isDeleteModalActive: boolean;
   public deleteError: string;
   public deleting: boolean;
-  public deleteTorrentId: string;
   public deleteData: boolean;
   public deleteRdTorrent: boolean;
   public deleteLocalFiles: boolean;
 
-  public isRetryModalActive: boolean;
-  public retryError: string;
-  public retrying: boolean;
-  public retryTorrentId: string;
-  public retry: number;
-
-  constructor(private torrentService: TorrentService) {}
+  constructor(private router: Router, private torrentService: TorrentService) {}
 
   ngOnInit(): void {
     this.torrentService.getList().subscribe(
       (result) => {
         this.torrents = result;
-
-        this.torrentService.connect();
 
         this.torrentService.update$.subscribe((result2) => {
           this.torrents = result2;
@@ -45,24 +38,40 @@ export class TorrentTableComponent implements OnInit, OnDestroy {
     );
   }
 
-  ngOnDestroy(): void {
-    this.torrentService.disconnect();
-  }
-
-  public selectTorrent(torrent: Torrent): void {
-    this.showFiles[torrent.torrentId] = !this.showFiles[torrent.torrentId];
+  public openTorrent(torrentId: string): void {
+    this.router.navigate([`/torrent/${torrentId}`]);
   }
 
   public trackByMethod(index: number, el: Torrent): string {
     return el.torrentId;
   }
 
-  public showDeleteModal(torrentId: string): void {
+  public toggleSelectAll(event: any) {
+    this.selectedTorrents = [];
+
+    if (event.target.checked) {
+      this.torrents.map((torrent) => {
+        this.selectedTorrents.push(torrent.torrentId);
+      });
+    }
+  }
+
+  public toggleSelect(torrentId: string) {
+    const index = this.selectedTorrents.indexOf(torrentId);
+
+    if (index > -1) {
+      this.selectedTorrents.splice(index, 1);
+    } else {
+      this.selectedTorrents.push(torrentId);
+    }
+  }
+
+  public showDeleteModal(): void {
     this.deleteData = false;
     this.deleteRdTorrent = false;
     this.deleteLocalFiles = false;
+    this.deleteError = null;
 
-    this.deleteTorrentId = torrentId;
     this.isDeleteModalActive = true;
   }
 
@@ -73,43 +82,23 @@ export class TorrentTableComponent implements OnInit, OnDestroy {
   public deleteOk(): void {
     this.deleting = true;
 
-    this.torrentService
-      .delete(this.deleteTorrentId, this.deleteData, this.deleteRdTorrent, this.deleteLocalFiles)
-      .subscribe(
-        () => {
-          this.isDeleteModalActive = false;
-          this.deleting = false;
-        },
-        (err) => {
-          this.deleteError = err.error;
-          this.deleting = false;
-        }
-      );
-  }
+    let calls: Observable<void>[] = [];
 
-  public showRetryModal(torrentId: string): void {
-    this.retry = 0;
+    this.selectedTorrents.forEach((torrentId) => {
+      calls.push(this.torrentService.delete(torrentId, this.deleteData, this.deleteRdTorrent, this.deleteLocalFiles));
+    });
 
-    this.retryTorrentId = torrentId;
-    this.isRetryModalActive = true;
-  }
+    forkJoin(calls).subscribe({
+      complete: () => {
+        this.isDeleteModalActive = false;
+        this.deleting = false;
 
-  public retryCancel(): void {
-    this.isRetryModalActive = false;
-  }
-
-  public retryOk(): void {
-    this.retrying = true;
-
-    this.torrentService.retry(this.retryTorrentId, this.retry).subscribe(
-      () => {
-        this.isRetryModalActive = false;
-        this.retrying = false;
+        this.selectedTorrents = [];
       },
-      (err) => {
-        this.retryError = err.error;
-        this.retrying = false;
-      }
-    );
+      error: (err) => {
+        this.deleteError = err.error;
+        this.deleting = false;
+      },
+    });
   }
 }
