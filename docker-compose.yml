@@ -1,11 +1,18 @@
 version: '3.3'
+
 services:
     rdtclient:
         image: rogerfar/rdtclient
-        volumes:
-            - ./data/downloads:/data/downloads
-            - ./data/db:/data/db
         container_name: rdtclient
+        build:
+            context: .
+            dockerfile: Dockerfile
+        environment:
+            - PUID=1001
+            - PGID=1001
+        volumes:
+            - ${PWD}/data/downloads:/data/downloads
+            - ${PWD}/data/db:/data/db
         restart: always
         logging:
             driver: json-file

@@ -36,7 +36,7 @@ RUN \
    if [ "$TARGETPLATFORM" = "linux/arm/v7" ] ; then \
       echo "**** Building $TARGETPLATFORM arm v7 version" && \
       dotnet restore -r linux-arm RdtClient.sln && dotnet publish -r linux-arm -c Release -o out ; \
-   elif [ "$TARGETPLATFORM" = "linux/arm/v8"] ; then \
+   elif [ "$TARGETPLATFORM" = "linux/arm/v8" ] ; then \
       echo "**** Building $TARGETPLATFORM arm v8 version" && \
       dotnet restore -r linux-arm64 RdtClient.sln && dotnet publish -r linux-arm64 -c Release -o out ; \
    else \
@@ -45,7 +45,7 @@ RUN \
    fi
 
 # Stage 3 - Build runtime image
-FROM ghcr.io/linuxserver/baseimage-ubuntu:focal
+FROM ghcr.io/linuxserver/baseimage-ubuntu:bionic
 ARG TARGETPLATFORM
 ENV TARGETPLATFORM=${TARGETPLATFORM:-linux/amd64}
 ARG BUILDPLATFORM
@@ -68,7 +68,7 @@ RUN \
     apt-get update -y -qq && \
     echo "**** Install pre-reqs ****" && \
     apt-get install -y -qq wget dos2unix && \
-    apt-get install -y libc6 libgcc1 libgssapi-krb5-2 libssl1.1 libstdc++6 zlib1g libicu66 && \
+    apt-get install -y libc6 libgcc1 libgssapi-krb5-2 libssl1.1 libstdc++6 zlib1g libicu60 && \
     echo "**** Installing dotnet ****" && \
     wget -q https://dot.net/v1/dotnet-install.sh && \
     chmod +x ./dotnet-install.sh && \
