@@ -37,4 +37,4 @@ server/**/.vs
 server/RdtClient.Web/wwwroot/
 
 build/
-publish/
+publish/data
