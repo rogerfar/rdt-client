@@ -85,6 +85,7 @@ RUN \
 
 ENV PATH "$PATH:/usr/share/dotnet"
 
+# Copy files for app
 WORKDIR /app
 COPY --from=dotnet-build-env /appserver/server/out .
 COPY --from=node-build-env /appclient/client/out ./wwwroot
@@ -93,3 +94,6 @@ COPY --from=node-build-env /appclient/root/ /
 # ports and volumes
 EXPOSE 6500
 VOLUME ["/config", "/data" ]
+
+# Check Status
+HEALTHCHECK --interval=30s --timeout=30s --start-period=30s --retries=3 CMD curl --fail http://localhost:6500 || exit 

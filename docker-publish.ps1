@@ -1,4 +1,4 @@
-#!/bin/pwsh
+#!/usr/bin/env pwsh
 <#
         .SYNOPSIS
         Helper script to execute docker buildx
@@ -34,12 +34,27 @@
 param(
     [string]$Version = "",
     [string]$DockerAccount = "rogerfar",
-    [string]$Platforms = "linux/arm/v7,linux/arm64/v8,linux/amd64"
+    [string]$Platforms = "linux/arm/v7,linux/arm64/v8,linux/amd64",
+    [switch]$SkipPush,
+    [switch]$SkipCache,
+    [switch]$OutputToDocker
 )
 
 $imageName = "$($DockerAccount)/rdtclient"
 
-$dockerArgs = @( "buildx", "build", "--no-cache", "--push", "--platform", $Platforms, "--tag", "$($imageName):latest", "." )
+$dockerArgs = @( "buildx", "build", "--network=default", "--platform", $Platforms, "--tag", "$($imageName):latest", "." )
+
+if (-Not $SkipPush.IsPresent) {
+    $dockerArgs += @("--push")
+}
+
+if (-Not $SkipCache.IsPresent) {
+    $dockerArgs += @("--no-cache")
+}
+
+if ($OutputToDocker.IsPresent) {
+    $dockerArgs += @("--output=type=docker")
+}
 
 if ([string]::IsNullOrEmpty($Version)) { 
 	$Version = (Get-Content "package.json" | ConvertFrom-Json).version

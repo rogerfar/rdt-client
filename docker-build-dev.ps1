@@ -17,7 +17,7 @@ Write-Host "removing Container (if exists)"
 docker rm rdtclientdev
 
 Write-Host "Building Container"
-$dockerArgs = @( "build", "--force-rm", "--tag", "rdtclientdev", "--progress=$BuildProgress", "." )
+$dockerArgs = @( "build", "--force-rm", "--network host", "--tag", "rdtclientdev", "--progress=$BuildProgress", "." )
 if ($IgnoreBuildCache.IsPresent) { $dockerArgs += @("--no-cace" ) }
 & docker $dockerArgs
 
