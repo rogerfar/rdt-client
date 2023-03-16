@@ -5,6 +5,11 @@ if [ -n "${UMASK_SET}" ] && [ -z "${UMASK}" ]; then
   umask ${UMASK_SET}
 fi
 
+# permissions
+echo "Setting permissions"
+chown -R abc:abc \
+	/app /data 
+
 echo "Changing to /app folder"
 cd /app || exit
 

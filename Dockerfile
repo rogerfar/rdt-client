@@ -45,7 +45,7 @@ RUN \
    fi
 
 # Stage 3 - Build runtime image
-FROM ghcr.io/linuxserver/baseimage-ubuntu:bionic
+FROM ghcr.io/linuxserver/baseimage-alpine:3.17
 ARG TARGETPLATFORM
 ENV TARGETPLATFORM=${TARGETPLATFORM:-linux/amd64}
 ARG BUILDPLATFORM
@@ -65,26 +65,21 @@ ENV RDTCLIENT_BRANCH="main"
 RUN \
     mkdir -p /data/downloads /data/db || true && \
     echo "**** Updating package information ****" && \
-    apt-get update -y -qq && \
+    apk update && \
     echo "**** Install pre-reqs ****" && \
-    apt-get install -y -qq wget dos2unix && \
-    apt-get install -y libc6 libgcc1 libgssapi-krb5-2 libssl1.1 libstdc++6 zlib1g libicu60 && \
+    apk add bash icu-libs krb5-libs libgcc libintl libssl1.1 libstdc++ zlib && \
     echo "**** Installing dotnet ****" && \
-    wget -q https://dot.net/v1/dotnet-install.sh && \
-    chmod +x ./dotnet-install.sh && \
-    bash ./dotnet-install.sh -c LTS -v latest --runtime dotnet --install-dir /usr/share/dotnet && \
-    bash ./dotnet-install.sh -c LTS -v latest --runtime aspnetcore --install-dir /usr/share/dotnet && \
-    echo "**** Cleaning image ****" && \
-    apt-get -y -qq -o Dpkg::Use-Pty=0 clean && apt-get -y -qq -o Dpkg::Use-Pty=0 purge && \
+    apk add aspnetcore6-runtime && \
     echo "**** Setting permissions ****" && \
     chown -R abc:abc /data && \
     rm -rf \
         /tmp/* \
-        /var/lib/apt/lists/* \
+        /var/cache/apk/* \
         /var/tmp/* || true
 
 ENV PATH "$PATH:/usr/share/dotnet"
 
+# Copy files for app
 WORKDIR /app
 COPY --from=dotnet-build-env /appserver/server/out .
 COPY --from=node-build-env /appclient/client/out ./wwwroot
@@ -92,4 +87,7 @@ COPY --from=node-build-env /appclient/root/ /
 
 # ports and volumes
 EXPOSE 6500
-VOLUME ["/config", "/data" ]
+VOLUME [ "/data" ]
+
+# Check Status
+HEALTHCHECK --interval=30s --timeout=30s --start-period=30s --retries=3 CMD curl --fail http://localhost:6500 || exit 

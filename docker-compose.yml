@@ -4,9 +4,9 @@ services:
     rdtclient:
         image: rogerfar/rdtclient
         container_name: rdtclient
-        build:
-            context: .
-            dockerfile: Dockerfile
+        # build:
+        #     context: .
+        #     dockerfile: Dockerfile
         environment:
             - PUID=1001
             - PGID=1001
@@ -20,3 +20,9 @@ services:
                 max-size: 10m
         ports:
             - '6500:6500'
+        healthcheck:
+            test: curl --fail http://localhost:6500 || exit 1
+            interval: 30s
+            retries: 3
+            start_period: 30s
+            timeout: 30s

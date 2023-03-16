@@ -2,8 +2,9 @@
 
 param(
     [string]$TempPath="c:/Temp/RtdClient",
+    [string]$Dockerfile="Dockerfile",
     [switch]$AutoAttach,
-    [switch]$IgnoreBuildCache,
+    [switch]$SkipCache,
     [string]$BuildProgress="auto"
 )
 
@@ -17,8 +18,8 @@ Write-Host "removing Container (if exists)"
 docker rm rdtclientdev
 
 Write-Host "Building Container"
-$dockerArgs = @( "build", "--force-rm", "--tag", "rdtclientdev", "--progress=$BuildProgress", "." )
-if ($IgnoreBuildCache.IsPresent) { $dockerArgs += @("--no-cace" ) }
+$dockerArgs = @( "build", "--force-rm", "--tag", "rdtclientdev", "--progress=$BuildProgress", "--file", $Dockerfile, "." )
+if ($SkipCache.IsPresent) { $dockerArgs += @("--no-cache" ) }
 & docker $dockerArgs
 
 Write-Host "Starting Container"
