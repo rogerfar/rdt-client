@@ -49,7 +49,7 @@ if (-Not $SkipPush.IsPresent) {
     $dockerArgs += @("--push")
 }
 
-if (-Not $SkipCache.IsPresent) {
+if ($SkipCache.IsPresent) {
     $dockerArgs += @("--no-cache")
 }
 
@@ -65,4 +65,5 @@ $dockerArgs += @("--tag", "$($imageName):$($Version)" )
 $dockerApps += @("--build-arg", "VERSION=$($Version)" )
 
 Write-Host "Generating docker image $imageName for $Platforms"
+Write-Host "Args: $dockerArgs"
 & docker $dockerArgs
