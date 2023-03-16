@@ -6,3 +6,4 @@ node_modules/
 RealDebridClient.zip
 server/RdtClient.Web/appsettings.Development.json
 data
+Dockerfile.dev
