@@ -28,8 +28,8 @@ jobs:
       uses: docker/metadata-action@v4.3.0
       with:
         images: |
-          # ${{ secrets.DOCKERHUB_USERNAME }}/$APP_NAME
-          ghcr.io/${{ secrets.DOCKERHUB_USERNAME }}/$APP_NAME
+          # ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}
+          ghcr.io/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}
         tags: |
             type=schedule
             type=ref,event=branch
@@ -68,7 +68,7 @@ jobs:
       uses: docker/build-push-action@v4.0.0
       with:
         context: .
-        file: $DOCKER_FILE
+        file: ${{ env.DOCKER_FILE }}
         platforms: "linux/arm/v7,linux/arm64/v8,linux/amd64"
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
@@ -80,7 +80,7 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-        repository: ${{ secrets.DOCKERHUB_USERNAME }}/$APP_NAME
+        repository: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}
         short-description: |
           a web interface to manage your torrents on Real-Debrid, AllDebrid or Premiumize.
         readme-filepath: ./README-DOCKER.md
