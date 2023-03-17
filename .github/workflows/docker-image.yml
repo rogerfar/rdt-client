@@ -3,6 +3,8 @@ name: Docker Image CI
 on:
   push:
     branches: [ "master" ]
+    tags:
+      - v*
 
 permissions: 
   packages: write
@@ -10,6 +12,7 @@ permissions:
 env:
   APP_NAME: rdt-client
   DOCKER_FILE: ./Dockerfile
+  DOCKER_PLATFORMS: "linux/arm/v7,linux/arm64/v8,linux/amd64"
   ENABLE_DOCKERHUB: 0
   ENABLE_GHCR: 1
   
@@ -69,7 +72,7 @@ jobs:
       with:
         context: .
         file: ${{ env.DOCKER_FILE }}
-        platforms: "linux/arm/v7,linux/arm64/v8,linux/amd64"
+        platforms: ${{ env.DOCKER_PLATFORMS }}
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
@@ -85,12 +88,12 @@ jobs:
           a web interface to manage your torrents on Real-Debrid, AllDebrid or Premiumize.
         readme-filepath: ./README-DOCKER.md
     
-    - name: Github Registry Description
-      if: ${{ env.ENABLE_GHCR == 1 }}
-      uses: peter-evans/dockerhub-description@v3.3.0
-      with:
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-        short-description: |
-          A web interface to manage your torrents on Real-Debrid, AllDebrid or Premiumize.
-        readme-filepath: ./README-DOCKER.md
+    # - name: Github Registry Description
+    #   if: ${{ env.ENABLE_GHCR == 1 }}
+    #   uses: peter-evans/dockerhub-description@v3.3.0
+    #   with:
+    #     username: ${{ github.repository_owner }}
+    #     password: ${{ secrets.GITHUB_TOKEN }}
+    #     short-description: |
+    #       A web interface to manage your torrents on Real-Debrid, AllDebrid or Premiumize.
+    #     readme-filepath: ./README-DOCKER.md
