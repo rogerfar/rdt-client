@@ -38,12 +38,13 @@ param(
     [string]$Dockerfile = "Dockerfile",
     [switch]$SkipPush,
     [switch]$SkipCache,
-    [switch]$OutputToDocker
+    [switch]$OutputToDocker,
+    [string]$BuildProgress="auto"
 )
 
 $imageName = "$($DockerAccount)/rdtclient"
 
-$dockerArgs = @( "buildx", "build", "--network=default", "--platform", $Platforms, "--tag", "$($imageName):latest", "--file", $Dockerfile, "." )
+$dockerArgs = @( "buildx", "build", "--network=default", "--platform", $Platforms, "--progress=$BuildProgress", "--tag", "$($imageName):latest", "--file", $Dockerfile, "." )
 
 if (-Not $SkipPush.IsPresent) {
     $dockerArgs += @("--push")
