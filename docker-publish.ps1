@@ -55,7 +55,7 @@ if ($SkipCache.IsPresent) {
 }
 
 if ($OutputToDocker.IsPresent) {
-    $dockerArgs += @("--output=type=docker")
+    $dockerArgs += @("--load")
 }
 
 if ([string]::IsNullOrEmpty($Version)) { 
