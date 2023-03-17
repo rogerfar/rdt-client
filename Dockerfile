@@ -1,5 +1,5 @@
 # Stage 1 - Build the frontend
-FROM node:16-buster AS node-build-env
+FROM node:16-alpine3.17 AS node-build-env
 ARG TARGETPLATFORM
 ENV TARGETPLATFORM=${TARGETPLATFORM:-linux/amd64}
 ARG BUILDPLATFORM
@@ -35,13 +35,13 @@ RUN \
    cd server && \
    if [ "$TARGETPLATFORM" = "linux/arm/v7" ] ; then \
       echo "**** Building $TARGETPLATFORM arm v7 version" && \
-      dotnet restore -r linux-arm RdtClient.sln && dotnet publish -r linux-arm -c Release -o out ; \
+      dotnet restore --no-cache -r linux-arm RdtClient.sln && dotnet publish --no-restore -r linux-arm -c Release -o out ; \
    elif [ "$TARGETPLATFORM" = "linux/arm/v8" ] ; then \
       echo "**** Building $TARGETPLATFORM arm v8 version" && \
-      dotnet restore -r linux-arm64 RdtClient.sln && dotnet publish -r linux-arm64 -c Release -o out ; \
+      dotnet restore --no-cache -r linux-arm64 RdtClient.sln && dotnet publish --no-restore -r linux-arm64 -c Release -o out ; \
    else \
       echo "**** Building $TARGETPLATFORM x64 version" && \
-      dotnet restore RdtClient.sln && dotnet publish -c Release -o out ; \
+      dotnet restore --no-cache RdtClient.sln && dotnet publish --no-restore -c Release -o out ; \
    fi
 
 # Stage 3 - Build runtime image
