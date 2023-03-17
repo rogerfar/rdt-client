@@ -10,8 +10,8 @@ permissions:
 env:
   APP_NAME: rdt-client
   DOCKER_FILE: ./Dockerfile
-  ENABLE_DOCKERHUB: FALSE
-  ENABLE_GHCR: TRUE
+  ENABLE_DOCKERHUB: 0
+  ENABLE_GHCR: 1
   
 jobs:
 
@@ -50,14 +50,14 @@ jobs:
         buildkitd-flags: --debug
     
     - name: Docker Login
-      if: ${{ github.event_name != 'pull_request' && env.ENABLE_DOCKERHUB == TRUE }}
+      if: ${{ github.event_name != 'pull_request' && env.ENABLE_DOCKERHUB == 1 }}
       uses: docker/login-action@v2.1.0
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
         
     - name: Login to GHCR
-      if: ${{ github.event_name != 'pull_request' && env.ENABLE_GHCR == TRUE }}
+      if: ${{ github.event_name != 'pull_request' && env.ENABLE_GHCR == 1 }}
       uses: docker/login-action@v2.1.0
       with:
         registry: ghcr.io
@@ -75,7 +75,7 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
 
     - name: Docker Hub Registry Description
-      if: ${{ env.ENABLE_DOCKERHUB == TRUE }}
+      if: ${{ env.ENABLE_DOCKERHUB == 1 }}
       uses: peter-evans/dockerhub-description@v3.3.0
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -86,7 +86,7 @@ jobs:
         readme-filepath: ./README-DOCKER.md
     
     - name: Github Registry Description
-      if: ${{ env.ENABLE_GHCR == TRUE }}
+      if: ${{ env.ENABLE_GHCR == 1 }}
       uses: peter-evans/dockerhub-description@v3.3.0
       with:
         username: ${{ github.repository_owner }}
