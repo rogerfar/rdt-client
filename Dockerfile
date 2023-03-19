@@ -8,6 +8,8 @@ ENV BUILDPLATFORM=${BUILDPLATFORM:-linux/amd64}
 RUN mkdir /appclient
 WORKDIR /appclient
 
+RUN apk add --no-cache git
+
 RUN \
    echo "**** Cloning Source Code ****" && \
    git clone https://github.com/rogerfar/rdt-client.git . && \

@@ -24,7 +24,7 @@ if ($SkipCache.IsPresent) { $dockerArgs += @("--no-cache" ) }
 & docker $dockerArgs
 
 Write-Host "Starting Container"
-docker run --cap-add=NET_ADMIN -d -v $($downloadPath):/data/downloads -v $($dbPath):/data/db --log-driver json-file --log-opt max-size=10m -p 6500:6500 --name rdtclientdev rdtclientdev
+& docker run --cap-add=NET_ADMIN -d -v ${$downloadPath}:/data/downloads -v ${$dbPath}:/data/db --log-driver json-file --log-opt max-size=10m -p 6500:6500 --name rdtclientdev rdtclientdev
 
 if ($AutoAttach.IsPresent) {
     docker exec -it rdtclientdev /bin/bash
