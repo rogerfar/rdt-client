@@ -95,10 +95,6 @@ public class DbSettingsDownloadClient
     [Description("Maximum amount of parallel threads that are used to download a single file to your host. If set to 0 no parallel downloading will be done.")]
     public Int32 ParallelCount { get; set; } = 0;
 
-    [DisplayName("Parallel chunks per download (only used for the Internal Downloader)")]
-    [Description("Split each parallel download in chunks.")]
-    public Int32 ChunkCount { get; set; } = 1;
-
     [DisplayName("Connection Timeout (only used for the Internal Downloader)")]
     [Description("Timeout in milliseconds before the downloader times out.")]
     public Int32 Timeout { get; set; } = 5000;

@@ -228,29 +228,35 @@ public class PremiumizeTorrentClient : ITorrentClient
         }
 
         var transfers = await GetClient().Transfers.ListAsync();
+
+        Log($"Found {transfers.Count} transfers", torrent);
+
         var transfer = transfers.FirstOrDefault(m => m.Id == torrent.RdId);
 
         if (transfer == null)
         {
+            Log($"Transfer {torrent.RdId} not found!", torrent);
             return null;
         }
 
         if (String.IsNullOrWhiteSpace(transfer.FolderId))
         {
+            Log($"Transfer {torrent.RdId} has no folderId!", torrent);
             return null;
         }
 
-        var zip = await GetClient()
-                        .Zip.Generate(new List<String>(),
-                                      new List<String>
-                                      {
-                                          transfer.FolderId
-                                      });
+        var files = await GetClient().Folder.ListAsync(transfer.FolderId);
 
-        return new List<String>
+        var downloadLinks = files.Content.Where(m => !String.IsNullOrWhiteSpace(m.Link)).Select(m => m.Link).ToList();
+
+        Log($"Found {downloadLinks.Count} links", torrent);
+
+        foreach (var link in downloadLinks)
         {
-            zip
-        };
+            Log($"{link}", torrent);
+        }
+
+        return downloadLinks;
     }
 
     private async Task<TorrentClientTorrent> GetInfo(String id)

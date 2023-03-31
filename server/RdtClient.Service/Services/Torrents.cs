@@ -23,8 +23,24 @@ public class Torrents
     private readonly ILogger<Torrents> _logger;
     private readonly TorrentData _torrentData;
     private readonly Downloads _downloads;
-        
-    private readonly ITorrentClient _torrentClient;
+
+    private readonly AllDebridTorrentClient _allDebridTorrentClient;
+    private readonly PremiumizeTorrentClient _premiumizeTorrentClient;
+    private readonly RealDebridTorrentClient _realDebridTorrentClient;
+
+    private ITorrentClient _torrentClient
+    {
+        get
+        {
+            return Settings.Get.Provider.Provider switch
+            {
+                Provider.Premiumize => _premiumizeTorrentClient,
+                Provider.RealDebrid => _realDebridTorrentClient,
+                Provider.AllDebrid => _allDebridTorrentClient,
+                _ => throw new Exception("Invalid Provider")
+            };
+        }
+    }
 
     private static readonly SemaphoreSlim TorrentResetLock = new(1, 1);
 
@@ -38,14 +54,9 @@ public class Torrents
         _logger = logger;
         _torrentData = torrentData;
         _downloads = downloads;
-            
-        _torrentClient = Settings.Get.Provider.Provider switch
-        {
-            Provider.Premiumize => premiumizeTorrentClient,
-            Provider.RealDebrid => realDebridTorrentClient,
-            Provider.AllDebrid => allDebridTorrentClient,
-            _ => throw new Exception("Invalid Provider")
-        };
+        _allDebridTorrentClient = allDebridTorrentClient;
+        _premiumizeTorrentClient = premiumizeTorrentClient;
+        _realDebridTorrentClient = realDebridTorrentClient;
     }
 
     public async Task<IList<Torrent>> Get()
