@@ -12,8 +12,8 @@ env:
   APP_NAME: rdt-client
   DOCKER_FILE: ./Dockerfile
   DOCKER_PLATFORMS: "linux/arm/v7,linux/arm64/v8,linux/amd64"
-  ENABLE_DOCKERHUB: 0
-  ENABLE_GHCR: 1
+  ENABLE_DOCKERHUB: 1
+  ENABLE_GHCR: 0
   
 jobs:
 
