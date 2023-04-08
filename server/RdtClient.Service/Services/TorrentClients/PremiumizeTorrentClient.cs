@@ -235,21 +235,32 @@ public class PremiumizeTorrentClient : ITorrentClient
 
         if (transfer == null)
         {
-            Log($"Transfer {torrent.RdId} not found!", torrent);
-            return null;
+            throw new Exception($"Transfer {torrent.RdId} not found!");
         }
 
-        if (String.IsNullOrWhiteSpace(transfer.FolderId))
+        List<String> downloadLinks;
+        if (!String.IsNullOrWhiteSpace(transfer.FolderId))
         {
-            Log($"Transfer {torrent.RdId} has no folderId!", torrent);
-            return null;
+            var files = await GetClient().Folder.ListAsync(transfer.FolderId);
+            downloadLinks = files.Content.Where(m => !String.IsNullOrWhiteSpace(m.Link)).Select(m => m.Link).ToList();
+
+            Log($"Found {downloadLinks.Count} links in folder {transfer.FolderId}", torrent);
         }
+        else if (!String.IsNullOrWhiteSpace(transfer.FileId))
+        {
+            var file = await GetClient().Items.DetailsAsync(transfer.FileId);
 
-        var files = await GetClient().Folder.ListAsync(transfer.FolderId);
+            downloadLinks = new List<String>
+            {
+                file.Link
+            };
 
-        var downloadLinks = files.Content.Where(m => !String.IsNullOrWhiteSpace(m.Link)).Select(m => m.Link).ToList();
-
-        Log($"Found {downloadLinks.Count} links", torrent);
+            Log($"Found {transfer.FileId}", torrent);
+        }
+        else
+        {
+            throw new Exception($"Transfer {torrent.RdId} has no folderId or fileId!");
+        }
 
         foreach (var link in downloadLinks)
         {

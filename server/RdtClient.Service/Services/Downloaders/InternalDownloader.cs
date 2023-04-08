@@ -43,7 +43,7 @@ public class InternalDownloader : IDownloader
             DownloadProgress.Invoke(this,
                                      new DownloadProgressEventArgs
                                      {
-                                         Speed = (Int64) args.Average(m => m.Speed),
+                                         Speed = (Int64) args.Sum(m => m.Speed),
                                          BytesDone = args.Sum(m => m.DownloadBytes),
                                          BytesTotal = args.Sum(m => m.LengthBytes)
                                      });
