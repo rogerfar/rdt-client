@@ -30,7 +30,7 @@ jobs:
       uses: docker/metadata-action@v4.3.0
       with:
         images: |
-          # ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}
+          ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}
           ghcr.io/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}
         tags: |
             type=schedule
