@@ -116,7 +116,7 @@ http://127.0.0.1:6800/jsonrpc.")]
 public class DbSettingsProvider
 {
     [DisplayName("Provider")]
-    [Description(@"The following 2 providers are supported:
+    [Description(@"The following 3 providers are supported:
 <a href=""https://real-debrid.com/?id=1348683"" target=""_blank"" rel=""noopener"">https://real-debrid.com</a>
 <a href=""https://alldebrid.com/?uid=2v91l&lang=en"" target=""_blank"" rel=""noopener"">https://alldebrid.com</a>
 <a href=""https://www.premiumize.me/"" target=""_blank"" rel=""noopener"">https://www.premiumize.me/</a>

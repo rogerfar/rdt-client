@@ -169,6 +169,8 @@ try
         app.UseMiddleware<BaseHrefMiddleware>();
     }
 
+    app.UseMiddleware<RequestLoggingMiddleware>();
+
     app.UseRouting();
 
     app.UseAuthentication();

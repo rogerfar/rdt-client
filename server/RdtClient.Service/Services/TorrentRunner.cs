@@ -512,9 +512,19 @@ public class TorrentRunner
                 if ((torrent.Downloads.Count > 0) || 
                     torrent.RdStatus == TorrentStatus.Finished && torrent.HostDownloadAction == TorrentHostDownloadAction.DownloadNone)
                 {
-                    var allComplete = torrent.Downloads.Count(m => m.Completed != null);
+                    var completeCount = torrent.Downloads.Count(m => m.Completed != null);
 
-                    if (allComplete == torrent.Downloads.Count)
+                    var completePerc = 0;
+
+                    var totalDownloadBytes = torrent.Downloads.Sum(m => m.BytesTotal);
+                    var totalDoneBytes = torrent.Downloads.Sum(m => m.BytesDone);
+
+                    if (totalDownloadBytes > 0)
+                    {
+                        completePerc = (Int32)((Double)totalDoneBytes / totalDownloadBytes * 100);
+                    }
+
+                    if (completeCount == torrent.Downloads.Count)
                     {
                         Log($"All downloads complete, marking torrent as complete", torrent);
 
@@ -558,7 +568,7 @@ public class TorrentRunner
                     }
                     else
                     {
-                        Log($"Waiting for downloads to complete. {allComplete}/{torrent.Downloads.Count} complete", torrent);
+                        Log($"Waiting for downloads to complete. {completeCount}/{torrent.Downloads.Count} complete ({completePerc}%)", torrent);
                     }
                 }
             }
