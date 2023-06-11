@@ -161,7 +161,7 @@ public class TorrentRunner
                 if (!String.IsNullOrWhiteSpace(downloadClient.Error))
                 {
                     // Retry the download if an error is encountered.
-                    Log($"Download reported an error: {downloadClient.Error}", download, download.Torrent);
+                    LogError($"Download reported an error: {downloadClient.Error}", download, download.Torrent);
                     Log($"Download retry count {download.RetryCount}/{download.Torrent!.DownloadRetryAttempts}, torrent retry count {download.Torrent.RetryCount}/{download.Torrent.TorrentRetryAttempts}", download, download.Torrent);
                         
                     if (download.RetryCount < download.Torrent.DownloadRetryAttempts)
@@ -612,5 +612,20 @@ public class TorrentRunner
         }
 
         _logger.LogDebug(message);
+    }
+
+    private void LogError(String message, Download? download, Torrent? torrent)
+    {
+        if (download != null)
+        {
+            message = $"{message} {download.ToLog()}";
+        }
+
+        if (torrent != null)
+        {
+            message = $"{message} {torrent.ToLog()}";
+        }
+
+        _logger.LogError(message);
     }
 }
