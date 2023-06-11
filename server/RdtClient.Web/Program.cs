@@ -164,6 +164,11 @@ try
         }
     });
 
+    if (!String.IsNullOrWhiteSpace(appSettings.BasePath))
+    {
+        app.UseMiddleware<BaseHrefMiddleware>();
+    }
+
     app.UseRouting();
 
     app.UseAuthentication();
