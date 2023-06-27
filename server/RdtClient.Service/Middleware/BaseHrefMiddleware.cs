@@ -39,6 +39,7 @@ public class BaseHrefMiddleware
                 responseBody = Regex.Replace(responseBody, "(<script.*?src=\")(.*?)(\".*?</script>)", $"$1{basePath}$2$3");
                 responseBody = Regex.Replace(responseBody, "(<link.*?href=\")(.*?)(\".*?>)", $"$1{basePath}$2$3");
 
+                context.Response.Headers.Remove("Content-Length");
                 await context.Response.WriteAsync(responseBody);
             }
             else
