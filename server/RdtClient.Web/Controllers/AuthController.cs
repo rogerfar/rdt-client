@@ -36,7 +36,7 @@ public class AuthController : Controller
                 return StatusCode(402, "Setup required");
             }
                 
-            return Unauthorized();
+            return StatusCode(403);
         }
             
         return Ok();
