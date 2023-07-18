@@ -225,24 +225,10 @@ public class PremiumizeTorrentClient : ITorrentClient
     private async Task<List<Tuple<String,String>>> GetDownloadLinksFromFolderId(string folderId, string folderPath)
     {
         var files = await GetClient().Folder.ListAsync(folderId);
-        Log($"Found {files.Content.Count} items in folder {folderId} with name {files.Name} and breadcrumbs: {files.Breadcrumbs}");
-        foreach(var crumb in files.Breadcrumbs)
-        {
-            Log($"crumb name: {crumb.Name}; crumb Id; {crumb.Id}");
-        }
 
-        foreach (var item in files.Content)
-        {
-            Log($"Found item: {item.Name}");
-            Log($"Id: {item.Id}");
-            Log($"Size: {item.Size}");
-            Log($"Folder Id: {item.FolderId}");
-            Log($"Type: {item.Type}");
-            Log($"Link: {item.Link}");
-        }
         var downloadLinks = files.Content.Where(m => !String.IsNullOrWhiteSpace(m.Link)).Select(m => m.Link).ToList();
 
-        Log($"Found {downloadLinks.Count} links in folder {folderId}");
+        Log($"Found {downloadLinks.Count} links in folder {folderPath}");
 
         List<Tuple<String, String>> linksAndFolders = new List<Tuple<string, string>>();
 
@@ -250,16 +236,14 @@ public class PremiumizeTorrentClient : ITorrentClient
         {
             linksAndFolders.Add(new Tuple<String, String>(downloadLink, folderPath));
         }
-        Log($"Added {linksAndFolders.Count} links to returnList");
+
         List<ItemContent> subFolders = files.Content.Where(m => !String.IsNullOrWhiteSpace(m.Id)).Where(m => m.Type =="folder").Select(m => m).ToList();
         foreach (var subFolder in subFolders)
         {
             String subFolderPath = folderPath + subFolder.Name + "/";
             var subFolderLinks = await GetDownloadLinksFromFolderId(subFolder.Id, subFolderPath);
             linksAndFolders.AddRange(subFolderLinks);
-            Log($"List contains {linksAndFolders.Count} links after AddRange");
         }
-        Log($"Returning {linksAndFolders.Count} links from sub-folder {folderPath}");
 
         return linksAndFolders;
     }
@@ -287,7 +271,6 @@ public class PremiumizeTorrentClient : ITorrentClient
         if (!String.IsNullOrWhiteSpace(transfer.FolderId))
         {
             downloadLinks = await GetDownloadLinksFromFolderId(transfer.FolderId, "");
-            Log($"Found {downloadLinks.Count} total links", torrent);
         }
         else if (!String.IsNullOrWhiteSpace(transfer.FileId))
         {
