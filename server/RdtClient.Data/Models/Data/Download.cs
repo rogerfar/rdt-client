@@ -14,6 +14,7 @@ public class Download
     public Torrent? Torrent { get; set; }
 
     public String Path { get; set; } = null!;
+    public String Folder { get; set; } = null!;
     public String? Link { get; set; }
 
     public DateTimeOffset Added { get; set; }

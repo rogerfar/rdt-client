@@ -200,11 +200,11 @@ public class Torrents
         foreach (var downloadLink in downloadLinks)
         {
             // Make sure downloads don't get added multiple times
-            var downloadExists = await _downloads.Get(torrent.TorrentId, downloadLink);
+            var downloadExists = await _downloads.Get(torrent.TorrentId, downloadLink.Item1);
 
-            if (downloadExists == null && !String.IsNullOrWhiteSpace(downloadLink))
+            if (downloadExists == null && !String.IsNullOrWhiteSpace(downloadLink.Item1))
             {
-                await _downloads.Add(torrent.TorrentId, downloadLink);
+                await _downloads.Add(torrent.TorrentId, downloadLink.Item1, downloadLink.Item2);
             }
         }
     }

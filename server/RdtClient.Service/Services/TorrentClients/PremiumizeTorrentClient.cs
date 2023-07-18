@@ -1,9 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using AllDebridNET;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PremiumizeNET;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
+using System.Security.Cryptography.Xml;
 using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services.TorrentClients;
@@ -220,7 +222,49 @@ public class PremiumizeTorrentClient : ITorrentClient
         return torrent;
     }
 
-    public async Task<IList<String>?> GetDownloadLinks(Torrent torrent)
+    private async Task<List<Tuple<String,String>>> GetDownloadLinksFromFolderId(string folderId, string folderPath)
+    {
+        var files = await GetClient().Folder.ListAsync(folderId);
+        Log($"Found {files.Content.Count} items in folder {folderId} with name {files.Name} and breadcrumbs: {files.Breadcrumbs}");
+        foreach(var crumb in files.Breadcrumbs)
+        {
+            Log($"crumb name: {crumb.Name}; crumb Id; {crumb.Id}");
+        }
+
+        foreach (var item in files.Content)
+        {
+            Log($"Found item: {item.Name}");
+            Log($"Id: {item.Id}");
+            Log($"Size: {item.Size}");
+            Log($"Folder Id: {item.FolderId}");
+            Log($"Type: {item.Type}");
+            Log($"Link: {item.Link}");
+        }
+        var downloadLinks = files.Content.Where(m => !String.IsNullOrWhiteSpace(m.Link)).Select(m => m.Link).ToList();
+
+        Log($"Found {downloadLinks.Count} links in folder {folderId}");
+
+        List<Tuple<String, String>> linksAndFolders = new List<Tuple<string, string>>();
+
+        foreach(var downloadLink in downloadLinks)
+        {
+            linksAndFolders.Add(new Tuple<String, String>(downloadLink, folderPath));
+        }
+        Log($"Added {linksAndFolders.Count} links to returnList");
+        List<ItemContent> subFolders = files.Content.Where(m => !String.IsNullOrWhiteSpace(m.Id)).Where(m => m.Type =="folder").Select(m => m).ToList();
+        foreach (var subFolder in subFolders)
+        {
+            String subFolderPath = folderPath + subFolder.Name + "/";
+            var subFolderLinks = await GetDownloadLinksFromFolderId(subFolder.Id, subFolderPath);
+            linksAndFolders.AddRange(subFolderLinks);
+            Log($"List contains {linksAndFolders.Count} links after AddRange");
+        }
+        Log($"Returning {linksAndFolders.Count} links from sub-folder {folderPath}");
+
+        return linksAndFolders;
+    }
+
+    public async Task<IList<Tuple<String, String>>?> GetDownloadLinks(Torrent torrent)
     {
         if (torrent.RdId == null)
         {
@@ -238,21 +282,20 @@ public class PremiumizeTorrentClient : ITorrentClient
             throw new Exception($"Transfer {torrent.RdId} not found!");
         }
 
-        List<String> downloadLinks;
+        Log($"Searching for links in folder {transfer.FolderId}", torrent);
+        List<Tuple<String,String>> downloadLinks;
         if (!String.IsNullOrWhiteSpace(transfer.FolderId))
         {
-            var files = await GetClient().Folder.ListAsync(transfer.FolderId);
-            downloadLinks = files.Content.Where(m => !String.IsNullOrWhiteSpace(m.Link)).Select(m => m.Link).ToList();
-
-            Log($"Found {downloadLinks.Count} links in folder {transfer.FolderId}", torrent);
+            downloadLinks = await GetDownloadLinksFromFolderId(transfer.FolderId, "");
+            Log($"Found {downloadLinks.Count} total links", torrent);
         }
         else if (!String.IsNullOrWhiteSpace(transfer.FileId))
         {
             var file = await GetClient().Items.DetailsAsync(transfer.FileId);
 
-            downloadLinks = new List<String>
+            downloadLinks = new List<Tuple<String, String>>
             {
-                file.Link
+                new Tuple<String, String>(file.Link, "")
             };
 
             Log($"Found {transfer.FileId}", torrent);
@@ -264,7 +307,7 @@ public class PremiumizeTorrentClient : ITorrentClient
 
         foreach (var link in downloadLinks)
         {
-            Log($"{link}", torrent);
+            Log($"Folder: {link.Item2}; Link: {link.Item1}", torrent);
         }
 
         return downloadLinks;

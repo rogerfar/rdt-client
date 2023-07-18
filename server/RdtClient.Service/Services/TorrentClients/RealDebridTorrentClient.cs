@@ -311,7 +311,7 @@ public class RealDebridTorrentClient : ITorrentClient
         return torrent;
     }
 
-    public async Task<IList<String>?> GetDownloadLinks(Data.Models.Data.Torrent torrent)
+    public async Task<IList<Tuple<String, String>>?> GetDownloadLinks(Data.Models.Data.Torrent torrent)
     {
         if (torrent.RdId == null)
         {
@@ -325,7 +325,7 @@ public class RealDebridTorrentClient : ITorrentClient
             return null;
         }
 
-        var downloadLinks = rdTorrent.Links.Where(m => !String.IsNullOrWhiteSpace(m)).ToList();
+        var downloadLinks = rdTorrent.Links.Where(m => !String.IsNullOrWhiteSpace(m)).Select(m => new Tuple<String, String>(m, "")).ToList();
 
         Log($"Found {downloadLinks.Count} links", torrent);
 

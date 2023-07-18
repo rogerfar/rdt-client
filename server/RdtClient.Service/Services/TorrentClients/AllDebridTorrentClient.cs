@@ -250,7 +250,7 @@ public class AllDebridTorrentClient : ITorrentClient
         return torrent;
     }
 
-    public async Task<IList<String>?> GetDownloadLinks(Torrent torrent)
+    public async Task<IList<Tuple<String, String>>?> GetDownloadLinks(Torrent torrent)
     {
         if (torrent.RdId == null)
         {
@@ -298,7 +298,7 @@ public class AllDebridTorrentClient : ITorrentClient
 
         Log("", torrent);
 
-        return links.Select(m => m.LinkUrl.ToString()).ToList();
+        return links.Select(m => new Tuple<String, String>(m.LinkUrl.ToString(), "")).ToList();
     }
 
     private async Task<TorrentClientTorrent> GetInfo(String torrentId)

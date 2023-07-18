@@ -36,7 +36,7 @@ public class DownloadData
                                  .FirstOrDefaultAsync(m => m.TorrentId == torrentId && m.Path == path);
     }
 
-    public async Task<Download> Add(Guid torrentId, String path)
+    public async Task<Download> Add(Guid torrentId, String path, String folder)
     {
         var download = new Download
         {
@@ -45,7 +45,8 @@ public class DownloadData
             Path = path,
             Added = DateTimeOffset.UtcNow,
             DownloadQueued = DateTimeOffset.UtcNow,
-            RetryCount = 0
+            RetryCount = 0,
+            Folder = folder
         };
 
         await _dataContext.Downloads.AddAsync(download);
