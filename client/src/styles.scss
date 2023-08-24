@@ -1,2 +1,7 @@
 @import "../node_modules/bulma/bulma.sass";
 @import "../node_modules/@fortawesome/fontawesome-free/css/all.css";
+
+// treat numbers as monospaced characters
+body {
+    font-feature-settings: "tnum";
+}
