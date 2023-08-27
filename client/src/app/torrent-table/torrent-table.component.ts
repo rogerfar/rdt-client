@@ -11,7 +11,6 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
   styleUrls: ['./torrent-table.component.scss'],
 })
 export class TorrentTableComponent implements OnInit {
-  public torrent: Torrent;
   public torrents: Torrent[] = [];
   public selectedTorrents: Torrent[] = [];
   public error: string;
