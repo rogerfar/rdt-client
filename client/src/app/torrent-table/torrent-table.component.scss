@@ -3,3 +3,11 @@ table {
     cursor: pointer;
   }
 }
+.control > .ng-dirty.ng-valid {
+  border-color: green;
+  border-width: 2px;
+}
+.control > .ng-dirty.ng-invalid {
+  border-color: red;
+  border-width: 2px;
+}

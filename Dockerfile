@@ -10,9 +10,11 @@ WORKDIR /appclient
 
 RUN apk add --no-cache git
 
+COPY . /appclient/
+
 RUN \
-   echo "**** Cloning Source Code ****" && \
-   git clone https://github.com/rogerfar/rdt-client.git . && \
+   # echo "**** Cloning Source Code ****" && \
+   # git clone https://github.com/rogerfar/rdt-client.git . && \
    cd client && \
    echo "**** Building Code  ****" && \
    npm ci && \

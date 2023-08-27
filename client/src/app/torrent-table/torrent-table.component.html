@@ -7,31 +7,24 @@
     <thead>
       <tr>
         <th>
-          <input
-            type="checkbox"
-            (click)="toggleSelectAll($event)"
-            [checked]="selectedTorrents.length > 0 && selectedTorrents.length === torrents.length"
-          />
-          </th>
-          <th>Name</th>
-          <th>Category</th>
-          <th>Priority</th>
-          <th>Files</th>
-          <th>Downloads</th>
-          <th>Size</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let torrent of torrents; trackBy: trackByMethod">
-          <td>
-            <input
-              type="checkbox"
-              (click)="toggleSelect(torrent.torrentId)"
-              [checked]="selectedTorrents.contains(torrent.torrentId)"
-            />
+          <input type="checkbox" (click)="toggleSelectAll($event)"
+            [checked]="selectedTorrents.length > 0 && selectedTorrents.length === torrents.length" />
+        </th>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Priority</th>
+        <th>Files</th>
+        <th>Downloads</th>
+        <th>Size</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let torrent of torrents; trackBy: trackByMethod">
+        <td>
+          <input type="checkbox" (click)="toggleSelect(torrent)" [checked]="getChecked(torrent)" />
         </td>
-        <td (click)="openTorrent(torrent.torrentId)">
+        <td (click)="openTorrent(torrent)">
           {{ torrent.rdName }}
         </td>
         <td>
@@ -59,34 +52,22 @@
   <div class="field is-grouped">
 
     <div class="control">
-      <button
-      class="button is-danger"
-      (click)="showDeleteModal()"
-      [disabled]="selectedTorrents.length === 0"
-      *ngIf="torrents.length > 0"
-      >
+      <button class="button is-danger" (click)="showDeleteModal()" [disabled]="selectedTorrents.length === 0"
+        *ngIf="torrents.length > 0">
         Delete Selected
       </button>
     </div>
 
     <div class="control">
-      <button
-      class="button is-primary"
-      (click)="showRetryModal()"
-      [disabled]="selectedTorrents.length === 0"
-      *ngIf="torrents.length > 0"
-      >
+      <button class="button is-primary" (click)="showRetryModal()" [disabled]="selectedTorrents.length === 0"
+        *ngIf="torrents.length > 0">
         Retry Selected
       </button>
     </div>
 
     <div class="control">
-      <button
-      class="button is-light"
-      (click)="showUpdateSettingsModal()"
-      [disabled]="selectedTorrents.length === 0"
-      *ngIf="torrents.length > 0"
-      >
+      <button class="button is-light" (click)="showUpdateSettingsModal()" [disabled]="selectedTorrents.length === 0"
+        *ngIf="torrents.length > 0">
         Change Selected's Settings
       </button>
     </div>
@@ -130,12 +111,8 @@
       </div>
     </section>
     <footer class="modal-card-foot">
-      <button
-          class="button is-success"
-          (click)="deleteOk()"
-          [disabled]="deleting"
-          [ngClass]="{ 'is-loading': deleting }"
-        >
+      <button class="button is-success" (click)="deleteOk()" [disabled]="deleting"
+        [ngClass]="{ 'is-loading': deleting }">
         Delete selected
       </button>
       <button class="button" (click)="deleteCancel()" [disabled]="deleting" [ngClass]="{ 'is-loading': deleting }">
@@ -153,97 +130,81 @@
       <button class="delete" aria-label="close" (click)="updateSettingsCancel()"></button>
     </header>
     <section class="modal-card-body">
-      <div class="field">
-        <label class="label">Category</label>
-        <div class="control">
-          <input class="input" type="text" maxlength="100" [(ngModel)]="updateSettingsCategory" />
+      <form [formGroup]="updateTorrentSettingsForm" (ngSubmit)="updateSettingsOk()" id="updateTorrentSettingsForm">
+        <div class="field">
+          <label class="label">Category</label>
+          <div class="control">
+            <input class="input" type="text" formControlName="category" name="category" />
+          </div>
+          <p class="help">The category becomes a sub-folder in your main download path.</p>
         </div>
-        <p class="help">The category becomes a sub-folder in your main download path.</p>
-      </div>
-      <div class="field">
-        <label class="label">Priority</label>
-        <div class="control">
-          <input class="input" type="number" step="1" [(ngModel)]="updateSettingsPriority" />
+        <div class="field">
+          <label class="label">Priority</label>
+          <div class="control">
+            <input class="input" inputmode="numeric" type="text" pattern="\d*" formControlName="priority"
+              name="priority" />
+          </div>
+          <p class="help">
+            Set the priority for this torrent where 1 is the highest. When empty it will be assigned the lowest
+            priority.
+          </p>
         </div>
-        <p class="help">
-          Set the priority for this torrent where 1 is the highest. When empty it will be assigned the lowest priority.
-        </p>
-      </div>
-      <div class="field">
-        <label class="label">Automatic retry downloads</label>
-        <div class="control">
-          <input
-              class="input"
-              type="number"
-              max="1000"
-              min="0"
-              step="1"
-              [(ngModel)]="updateSettingsDownloadRetryAttempts"
-            />
+        <div class="field">
+          <label class="label">Automatic retry downloads</label>
+          <div class="control">
+            <input class="input" inputmode="numeric" type="text" pattern="\d*" formControlName="downloadRetryAttempts"
+              name="downloadRetryAttempts" />
+          </div>
+          <p class="help">When a single download fails it will retry it this many times before marking it as failed.</p>
         </div>
-        <p class="help">When a single download fails it will retry it this many times before marking it as failed.</p>
-      </div>
-      <div class="field">
-        <label class="label">Automatic retry torrent</label>
-        <div class="control">
-          <input
-              class="input"
-              type="number"
-              max="1000"
-              min="0"
-              step="1"
-              [(ngModel)]="updateSettingsTorrentRetryAttempts"
-            />
+        <div class="field">
+          <label class="label">Automatic retry torrent</label>
+          <div class="control">
+            <input class="input" inputmode="numeric" type="text" pattern="\d*" formControlName="torrentRetryAttempts"
+              name="torrentRetryAttempts" />
+          </div>
+          <p class="help">
+            When a single download has failed multiple times (see setting above) or when the torrent itself received an
+            error it will retry the full torrent this many times before marking it failed.
+          </p>
         </div>
-        <p class="help">
-          When a single download has failed multiple times (see setting above) or when the torrent itself received an
-          error it will retry the full torrent this many times before marking it failed.
-        </p>
-      </div>
-      <div class="field">
-        <label class="label">Delete download when in error</label>
-        <div class="control">
-          <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="updateSettingsDeleteOnError" />
+        <div class="field">
+          <label class="label">Delete download when in error</label>
+          <div class="control">
+            <input class="input" inputmode="numeric" type="text" pattern="\d*" formControlName="deleteOnError"
+              name="deleteOnError" />
+          </div>
+          <p class="help">
+            When a download has been in error for this many minutes, delete it from the provider and the client. 0 to
+            disable.
+          </p>
         </div>
-        <p class="help">
-          When a download has been in error for this many minutes, delete it from the provider and the client. 0 to
-          disable.
-        </p>
-      </div>
-      <div class="field">
-        <label class="label">Torrent maximum lifetime</label>
-        <div class="control">
-          <input
-              class="input"
-              type="number"
-              max="100000"
-              min="0"
-              step="1"
-              [(ngModel)]="updateSettingsTorrentLifetime"
-            />
+        <div class="field">
+          <label class="label">Torrent maximum lifetime</label>
+          <div class="control">
+            <input class="input" inputmode="numeric" type="text" pattern="\d*" formControlName="lifetime"
+              name="lifetime" />
+          </div>
+          <p class="help">
+            The maximum lifetime of a torrent in minutes. When this time has passed, mark the torrent as error. If the
+            torrent is completed and has downloads, the lifetime setting will not apply. 0 to disable.
+          </p>
         </div>
-        <p class="help">
-          The maximum lifetime of a torrent in minutes. When this time has passed, mark the torrent as error. If the
-          torrent is completed and has downloads, the lifetime setting will not apply. 0 to disable.
-        </p>
-      </div>
+      </form>
     </section>
     <footer class="modal-card-foot">
-      <button
-          class="button is-success"
-          (click)="updateSettingsOk()"
-          [disabled]="updating"
-          [ngClass]="{ 'is-loading': updating }"
-        >
+      <button class="button is-success" type="submit" form="updateTorrentSettingsForm"
+        [disabled]="updateTorrentSettingsForm.pristine || updateTorrentSettingsForm.invalid || updating ? true : false"
+        [ngClass]="{ 'is-loading': updating }">
         Save
       </button>
-      <button
-          class="button"
-          (click)="updateSettingsCancel()"
-          [disabled]="updating"
-          [ngClass]="{ 'is-loading': updating }"
-        >
+      <button class="button" (click)="updateSettingsCancel()" [disabled]="updating" [ngClass]="{  }">
         Cancel
+      </button>
+      <div style="width: 100%; max-width: 100%;"></div>
+      <button class="button is-danger" (click)="updateSettingsResetAll()"
+        [disabled]="updateTorrentSettingsForm.pristine || updating ? true : false" [ngClass]="{  }">
+        Reset All
       </button>
     </footer>
   </div>
@@ -267,12 +228,8 @@
       </div>
     </section>
     <footer class="modal-card-foot">
-      <button
-          class="button is-success"
-          (click)="retryOk()"
-          [disabled]="retrying"
-          [ngClass]="{ 'is-loading': retrying }"
-        >
+      <button class="button is-success" (click)="retryOk()" [disabled]="retrying"
+        [ngClass]="{ 'is-loading': retrying }">
         Retry
       </button>
       <button class="button" (click)="retryCancel()" [disabled]="retrying" [ngClass]="{ 'is-loading': retrying }">

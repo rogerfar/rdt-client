@@ -8,3 +8,6 @@ server/RdtClient.Web/appsettings.Development.json
 data
 Dockerfile.dev
 test.bat
+
+Dockerfile
+docker-compose.yml

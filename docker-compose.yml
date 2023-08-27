@@ -1,28 +1,28 @@
-version: '3.3'
+version: "3.3"
 
 services:
-    rdtclient:
-        image: rogerfar/rdtclient
-        container_name: rdtclient
-        # build:
-        #     context: .
-        #     dockerfile: Dockerfile
-        environment:
-            - PUID=1001
-            - PGID=1001
-        volumes:
-            - ${PWD}/data/downloads:/data/downloads
-            - ${PWD}/data/db:/data/db
-        restart: always
-        logging:
-            driver: json-file
-            options:
-                max-size: 10m
-        ports:
-            - '6500:6500'
-        healthcheck:
-            test: curl --fail http://localhost:6500 || exit 1
-            interval: 30s
-            retries: 3
-            start_period: 30s
-            timeout: 30s
+  rdtclient:
+    # image: rogerfar/rdtclient
+    container_name: rdtclient
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - PUID=1001
+      - PGID=1001
+    volumes:
+      - /mnt/internal_1tb/Downloading/Downloads/rdtclient:/mnt/internal_1tb/Downloading/Downloads/rdtclient:ro
+      - /docker_mnt/rdtclient/data/db:/data/db
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+    ports:
+      - "6500:6500"
+    healthcheck:
+      test: curl --fail http://localhost:6500 || exit 1
+      interval: 30s
+      retries: 3
+      start_period: 30s
+      timeout: 30s
