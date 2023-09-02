@@ -127,6 +127,11 @@ navigate to http://<ipaddress>:6500, if all is good then we'll create a service
 ```sudo systemctl enable rdtc```  
 ```sudo systemctl start rdtc```  
 
+## Proxmox LXC
+
+If you use Proxmox for your homelab, you can run rdt-client in a linux container (LXC), check it here:
+[https://tteck.github.io/Proxmox/](https://tteck.github.io/Proxmox/) 
+
 ## Setup
 
 ### First Login
