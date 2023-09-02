@@ -238,33 +238,34 @@ public class PremiumizeTorrentClient : ITorrentClient
             throw new Exception($"Transfer {torrent.RdId} not found!");
         }
 
-        List<String> downloadLinks;
-        if (!String.IsNullOrWhiteSpace(transfer.FolderId))
-        {
-            var files = await GetClient().Folder.ListAsync(transfer.FolderId);
-            downloadLinks = files.Content.Where(m => !String.IsNullOrWhiteSpace(m.Link)).Select(m => m.Link).ToList();
+        Log($"Found transfer {transfer.Name} ({transfer.Id})", torrent);
 
-            Log($"Found {downloadLinks.Count} links in folder {transfer.FolderId}", torrent);
-        }
-        else if (!String.IsNullOrWhiteSpace(transfer.FileId))
+        var downloadLinks = await GetAllDownloadLinks(torrent, transfer.FolderId);
+        
+        if (!String.IsNullOrWhiteSpace(transfer.FileId))
         {
             var file = await GetClient().Items.DetailsAsync(transfer.FileId);
 
-            downloadLinks = new List<String>
-            {
-                file.Link
-            };
-
             Log($"Found {transfer.FileId}", torrent);
+
+            if (String.IsNullOrWhiteSpace(file.Link))
+            {
+                Log($"File {file.Name} ({file.Id}) does not contain a link", torrent);
+            }
+
+            downloadLinks.Add(file.Link);
         }
-        else
+
+        if (downloadLinks.Count == 0)
         {
-            throw new Exception($"Transfer {torrent.RdId} has no folderId or fileId!");
+            Log($"No download links found for transfer {transfer.Name} ({transfer.Id})", torrent);
+
+            return null;
         }
 
         foreach (var link in downloadLinks)
         {
-            Log($"{link}", torrent);
+            Log($"Found {link}", torrent);
         }
 
         return downloadLinks;
@@ -281,6 +282,44 @@ public class PremiumizeTorrentClient : ITorrentClient
         }
 
         return Map(result);
+    }
+
+    private async Task<List<String>> GetAllDownloadLinks(Torrent torrent, String folderId)
+    {
+        var downloadLinks = new List<String>();
+
+        if (String.IsNullOrWhiteSpace(folderId))
+        {
+            return downloadLinks;
+        }
+
+        var folder = await GetClient().Folder.ListAsync(folderId);
+
+        if (folder.Content == null)
+        {
+            Log($"Found no items in folder {folder.Name} ({folderId})", torrent);
+            return downloadLinks;
+        }
+
+        Log($"Found {folder.Content.Count} items in folder {folder.Name} ({folderId})", torrent);
+
+        foreach (var item in folder.Content)
+        {
+            if (!String.IsNullOrWhiteSpace(item.Link))
+            {
+                Log($"Found item {item.Name} in folder {folder.Name} ({folderId}) with link {item.Link}", torrent);
+                downloadLinks.Add(item.Link);
+            }
+            else
+            {
+                Log($"Found item {item.Name} in folder {folder.Name} ({folderId}), but has no link", torrent);
+            }
+
+            var subDownloadLinks = await GetAllDownloadLinks(torrent, item.FolderId);
+            downloadLinks.AddRange(subDownloadLinks);
+        }
+
+        return downloadLinks;
     }
 
     private void Log(String message, Torrent? torrent = null)
