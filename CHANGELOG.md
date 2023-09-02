@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.33] - 2023-08-01
+### Changed
+- Fixed sub folders on Premiumize.
+- Fixed serialization errors on Premiumize.
+- Filter illegal path and filename characters when setting the download paths.
+### Added
+- Add the option "Post Download Action" to the Torrent settings popup.
+- Add a 2nd "Add Torrent" button on the add torrent page.
+- Add the Aria2c downloader to the Docker container and set it as the default downloader when running in docker.
+
+## [2.0.32] - 2023-06-27
+### Changed
+- Fixed the BaseURL content-length setting.
+
 ## [2.0.32] - 2023-06-27
 ### Changed
 - Fixed the BaseURL content-length setting.
