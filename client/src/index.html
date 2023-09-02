@@ -6,9 +6,11 @@
     <base href="/" />
     <script>
       (function () {
-        var pathSegment = window.location.pathname.split("/")[1];
-        window["_app_base"] = pathSegment ? "/" + pathSegment + "/" : "/";
-        console.log("setting base href to " + window["_app_base"]);
+        if (window.location.host !== 'localhost:4200') {
+          var pathSegment = window.location.pathname.split("/")[1];
+          window["_app_base"] = pathSegment ? "/" + pathSegment + "/" : "/";
+          console.log("setting base href to " + window["_app_base"]);
+        }
       })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />

@@ -17,3 +17,28 @@
 .is-block {
   display: block;
 }
+
+.separator {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: darkgray;
+  font-size: 10px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.separator::before,
+.separator::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid darkgray;
+}
+
+.separator:not(:empty)::before {
+  margin-right: .25em;
+}
+
+.separator:not(:empty)::after {
+  margin-left: .25em;
+}
