@@ -470,6 +470,19 @@
     </header>
     <section class="modal-card-body">
       <div class="field">
+        <label class="label">Post Download Action</label>
+        <div class="control select is-fullwidth">
+          <select [(ngModel)]="updateSettingsHostDownloadAction">
+            <option [ngValue]="0">Download all files to host</option>
+            <option [ngValue]="1">Don't download any files to host</option>
+          </select>
+        </div>
+        <p class="help">
+          When a torrent is finished downloading on the provider, perform this action. Use this setting if you only want
+          to add files to Real-Debrid but not download them to the host.
+        </p>
+      </div>
+      <div class="field">
         <label class="label">Category</label>
         <div class="control">
           <input class="input" type="text" maxlength="100" [(ngModel)]="updateSettingsCategory" />

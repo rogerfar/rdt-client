@@ -147,6 +147,7 @@ public class TorrentData
             return;
         }
 
+        dbTorrent.HostDownloadAction = torrent.HostDownloadAction;
         dbTorrent.Category = torrent.Category;
         dbTorrent.Priority = torrent.Priority;
         dbTorrent.DownloadRetryAttempts = torrent.DownloadRetryAttempts;
