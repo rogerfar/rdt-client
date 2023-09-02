@@ -14,8 +14,10 @@ public static class DownloadHelper
             return null;
         }
 
+        var directory = RemoveInvalidChars(torrent.RdName);
+
         var uri = new Uri(fileUrl);
-        var torrentPath = Path.Combine(downloadPath, torrent.RdName);
+        var torrentPath = Path.Combine(downloadPath, directory);
 
         if (!Directory.Exists(torrentPath))
         {
@@ -26,8 +28,15 @@ public static class DownloadHelper
 
         fileName = HttpUtility.UrlDecode(fileName);
 
+        fileName = RemoveInvalidChars(fileName);
+
         var filePath = Path.Combine(torrentPath, fileName);
 
         return filePath;
+    }
+
+    private static String RemoveInvalidChars(String filename)
+    {
+        return String.Concat(filename.Split(Path.GetInvalidFileNameChars()));
     }
 }
