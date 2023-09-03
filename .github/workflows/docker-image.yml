@@ -11,7 +11,7 @@ permissions:
 env:
   APP_NAME: rdtclient
   DOCKER_FILE: ./Dockerfile
-  DOCKER_PLATFORMS: "linux/arm/v7,linux/arm64/v8,linux/amd64"
+  DOCKER_PLATFORMS: "linux/arm64/v8,linux/amd64"
   ENABLE_DOCKERHUB: 1
   ENABLE_GHCR: 1
   
