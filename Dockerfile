@@ -1,5 +1,5 @@
 # Stage 1 - Build the frontend
-FROM node:16-alpine3.18 AS node-build-env
+FROM node:18-alpine3.18 AS node-build-env
 ARG TARGETPLATFORM
 ENV TARGETPLATFORM=${TARGETPLATFORM:-linux/amd64}
 ARG BUILDPLATFORM
@@ -8,7 +8,7 @@ ENV BUILDPLATFORM=${BUILDPLATFORM:-linux/amd64}
 RUN mkdir /appclient
 WORKDIR /appclient
 
-RUN apk add --no-cache git
+RUN apk add --no-cache git python3 py3-pip make g++
 
 RUN \
    echo "**** Cloning Source Code ****" && \
