@@ -3,6 +3,15 @@
   Please refresh the screen after fixing this error.
 </div>
 <div class="table-container">
+  <button
+    class="button is-danger"
+    (click)="showDeleteModal()"
+    [disabled]="selectedTorrents.length === 0"
+    *ngIf="torrents.length > 0"
+  >
+    Delete Selected
+  </button>
+
   <table class="table is-fullwidth is-hoverable">
     <thead>
       <tr>
@@ -55,15 +64,6 @@
       </tr>
     </tbody>
   </table>
-
-  <button
-    class="button is-danger"
-    (click)="showDeleteModal()"
-    [disabled]="selectedTorrents.length === 0"
-    *ngIf="torrents.length > 0"
-  >
-    Delete Selected
-  </button>
 </div>
 
 <div class="modal" [class.is-active]="isDeleteModalActive">

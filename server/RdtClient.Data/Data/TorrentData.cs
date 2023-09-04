@@ -27,7 +27,7 @@ public class TorrentData
                                                 .Include(m => m.Downloads)
                                                 .ToListAsync();
 
-            return _torrentCache.OrderBy(m => m.Priority ?? 9999).ThenBy(m => m.Added).ToList();
+            return _torrentCache.OrderBy(m => m.Priority ?? 9999).ThenByDescending(m => m.Added).ToList();
         }
         finally
         {
