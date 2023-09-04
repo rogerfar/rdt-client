@@ -6,6 +6,7 @@ public class AppSettings
     public AppSettingsDatabase? Database { get; set; }
         
     public Int32 Port { get; set; }
+    public String? BasePath { get; set; }
 }
 
 public class AppSettingsLogging

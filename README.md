@@ -127,6 +127,11 @@ navigate to http://<ipaddress>:6500, if all is good then we'll create a service
 ```sudo systemctl enable rdtc```  
 ```sudo systemctl start rdtc```  
 
+## Proxmox LXC
+
+If you use Proxmox for your homelab, you can run rdt-client in a linux container (LXC), check it here:
+[https://tteck.github.io/Proxmox/](https://tteck.github.io/Proxmox/) 
+
 ## Setup
 
 ### First Login
@@ -187,6 +192,10 @@ RdtClient emulates the qBittorrent web protocol and allow applications to use th
 When downloading files it will append the `category` setting in the Sonarr/Radarr Download Client setting. For example if your Remote Path setting is set to `C:\Downloads` and your Sonarr Download Client setting `category` is set to `sonarr` files will be downloaded to `C:\Downloads\sonarr`.
 
 Notice: the progress and ETA reported in Sonarr's Activity tab will not be accurate, but it will report the torrent as completed so it can be processed after it is done downloading.
+
+### Running within a folder
+
+By default the application runs in the root of your hosted address (i.e. https://rdt.myserver.com/), but if you want to run it as a relative folder (i.e. https://myserver.com/rdt) you will have to change the `BasePath` setting in the `appsettings.json` file.
 
 ## Build instructions
 

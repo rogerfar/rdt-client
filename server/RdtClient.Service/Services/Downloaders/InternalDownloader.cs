@@ -1,5 +1,4 @@
-﻿using System.Net;
-using Downloader;
+﻿using DownloaderNET;
 using Serilog;
 
 namespace RdtClient.Service.Services.Downloaders;
@@ -9,13 +8,15 @@ public class InternalDownloader : IDownloader
     public event EventHandler<DownloadCompleteEventArgs>? DownloadComplete;
     public event EventHandler<DownloadProgressEventArgs>? DownloadProgress;
 
-    private readonly DownloadService _downloadService;
-    private readonly DownloadConfiguration _downloadConfiguration;
+    private readonly Downloader _downloadService;
+    private readonly DownloaderNET.Settings _downloadConfiguration;
 
     private readonly String _filePath;
     private readonly String _uri;
 
     private readonly ILogger _logger;
+
+    private readonly CancellationTokenSource _cancellationToken = new();
 
     private Boolean _finished;
 
@@ -25,40 +26,14 @@ public class InternalDownloader : IDownloader
 
         _uri = uri;
         _filePath = filePath;
-
-        var settingProxyServer = Settings.Get.DownloadClient.ProxyServer;
-
-        // For all options, see https://github.com/bezzad/Downloader
-        _downloadConfiguration = new DownloadConfiguration
-        {
-            BufferBlockSize = 1024 * 8,
-            MaxTryAgainOnFailover = 5,
-            RangeDownload = false,
-            ClearPackageOnCompletionWithFailure = false,
-            MinimumSizeOfChunking = 1024,
-            ReserveStorageSpaceBeforeStartingDownload = false,
-            CheckDiskSizeBeforeDownload = true,
-            RequestConfiguration =
-            {
-                Accept = "*/*",
-                UserAgent = $"rdt-client",
-                ProtocolVersion = HttpVersion.Version11,
-                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
-                KeepAlive = true,
-                UseDefaultCredentials = false
-            }
-        };
+        
+        _downloadConfiguration = new DownloaderNET.Settings();
 
         SetSettings();
 
-        if (!String.IsNullOrWhiteSpace(settingProxyServer))
-        {
-            _downloadConfiguration.RequestConfiguration.Proxy = new WebProxy(new Uri(settingProxyServer), false);
-        }
+        _downloadService = new Downloader(_uri, _filePath, _downloadConfiguration, _cancellationToken.Token);
 
-        _downloadService = new DownloadService(_downloadConfiguration);
-
-        _downloadService.DownloadProgressChanged += (_, args) =>
+        _downloadService.OnProgress += args =>
         {
             if (DownloadProgress == null)
             {
@@ -68,32 +43,23 @@ public class InternalDownloader : IDownloader
             DownloadProgress.Invoke(this,
                                      new DownloadProgressEventArgs
                                      {
-                                         Speed = (Int64)args.BytesPerSecondSpeed,
-                                         BytesDone = args.ReceivedBytesSize,
-                                         BytesTotal = args.TotalBytesToReceive
+                                         Speed = (Int64) args.Sum(m => m.Speed),
+                                         BytesDone = args.Sum(m => m.DownloadBytes),
+                                         BytesTotal = args.Sum(m => m.LengthBytes)
                                      });
         };
 
-        _downloadService.DownloadFileCompleted += (_, args) =>
+        _downloadService.OnComplete += error =>
         {
-            String? error = null;
-
-            if (args.Cancelled)
-            {
-                error = $"The download was cancelled";
-            }
-            else if (args.Error != null)
-            {
-                error = args.Error.Message;
-            }
-
             DownloadComplete?.Invoke(this,
                                      new DownloadCompleteEventArgs
                                      {
-                                         Error = error
+                                         Error = error?.Message
                                      });
 
             _finished = true;
+
+            return Task.CompletedTask;
         };
     }
 
@@ -101,11 +67,7 @@ public class InternalDownloader : IDownloader
     {
         _logger.Debug($"Starting download of {_uri}, writing to path: {_filePath}");
 
-        Task.Run(async () =>
-        {
-            await _downloadService.DownloadFileTaskAsync(_uri, _filePath);
-        });
-
+        Task.Run(_downloadService.Download);
         Task.Run(StartTimer);
 
         return Task.FromResult<String?>(null);
@@ -115,7 +77,7 @@ public class InternalDownloader : IDownloader
     {
         _logger.Debug($"Cancelling download {_uri}");
 
-        _downloadService.CancelAsync();
+        _cancellationToken.Cancel(false);
 
         return Task.CompletedTask;
     }
@@ -138,14 +100,7 @@ public class InternalDownloader : IDownloader
         {
             settingDownloadParallelCount = 1;
         }
-
-        var settingDownloadChunkCount = Settings.Get.DownloadClient.ChunkCount;
-
-        if (settingDownloadChunkCount <= 0)
-        {
-            settingDownloadChunkCount = 1;
-        }
-
+        
         var settingDownloadMaxSpeed = Settings.Get.DownloadClient.MaxSpeed;
 
         if (settingDownloadMaxSpeed <= 0)
@@ -162,10 +117,8 @@ public class InternalDownloader : IDownloader
             settingDownloadTimeout = 1000;
         }
         
-        _downloadConfiguration.ChunkCount = settingDownloadChunkCount;
+        _downloadConfiguration.ChunkCount = settingDownloadParallelCount;
         _downloadConfiguration.MaximumBytesPerSecond = settingDownloadMaxSpeed;
-        _downloadConfiguration.ParallelDownload = settingDownloadChunkCount > 1;
-        _downloadConfiguration.ParallelCount = settingDownloadParallelCount;
         _downloadConfiguration.Timeout = settingDownloadTimeout;
     }
 

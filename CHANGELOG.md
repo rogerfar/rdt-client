@@ -4,6 +4,71 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.36] - 2023-08-02
+### Changed
+- Fixed docker build process and upgraded to Node18.
+
+## [2.0.35] - 2023-08-02
+### Removed
+- Docker arm32/v7 images because the base image does not support it anymore: https://www.linuxserver.io/blog/a-farewell-to-arm-hf
+
+## [2.0.34] - 2023-08-01
+### Changed
+- Update docker image to alpine 3.14.
+
+## [2.0.33] - 2023-08-01
+### Changed
+- Fixed sub folders on Premiumize.
+- Fixed serialization errors on Premiumize.
+- Filter illegal path and filename characters when setting the download paths.
+### Added
+- Add the option "Post Download Action" to the Torrent settings popup.
+- Add a 2nd "Add Torrent" button on the add torrent page.
+- Add the Aria2c downloader to the Docker container and set it as the default downloader when running in docker.
+
+## [2.0.32] - 2023-06-27
+### Changed
+- Fixed the BaseURL content-length setting.
+
+## [2.0.32] - 2023-06-27
+### Changed
+- Fixed the BaseURL content-length setting.
+
+## [2.0.31] - 2023-06-11
+### Added
+- Added setting to set the BaseURL.
+
+### Changed
+- Added some logging.
+
+## [2.0.30] - 2023-04-09
+### Changed
+- Improved the internal downloader bandwidth limiter.
+
+## [2.0.29] - 2023-04-09
+### Changed
+- Testing Github actions automatic build to Docker.
+
+## [2.0.28] - 2023-04-09
+### Changed
+- Added link to repository from the version link.
+
+## [2.0.27] - 2023-04-08
+### Changed
+- Fixed Premiumize selecting of files.
+- Updated internal downloader to report download speeds better.
+
+## [2.0.26] - 2023-03-30
+### Changed
+- Add some logging for Premiumize to better understand errors.
+- Changed Premiumize to download each file individually instead of creating a zip first.
+- Swapped the internal downloader for a new version.
+- Fixed issue when switching providers and it not switching over properly.
+
+## [2.0.25] - 2023-03-17
+### Changed
+- Fixed docker run issues.
+
 ## [2.0.24] - 2023-03-16
 ### Changed
 - Fixed docker run issues.

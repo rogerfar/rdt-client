@@ -3,7 +3,7 @@
     <div class="container">
       <div class="columns is-centered">
         <div class="column is-5-tablet is-5-desktop is-5-widescreen">
-          <img src="../../assets/logo.png" />
+          <img src="assets/logo.png" />
           <div class="box" *ngIf="step === 1">
             <div class="notification is-primary">
               Welcome to Real-Debrid Client. Please create your account by entering a username and password.
@@ -52,7 +52,7 @@
                 >Use this link to sign up to AllDebrid.</a
               >
               <br />
-			  <a href="https://www.premiumize.me/" target="_blank" rel="noopener"
+              <a href="https://www.premiumize.me/" target="_blank" rel="noopener"
                 >Use this link to sign up to Premiumize.</a
               >
               <br />
@@ -64,7 +64,7 @@
                 <select [(ngModel)]="provider">
                   <option [value]="0">Real-Debrid</option>
                   <option [value]="1">AllDebrid</option>
-				  <option [value]="2">Premiumize</option>
+                  <option [value]="2">Premiumize</option>
                 </select>
               </div>
             </div>
@@ -85,7 +85,7 @@
                   >https://alldebrid.com/apikeys/</a
                 >.
               </p>
-			  <p class="help" *ngIf="provider === 'Premiumize'">
+              <p class="help" *ngIf="provider === 'Premiumize'">
                 You can find your API key here:
                 <a href="https://www.premiumize.me/account" target="_blank" rel="noopener"
                   >https://www.premiumize.me/account</a

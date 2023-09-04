@@ -13,7 +13,7 @@ public class DownloadClient
 
     public IDownloader? Downloader;
 
-    public Data.Enums.DownloadClient Type { get; set; }
+    public Data.Enums.DownloadClient Type { get; private set; }
 
     public Boolean Finished { get; private set; }
 

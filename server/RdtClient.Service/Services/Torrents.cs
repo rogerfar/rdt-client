@@ -23,8 +23,24 @@ public class Torrents
     private readonly ILogger<Torrents> _logger;
     private readonly TorrentData _torrentData;
     private readonly Downloads _downloads;
-        
-    private readonly ITorrentClient _torrentClient;
+
+    private readonly AllDebridTorrentClient _allDebridTorrentClient;
+    private readonly PremiumizeTorrentClient _premiumizeTorrentClient;
+    private readonly RealDebridTorrentClient _realDebridTorrentClient;
+
+    private ITorrentClient TorrentClient
+    {
+        get
+        {
+            return Settings.Get.Provider.Provider switch
+            {
+                Provider.Premiumize => _premiumizeTorrentClient,
+                Provider.RealDebrid => _realDebridTorrentClient,
+                Provider.AllDebrid => _allDebridTorrentClient,
+                _ => throw new Exception("Invalid Provider")
+            };
+        }
+    }
 
     private static readonly SemaphoreSlim TorrentResetLock = new(1, 1);
 
@@ -38,14 +54,9 @@ public class Torrents
         _logger = logger;
         _torrentData = torrentData;
         _downloads = downloads;
-            
-        _torrentClient = Settings.Get.Provider.Provider switch
-        {
-            Provider.Premiumize => premiumizeTorrentClient,
-            Provider.RealDebrid => realDebridTorrentClient,
-            Provider.AllDebrid => allDebridTorrentClient,
-            _ => throw new Exception("Invalid Provider")
-        };
+        _allDebridTorrentClient = allDebridTorrentClient;
+        _premiumizeTorrentClient = premiumizeTorrentClient;
+        _realDebridTorrentClient = realDebridTorrentClient;
     }
 
     public async Task<IList<Torrent>> Get()
@@ -114,7 +125,7 @@ public class Torrents
             throw new Exception($"{ex.Message}, trying to parse {magnetLink}");
         }
 
-        var id = await _torrentClient.AddMagnet(magnetLink);
+        var id = await TorrentClient.AddMagnet(magnetLink);
 
         var hash = magnet.InfoHash.ToHex();
 
@@ -140,7 +151,7 @@ public class Torrents
             throw new Exception($"{ex.Message}, trying to parse {fileAsBase64}");
         }
 
-        var id = await _torrentClient.AddFile(bytes);
+        var id = await TorrentClient.AddFile(bytes);
 
         var hash = monoTorrent.InfoHash.ToHex();
 
@@ -153,7 +164,7 @@ public class Torrents
 
     public async Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
     {
-        var result = await _torrentClient.GetAvailableFiles(hash);
+        var result = await TorrentClient.GetAvailableFiles(hash);
 
         return result;
     }
@@ -167,7 +178,7 @@ public class Torrents
             return;
         }
 
-        await _torrentClient.SelectFiles(torrent);
+        await TorrentClient.SelectFiles(torrent);
     }
 
     public async Task CreateDownloads(Guid torrentId)
@@ -179,7 +190,7 @@ public class Torrents
             return;
         }
 
-        var downloadLinks = await _torrentClient.GetDownloadLinks(torrent);
+        var downloadLinks = await TorrentClient.GetDownloadLinks(torrent);
 
         if (downloadLinks == null)
         {
@@ -264,7 +275,7 @@ public class Torrents
 
             try
             {
-                await _torrentClient.Delete(torrent.RdId);
+                await TorrentClient.Delete(torrent.RdId);
             }
             catch
             {
@@ -318,7 +329,7 @@ public class Torrents
 
         Log($"Unrestricting link", download, download.Torrent);
 
-        var unrestrictedLink = await _torrentClient.Unrestrict(download.Path);
+        var unrestrictedLink = await TorrentClient.Unrestrict(download.Path);
 
         await _downloads.UpdateUnrestrictedLink(downloadId, unrestrictedLink);
 
@@ -327,7 +338,7 @@ public class Torrents
 
     public async Task<Profile> GetProfile()
     {
-        var user = await _torrentClient.GetUser();
+        var user = await TorrentClient.GetUser();
 
         var profile = new Profile
         {
@@ -349,7 +360,7 @@ public class Torrents
 
         try
         {
-            var rdTorrents = await _torrentClient.GetTorrents();
+            var rdTorrents = await TorrentClient.GetTorrents();
 
             foreach (var rdTorrent in rdTorrents)
             {
@@ -728,7 +739,7 @@ public class Torrents
                                                                ReferenceHandler = ReferenceHandler.IgnoreCycles
                                                            });
 
-            await _torrentClient.UpdateData(torrent, torrentClientTorrent);
+            await TorrentClient.UpdateData(torrent, torrentClientTorrent);
 
             var newTorrent = JsonSerializer.Serialize(torrent,
                                                       new JsonSerializerOptions

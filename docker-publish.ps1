@@ -13,7 +13,7 @@
         The docker account to use to push the image
 
         .PARAMETER Platforms
-        The platforms to target for the image (defaults to linux/arm/v7,linux/arm64/v8,linux/amd64)
+        The platforms to target for the image (defaults to linux/arm64/v8,linux/amd64)
 
         .INPUTS
         None. You cannot pipe objects to to this script.
@@ -34,7 +34,7 @@
 param(
     [string]$Version = "",
     [string]$DockerAccount = "rogerfar",
-    [string]$Platforms = "linux/arm/v7,linux/arm64/v8,linux/amd64",
+    [string]$Platforms = "linux/arm64/v8,linux/amd64",
     [string]$Dockerfile = "Dockerfile",
     [switch]$SkipPush,
     [switch]$SkipCache,

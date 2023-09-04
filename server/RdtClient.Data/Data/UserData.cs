@@ -14,6 +14,6 @@ public class UserData
 
     public async Task<IdentityUser?> GetUser()
     {
-        return await _dataContext.Users.FirstOrDefaultAsync();
+        return await _dataContext.Users.OrderBy(m => m.Id).FirstOrDefaultAsync();
     }
 }

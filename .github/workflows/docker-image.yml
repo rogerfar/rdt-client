@@ -9,10 +9,10 @@ permissions:
   packages: write
   
 env:
-  APP_NAME: rdt-client
+  APP_NAME: rdtclient
   DOCKER_FILE: ./Dockerfile
-  DOCKER_PLATFORMS: "linux/arm/v7,linux/arm64/v8,linux/amd64"
-  ENABLE_DOCKERHUB: 0
+  DOCKER_PLATFORMS: "linux/arm64/v8,linux/amd64"
+  ENABLE_DOCKERHUB: 1
   ENABLE_GHCR: 1
   
 jobs:
@@ -30,7 +30,7 @@ jobs:
       uses: docker/metadata-action@v4.3.0
       with:
         images: |
-          # ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}
+          ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}
           ghcr.io/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}
         tags: |
             type=schedule

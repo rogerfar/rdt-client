@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Inject, Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { Observable, Subject } from 'rxjs';
 import { Torrent, TorrentFileAvailability } from './models/torrent.model';
+import { APP_BASE_HREF } from '@angular/common';
 
 @Injectable({
   providedIn: 'root',
@@ -12,7 +13,7 @@ export class TorrentService {
 
   private connection: signalR.HubConnection;
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, @Inject(APP_BASE_HREF) private baseHref: string) {
     this.connect();
   }
 
@@ -21,7 +22,10 @@ export class TorrentService {
       return;
     }
 
-    this.connection = new signalR.HubConnectionBuilder().withUrl('/hub').withAutomaticReconnect().build();
+    this.connection = new signalR.HubConnectionBuilder()
+      .withUrl(`${this.baseHref}hub`)
+      .withAutomaticReconnect()
+      .build();
     this.connection.start().catch((err) => console.error(err));
 
     this.connection.on('update', (torrents: Torrent[]) => {
@@ -30,15 +34,15 @@ export class TorrentService {
   }
 
   public getList(): Observable<Torrent[]> {
-    return this.http.get<Torrent[]>(`/Api/Torrents`);
+    return this.http.get<Torrent[]>(`${this.baseHref}Api/Torrents`);
   }
 
   public get(torrentId: string): Observable<Torrent> {
-    return this.http.get<Torrent>(`/Api/Torrents/Get/${torrentId}`);
+    return this.http.get<Torrent>(`${this.baseHref}Api/Torrents/Get/${torrentId}`);
   }
 
   public uploadMagnet(magnetLink: string, torrent: Torrent): Observable<void> {
-    return this.http.post<void>(`/Api/Torrents/UploadMagnet`, {
+    return this.http.post<void>(`${this.baseHref}Api/Torrents/UploadMagnet`, {
       magnetLink,
       torrent,
     });
@@ -48,11 +52,11 @@ export class TorrentService {
     const formData: FormData = new FormData();
     formData.append('file', file);
     formData.append('formData', JSON.stringify({ torrent }));
-    return this.http.post<void>(`/Api/Torrents/UploadFile`, formData);
+    return this.http.post<void>(`${this.baseHref}Api/Torrents/UploadFile`, formData);
   }
 
   public checkFilesMagnet(magnetLink: string): Observable<TorrentFileAvailability[]> {
-    return this.http.post<TorrentFileAvailability[]>(`/Api/Torrents/CheckFilesMagnet`, {
+    return this.http.post<TorrentFileAvailability[]>(`${this.baseHref}Api/Torrents/CheckFilesMagnet`, {
       magnetLink,
     });
   }
@@ -60,7 +64,7 @@ export class TorrentService {
   public checkFiles(file: File): Observable<TorrentFileAvailability[]> {
     const formData: FormData = new FormData();
     formData.append('file', file);
-    return this.http.post<TorrentFileAvailability[]>(`/Api/Torrents/CheckFiles`, formData);
+    return this.http.post<TorrentFileAvailability[]>(`${this.baseHref}Api/Torrents/CheckFiles`, formData);
   }
 
   public delete(
@@ -69,7 +73,7 @@ export class TorrentService {
     deleteRdTorrent: boolean,
     deleteLocalFiles: boolean
   ): Observable<void> {
-    return this.http.post<void>(`/Api/Torrents/Delete/${torrentId}`, {
+    return this.http.post<void>(`${this.baseHref}Api/Torrents/Delete/${torrentId}`, {
       deleteData,
       deleteRdTorrent,
       deleteLocalFiles,
@@ -77,14 +81,14 @@ export class TorrentService {
   }
 
   public retry(torrentId: string): Observable<void> {
-    return this.http.post<void>(`/Api/Torrents/Retry/${torrentId}`, {});
+    return this.http.post<void>(`${this.baseHref}Api/Torrents/Retry/${torrentId}`, {});
   }
 
   public retryDownload(downloadId: string): Observable<void> {
-    return this.http.post<void>(`/Api/Torrents/RetryDownload/${downloadId}`, {});
+    return this.http.post<void>(`${this.baseHref}Api/Torrents/RetryDownload/${downloadId}`, {});
   }
 
   public update(torrent: Torrent): Observable<void> {
-    return this.http.put<void>(`/Api/Torrents/Update`, torrent);
+    return this.http.put<void>(`${this.baseHref}Api/Torrents/Update`, torrent);
   }
 }

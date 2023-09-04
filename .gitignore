@@ -7,3 +7,4 @@ RealDebridClient.zip
 server/RdtClient.Web/appsettings.Development.json
 data
 Dockerfile.dev
+test.bat

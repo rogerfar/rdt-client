@@ -18,8 +18,6 @@
       </div>
     </div>
 
-    <hr />
-
     <div class="field">
       <label class="label">Magnet Link</label>
       <div class="control">
@@ -33,8 +31,16 @@
         ></textarea>
       </div>
     </div>
+   
+    <div class="field">
+      <div class="control">
+        <button class="button is-success" [disabled]="saving" [ngClass]="{ 'is-loading': saving }" (click)="ok()">
+          <span>Add Torrent</span>
+        </button>
+      </div>
+    </div>
 
-    <hr />
+    <div class="separator">Advanced settings</div>
 
     <div class="field">
       <label class="label">Post Download Action</label>

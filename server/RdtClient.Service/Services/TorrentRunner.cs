@@ -161,7 +161,7 @@ public class TorrentRunner
                 if (!String.IsNullOrWhiteSpace(downloadClient.Error))
                 {
                     // Retry the download if an error is encountered.
-                    Log($"Download reported an error: {downloadClient.Error}", download, download.Torrent);
+                    LogError($"Download reported an error: {downloadClient.Error}", download, download.Torrent);
                     Log($"Download retry count {download.RetryCount}/{download.Torrent!.DownloadRetryAttempts}, torrent retry count {download.Torrent.RetryCount}/{download.Torrent.TorrentRetryAttempts}", download, download.Torrent);
                         
                     if (download.RetryCount < download.Torrent.DownloadRetryAttempts)
@@ -512,9 +512,19 @@ public class TorrentRunner
                 if ((torrent.Downloads.Count > 0) || 
                     torrent.RdStatus == TorrentStatus.Finished && torrent.HostDownloadAction == TorrentHostDownloadAction.DownloadNone)
                 {
-                    var allComplete = torrent.Downloads.Count(m => m.Completed != null);
+                    var completeCount = torrent.Downloads.Count(m => m.Completed != null);
 
-                    if (allComplete == torrent.Downloads.Count)
+                    var completePerc = 0;
+
+                    var totalDownloadBytes = torrent.Downloads.Sum(m => m.BytesTotal);
+                    var totalDoneBytes = torrent.Downloads.Sum(m => m.BytesDone);
+
+                    if (totalDownloadBytes > 0)
+                    {
+                        completePerc = (Int32)((Double)totalDoneBytes / totalDownloadBytes * 100);
+                    }
+
+                    if (completeCount == torrent.Downloads.Count)
                     {
                         Log($"All downloads complete, marking torrent as complete", torrent);
 
@@ -558,7 +568,7 @@ public class TorrentRunner
                     }
                     else
                     {
-                        Log($"Waiting for downloads to complete. {allComplete}/{torrent.Downloads.Count} complete", torrent);
+                        Log($"Waiting for downloads to complete. {completeCount}/{torrent.Downloads.Count} complete ({completePerc}%)", torrent);
                     }
                 }
             }
@@ -602,5 +612,20 @@ public class TorrentRunner
         }
 
         _logger.LogDebug(message);
+    }
+
+    private void LogError(String message, Download? download, Torrent? torrent)
+    {
+        if (download != null)
+        {
+            message = $"{message} {download.ToLog()}";
+        }
+
+        if (torrent != null)
+        {
+            message = $"{message} {torrent.ToLog()}";
+        }
+
+        _logger.LogError(message);
     }
 }

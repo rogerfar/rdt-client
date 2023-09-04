@@ -13,4 +13,6 @@ assignees: ''
 
 **Are you using Docker or as a service?**
 
+**Which debrid provider are you using?**
+
 **Please attach a log file here with the log setting set to debug**
