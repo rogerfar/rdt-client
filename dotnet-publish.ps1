@@ -11,6 +11,10 @@ $newCsProj = (Get-Content $csProj) -replace '<Version>.*?<\/Version>', "<Version
 $newNavbar = (Get-Content $navbar) -replace 'Version .*?<', "Version $version<"
 [System.IO.File]::WriteAllLines($navbar, $newNavbar, $utf8NoBomEncoding)
 
+Write-Output "Commit and push now, press any key to continue"
+
+[Console]::ReadKey()
+
 cd client
 npm install
 ng build --configuration production --output-path=..\server\RdtClient.Web\wwwroot
