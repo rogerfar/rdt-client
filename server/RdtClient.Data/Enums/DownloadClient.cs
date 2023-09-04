@@ -8,5 +8,8 @@ public enum DownloadClient
     Internal,
 
     [Description("Aria2c")]
-    Aria2c
+    Aria2c,
+
+    [Description("Symlink Downloader")]
+    Symlink,
 }
