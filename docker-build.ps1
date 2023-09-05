@@ -34,7 +34,7 @@
 param(
     [string]$Version = "",
     [string]$DockerAccount = "rogerfar",
-    [string]$Platforms = "linux/arm/v7,linux/arm64/v8,linux/amd64",
+    [string]$Platforms = "linux/arm64/v8,linux/amd64",
     [string]$Dockerfile = "Dockerfile",
     [switch]$SkipPush,
     [switch]$SkipCache,
