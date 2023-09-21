@@ -21,6 +21,10 @@ export class TorrentTableComponent implements OnInit {
   public deleteRdTorrent: boolean;
   public deleteLocalFiles: boolean;
 
+  public isRetryModalActive: boolean;
+  public retryError: string;
+  public retrying: boolean;
+
   constructor(private router: Router, private torrentService: TorrentService) {}
 
   ngOnInit(): void {
@@ -98,6 +102,39 @@ export class TorrentTableComponent implements OnInit {
       error: (err) => {
         this.deleteError = err.error;
         this.deleting = false;
+      },
+    });
+  }
+
+  public showRetryModal(): void {
+    this.retryError = null;
+
+    this.isRetryModalActive = true;
+  }
+
+  public retryCancel(): void {
+    this.isRetryModalActive = false;
+  }
+
+  public retryOk(): void {
+    this.retrying = true;
+
+    let calls: Observable<void>[] = [];
+
+    this.selectedTorrents.forEach((torrentId) => {
+      calls.push(this.torrentService.retry(torrentId));
+    });
+
+    forkJoin(calls).subscribe({
+      complete: () => {
+        this.isRetryModalActive = false;
+        this.retrying = false;
+
+        this.selectedTorrents = [];
+      },
+      error: (err) => {
+        this.retryError = err.error;
+        this.retrying = false;
       },
     });
   }

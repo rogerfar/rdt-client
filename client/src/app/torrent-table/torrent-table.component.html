@@ -56,14 +56,25 @@
     </tbody>
   </table>
 
-  <button
-    class="button is-danger"
-    (click)="showDeleteModal()"
-    [disabled]="selectedTorrents.length === 0"
-    *ngIf="torrents.length > 0"
-  >
-    Delete Selected
-  </button>
+  <div fxLayout.lt-lg="column" fxLayout.gt-sm="row" fxLayoutGap="20px">
+    <button
+      class="button is-danger"
+      (click)="showDeleteModal()"
+      [disabled]="selectedTorrents.length === 0"
+      *ngIf="torrents.length > 0"
+    >
+      Delete Selected
+    </button>
+
+    <button
+      class="button is-primary"
+      (click)="showRetryModal()"
+      [disabled]="selectedTorrents.length === 0"
+      *ngIf="torrents.length > 0"
+    >
+      Retry Selected
+    </button>
+  </div>
 </div>
 
 <div class="modal" [class.is-active]="isDeleteModalActive">
@@ -111,6 +122,35 @@
         Delete selected
       </button>
       <button class="button" (click)="deleteCancel()" [disabled]="deleting" [ngClass]="{ 'is-loading': deleting }">
+        Cancel
+      </button>
+    </footer>
+  </div>
+</div>
+
+<div class="modal" [class.is-active]="isRetryModalActive">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Retry selected torrents</p>
+      <button class="delete" aria-label="close" (click)="retryCancel()"></button>
+    </header>
+    <section class="modal-card-body">
+      <p>Are you sure you want to retry these torrent?</p>
+      <div class="notification is-danger is-light" *ngIf="retryError?.length > 0">
+        Error retrying torrent: {{ retryError }}
+      </div>
+    </section>
+    <footer class="modal-card-foot">
+      <button
+        class="button is-success"
+        (click)="retryOk()"
+        [disabled]="retrying"
+        [ngClass]="{ 'is-loading': deleting }"
+      >
+        Retry selected
+      </button>
+      <button class="button" (click)="retryCancel()" [disabled]="retrying" [ngClass]="{ 'is-loading': deleting }">
         Cancel
       </button>
     </footer>
