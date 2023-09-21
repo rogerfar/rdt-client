@@ -45,6 +45,15 @@ public class RealDebridTorrentClient : ITorrentClient
 
             return rdtNetClient;
         }
+        catch (AggregateException ae)
+        {
+            foreach (var inner in ae.InnerExceptions)
+            {
+                _logger.LogError(inner, $"The connection to RealDebrid has failed: {inner.Message}");
+            }
+
+            throw;
+        }
         catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
         {
             _logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
