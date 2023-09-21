@@ -81,11 +81,11 @@ builder.Services.AddAuthorization( options =>
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
        {
            options.User.RequireUniqueEmail = false;
-           options.Password.RequiredLength = 10;
+           options.Password.RequiredLength = 5;
            options.Password.RequireUppercase = false;
            options.Password.RequireLowercase = false;
            options.Password.RequireNonAlphanumeric = false;
-           options.Password.RequiredUniqueChars = 5;
+           options.Password.RequiredUniqueChars = 3;
        })
        .AddEntityFrameworkStores<DataContext>()
        .AddDefaultTokenProviders();
