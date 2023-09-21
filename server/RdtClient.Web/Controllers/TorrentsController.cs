@@ -12,10 +12,12 @@ namespace RdtClient.Web.Controllers;
 public class TorrentsController : Controller
 {
     private readonly TorrentRunner _torrentRunner;
+    private readonly ILogger<TorrentsController> _logger;
     private readonly Torrents _torrents;
 
-    public TorrentsController(Torrents torrents, TorrentRunner torrentRunner)
+    public TorrentsController(ILogger<TorrentsController> logger, Torrents torrents, TorrentRunner torrentRunner)
     {
+        _logger = logger;
         _torrents = torrents;
         _torrentRunner = torrentRunner;
     }
@@ -81,6 +83,8 @@ public class TorrentsController : Controller
             return BadRequest("Invalid Torrent");
         }
 
+        _logger.LogDebug($"Add file");
+
         var fileStream = file.OpenReadStream();
 
         await using var memoryStream = new MemoryStream();
@@ -112,6 +116,8 @@ public class TorrentsController : Controller
         {
             return BadRequest("Invalid Torrent");
         }
+
+        _logger.LogDebug($"Add magnet");
 
         await _torrents.UploadMagnet(request.MagnetLink, request.Torrent);
 
@@ -167,6 +173,8 @@ public class TorrentsController : Controller
             return BadRequest();
         }
 
+        _logger.LogDebug($"Delete {torrentId}");
+
         await _torrents.Delete(torrentId, request.DeleteData, request.DeleteRdTorrent, request.DeleteLocalFiles);
 
         return Ok();
@@ -176,6 +184,8 @@ public class TorrentsController : Controller
     [Route("Retry/{torrentId:guid}")]
     public async Task<ActionResult> Retry(Guid torrentId)
     {
+        _logger.LogDebug($"Retry {torrentId}");
+
         await _torrents.UpdateRetry(torrentId, DateTimeOffset.UtcNow, 0);
         await _torrents.RetryTorrent(torrentId, 0);
 
@@ -186,6 +196,8 @@ public class TorrentsController : Controller
     [Route("RetryDownload/{downloadId:guid}")]
     public async Task<ActionResult> RetryDownload(Guid downloadId)
     {
+        _logger.LogDebug($"Retry download {downloadId}");
+
         await _torrents.RetryDownload(downloadId);
 
         return Ok();

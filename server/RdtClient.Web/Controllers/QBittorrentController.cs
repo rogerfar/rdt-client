@@ -14,10 +14,12 @@ namespace RdtClient.Web.Controllers;
 [Route("api/v2")]
 public class QBittorrentController : Controller
 {
+    private readonly ILogger<QBittorrentController> _logger;
     private readonly QBittorrent _qBittorrent;
 
-    public QBittorrentController(QBittorrent qBittorrent)
+    public QBittorrentController(ILogger<QBittorrentController> logger, QBittorrent qBittorrent)
     {
+        _logger = logger;
         _qBittorrent = qBittorrent;
     }
 
@@ -26,6 +28,8 @@ public class QBittorrentController : Controller
     [HttpGet]
     public async Task<ActionResult> AuthLogin([FromQuery] QBAuthLoginRequest request)
     {
+        _logger.LogDebug($"Auth login");
+
         if (String.IsNullOrWhiteSpace(request.UserName) || String.IsNullOrEmpty(request.Password))
         {
             return Ok("Fails.");
@@ -55,6 +59,8 @@ public class QBittorrentController : Controller
     [HttpPost]
     public async Task<ActionResult> AuthLogout()
     {
+        _logger.LogDebug($"Auth logout");
+
         await _qBittorrent.AuthLogout();
         return Ok();
     }
@@ -284,6 +290,8 @@ public class QBittorrentController : Controller
         {
             return BadRequest();
         }
+
+        _logger.LogDebug($"Delete {request.Hashes}");
 
         var hashes = request.Hashes.Split("|");
 

@@ -1,4 +1,5 @@
-﻿using RdtClient.Data.Enums;
+﻿using Microsoft.Extensions.Logging;
+using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.QBittorrent;
 
@@ -7,12 +8,14 @@ namespace RdtClient.Service.Services;
 public class QBittorrent
 {
     private readonly Authentication _authentication;
+    private readonly ILogger<QBittorrent> _logger;
     private readonly Settings _settings;
     private readonly Torrents _torrents;
     private readonly Downloads _downloads;
 
-    public QBittorrent(Settings settings, Authentication authentication, Torrents torrents, Downloads downloads)
+    public QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authentication authentication, Torrents torrents, Downloads downloads)
     {
+        _logger = logger;
         _settings = settings;
         _authentication = authentication;
         _torrents = torrents;
@@ -21,6 +24,8 @@ public class QBittorrent
 
     public async Task<Boolean> AuthLogin(String userName, String password)
     {
+        _logger.LogDebug("Auth login");
+
         var login = await _authentication.Login(userName, password);
 
         return login.Succeeded;
@@ -28,6 +33,8 @@ public class QBittorrent
 
     public async Task AuthLogout()
     {
+        _logger.LogDebug("Auth logout");
+
         await _authentication.Logout();
     }
 
@@ -405,6 +412,8 @@ public class QBittorrent
 
     public async Task TorrentsDelete(String hash, Boolean deleteFiles)
     {
+        _logger.LogDebug($"Delete {hash}");
+
         var torrent = await _torrents.GetByHash(hash);
 
         if (torrent == null)
@@ -417,6 +426,8 @@ public class QBittorrent
 
     public async Task TorrentsAddMagnet(String magnetLink, String? category, Int32? priority)
     {
+        _logger.LogDebug($"Add magnet {category}");
+
         var torrent = new Torrent
         {
             Category = category,
@@ -436,6 +447,8 @@ public class QBittorrent
 
     public async Task TorrentsAddFile(Byte[] fileBytes, String? category, Int32? priority)
     {
+        _logger.LogDebug($"Add file {category}");
+
         var torrent = new Torrent
         {
             Category = category,
