@@ -9,6 +9,7 @@ public class SymlinkDownloader : IDownloader
     public event EventHandler<DownloadProgressEventArgs>? DownloadProgress;
 
     private const Int32 RetryCount = 5;
+    private const Int32 RetryDelaySeconds = 30;
 
     private readonly String _filePath;
     private readonly String _uri;
@@ -45,13 +46,13 @@ public class SymlinkDownloader : IDownloader
             _logger.Debug($"Searching {Settings.Get.DownloadClient.RcloneMountPath} for {fileName} ({retryCount}/{RetryCount}) ");
 
             // Recursively search for the fileName in the rclone mount location.
-            var foundFiles = Directory.GetFiles(Settings.Get.DownloadClient.RcloneMountPath, fileName, SearchOption.AllDirectories).ToList();
+            var foundFiles = Directory.GetFiles(Settings.Get.DownloadClient.RcloneMountPath, fileName, SearchOption.AllDirectories);
 
             if (foundFiles.Any())
             {
-                if (foundFiles.Count > 1)
+                if (foundFiles.Length > 1)
                 {
-                    _logger.Warning($"Found {foundFiles.Count} files named {fileName}");
+                    _logger.Warning($"Found {foundFiles.Length} files named {fileName}");
                 }
 
                 // Assume first matching filename is the one we want.
@@ -105,33 +106,21 @@ public class SymlinkDownloader : IDownloader
     {
         try
         {
-            var process = new Process();
-            process.StartInfo.FileName = "ln";
-            process.StartInfo.Arguments = @$"-s ""{sourcePath}"" ""{symlinkPath}""";
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.RedirectStandardError = true;
-
-            process.Start();
-
-            var errors = process.StandardError.ReadToEnd();
-
-            process.WaitForExit();
-
-            if (process.ExitCode == 0)
+            File.CreateSymbolicLink(symlinkPath, sourcePath);
+            if (File.Exists(symlinkPath))  // Double-check that the link was created
             {
                 _logger.Information($"Created symbolic link from {sourcePath} to {symlinkPath}");
-
                 return true;
             }
-            
-            _logger.Error($"Failed to create symbolic link: {process.ExitCode} - {errors}");
-
-            return false;
+            else
+            {
+                _logger.Error($"Failed to create symbolic link from {sourcePath} to {symlinkPath}");
+                return false;
+            }
         }
         catch (Exception ex)
         {
             _logger.Error($"Error creating symbolic link from {sourcePath} to {symlinkPath}: {ex.Message}");
-
             return false;
         }
     }

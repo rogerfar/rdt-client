@@ -312,75 +312,7 @@ public class TorrentRunner
 
                 foreach (var download in queuedDownloads)
                 {
-                    Log($"Processing to download", download, torrent);
-
-                    if (ActiveDownloadClients.Count >= settingDownloadLimit)
-                    {
-                        Log($"Not starting download because there are already the max number of downloads active", download, torrent);
-
-                        continue;
-                    }
-
-                    if (ActiveDownloadClients.ContainsKey(download.DownloadId))
-                    {
-                        Log($"Not starting download because this download is already active", download, torrent);
-
-                        continue;
-                    }
-
-                    try
-                    {
-                        Log($"Unrestricting links", download, torrent);
-
-                        var downloadLink = await _torrents.UnrestrictLink(download.DownloadId);
-                        download.Link = downloadLink;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Cannot unrestrict link: {ex.Message}", ex.Message);
-
-                        await _downloads.UpdateError(download.DownloadId, ex.Message);
-                        await _downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
-                        download.Error = ex.Message;
-                        download.Completed = DateTimeOffset.UtcNow;
-
-                        continue;
-                    }
-
-                    Log($"Marking download as started", download, torrent);
-
-                    download.DownloadStarted = DateTime.UtcNow;
-                    await _downloads.UpdateDownloadStarted(download.DownloadId, download.DownloadStarted);
-
-                    var downloadPath = settingDownloadPath;
-
-                    if (!String.IsNullOrWhiteSpace(torrent.Category))
-                    {
-                        downloadPath = Path.Combine(downloadPath, torrent.Category);
-                    }
-
-                    Log($"Setting download path to {downloadPath}", download, torrent);
-
-                    // Start the download process
-                    var downloadClient = new DownloadClient(download, torrent, downloadPath);
-
-                    if (ActiveDownloadClients.TryAdd(download.DownloadId, downloadClient))
-                    {
-                        Log($"Starting download", download, torrent);
-
-                        var remoteId = await downloadClient.Start();
-
-                        if (!String.IsNullOrWhiteSpace(remoteId) && download.RemoteId != remoteId)
-                        {
-                            Log($"Received ID {remoteId}", download, torrent);
-
-                            await _downloads.UpdateRemoteId(download.DownloadId, remoteId);
-                        }
-                        else
-                        {
-                            Log($"No ID received", download, torrent);
-                        }
-                    }
+                    await ProcessDownload(download, torrent, settingDownloadPath, settingDownloadLimit);
                 }
 
                 // Check if there are any unpacks that are queued and can be started.
@@ -627,5 +559,89 @@ public class TorrentRunner
         }
 
         _logger.LogError(message);
+    }
+
+    private async Task ProcessDownload(Download download, Torrent torrent, string settingDownloadPath, int settingDownloadLimit)
+    {
+        Log($"Processing to download", download, torrent);
+
+        if (ActiveDownloadClients.Count >= settingDownloadLimit)
+        {
+            Log($"Not starting download because there are already the max number of downloads active", download, torrent);
+
+            return;
+        }
+
+        if (ActiveDownloadClients.ContainsKey(download.DownloadId))
+        {
+            Log($"Not starting download because this download is already active", download, torrent);
+
+            return;
+        }
+
+        try
+        {
+            Log($"Unrestricting links", download, torrent);
+
+            var downloadLink = await _torrents.UnrestrictLink(download.DownloadId);
+            download.Link = downloadLink;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Cannot unrestrict link: {ex.Message}", ex.Message);
+
+            await _downloads.UpdateError(download.DownloadId, ex.Message);
+            await _downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
+            download.Error = ex.Message;
+            download.Completed = DateTimeOffset.UtcNow;
+
+            return;
+        }
+
+        Log($"Marking download as started", download, torrent);
+
+        download.DownloadStarted = DateTime.UtcNow;
+        await _downloads.UpdateDownloadStarted(download.DownloadId, download.DownloadStarted);
+
+        var downloadPath = settingDownloadPath;
+
+        if (!String.IsNullOrWhiteSpace(torrent.Category))
+        {
+            downloadPath = Path.Combine(downloadPath, torrent.Category);
+        }
+
+        Log($"Setting download path to {downloadPath}", download, torrent);
+
+        var downloadClient = new DownloadClient(download, torrent, downloadPath);
+
+        if (downloadClient.Type == Data.Enums.DownloadClient.Symlink) // Check if the type is "Symlink"
+        {
+            // If it's Symlink type, start the download concurrently
+            _ = Task.Run(async () => await StartDownload(download, torrent, downloadClient));
+        }
+        else
+        {
+            await StartDownload(download, torrent, downloadClient);
+        }
+    }
+
+    private async Task StartDownload(Download download, Torrent torrent, DownloadClient downloadClient)
+    {
+        if (ActiveDownloadClients.TryAdd(download.DownloadId, downloadClient))
+        {
+            Log($"Starting download", download, torrent);
+
+            var remoteId = await downloadClient.Start();
+
+            if (!String.IsNullOrWhiteSpace(remoteId) && download.RemoteId != remoteId)
+            {
+                Log($"Received ID {remoteId}", download, torrent);
+                await _downloads.UpdateRemoteId(download.DownloadId, remoteId);
+            }
+            else
+            {
+                Log($"No ID received", download, torrent);
+            }
+        }
     }
 }

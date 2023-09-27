@@ -28,6 +28,8 @@ public class DownloadClient
         _download = download;
         _torrent = torrent;
         _destinationPath = destinationPath;
+
+        Type = Settings.Get.DownloadClient.Client;
     }
 
     public async Task<String?> Start()
@@ -51,8 +53,6 @@ public class DownloadClient
             }
 
             await FileHelper.Delete(filePath);
-
-            Type = Settings.Get.DownloadClient.Client;
 
             Downloader = Settings.Get.DownloadClient.Client switch
             {
