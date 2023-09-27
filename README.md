@@ -169,6 +169,20 @@ It has the following options:
 
 If Aria2c is selected, none of the above options for `Internal Downloader` are used, you have to configure Aria2c manually.
 
+#### Symlink downloader
+
+Symlink downloader requires a rclone mount to be mounted into your filesystem. Be sure to keep the exact path to mounted files in other apps exactly
+the same as used by rdt-client. Otherwise the symlinks wont resolve the file its trying to point to.
+
+If the mount path folder cant be found the client wont start downloading anything.
+
+Required configuration:
+- Post Download Action = DO NOT SELECT REMOVE FROM PROVIDER
+- Rclone mount path = /PATH_TO_YOUR_RCLONE_MOUNT/torrents/
+
+Suggested configuration:
+- Automatic retry downloads > 3
+
 ### Troubleshooting
 
 - If you forgot your logins simply delete the `rdtclient.db` and restart the service.
