@@ -22,6 +22,7 @@ public class TorrentRunner
     private readonly Downloads _downloads;
     private readonly RemoteService _remoteService;
     private readonly HttpClient _httpClient;
+    private readonly Dictionary<Guid, string> _aggregatedDownloadResults;
 
     public TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Downloads downloads, RemoteService remoteService)
     {
@@ -29,6 +30,7 @@ public class TorrentRunner
         _torrents = torrents;
         _downloads = downloads;
         _remoteService = remoteService;
+        _aggregatedDownloadResults = new Dictionary<Guid, string>();
 
         _httpClient = new HttpClient
         {
@@ -310,9 +312,15 @@ public class TorrentRunner
                                              .OrderBy(m => m.DownloadQueued)
                                              .ToList();
 
+                _aggregatedDownloadResults.Clear();
                 foreach (var download in queuedDownloads)
                 {
                     await ProcessDownload(download, torrent, settingDownloadPath, settingDownloadLimit);
+                }
+                if (_aggregatedDownloadResults.Count > 0)
+                {
+                    await _downloads.UpdateRemoteIdRange(_aggregatedDownloadResults);
+
                 }
 
                 // Check if there are any unpacks that are queued and can be started.
@@ -633,10 +641,10 @@ public class TorrentRunner
 
             var remoteId = await downloadClient.Start();
 
-            if (!String.IsNullOrWhiteSpace(remoteId) && download.RemoteId != remoteId)
+            if (!string.IsNullOrWhiteSpace(remoteId) && download.RemoteId != remoteId)
             {
                 Log($"Received ID {remoteId}", download, torrent);
-                await _downloads.UpdateRemoteId(download.DownloadId, remoteId);
+                _aggregatedDownloadResults.Add(download.DownloadId, remoteId);
             }
             else
             {
