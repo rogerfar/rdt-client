@@ -210,27 +210,17 @@ public class DownloadData
         await TorrentData.VoidCache();
     }
 
-    public async Task UpdateRemoteId(Guid downloadId, string remoteId)
+    public async Task UpdateRemoteId(Guid downloadId, String remoteId)
     {
-        await UpdateRemoteIdRange(new Dictionary<Guid, string>
+        var dbDownload = await _dataContext.Downloads
+                                           .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+        if (dbDownload == null)
         {
-            { downloadId, remoteId }
-        });
-
-    }
-
-    public async Task UpdateRemoteIdRange(Dictionary<Guid, string> remoteIdRange)
-    {
-        foreach (var entry in remoteIdRange)
-        {
-            var dbDownload = await _dataContext.Downloads.FirstOrDefaultAsync(m => m.DownloadId == entry.Key);
-            if (dbDownload == null)
-            {
-                continue;
-            }
-
-            dbDownload.RemoteId = entry.Value;
+            return;
         }
+
+        dbDownload.RemoteId = remoteId;
 
         await _dataContext.SaveChangesAsync();
     }

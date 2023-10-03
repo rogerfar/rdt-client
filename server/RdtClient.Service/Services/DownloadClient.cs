@@ -23,13 +23,11 @@ public class DownloadClient
     public Int64 BytesTotal { get; private set; }
     public Int64 BytesDone { get; private set; }
 
-    public DownloadClient(Download download, Torrent torrent, string destinationPath)
+    public DownloadClient(Download download, Torrent torrent, String destinationPath)
     {
         _download = download;
         _torrent = torrent;
         _destinationPath = destinationPath;
-
-        Type = Settings.Get.DownloadClient.Client;
     }
 
     public async Task<String?> Start()
@@ -54,7 +52,9 @@ public class DownloadClient
 
             await FileHelper.Delete(filePath);
 
-            Downloader = Type switch
+            Type = Settings.Get.DownloadClient.Client;
+
+            Downloader = Settings.Get.DownloadClient.Client switch
             {
                 Data.Enums.DownloadClient.Internal => new InternalDownloader(_download.Link, filePath),
                 Data.Enums.DownloadClient.Aria2c => new Aria2cDownloader(_download.RemoteId, _download.Link, filePath),

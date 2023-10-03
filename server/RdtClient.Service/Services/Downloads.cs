@@ -82,11 +82,6 @@ public class Downloads
         await _downloadData.UpdateRemoteId(downloadId, remoteId);
     }
 
-    public async Task UpdateRemoteIdRange(Dictionary<Guid, String> updateDict)
-    {
-        await _downloadData.UpdateRemoteIdRange(updateDict);
-    }
-
     public async Task DeleteForTorrent(Guid torrentId)
     {
         await _downloadData.DeleteForTorrent(torrentId);
