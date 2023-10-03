@@ -421,7 +421,32 @@ public class QBittorrent
             return;
         }
 
-        await _torrents.Delete(torrent.TorrentId, true, true, deleteFiles);
+        switch (Settings.Get.Integrations.Default.FinishedAction)
+        {
+            case TorrentFinishedAction.RemoveAllTorrents:
+                _logger.LogDebug($"Removing torrents from Real-Debrid and Real-Debrid Client, no files", torrent);
+                await _torrents.Delete(torrent.TorrentId, true, true, false);
+
+                break;
+            case TorrentFinishedAction.RemoveRealDebrid:
+                _logger.LogDebug($"Removing torrents from Real-Debrid, no files", torrent);
+                await _torrents.Delete(torrent.TorrentId, false, true, false);
+
+                break;
+            case TorrentFinishedAction.RemoveClient:
+                _logger.LogDebug($"Removing torrents from client, no files", torrent);
+                await _torrents.Delete(torrent.TorrentId, true, false, false);
+
+                break;
+            case TorrentFinishedAction.None:
+                _logger.LogDebug($"Not removing torrents or files", torrent);
+
+                break;
+            default:
+                _logger.LogDebug($"Invalid torrent FinishedAction {torrent.FinishedAction}", torrent);
+
+                break;
+        }
     }
 
     public async Task TorrentsAddMagnet(String magnetLink, String? category, Int32? priority)
