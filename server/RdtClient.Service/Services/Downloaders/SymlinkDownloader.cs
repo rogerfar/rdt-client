@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Serilog;
+﻿using Serilog;
 
 namespace RdtClient.Service.Services.Downloaders;
 
@@ -23,7 +22,7 @@ public class SymlinkDownloader : IDownloader
         _filePath = filePath;
     }
 
-    public Task<string?> Download()
+    public Task<String?> Download()
     {
         _logger.Debug($"Starting download of {_uri}, writing to path: {_filePath}");
 
@@ -35,7 +34,6 @@ public class SymlinkDownloader : IDownloader
             BytesTotal = 0,
             Speed = 0
         });
-
 
         _logger.Debug($"Searching {Settings.Get.DownloadClient.RcloneMountPath} for {fileName}");
 
@@ -58,12 +56,12 @@ public class SymlinkDownloader : IDownloader
             {
                 DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs());
 
-                return Task.FromResult<string?>(actualFilePath);
+                return Task.FromResult<String?>(actualFilePath);
             }
         }
 
         // Return null and try again next cycle.
-        return Task.FromResult<string?>(null);
+        return Task.FromResult<String?>(null);
     }
 
     public Task Cancel()
@@ -85,21 +83,22 @@ public class SymlinkDownloader : IDownloader
         return Task.CompletedTask;
     }
 
-    private bool TryCreateSymbolicLink(string sourcePath, string symlinkPath)
+    private Boolean TryCreateSymbolicLink(String sourcePath, String symlinkPath)
     {
         try
         {
+            _logger.Information($"Creating symbolic link from {sourcePath} to {symlinkPath}");
+
             File.CreateSymbolicLink(symlinkPath, sourcePath);
-            if (File.Exists(symlinkPath))  // Double-check that the link was created
+
+            if (File.Exists(symlinkPath))
             {
                 _logger.Information($"Created symbolic link from {sourcePath} to {symlinkPath}");
                 return true;
             }
-            else
-            {
-                _logger.Error($"Failed to create symbolic link from {sourcePath} to {symlinkPath}");
-                return false;
-            }
+
+            _logger.Error($"Failed to create symbolic link from {sourcePath} to {symlinkPath}");
+            return false;
         }
         catch (Exception ex)
         {
