@@ -2,6 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { SettingsService } from 'src/app/settings.service';
 import { Setting } from '../models/setting.model';
 
+type Value = string | number | boolean;
+
+interface Tab {
+  key: string;
+  settings: Setting[];
+}
+
 @Component({
   selector: 'app-settings',
   templateUrl: './settings.component.html',
@@ -27,6 +34,17 @@ export class SettingsComponent implements OnInit {
   public testAria2cConnectionError: string = null;
   public testAria2cConnectionSuccess: string = null;
 
+  readonly DOWNLOAD_CLIENT = 'DownloadClient';
+  readonly DOWNLOAD_CLIENT_KEY = 'DownloadClient:Client';
+  readonly SETTINGS_SECTION_NAMES = ["Provider", "Integrations", "Gui", "Watch"];
+  readonly FINISHED_ACTION_KEY = ":Default:FinishedAction";
+  readonly NO_ACTION = "0";
+  readonly SYMLINK_VALUE = "2";
+  readonly POST_PROCESS_CLIENT_VALUE = "3";
+  readonly REMOVE_PROVIDER_VALUE = "1";
+  readonly REMOVE_PROVIDER_AND_CLIENT_VALUE = "2";
+  readonly HIDDEN_VALUES_ARRAY = [this.REMOVE_PROVIDER_VALUE, this.REMOVE_PROVIDER_AND_CLIENT_VALUE];
+
   constructor(private settingsService: SettingsService) {}
 
   ngOnInit(): void {
@@ -40,6 +58,7 @@ export class SettingsComponent implements OnInit {
       for (let tab of this.tabs) {
         tab.settings = settings.where((m) => m.key.indexOf(`${tab.key}:`) > -1);
       }
+      this.updateDownloadClientValue();
     });
   }
 
@@ -137,5 +156,83 @@ export class SettingsComponent implements OnInit {
         this.saving = false;
       }
     );
+  }
+
+  private getProviderDefaultTab(sectionName:string){
+    return this.tabs.find((m) => m.key === sectionName);
+  }
+
+  private getPostDownloadAction(providerDefaultTab: Tab | undefined, sectionName:string): Setting | undefined {
+    return providerDefaultTab?.settings.find((m) => m.key === `${sectionName}${this.FINISHED_ACTION_KEY}`);
+  }
+
+  private getAllPostDownloadActions(sectionName: string){
+    const providerDefaultTab = this.getProviderDefaultTab(sectionName);
+    return this.getPostDownloadAction(providerDefaultTab, sectionName);
+  }
+
+  public onDownloadClientChange(value: Value, key: string): void {
+    if (this.isDownloadClientKey(key)) {
+      this.toggleRemoveTorrentFromProvider(value);
+      console.log("Value: ", value);
+      this.updatePostDownloadAction(value);
+    }
+  }
+
+  private updateDownloadClientValue(): void {
+    const downloadClientValue = this.tabs
+      .find((m) => m.key === this.DOWNLOAD_CLIENT)
+      ?.settings.find((m) => m.key === this.DOWNLOAD_CLIENT_KEY)?.value;
+    this.onDownloadClientChange(downloadClientValue.toString(), this.DOWNLOAD_CLIENT_KEY);
+  }
+
+  private isDownloadClientKey(key: string): boolean {
+    return key === this.DOWNLOAD_CLIENT_KEY;
+  }
+
+  private toggleRemoveTorrentFromProvider(value: Value): void {
+    if (value === this.SYMLINK_VALUE) {
+      this.removeHiddenValues();
+    } else {
+      this.addHiddenValues();
+    }
+  }
+
+  private handleEnumValues(postDownloadAction: Setting) {
+    if (postDownloadAction.originalEnumValues === undefined) {
+      postDownloadAction.originalEnumValues = {...postDownloadAction.enumValues};
+    } else {
+      postDownloadAction.enumValues = {...postDownloadAction.originalEnumValues};
+    }
+  }
+
+  private addHiddenValues(): void {
+    this.SETTINGS_SECTION_NAMES.forEach((sectionName) => {
+      let postDownloadAction = this.getAllPostDownloadActions(sectionName);
+      if (postDownloadAction != null){
+        this.handleEnumValues(postDownloadAction);
+      }
+    });
+  }
+
+  private removeHiddenValues(): void {
+    this.SETTINGS_SECTION_NAMES.forEach((sectionName) => {
+      let postDownloadAction = this.getAllPostDownloadActions(sectionName);
+      if (postDownloadAction != null) {
+        postDownloadAction.originalEnumValues = { ...postDownloadAction.enumValues };
+        this.HIDDEN_VALUES_ARRAY.forEach((hiddenValue) => {
+          delete postDownloadAction.enumValues[hiddenValue];
+        });
+      }
+    });
+  }
+
+  private updatePostDownloadAction(value: Value): void {
+    this.SETTINGS_SECTION_NAMES.forEach((sectionName) => {
+      let postDownloadAction = this.getAllPostDownloadActions(sectionName);
+      if (postDownloadAction && value === this.SYMLINK_VALUE && postDownloadAction.value.toString() !== this.NO_ACTION) {
+        postDownloadAction.value = this.POST_PROCESS_CLIENT_VALUE;
+      }
+    });
   }
 }

@@ -29,7 +29,7 @@
           {{ setting.displayName }}
         </label>
         <div class="control select is-fullwidth" *ngSwitchCase="'Enum'">
-          <select [(ngModel)]="setting.value">
+          <select [(ngModel)]="setting.value" (ngModelChange)="onDownloadClientChange(setting.value, setting.key)">
             <option [value]="kvp.key" *ngFor="let kvp of setting.enumValues | keyvalue">{{ kvp.value }}</option>
           </select>
         </div>

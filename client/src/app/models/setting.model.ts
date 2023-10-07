@@ -6,4 +6,5 @@ export class Setting {
   type: string;
   settings: Setting[];
   enumValues: { [key: string]: string };
+  originalEnumValues?: { [key: string]: string };
 }
