@@ -11,6 +11,7 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="AllDebrid.NET" Version="1.0.12" />
     <PackageReference Include="Aria2.NET" Version="1.0.5" />
+    <PackageReference Include="DebridLinkFr.NET" Version="1.0.3" />
     <PackageReference Include="Downloader" Version="3.3.3" />
     <PackageReference Include="Downloader.NET" Version="1.0.12" />
     <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.1" />

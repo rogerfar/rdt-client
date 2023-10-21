@@ -56,6 +56,9 @@
                 >Use this link to sign up to Premiumize.</a
               >
               <br />
+              <a href="https://debrid-link.com/" target="_blank" rel="noopener"
+                >Use this link to sign up to DebridLinkFr.</a
+              >
               <a href="https://torbox.app/" target="_blank" rel="noopener"
                 >Use this link to sign up to TorBox.</a>
               <br />
@@ -68,7 +71,8 @@
                   <option [ngValue]="0">Real-Debrid</option>
                   <option [ngValue]="1">AllDebrid</option>
                   <option [ngValue]="2">Premiumize</option>
-                  <option [ngValue]="3">TorBox</option>
+                  <option [ngValue]="3">DebridLinkFr</option>
+                  <option [ngValue]="4">TorBox</option>
                 </select>
               </div>
             </div>
@@ -98,6 +102,12 @@
               <p class="help" *ngIf="provider === 3">
                 You can find your API key here:
                 <a href="https://torbox.app/settings" target="_blank" rel="noopener">https://torbox.app/settings</a>.
+              </p>
+              <p class="help" *ngIf="provider === 4">
+                You can find your API key here:
+                <a href="https://debrid-link.com/webapp/apikey" target="_blank" rel="noopener"
+                  >https://debrid-link.com/webapp/apikey</a
+                >.
               </p>
             </div>
 
