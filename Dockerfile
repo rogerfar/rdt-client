@@ -21,7 +21,7 @@ RUN \
 RUN ls -FCla /appclient/root
 
 # Stage 2 - Build the backend
-FROM mcr.microsoft.com/dotnet/sdk:6.0-bullseye-slim-amd64 AS dotnet-build-env
+FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim-amd64 AS dotnet-build-env
 ARG TARGETPLATFORM
 ENV TARGETPLATFORM=${TARGETPLATFORM:-linux/amd64}
 ARG BUILDPLATFORM
@@ -71,7 +71,7 @@ RUN \
     echo "**** Install pre-reqs ****" && \
     apk add bash icu-libs krb5-libs libgcc libintl libssl1.1 libstdc++ zlib && \
     echo "**** Installing dotnet ****" && \
-    apk add aspnetcore6-runtime && \
+    apk add aspnetcore8-runtime && \
     echo "**** Setting permissions ****" && \
     chown -R abc:abc /data && \
     rm -rf \

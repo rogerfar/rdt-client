@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Net;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using RdtClient.Data.Data;
@@ -174,14 +175,11 @@ try
     app.UseRouting();
 
     app.UseAuthentication();
-
     app.UseAuthorization();
-            
-    app.UseEndpoints(endpoints =>
-    {
-        endpoints.MapHub<RdtHub>("/hub");
-        endpoints.MapControllers();
-    });
+
+    app.MapHub<RdtHub>("/hub");
+
+    app.MapControllers();
 
     app.MapWhen(x => !x.Request.Path.StartsWithSegments("/api"), routeBuilder =>
     {
