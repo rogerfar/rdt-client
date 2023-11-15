@@ -174,11 +174,14 @@ try
     app.UseRouting();
 
     app.UseAuthentication();
+
     app.UseAuthorization();
-
-    app.MapHub<RdtHub>("/hub");
-
-    app.MapControllers();
+            
+    app.UseEndpoints(endpoints =>
+    {
+        endpoints.MapHub<RdtHub>("/hub");
+        endpoints.MapControllers();
+    });
 
     app.MapWhen(x => !x.Request.Path.StartsWithSegments("/api"), routeBuilder =>
     {
