@@ -31,7 +31,7 @@ public class InternalDownloader : IDownloader
 
         SetSettings();
 
-        _downloadService = new Downloader(_uri, _filePath, _downloadConfiguration, _cancellationToken.Token);
+        _downloadService = new Downloader(_uri, _filePath, _downloadConfiguration);
 
         _downloadService.OnProgress += args =>
         {
@@ -49,7 +49,7 @@ public class InternalDownloader : IDownloader
                                      });
         };
 
-        _downloadService.OnComplete += error =>
+        _downloadService.OnComplete += (_, error) =>
         {
             DownloadComplete?.Invoke(this,
                                      new DownloadCompleteEventArgs
@@ -67,7 +67,7 @@ public class InternalDownloader : IDownloader
     {
         _logger.Debug($"Starting download of {_uri}, writing to path: {_filePath}");
 
-        Task.Run(_downloadService.Download);
+        _downloadService.Download(_cancellationToken.Token);
         Task.Run(StartTimer);
 
         return Task.FromResult<String?>(null);
@@ -117,7 +117,7 @@ public class InternalDownloader : IDownloader
             settingDownloadTimeout = 1000;
         }
         
-        _downloadConfiguration.ChunkCount = settingDownloadParallelCount;
+        _downloadConfiguration.Parallel = settingDownloadParallelCount;
         _downloadConfiguration.MaximumBytesPerSecond = settingDownloadMaxSpeed;
         _downloadConfiguration.Timeout = settingDownloadTimeout;
     }
