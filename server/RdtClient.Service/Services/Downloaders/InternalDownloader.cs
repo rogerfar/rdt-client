@@ -1,4 +1,5 @@
-﻿using DownloaderNET;
+﻿using System.Diagnostics;
+using DownloaderNET;
 using Serilog;
 
 namespace RdtClient.Service.Services.Downloaders;
@@ -33,7 +34,9 @@ public class InternalDownloader : IDownloader
 
         _downloadService = new Downloader(_uri, _filePath, _downloadConfiguration);
 
-        _downloadService.OnProgress += args =>
+        _downloadService.OnLog += message => Debug.WriteLine(message.Message);
+
+        _downloadService.OnProgress += (chunks, _) =>
         {
             if (DownloadProgress == null)
             {
@@ -43,9 +46,9 @@ public class InternalDownloader : IDownloader
             DownloadProgress.Invoke(this,
                                      new DownloadProgressEventArgs
                                      {
-                                         Speed = (Int64) args.Sum(m => m.Speed),
-                                         BytesDone = args.Sum(m => m.DownloadBytes),
-                                         BytesTotal = args.Sum(m => m.LengthBytes)
+                                         Speed = (Int64)chunks.Where(m => m.IsActive).Sum(m => m.Speed),
+                                         BytesDone = chunks.Sum(m => m.DownloadBytes),
+                                         BytesTotal = chunks.Sum(m => m.LengthBytes)
                                      });
         };
 
@@ -67,7 +70,7 @@ public class InternalDownloader : IDownloader
     {
         _logger.Debug($"Starting download of {_uri}, writing to path: {_filePath}");
 
-        _downloadService.Download(_cancellationToken.Token);
+        Task.Run(async () => await _downloadService.Download(_cancellationToken.Token));
         Task.Run(StartTimer);
 
         return Task.FromResult<String?>(null);
@@ -120,6 +123,7 @@ public class InternalDownloader : IDownloader
         _downloadConfiguration.Parallel = settingDownloadParallelCount;
         _downloadConfiguration.MaximumBytesPerSecond = settingDownloadMaxSpeed;
         _downloadConfiguration.Timeout = settingDownloadTimeout;
+        _downloadConfiguration.RetryCount = 5;
     }
 
     private async Task StartTimer()
