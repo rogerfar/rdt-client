@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using DownloaderNET;
+﻿using DownloaderNET;
 using Serilog;
 
 namespace RdtClient.Service.Services.Downloaders;
@@ -34,7 +33,7 @@ public class InternalDownloader : IDownloader
 
         _downloadService = new Downloader(_uri, _filePath, _downloadConfiguration);
 
-        _downloadService.OnLog += message => Debug.WriteLine(message.Message);
+        //_downloadService.OnLog += message => Debug.WriteLine(message.Message);
 
         _downloadService.OnProgress += (chunks, _) =>
         {

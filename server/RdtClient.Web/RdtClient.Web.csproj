@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <UserSecretsId>94c24cba-f03f-4453-a671-3640b517c573</UserSecretsId>
-    <Version>2.0.48</Version>
+    <Version>2.0.49</Version>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>

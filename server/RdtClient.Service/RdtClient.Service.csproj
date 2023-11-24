@@ -11,7 +11,7 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="AllDebrid.NET" Version="1.0.12" />
     <PackageReference Include="Aria2.NET" Version="1.0.5" />
-    <PackageReference Include="Downloader.NET" Version="1.0.8" />
+    <PackageReference Include="Downloader.NET" Version="1.0.9" />
     <PackageReference Include="MonoTorrent" Version="2.0.7" />
     <PackageReference Include="Premiumize.NET" Version="1.0.4" />
     <PackageReference Include="RD.NET" Version="2.1.4" />

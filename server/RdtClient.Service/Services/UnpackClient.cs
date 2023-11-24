@@ -1,9 +1,9 @@
-﻿using RdtClient.Data.Models.Data;
+﻿using System.Diagnostics;
+using RdtClient.Data.Models.Data;
 using RdtClient.Service.Helpers;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.Zip;
-using SharpCompress.Common;
 
 namespace RdtClient.Service.Services;
 
@@ -13,17 +13,13 @@ public class UnpackClient
         
     public String? Error { get; private set; }
         
-    public Int64 BytesTotal { get; private set; }
-    public Int64 BytesDone { get; private set; }
+    public Int32 Progess { get; private set; }
         
     private readonly Download _download;
     private readonly String _destinationPath;
     private readonly Torrent _torrent;
-
-    private Boolean _cancelled;
-        
-    private IArchiveEntry? _rarCurrentEntry;
-    private Dictionary<String, Int64>? _rarfileStatus;
+    
+    private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
     public UnpackClient(Download download, String destinationPath)
     {
@@ -34,8 +30,7 @@ public class UnpackClient
 
     public void Start()
     {
-        BytesDone = 0;
-        BytesTotal = 0;
+        Progess = 0;
 
         try
         {
@@ -48,9 +43,9 @@ public class UnpackClient
 
             Task.Run(async delegate
             {
-                if (!_cancelled)
+                if (!_cancellationTokenSource.IsCancellationRequested)
                 {
-                    await Unpack(filePath);
+                    await Unpack(filePath, _cancellationTokenSource.Token);
                 }
             });
         }
@@ -63,10 +58,10 @@ public class UnpackClient
 
     public void Cancel()
     {
-        _cancelled = true;
+        _cancellationTokenSource.Cancel();
     }
 
-    private async Task Unpack(String filePath)
+    private async Task Unpack(String filePath, CancellationToken cancellationToken)
     {
         try
         {
@@ -80,7 +75,7 @@ public class UnpackClient
 
             var archiveEntries = await GetArchiveFiles(filePath);
 
-            if (!archiveEntries.Any(m => m.StartsWith(_torrent.RdName + @"\")) && !archiveEntries.Any(m => m.StartsWith(_torrent.RdName + @"/")))
+            if (!archiveEntries.Any(m => m.StartsWith(_torrent.RdName + @"\")) && !archiveEntries.Any(m => m.StartsWith(_torrent.RdName + "/")))
             {
                 extractPath = Path.Combine(_destinationPath, _torrent.RdName!);
             }
@@ -97,7 +92,7 @@ public class UnpackClient
             
             if (extractPathTemp != null)
             {
-                Extract(filePath, extractPathTemp);
+                Extract(filePath, extractPathTemp, cancellationToken);
 
                 await FileHelper.Delete(filePath);
 
@@ -109,7 +104,7 @@ public class UnpackClient
 
                     if (File.Exists(mainRarFile))
                     {
-                        Extract(mainRarFile, extractPath);
+                        Extract(mainRarFile, extractPath, cancellationToken);
                     }
 
                     await FileHelper.DeleteDirectory(extractPathTemp);
@@ -117,7 +112,7 @@ public class UnpackClient
             }
             else
             {
-                Extract(filePath, extractPath);
+                Extract(filePath, extractPath, cancellationToken);
 
                 await FileHelper.Delete(filePath);
             }
@@ -132,7 +127,7 @@ public class UnpackClient
         }
     }
 
-    private async Task<IList<String>> GetArchiveFiles(String filePath)
+    private static async Task<IList<String>> GetArchiveFiles(String filePath)
     {
         await using Stream stream = File.OpenRead(filePath);
 
@@ -148,8 +143,6 @@ public class UnpackClient
             archive = RarArchive.Open(stream);
         }
 
-        BytesTotal = archive.TotalSize;
-
         var entries = archive.Entries
                              .Where(entry => !entry.IsDirectory)
                              .Select(m => m.Key)
@@ -160,7 +153,7 @@ public class UnpackClient
         return entries;
     }
 
-    private void Extract(String filePath, String extractPath)
+    private void Extract(String filePath, String extractPath, CancellationToken cancellationToken)
     {
         var parts = ArchiveFactory.GetFileParts(filePath);
 
@@ -177,48 +170,17 @@ public class UnpackClient
         {
             archive = RarArchive.Open(fi);
         }
-        
-        if (archive.IsComplete)
-        {
-            BytesTotal = archive.TotalSize;
-        }
 
-        var entries = archive.Entries.Where(entry => !entry.IsDirectory)
-                             .ToList();
-
-        _rarfileStatus = entries.ToDictionary(entry => entry.Key, _ => 0L);
-        _rarCurrentEntry = null;
-        archive.CompressedBytesRead += ArchiveOnCompressedBytesRead;
-
-        foreach (var entry in entries)
-        {
-            if (_cancelled)
-            {
-                throw new Exception("Task was cancelled");
-            }
-                        
-            _rarCurrentEntry = entry;
-
-            entry.WriteToDirectory(extractPath,
-                                   new ExtractionOptions
+        archive.ExtractToDirectory(extractPath,
+                                   d =>
                                    {
-                                       ExtractFullPath = true,
-                                       Overwrite = true
-                                   });
-        }
-
+                                       Debug.WriteLine(d);
+                                       Progess = (Int32) Math.Round(d);
+                                   },
+                                   cancellationToken: cancellationToken);
+        
         archive.Dispose();
-    }
 
-    private void ArchiveOnCompressedBytesRead(Object? sender, CompressedBytesReadEventArgs e)
-    {
-        if (_rarCurrentEntry == null)
-        {
-            return;
-        }
-
-        _rarfileStatus![_rarCurrentEntry.Key] = e.CompressedBytesRead;
-
-        BytesDone = _rarfileStatus.Sum(m => m.Value);
+        GC.Collect();
     }
 }

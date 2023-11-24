@@ -76,8 +76,8 @@ public class Torrents
 
                 if (TorrentRunner.ActiveUnpackClients.TryGetValue(download.DownloadId, out var unpackClient))
                 {
-                    download.BytesTotal = unpackClient.BytesTotal;
-                    download.BytesDone = unpackClient.BytesDone;
+                    download.BytesTotal = 100;
+                    download.BytesDone = unpackClient.Progess;
                 }
             }
         }
@@ -580,8 +580,8 @@ public class Torrents
 
             if (TorrentRunner.ActiveUnpackClients.TryGetValue(download.DownloadId, out var unpackClient))
             {
-                download.BytesTotal = unpackClient.BytesTotal;
-                download.BytesDone = unpackClient.BytesDone;
+                download.BytesTotal = 100;
+                download.BytesDone = unpackClient.Progess;
             }
         }
 
