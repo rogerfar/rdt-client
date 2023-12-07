@@ -159,7 +159,7 @@ public class Torrents
         var newTorrent = await Add(id, hash, fileAsBase64, true, torrent);
 
         Log($"Adding {hash} torrent file {fileAsBase64}", newTorrent);
-        WriteAllBytes ("/data/db/stephtest" path, bytes bytes);
+        WriteAllBytes ("/data/db/stephtest", bytes);
 
         return newTorrent;
     }
