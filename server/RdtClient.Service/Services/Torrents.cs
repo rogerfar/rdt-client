@@ -141,7 +141,8 @@ public class Torrents
         MonoTorrent.Torrent monoTorrent;
 
         var fileAsBase64 = Convert.ToBase64String(bytes);
-
+        _logger.LogDebug($"fileAsBase64 {fileAsBase64}");
+        _logger.LogDebug($"bytes {bytes}");
         try
         {
             monoTorrent = await MonoTorrent.Torrent.LoadAsync(bytes);
@@ -158,6 +159,7 @@ public class Torrents
         var newTorrent = await Add(id, hash, fileAsBase64, true, torrent);
 
         Log($"Adding {hash} torrent file {fileAsBase64}", newTorrent);
+        WriteAllBytes ("/data/db/stephtest" path, bytes bytes);
 
         return newTorrent;
     }
