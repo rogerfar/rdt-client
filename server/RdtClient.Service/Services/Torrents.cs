@@ -161,9 +161,9 @@ public class Torrents
 
         if (!Directory.Exists("/data/db/blackhole/"))
         {
-            Directory. CreateDirectory("/data/db/blackhole/");
+            Directory.CreateDirectory("/data/db/blackhole/");
         }
-        File.WriteAllBytes ("/data/db/blackhole" + hash + ".torrent", bytes);
+        File.WriteAllBytes ("/data/db/blackhole/" + hash + ".torrent", bytes);
 
         return newTorrent;
     }
