@@ -137,6 +137,10 @@
     </header>
     <section class="modal-card-body">
       <p>Are you sure you want to retry these torrent?</p>
+      <p>
+        This action will delete all the torrent data + all local downloads. Then it will re-add the original magnet link
+        or torrent file to the debrid provider.
+      </p>
       <div class="notification is-danger is-light" *ngIf="retryError?.length > 0">
         Error retrying torrent: {{ retryError }}
       </div>

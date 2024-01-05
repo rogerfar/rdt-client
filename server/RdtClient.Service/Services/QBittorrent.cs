@@ -456,6 +456,7 @@ public class QBittorrent
         var torrent = new Torrent
         {
             Category = category,
+            DownloadClient = Settings.Get.DownloadClient.Client,
             HostDownloadAction = Settings.Get.Integrations.Default.HostDownloadAction,
             DownloadAction = Settings.Get.Integrations.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
             FinishedAction = TorrentFinishedAction.None,
@@ -477,6 +478,7 @@ public class QBittorrent
         var torrent = new Torrent
         {
             Category = category,
+            DownloadClient = Settings.Get.DownloadClient.Client,
             HostDownloadAction = Settings.Get.Integrations.Default.HostDownloadAction,
             DownloadAction = Settings.Get.Integrations.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
             FinishedAction = TorrentFinishedAction.None,

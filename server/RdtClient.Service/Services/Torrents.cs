@@ -405,6 +405,7 @@ public class Torrents
                     var newTorrent = new Torrent
                     {
                         Category = Settings.Get.Provider.Default.Category,
+                        DownloadClient = Settings.Get.DownloadClient.Client,
                         DownloadAction = Settings.Get.Provider.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
                         FinishedAction = Settings.Get.Provider.Default.FinishedAction,
                         DownloadMinSize = Settings.Get.Provider.Default.MinFileSize,

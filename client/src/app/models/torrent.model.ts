@@ -4,6 +4,7 @@ export class Torrent {
   public torrentId: string;
   public hash: string;
   public category: string;
+  public downloadClient: number;
   public hostDownloadAction: number;
   public downloadAction: number;
   public finishedAction: number;
