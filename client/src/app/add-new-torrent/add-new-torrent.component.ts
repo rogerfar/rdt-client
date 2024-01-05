@@ -15,6 +15,7 @@ export class AddNewTorrentComponent implements OnInit {
   private currentTorrentFile: string;
 
   public provider: string;
+  public downloadClient: number;
 
   public category: string;
   public hostDownloadAction: number = 0;
@@ -46,6 +47,7 @@ export class AddNewTorrentComponent implements OnInit {
     this.settingsService.get().subscribe((settings) => {
       const providerSetting = settings.first((m) => m.key === 'Provider:Provider');
       this.provider = providerSetting.enumValues[providerSetting.value as number];
+      this.downloadClient = settings.first((m) => m.key === 'DownloadClient:Client')?.value as number;
 
       this.category = settings.first((m) => m.key === 'Gui:Default:Category')?.value as string;
       this.hostDownloadAction = this.downloadAction = settings.first((m) => m.key === 'Gui:Default:HostDownloadAction')
@@ -60,7 +62,19 @@ export class AddNewTorrentComponent implements OnInit {
       this.torrentDeleteOnError = settings.first((m) => m.key === 'Gui:Default:DeleteOnError')?.value as number;
       this.torrentLifetime = settings.first((m) => m.key === 'Gui:Default:TorrentLifetime')?.value as number;
       this.priority = settings.first((m) => m.key === 'Gui:Default:Priority')?.value as number;
+
+      this.setFinishAction();
     });
+  }
+
+  public setFinishAction() {
+    if (this.downloadClient === 2){
+      if (this.finishedAction === 1){
+        this.finishedAction = 3;
+      } else if (this.finishedAction === 2){
+        this.finishedAction = 0;
+      }
+    }
   }
 
   public pickFile(evt: Event): void {
