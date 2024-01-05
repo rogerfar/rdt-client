@@ -35,16 +35,7 @@ RUN \
    git clone https://github.com/rogerfar/rdt-client.git . && \
    echo "**** Building Source Code for $TARGETPLATFORM on $BUILDPLATFORM ****" && \
    cd server && \
-   if [ "$TARGETPLATFORM" = "linux/arm/v7" ] ; then \
-      echo "**** Building $TARGETPLATFORM arm v7 version" && \
-      dotnet restore --no-cache -r linux-arm RdtClient.sln && dotnet publish --no-restore -r linux-arm -c Release -o out ; \
-   elif [ "$TARGETPLATFORM" = "linux/arm/v8" ] ; then \
-      echo "**** Building $TARGETPLATFORM arm v8 version" && \
-      dotnet restore --no-cache -r linux-arm64 RdtClient.sln && dotnet publish --no-restore -r linux-arm64 -c Release -o out ; \
-   else \
-      echo "**** Building $TARGETPLATFORM x64 version" && \
-      dotnet restore --no-cache RdtClient.sln && dotnet publish --no-restore -c Release -o out ; \
-   fi
+   dotnet restore --no-cache RdtClient.sln && dotnet publish --no-restore -c Release -o out ; 
 
 # Stage 3 - Build runtime image
 FROM ghcr.io/linuxserver/baseimage-alpine:3.18
@@ -65,33 +56,33 @@ ENV XDG_CONFIG_HOME="/config/xdg"
 ENV RDTCLIENT_BRANCH="main"
 
 RUN \
-    mkdir -p /data/downloads /data/db || true && \
-    echo "**** Updating package information ****" && \
-    apk update && \
-    echo "**** Install pre-reqs ****" && \
-    apk add bash icu-libs krb5-libs libgcc libintl libssl1.1 libstdc++ zlib && \
-    echo "**** Installing dotnet ****" && \
-	mkdir -p /usr/share/dotnet
+   mkdir -p /data/downloads /data/db || true && \
+   echo "**** Updating package information ****" && \
+   apk update && \
+   echo "**** Install pre-reqs ****" && \
+   apk add bash icu-libs krb5-libs libgcc libintl libssl1.1 libstdc++ zlib && \
+   echo "**** Installing dotnet ****" && \
+   mkdir -p /usr/share/dotnet
 
 RUN \
    if [ "$TARGETPLATFORM" = "linux/arm/v7" ] ; then \
-      wget https://download.visualstudio.microsoft.com/download/pr/c3bf3103-efdb-42e0-af55-bbf861a4215b/dc22eda8877933b8c6569e3823f18d21/aspnetcore-runtime-8.0.0-linux-musl-arm64.tar.gz && \
-      tar zxf aspnetcore-runtime-8.0.0-linux-musl-arm64.tar.gz -C /usr/share/dotnet ; \
-   elif [ "$TARGETPLATFORM" = "linux/arm/v8" ] ; then \
-      wget https://download.visualstudio.microsoft.com/download/pr/c3bf3103-efdb-42e0-af55-bbf861a4215b/dc22eda8877933b8c6569e3823f18d21/aspnetcore-runtime-8.0.0-linux-musl-arm64.tar.gz && \
-      tar zxf aspnetcore-runtime-8.0.0-linux-musl-arm64.tar.gz -C /usr/share/dotnet ; \
+   wget https://download.visualstudio.microsoft.com/download/pr/c3bf3103-efdb-42e0-af55-bbf861a4215b/dc22eda8877933b8c6569e3823f18d21/aspnetcore-runtime-8.0.0-linux-musl-arm64.tar.gz && \
+   tar zxf aspnetcore-runtime-8.0.0-linux-musl-arm64.tar.gz -C /usr/share/dotnet ; \
+   elif [ "$TARGETPLATFORM" = "linux/arm64" ] ; then \
+   wget https://download.visualstudio.microsoft.com/download/pr/c3bf3103-efdb-42e0-af55-bbf861a4215b/dc22eda8877933b8c6569e3823f18d21/aspnetcore-runtime-8.0.0-linux-musl-arm64.tar.gz && \
+   tar zxf aspnetcore-runtime-8.0.0-linux-musl-arm64.tar.gz -C /usr/share/dotnet ; \
    else \
-      wget https://download.visualstudio.microsoft.com/download/pr/7aa33fc7-07fe-48c2-8e44-a4bfb4928535/3b96ec50970eee414895ef3a5b188bcd/aspnetcore-runtime-8.0.0-linux-musl-x64.tar.gz && \
-      tar zxf aspnetcore-runtime-8.0.0-linux-musl-x64.tar.gz -C /usr/share/dotnet ; \
+   wget https://download.visualstudio.microsoft.com/download/pr/7aa33fc7-07fe-48c2-8e44-a4bfb4928535/3b96ec50970eee414895ef3a5b188bcd/aspnetcore-runtime-8.0.0-linux-musl-x64.tar.gz && \
+   tar zxf aspnetcore-runtime-8.0.0-linux-musl-x64.tar.gz -C /usr/share/dotnet ; \
    fi
-	
+
 RUN \
-    echo "**** Setting permissions ****" && \
-    chown -R abc:abc /data && \
-    rm -rf \
-        /tmp/* \
-        /var/cache/apk/* \
-        /var/tmp/* || true
+   echo "**** Setting permissions ****" && \
+   chown -R abc:abc /data && \
+   rm -rf \
+   /tmp/* \
+   /var/cache/apk/* \
+   /var/tmp/* || true
 
 ENV PATH "$PATH:/usr/share/dotnet"
 
