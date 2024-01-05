@@ -4,14 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.51] - 2024-01-15
+### Added
+- Added setting to store magnets and torrents to a directory after adding.
+- Added bulk settings change on the index pages.
+### Changed
+- Swapped the internal downloader back to the one that was before, this one is giving too many headaches.
+- Prevent deleting torrents from the debrid provider when the symlink downloader is used.
+- Fixed %F parameter on the external program.
+- Run the external program before the deletion process is ran.
+- Remove the 100 char limit on inputs.
+
 ## [2.0.50] - 2023-11-25
 ### Changed
-- Fixed Docker Builds for arm64
+- Fixed Docker Builds for arm64.
 
 ## [2.0.49] - 2023-11-24
 ### Changed
-- Fixed memory issue in internal downloader
-- Changed unpack process to handle cancels
+- Fixed memory issue in internal downloader.
+- Changed unpack process to handle cancels.
 
 ## [2.0.48] - 2023-11-15
 ### Changed
