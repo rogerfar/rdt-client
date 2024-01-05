@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.52] - 2024-01-15
+### Added
+- Add BASE_PATH environment variable for the base path setting.
+- Expose the Post Torrent Download Action setting on the Provider settings.
+
 ## [2.0.51] - 2024-01-15
 ### Added
 - Added setting to store magnets and torrents to a directory after adding.
