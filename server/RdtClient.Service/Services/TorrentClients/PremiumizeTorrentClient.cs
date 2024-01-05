@@ -200,7 +200,7 @@ public class PremiumizeTorrentClient : ITorrentClient
                 "waiting" => TorrentStatus.Processing,
                 "queued" => TorrentStatus.Processing,
                 "running" => TorrentStatus.Downloading,
-                "seeding" => TorrentStatus.Uploading,
+                "seeding" => TorrentStatus.Finished,
                 "finished" => TorrentStatus.Finished,
                 _ => TorrentStatus.Error
             };
