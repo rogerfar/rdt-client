@@ -1,4 +1,5 @@
-﻿using DownloaderNET;
+﻿using System.Net;
+using Downloader;
 using Serilog;
 
 namespace RdtClient.Service.Services.Downloaders;
@@ -8,15 +9,13 @@ public class InternalDownloader : IDownloader
     public event EventHandler<DownloadCompleteEventArgs>? DownloadComplete;
     public event EventHandler<DownloadProgressEventArgs>? DownloadProgress;
 
-    private readonly Downloader _downloadService;
-    private readonly DownloaderNET.Settings _downloadConfiguration;
+    private readonly DownloadService _downloadService;
+    private readonly DownloadConfiguration _downloadConfiguration;
 
     private readonly String _filePath;
     private readonly String _uri;
 
     private readonly ILogger _logger;
-
-    private readonly CancellationTokenSource _cancellationToken = new();
 
     private Boolean _finished;
 
@@ -26,16 +25,40 @@ public class InternalDownloader : IDownloader
 
         _uri = uri;
         _filePath = filePath;
-        
-        _downloadConfiguration = new DownloaderNET.Settings();
+
+        var settingProxyServer = Settings.Get.DownloadClient.ProxyServer;
+
+        // For all options, see https://github.com/bezzad/Downloader
+        _downloadConfiguration = new DownloadConfiguration
+        {
+            BufferBlockSize = 1024 * 8,
+            MaxTryAgainOnFailover = 5,
+            RangeDownload = false,
+            ClearPackageOnCompletionWithFailure = false,
+            MinimumSizeOfChunking = 1024,
+            ReserveStorageSpaceBeforeStartingDownload = false,
+            CheckDiskSizeBeforeDownload = true,
+            RequestConfiguration =
+            {
+                Accept = "*/*",
+                UserAgent = $"rdt-client",
+                ProtocolVersion = HttpVersion.Version11,
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+                KeepAlive = true,
+                UseDefaultCredentials = false
+            }
+        };
 
         SetSettings();
 
-        _downloadService = new Downloader(_uri, _filePath, _downloadConfiguration);
+        if (!String.IsNullOrWhiteSpace(settingProxyServer))
+        {
+            _downloadConfiguration.RequestConfiguration.Proxy = new WebProxy(new Uri(settingProxyServer), false);
+        }
 
-        //_downloadService.OnLog += message => Debug.WriteLine(message.Message);
+        _downloadService = new DownloadService(_downloadConfiguration);
 
-        _downloadService.OnProgress += (chunks, _) =>
+        _downloadService.DownloadProgressChanged += (_, args) =>
         {
             if (DownloadProgress == null)
             {
@@ -45,41 +68,68 @@ public class InternalDownloader : IDownloader
             DownloadProgress.Invoke(this,
                                      new DownloadProgressEventArgs
                                      {
-                                         Speed = (Int64)chunks.Where(m => m.IsActive).Sum(m => m.Speed),
-                                         BytesDone = chunks.Sum(m => m.DownloadBytes),
-                                         BytesTotal = chunks.Sum(m => m.LengthBytes)
+                                         Speed = (Int64)args.BytesPerSecondSpeed,
+                                         BytesDone = args.ReceivedBytesSize,
+                                         BytesTotal = args.TotalBytesToReceive
                                      });
         };
 
-        _downloadService.OnComplete += (_, error) =>
+        _downloadService.DownloadFileCompleted += (_, args) =>
         {
+            String? error = null;
+
+            if (args.Cancelled)
+            {
+                error = $"The download was cancelled";
+            }
+            else if (args.Error != null)
+            {
+                error = args.Error.Message;
+            }
+
             DownloadComplete?.Invoke(this,
                                      new DownloadCompleteEventArgs
                                      {
-                                         Error = error?.Message
+                                         Error = error
                                      });
 
             _finished = true;
-
-            return Task.CompletedTask;
         };
     }
 
-    public Task<String?> Download()
+    public async Task<String?> Download()
     {
         _logger.Debug($"Starting download of {_uri}, writing to path: {_filePath}");
 
-        Task.Run(async () => await _downloadService.Download(_cancellationToken.Token));
-        Task.Run(StartTimer);
+        if (Settings.Get.DownloadClient.ChunkCount == 0)
+        {
+            var contentSize = await GetContentSize();
 
-        return Task.FromResult<String?>(null);
+            var chunkSize = contentSize switch
+            {
+                <= 1024 * 1024 * 10 => 1024 * 1024 * 10,
+                <= 1024 * 1024 * 100 => 1024 * 1024 * 25,
+                _ => 1024 * 1024 * 50
+            };
+
+            _downloadConfiguration.ChunkCount = (Int32) Math.Ceiling(contentSize / (Double) chunkSize);
+        }
+
+        _ = Task.Run(async () =>
+        {
+            await _downloadService.DownloadFileTaskAsync(_uri, _filePath);
+        });
+
+        _ = Task.Run(StartTimer);
+
+        return null;
     }
 
     public Task Cancel()
     {
         _logger.Debug($"Cancelling download {_uri}");
 
-        _cancellationToken.Cancel(false);
+        _downloadService.CancelAsync();
 
         return Task.CompletedTask;
     }
@@ -102,7 +152,7 @@ public class InternalDownloader : IDownloader
         {
             settingDownloadParallelCount = 1;
         }
-        
+
         var settingDownloadMaxSpeed = Settings.Get.DownloadClient.MaxSpeed;
 
         if (settingDownloadMaxSpeed <= 0)
@@ -119,10 +169,10 @@ public class InternalDownloader : IDownloader
             settingDownloadTimeout = 1000;
         }
         
-        _downloadConfiguration.Parallel = settingDownloadParallelCount;
         _downloadConfiguration.MaximumBytesPerSecond = settingDownloadMaxSpeed;
+        _downloadConfiguration.ParallelDownload = settingDownloadParallelCount > 1;
+        _downloadConfiguration.ParallelCount = settingDownloadParallelCount;
         _downloadConfiguration.Timeout = settingDownloadTimeout;
-        _downloadConfiguration.RetryCount = 5;
     }
 
     private async Task StartTimer()
@@ -138,5 +188,22 @@ public class InternalDownloader : IDownloader
 
             SetSettings();
         }
+    }
+
+    private async Task<Int64> GetContentSize()
+    {
+        var httpClient = new HttpClient();
+        var responseHeaders = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, _uri));
+
+        if (!responseHeaders.IsSuccessStatusCode)
+        {
+            var content = await responseHeaders.Content.ReadAsStringAsync();
+            var ex = new Exception($"Unable to retrieve content size before downloading, received response: {responseHeaders.StatusCode} {content}");
+
+            throw ex;
+        }
+
+        var result = responseHeaders.Content.Headers.ContentLength ?? -1;
+        return result;
     }
 }
