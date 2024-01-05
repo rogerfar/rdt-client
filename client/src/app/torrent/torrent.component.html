@@ -52,6 +52,14 @@
         {{ torrent.category || "(no category set)" }}
       </div>
       <div class="field">
+        <label class="label">Downloader</label>
+        <ng-container [ngSwitch]="torrent.downloadClient">
+          <ng-container *ngSwitchCase="0">Internal Downloader</ng-container>
+          <ng-container *ngSwitchCase="1">Aria2c</ng-container>
+          <ng-container *ngSwitchCase="2">Symlink Downloader</ng-container>
+        </ng-container>
+      </div>
+      <div class="field">
         <label class="label">Post Download Action</label>
         <ng-container [ngSwitch]="torrent.hostDownloadAction">
           <ng-container *ngSwitchCase="0">Download all files to host</ng-container>
@@ -469,10 +477,25 @@
       <button class="delete" aria-label="close" (click)="updateSettingsCancel()"></button>
     </header>
     <section class="modal-card-body">
+      <p>Settings that are blank do not have the same values for each torrent. Updating a setting with a blank value will not update it.</p>
+      <div class="field">
+        <label class="label">Downloader</label>
+        <div class="control select is-fullwidth">
+          <select [(ngModel)]="updateSettingsDownloadClient">
+            <option [ngValue]="0">Internal Downloader</option>
+            <option [ngValue]="1">Aria2c</option>
+            <option [ngValue]="2">Symlink Downloader</option>
+          </select>
+        </div>
+        <p class="help">
+          Select which downloader is used to download this torrent from the debrid provider to your host.
+        </p>
+      </div>
       <div class="field">
         <label class="label">Post Download Action</label>
         <div class="control select is-fullwidth">
           <select [(ngModel)]="updateSettingsHostDownloadAction">
+            <option [ngValue]="null"></option>
             <option [ngValue]="0">Download all files to host</option>
             <option [ngValue]="1">Don't download any files to host</option>
           </select>

@@ -25,7 +25,23 @@ export class TorrentTableComponent implements OnInit {
   public retryError: string;
   public retrying: boolean;
 
-  constructor(private router: Router, private torrentService: TorrentService) {}
+  public isChangeSettingsModalActive: boolean;
+  public changeSettingsError: string;
+  public changingSettings: boolean;
+
+  public updateSettingsDownloadClient: number;
+  public updateSettingsHostDownloadAction: number;
+  public updateSettingsCategory: string;
+  public updateSettingsPriority: number;
+  public updateSettingsDownloadRetryAttempts: number;
+  public updateSettingsTorrentRetryAttempts: number;
+  public updateSettingsDeleteOnError: number;
+  public updateSettingsTorrentLifetime: number;
+
+  constructor(
+    private router: Router,
+    private torrentService: TorrentService,
+  ) {}
 
   ngOnInit(): void {
     this.torrentService.getList().subscribe(
@@ -38,7 +54,7 @@ export class TorrentTableComponent implements OnInit {
       },
       (err) => {
         this.error = err.error;
-      }
+      },
     );
   }
 
@@ -135,6 +151,91 @@ export class TorrentTableComponent implements OnInit {
       error: (err) => {
         this.retryError = err.error;
         this.retrying = false;
+      },
+    });
+  }
+
+  public changeSettingsModal(): void {
+    this.changeSettingsError = null;
+
+    const selectedTorrents = this.torrents.where((m) => this.selectedTorrents.indexOf(m.torrentId) > -1);
+
+    this.updateSettingsDownloadClient =
+      selectedTorrents.distinctBy((m) => m.downloadClient).count() == 1 ? selectedTorrents[0].downloadClient : null;
+    this.updateSettingsHostDownloadAction =
+      selectedTorrents.distinctBy((m) => m.hostDownloadAction).count() == 1
+        ? selectedTorrents[0].hostDownloadAction
+        : null;
+    this.updateSettingsCategory =
+      selectedTorrents.distinctBy((m) => m.category).count() == 1 ? selectedTorrents[0].category : null;
+    this.updateSettingsPriority =
+      selectedTorrents.distinctBy((m) => m.priority).count() == 1 ? selectedTorrents[0].priority : null;
+    this.updateSettingsDownloadRetryAttempts =
+      selectedTorrents.distinctBy((m) => m.downloadRetryAttempts).count() == 1
+        ? selectedTorrents[0].downloadRetryAttempts
+        : null;
+    this.updateSettingsTorrentRetryAttempts =
+      selectedTorrents.distinctBy((m) => m.torrentRetryAttempts).count() == 1
+        ? selectedTorrents[0].torrentRetryAttempts
+        : null;
+    this.updateSettingsDeleteOnError =
+      selectedTorrents.distinctBy((m) => m.deleteOnError).count() == 1 ? selectedTorrents[0].deleteOnError : null;
+    this.updateSettingsTorrentLifetime =
+      selectedTorrents.distinctBy((m) => m.lifetime).count() == 1 ? selectedTorrents[0].lifetime : null;
+
+    this.isChangeSettingsModalActive = true;
+  }
+
+  public changeSettingsCancel(): void {
+    this.isChangeSettingsModalActive = false;
+  }
+
+  public changeSettingsOk(): void {
+    this.changingSettings = true;
+
+    let calls: Observable<void>[] = [];
+
+    const selectedTorrents = this.torrents.where((m) => this.selectedTorrents.indexOf(m.torrentId) > -1);
+
+    selectedTorrents.forEach((torrent) => {
+      if (this.updateSettingsDownloadClient != null) {
+        torrent.downloadClient = this.updateSettingsDownloadClient;
+      }
+      if (this.updateSettingsHostDownloadAction != null) {
+        torrent.hostDownloadAction = this.updateSettingsHostDownloadAction;
+      }
+      if (this.updateSettingsCategory != null) {
+        torrent.category = this.updateSettingsCategory;
+      }
+      if (this.updateSettingsPriority != null) {
+        torrent.priority = this.updateSettingsPriority;
+      }
+      if (this.updateSettingsDownloadRetryAttempts != null) {
+        torrent.retryCount = this.updateSettingsDownloadRetryAttempts;
+      }
+      if (this.updateSettingsTorrentRetryAttempts != null) {
+        torrent.torrentRetryAttempts = this.updateSettingsTorrentRetryAttempts;
+      }
+      if (this.updateSettingsDeleteOnError != null) {
+        torrent.deleteOnError = this.updateSettingsDeleteOnError;
+      }
+      if (this.updateSettingsTorrentLifetime != null) {
+        torrent.lifetime = this.updateSettingsTorrentLifetime;
+      }
+
+      calls.push(this.torrentService.update(torrent));
+    });
+
+    forkJoin(calls).subscribe({
+      complete: () => {
+        this.isChangeSettingsModalActive = false;
+        this.changingSettings = false;
+
+        this.selectedTorrents = [];
+      },
+      error: (err) => {
+        this.changeSettingsError = err.error;
+        this.changingSettings = false;
       },
     });
   }
