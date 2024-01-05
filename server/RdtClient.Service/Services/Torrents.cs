@@ -421,7 +421,7 @@ public class Torrents
                         continue;
                     }
 
-                    torrent = await _torrentData.Add(rdTorrent.Id, rdTorrent.Hash, null, false, newTorrent);
+                    torrent = await _torrentData.Add(rdTorrent.Id, rdTorrent.Hash, null, false, Settings.Get.DownloadClient.Client, newTorrent);
 
                     await UpdateTorrentClientData(torrent, rdTorrent);
                 }
@@ -654,6 +654,7 @@ public class Torrents
                                                     infoHash,
                                                     fileOrMagnetContents,
                                                     isFile,
+                                                    Settings.Get.DownloadClient.Client,
                                                     torrent);
 
             await UpdateTorrentClientData(newTorrent);

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 
 namespace RdtClient.Data.Data;
@@ -79,6 +80,7 @@ public class TorrentData
                                    String hash,
                                    String? fileOrMagnetContents,
                                    Boolean isFile,
+                                   DownloadClient downloadClient,
                                    Torrent torrent)
     {
         var newTorrent = new Torrent
@@ -93,6 +95,7 @@ public class TorrentData
             FinishedAction = torrent.FinishedAction,
             DownloadMinSize = torrent.DownloadMinSize,
             DownloadManualFiles = torrent.DownloadManualFiles,
+            DownloadClient = downloadClient,
             FileOrMagnet = fileOrMagnetContents,
             IsFile = isFile,
             Priority = torrent.Priority,

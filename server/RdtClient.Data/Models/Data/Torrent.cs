@@ -20,6 +20,7 @@ public class Torrent
     public TorrentHostDownloadAction HostDownloadAction { get; set; }
     public Int32 DownloadMinSize { get; set; }
     public String? DownloadManualFiles { get; set; }
+    public DownloadClient DownloadClient { get; set; }
 
     public DateTimeOffset Added { get; set; }
     public DateTimeOffset? FilesSelected { get; set; }

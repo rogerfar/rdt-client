@@ -530,6 +530,16 @@ public class TorrentRunner
 
                         await _torrents.UpdateComplete(torrent.TorrentId, null, DateTimeOffset.UtcNow, true);
 
+                        if (torrent.DownloadClient == Data.Enums.DownloadClient.Symlink)
+                        {
+                            torrent.FinishedAction = torrent.FinishedAction switch
+                            {
+                                TorrentFinishedAction.RemoveAllTorrents => TorrentFinishedAction.RemoveClient,
+                                TorrentFinishedAction.RemoveRealDebrid => TorrentFinishedAction.None,
+                                _ => torrent.FinishedAction
+                            };
+                        }
+
                         switch (torrent.FinishedAction)
                         {
                             case TorrentFinishedAction.RemoveAllTorrents:
