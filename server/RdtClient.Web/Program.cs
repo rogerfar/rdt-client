@@ -164,9 +164,11 @@ try
         }
     });
 
-    if (!String.IsNullOrWhiteSpace(appSettings.BasePath))
+    var basePath = !String.IsNullOrWhiteSpace(appSettings.BasePath) ? appSettings.BasePath : !String.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("BASE_PATH")) ? Environment.GetEnvironmentVariable("BASE_PATH") : null;
+
+    if (basePath != null)
     {
-        app.UseMiddleware<BaseHrefMiddleware>();
+        app.UseMiddleware<BaseHrefMiddleware>(basePath);
     }
 
     app.UseMiddleware<RequestLoggingMiddleware>();
