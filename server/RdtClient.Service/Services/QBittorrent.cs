@@ -424,12 +424,12 @@ public class QBittorrent
         switch (Settings.Get.Integrations.Default.FinishedAction)
         {
             case TorrentFinishedAction.RemoveAllTorrents:
-                _logger.LogDebug("Removing torrents from Real-Debrid and Real-Debrid Client, no files");
+                _logger.LogDebug("Removing torrents from debrid provider and RDT-Client, no files");
                 await _torrents.Delete(torrent.TorrentId, true, true, false);
 
                 break;
             case TorrentFinishedAction.RemoveRealDebrid:
-                _logger.LogDebug("Removing torrents from Real-Debrid, no files");
+                _logger.LogDebug("Removing torrents from debrid provider, no files");
                 await _torrents.Delete(torrent.TorrentId, false, true, false);
 
                 break;

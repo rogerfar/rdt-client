@@ -38,7 +38,7 @@ public class ProviderUpdater : BackgroundService
                 
                 if (_nextUpdate < DateTime.UtcNow && ((torrents.Count > 0 && !Settings.Get.Provider.AutoImport) || Settings.Get.Provider.AutoImport))
                 {
-                    _logger.LogDebug($"Updating torrent info from Real-Debrid");
+                    _logger.LogDebug($"Updating torrent info from debrid provider");
                     
                     var updateTime = Settings.Get.Provider.CheckInterval * 3;
 
@@ -61,7 +61,7 @@ public class ProviderUpdater : BackgroundService
 
                     await torrentService.UpdateRdData();
 
-                    _logger.LogDebug($"Finished updating torrent info from Real-Debrid, next update in {updateTime} seconds");
+                    _logger.LogDebug($"Finished updating torrent info from debrid provider, next update in {updateTime} seconds");
                 }
             }
             catch (Exception ex)

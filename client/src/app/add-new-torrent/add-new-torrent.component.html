@@ -66,7 +66,7 @@
       </div>
       <p class="help">
         When a torrent is finished downloading on the provider, perform this action. Use this setting if you only want
-        to add files to Real-Debrid but not download them to the host.
+        to add files to your debrid provider but not download them to the host.
       </p>
     </div>
 
@@ -132,7 +132,7 @@
     <div class="field">
       <label class="label">Category</label>
       <div class="control">
-        <input class="input" type="text" maxlength="100" [(ngModel)]="category" />
+        <input class="input" type="text" [(ngModel)]="category" />
       </div>
       <p class="help">The category becomes a sub-folder in your main download path.</p>
     </div>
@@ -188,7 +188,7 @@
     <div class="field">
       <label class="label">Available files</label>
       <p class="help">
-        These files are available for immediate download from Real-Debrid. <br />
+        These files are available for immediate download from your debrid provider. <br />
         It is possible that there are more files in the torrent, which are not shown here.<br />
       </p>
       <div class="scroll-container">

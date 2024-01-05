@@ -20,7 +20,7 @@ export class AuthService {
     });
   }
 
-  public setupProvider(provider: string, token: string): Observable<void> {
+  public setupProvider(provider: number, token: string): Observable<void> {
     return this.http.post<void>(`${this.baseHref}Api/Authentication/SetupProvider`, {
       provider,
       token,

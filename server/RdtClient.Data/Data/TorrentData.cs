@@ -76,7 +76,7 @@ public class TorrentData
         return dbTorrent;
     }
 
-    public async Task<Torrent> Add(String realDebridId,
+    public async Task<Torrent> Add(String rdId,
                                    String hash,
                                    String? fileOrMagnetContents,
                                    Boolean isFile,
@@ -87,7 +87,7 @@ public class TorrentData
         {
             TorrentId = Guid.NewGuid(),
             Added = DateTimeOffset.UtcNow,
-            RdId = realDebridId,
+            RdId = rdId,
             Hash = hash.ToLower(),
             Category = torrent.Category,
             HostDownloadAction = torrent.HostDownloadAction,

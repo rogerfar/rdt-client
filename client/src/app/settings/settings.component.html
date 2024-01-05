@@ -19,7 +19,7 @@
       }}</label>
       <ng-container [ngSwitch]="setting.type">
         <div class="control" *ngSwitchCase="'String'">
-          <input class="input" type="text" maxlength="100" [(ngModel)]="setting.value" />
+          <input class="input" type="text" [(ngModel)]="setting.value" />
         </div>
         <div class="control" *ngSwitchCase="'Int32'">
           <input class="input" type="number" [(ngModel)]="setting.value" />

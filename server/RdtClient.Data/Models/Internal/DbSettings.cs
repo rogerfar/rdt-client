@@ -145,11 +145,11 @@ or
     public String ApiKey { get; set; } = "";
 
     [DisplayName("Automatically import and process torrents added to provider")]
-    [Description("When selected, import downloads that are not added through RealDebridClient but have been directly added to Real-Debrid, AllDebrid or Premiumize.")]
+    [Description("When selected, import downloads that are not added through RealDebridClient but have been directly added to your debrid provider.")]
     public Boolean AutoImport { get; set; } = false;
 
     [DisplayName("Automatically delete downloads removed from provider")]
-    [Description("When selected, cancel and delete downloads that have been removed from Real-Debrid, AllDebrid or Premiumize.")]
+    [Description("When selected, cancel and delete downloads that have been removed from your debrid provider.")]
     public Boolean AutoDelete { get; set; } = false;
 
     [DisplayName("Connection Timeout")]
@@ -199,7 +199,7 @@ public class DbSettingsWatch
 public class DbSettingsDefaultsWithDownload : DbSettingsDefaultsWithCategory
 {
     [DisplayName("Post Torrent Download Action")]
-    [Description("When a torrent is finished downloading on the provider, perform this action. Use this setting if you only want to add files to Real-Debrid but not download them to the host.")]
+    [Description("When a torrent is finished downloading on your debrid provider, perform this action. Use this setting if you only want to add files to your debrid provider but not download them to the host.")]
     public TorrentHostDownloadAction HostDownloadAction { get; set; }
 }
 

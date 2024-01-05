@@ -468,7 +468,7 @@ public class TorrentRunner
 
                 Log("Processing", torrent);
 
-                // If torrent is erroring out on the Real-Debrid side.
+                // If torrent is erroring out on the debrid side.
                 if (torrent.RdStatus == TorrentStatus.Error)
                 {
                     Log($"Torrent reported an error: {torrent.RdStatusRaw}", torrent);
@@ -481,7 +481,7 @@ public class TorrentRunner
                     continue;
                 }
 
-                // Real-Debrid is waiting for file selection, select which files to download.
+                // Debrid provider is waiting for file selection, select which files to download.
                 if ((torrent.RdStatus == TorrentStatus.WaitingForFileSelection || torrent.RdStatus == TorrentStatus.Finished) &&
                     torrent.FilesSelected == null &&
                     torrent.Downloads.Count == 0)
@@ -493,10 +493,10 @@ public class TorrentRunner
                     await _torrents.UpdateFilesSelected(torrent.TorrentId, DateTime.UtcNow);
                 }
 
-                // Real-Debrid finished downloading the torrent, process the file to host.
+                // Debrid provider finished downloading the torrent, process the file to host.
                 if (torrent.RdStatus == TorrentStatus.Finished)
                 {
-                    // The files are selected but there are no downloads yet, check if Real-Debrid has generated links yet.
+                    // The files are selected but there are no downloads yet, check if debrid provider has generated links yet.
                     if (torrent.Downloads.Count == 0 && torrent.FilesSelected != null)
                     {
                         Log($"Creating downloads", torrent);
@@ -543,12 +543,12 @@ public class TorrentRunner
                         switch (torrent.FinishedAction)
                         {
                             case TorrentFinishedAction.RemoveAllTorrents:
-                                Log($"Removing torrents from Real-Debrid and Real-Debrid Client, no files", torrent);
+                                Log($"Removing torrents from debrid provider and RDT-Client, no files", torrent);
                                 await _torrents.Delete(torrent.TorrentId, true, true, false);
 
                                 break;
                             case TorrentFinishedAction.RemoveRealDebrid:
-                                Log($"Removing torrents from Real-Debrid, no files", torrent);
+                                Log($"Removing torrents from debrid provider, no files", torrent);
                                 await _torrents.Delete(torrent.TorrentId, false, true, false);
 
                                 break;

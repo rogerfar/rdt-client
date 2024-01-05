@@ -10,13 +10,13 @@ import { AuthService } from '../auth.service';
 export class SetupComponent {
   public userName: string;
   public password: string;
-  public provider = 'RealDebrid';
+  public provider = 0;
   public token: string;
 
   public error: string;
   public working: boolean;
 
-  public step: number = 1;
+  public step: number = 2;
 
   constructor(private authService: AuthService, private router: Router) {}
 

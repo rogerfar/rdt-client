@@ -48,5 +48,9 @@
     <ProjectReference Include="..\RdtClient.Service\RdtClient.Service.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
 
 </Project>
