@@ -142,7 +142,14 @@ public class Torrents
                     Directory.CreateDirectory(Settings.Get.General.CopyAddedTorrents);
                 }
 
-                await File.WriteAllTextAsync(Path.Combine(Settings.Get.General.CopyAddedTorrents, $"{torrent.Hash}.magnet"), magnetLink);
+                var copyFileName = Path.Combine(Settings.Get.General.CopyAddedTorrents, $"{FileHelper.RemoveInvalidFileNameChars(magnet.Name)}.magnet");
+
+                if (File.Exists(copyFileName))
+                {
+                    File.Delete(copyFileName);
+                }
+
+                await File.WriteAllTextAsync(copyFileName, magnetLink);
             }
             catch (Exception ex)
             {
@@ -175,6 +182,8 @@ public class Torrents
 
         var newTorrent = await Add(id, hash, fileAsBase64, true, torrent);
 
+        Log($"Adding {hash} torrent file", newTorrent);
+
         if (!String.IsNullOrWhiteSpace(Settings.Get.General.CopyAddedTorrents))
         {
             try
@@ -184,7 +193,14 @@ public class Torrents
                     Directory.CreateDirectory(Settings.Get.General.CopyAddedTorrents);
                 }
 
-                await File.WriteAllBytesAsync(Path.Combine(Settings.Get.General.CopyAddedTorrents, $"{torrent.Hash}.torrent"), bytes);
+                var copyFileName = Path.Combine(Settings.Get.General.CopyAddedTorrents, $"{FileHelper.RemoveInvalidFileNameChars(monoTorrent.Name)}.torrent");
+
+                if (File.Exists(copyFileName))
+                {
+                    File.Delete(copyFileName);
+                }
+
+                await File.WriteAllBytesAsync(copyFileName, bytes);
             }
             catch (Exception ex)
             {

@@ -28,7 +28,7 @@ public static class DownloadHelper
 
         fileName = HttpUtility.UrlDecode(fileName);
 
-        fileName = RemoveInvalidFileNameChars(fileName);
+        fileName = FileHelper.RemoveInvalidFileNameChars(fileName);
 
         var filePath = Path.Combine(torrentPath, fileName);
 
@@ -38,10 +38,5 @@ public static class DownloadHelper
     private static String RemoveInvalidPathChars(String path)
     {
         return String.Concat(path.Split(Path.GetInvalidPathChars()));
-    }
-
-    private static String RemoveInvalidFileNameChars(String filename)
-    {
-        return String.Concat(filename.Split(Path.GetInvalidFileNameChars()));
     }
 }
