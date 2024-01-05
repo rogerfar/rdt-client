@@ -713,9 +713,18 @@ public class Torrents
         var downloadPath = DownloadPath(torrent);
         var torrentPath = Path.Combine(downloadPath, torrent.RdName ?? "Unknown");
 
+        var filePath = torrentPath;
+
+        var files = Directory.GetFiles(filePath);
+
+        if (files.Length == 1)
+        {
+            filePath = Path.Combine(torrentPath, files[0]);
+        }
+
         arguments = arguments.Replace("%N", $"\"{torrent.RdName}\"");
         arguments = arguments.Replace("%L", $"\"{torrent.Category}\"");
-        arguments = arguments.Replace("%F", $"\"{torrentPath}\"");
+        arguments = arguments.Replace("%F", $"\"{filePath}\"");
         arguments = arguments.Replace("%R", $"\"{downloadPath}\"");
         arguments = arguments.Replace("%D", $"\"{torrentPath}\"");
         arguments = arguments.Replace("%C", downloads.Count.ToString(CultureInfo.InvariantCulture).Replace(",", "").Replace(".", ""));

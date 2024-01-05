@@ -47,7 +47,7 @@ public class DbSettingsGeneral
     public Int32 UnpackLimit { get; set; } = 1;
 
     [DisplayName("Categories")]
-    [Description("Expose these categories through the QBittorrent API.")]
+    [Description("Expose these categories through the QBittorrent API. Define multiple categories by separating them with a comma.")]
     public String? Categories { get; set; } = null;
 
     [DisplayName("Run external program on torrent completion")]
