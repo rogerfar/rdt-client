@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
 using System.Text;
+using System.IO;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using MonoTorrent;
@@ -141,6 +142,7 @@ public class Torrents
         MonoTorrent.Torrent monoTorrent;
 
         var fileAsBase64 = Convert.ToBase64String(bytes);
+        _logger.LogDebug($"bytes {bytes}");
 
         try
         {
@@ -157,7 +159,11 @@ public class Torrents
 
         var newTorrent = await Add(id, hash, fileAsBase64, true, torrent);
 
-        Log($"Adding {hash} torrent file {fileAsBase64}", newTorrent);
+        if (!Directory.Exists("/data/db/blackhole/"))
+        {
+            Directory.CreateDirectory("/data/db/blackhole/");
+        }
+        File.WriteAllBytes ("/data/db/blackhole/" + hash + ".torrent", bytes);
 
         return newTorrent;
     }
