@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
 using System.Text;
-using System.IO;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using MonoTorrent;
@@ -134,6 +133,23 @@ public class Torrents
 
         Log($"Adding {hash} magnet link {magnetLink}", newTorrent);
 
+        if (!String.IsNullOrWhiteSpace(Settings.Get.General.CopyAddedTorrents))
+        {
+            try
+            {
+                if (!Directory.Exists(Settings.Get.General.CopyAddedTorrents))
+                {
+                    Directory.CreateDirectory(Settings.Get.General.CopyAddedTorrents);
+                }
+
+                await File.WriteAllTextAsync(Path.Combine(Settings.Get.General.CopyAddedTorrents, $"{torrent.Hash}.magnet"), magnetLink);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Unable to create torrent blackhole directory: {Settings.Get.General.CopyAddedTorrents}: {ex.Message}");
+            }
+        }
+
         return newTorrent;
     }
 
@@ -159,11 +175,22 @@ public class Torrents
 
         var newTorrent = await Add(id, hash, fileAsBase64, true, torrent);
 
-        if (!Directory.Exists("/data/db/blackhole/"))
+        if (!String.IsNullOrWhiteSpace(Settings.Get.General.CopyAddedTorrents))
         {
-            Directory.CreateDirectory("/data/db/blackhole/");
+            try
+            {
+                if (!Directory.Exists(Settings.Get.General.CopyAddedTorrents))
+                {
+                    Directory.CreateDirectory(Settings.Get.General.CopyAddedTorrents);
+                }
+
+                await File.WriteAllBytesAsync(Path.Combine(Settings.Get.General.CopyAddedTorrents, $"{torrent.Hash}.torrent"), bytes);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Unable to create torrent blackhole directory: {Settings.Get.General.CopyAddedTorrents}: {ex.Message}");
+            }
         }
-        File.WriteAllBytes ("/data/db/blackhole/" + hash + ".torrent", bytes);
 
         return newTorrent;
     }

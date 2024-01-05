@@ -70,6 +70,10 @@ Supports the following parameters:
     [DisplayName("Authentication Type")]
     [Description("How to authenticate with the client. WARNING: when set to None anyone with access to the URL can use the client without any credentials.")]
     public AuthenticationType AuthenticationType { get; set; } = AuthenticationType.UserNamePassword;
+
+    [DisplayName("Copy added torrent files")]
+    [Description("When a torrent file or magnet is added, create a copy in this directory.")]
+    public String? CopyAddedTorrents { get; set; } = null;
 }
 
 public class DbSettingsDownloadClient
