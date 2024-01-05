@@ -16,7 +16,7 @@ export class SetupComponent {
   public error: string;
   public working: boolean;
 
-  public step: number = 2;
+  public step: number = 1;
 
   constructor(private authService: AuthService, private router: Router) {}
 
