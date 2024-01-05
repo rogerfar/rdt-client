@@ -530,6 +530,15 @@ public class TorrentRunner
 
                         await _torrents.UpdateComplete(torrent.TorrentId, null, DateTimeOffset.UtcNow, true);
 
+                        try
+                        {
+                            await _torrents.RunTorrentComplete(torrent.TorrentId);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex.Message, "Unable to run post process: {Message}", ex.Message);
+                        }
+
                         if (torrent.DownloadClient == Data.Enums.DownloadClient.Symlink)
                         {
                             torrent.FinishedAction = torrent.FinishedAction switch
@@ -565,15 +574,6 @@ public class TorrentRunner
                                 Log($"Invalid torrent FinishedAction {torrent.FinishedAction}", torrent);
 
                                 break;
-                        }
-
-                        try
-                        {
-                            await _torrents.RunTorrentComplete(torrent.TorrentId);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex.Message, "Unable to run post process: {Message}", ex.Message);
                         }
                     }
                     else
