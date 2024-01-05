@@ -35,6 +35,34 @@ public static class DownloadHelper
         return filePath;
     }
 
+    public static String? GetDownloadPath(Torrent torrent, Download download)
+    {
+        var fileUrl = download.Link;
+
+        if (String.IsNullOrWhiteSpace(fileUrl) || torrent.RdName == null)
+        {
+            return null;
+        }
+
+        var uri = new Uri(fileUrl);
+        var torrentPath = RemoveInvalidPathChars(torrent.RdName);
+        
+        if (!Directory.Exists(torrentPath))
+        {
+            Directory.CreateDirectory(torrentPath);
+        }
+
+        var fileName = uri.Segments.Last();
+
+        fileName = HttpUtility.UrlDecode(fileName);
+
+        fileName = FileHelper.RemoveInvalidFileNameChars(fileName);
+
+        var filePath = Path.Combine(torrentPath, fileName);
+
+        return filePath;
+    }
+
     private static String RemoveInvalidPathChars(String path)
     {
         return String.Concat(path.Split(Path.GetInvalidPathChars()));
