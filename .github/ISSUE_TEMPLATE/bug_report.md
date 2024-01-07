@@ -15,4 +15,6 @@ assignees: ''
 
 **Which debrid provider are you using?**
 
+**Which downloader are you using?**
+
 **Please attach a log file here with the log setting set to debug**
