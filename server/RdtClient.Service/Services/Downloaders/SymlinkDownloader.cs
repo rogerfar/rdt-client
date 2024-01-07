@@ -24,7 +24,7 @@ public class SymlinkDownloader : IDownloader
 
     public Task<String?> Download()
     {
-        _logger.Debug($"Starting download of {_uri}, writing to path: {_filePath}");
+        _logger.Debug($"Starting symlink resolving of {_uri}, writing to path: {_filePath}");
 
         var fileName = Path.GetFileName(_filePath);
 
@@ -56,9 +56,12 @@ public class SymlinkDownloader : IDownloader
             {
                 DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs());
 
+                _logger.Information($"File {fileName} found on {Settings.Get.DownloadClient.RcloneMountPath} at {actualFilePath}");
                 return Task.FromResult<String?>(actualFilePath);
             }
         }
+
+        _logger.Information($"File {fileName} not found on {Settings.Get.DownloadClient.RcloneMountPath}!");
 
         // Return null and try again next cycle.
         return Task.FromResult<String?>(null);

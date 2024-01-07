@@ -4,16 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.53] - 2024-01-15
+## [2.0.54] - 2024-01-07
+### Changed
+- Added some logging for the symlink downloader to troubleshoot.
+- Added some logging when deleting torrents and the symlinker overrides the finish action.
+
+## [2.0.53] - 2024-01-05
 ### Added
 - Add setting to set the download path on the aria2 instance.
 
-## [2.0.52] - 2024-01-15
+## [2.0.52] - 2024-01-05
 ### Added
 - Add BASE_PATH environment variable for the base path setting.
 - Expose the Post Torrent Download Action setting on the Provider settings.
 
-## [2.0.51] - 2024-01-15
+## [2.0.51] - 2024-01-05
 ### Added
 - Added setting to store magnets and torrents to a directory after adding.
 - Added bulk settings change on the index pages.

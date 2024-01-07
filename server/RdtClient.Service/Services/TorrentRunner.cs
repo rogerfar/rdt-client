@@ -541,12 +541,19 @@ public class TorrentRunner
 
                         if (torrent.DownloadClient == Data.Enums.DownloadClient.Symlink)
                         {
-                            torrent.FinishedAction = torrent.FinishedAction switch
+                            switch (torrent.FinishedAction)
                             {
-                                TorrentFinishedAction.RemoveAllTorrents => TorrentFinishedAction.RemoveClient,
-                                TorrentFinishedAction.RemoveRealDebrid => TorrentFinishedAction.None,
-                                _ => torrent.FinishedAction
-                            };
+                                case TorrentFinishedAction.RemoveAllTorrents:
+                                    Log($"Force setting FinishedAction to RemoveClient as download client is Symlink and FinishedAction is RemoveAllTorrents", torrent);
+                                    torrent.FinishedAction = TorrentFinishedAction.RemoveClient;
+
+                                    break;
+                                case TorrentFinishedAction.RemoveRealDebrid:
+                                    Log($"Force setting FinishedAction to TorrentFinishedAction.None as download client is Symlink and FinishedAction is RemoveRealDebrid", torrent);
+                                    torrent.FinishedAction = TorrentFinishedAction.None;
+
+                                    break;
+                            }
                         }
 
                         switch (torrent.FinishedAction)
