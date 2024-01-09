@@ -64,7 +64,7 @@ public class SymlinkDownloader : IDownloader
         _logger.Information($"File {fileName} not found on {Settings.Get.DownloadClient.RcloneMountPath}!");
 
         // Return null and try again next cycle.
-        return Task.FromResult<String?>(null);
+        return Task.FromResult<String?>(Guid.NewGuid().ToString());
     }
 
     public Task Cancel()
