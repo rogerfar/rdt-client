@@ -347,11 +347,6 @@ public class TorrentRunner
                         continue;
                     }
 
-                    Log($"Marking download as started", download, torrent);
-
-                    download.DownloadStarted = DateTime.UtcNow;
-                    await _downloads.UpdateDownloadStarted(download.DownloadId, download.DownloadStarted);
-
                     var downloadPath = settingDownloadPath;
 
                     if (!String.IsNullOrWhiteSpace(torrent.Category))
@@ -364,23 +359,27 @@ public class TorrentRunner
                     // Start the download process
                     var downloadClient = new DownloadClient(download, torrent, downloadPath);
 
-                    if (ActiveDownloadClients.TryAdd(download.DownloadId, downloadClient))
+                    Log($"Starting download", download, torrent);
+
+                    var remoteId = await downloadClient.Start();
+
+                    if (String.IsNullOrWhiteSpace(remoteId) || download.RemoteId == remoteId)
                     {
-                        Log($"Starting download", download, torrent);
-
-                        var remoteId = await downloadClient.Start();
-
-                        if (!String.IsNullOrWhiteSpace(remoteId) && download.RemoteId != remoteId)
-                        {
-                            Log($"Received ID {remoteId}", download, torrent);
-
-                            await _downloads.UpdateRemoteId(download.DownloadId, remoteId);
-                        }
-                        else
-                        {
-                            Log($"No ID received", download, torrent);
-                        }
+                        Log($"No ID received", download, torrent);
+                        continue;
                     }
+
+                    Log($"Received ID {remoteId}", download, torrent);
+
+                    download.RemoteId = remoteId;
+                    await _downloads.UpdateRemoteId(download.DownloadId, remoteId);
+
+                    Log($"Marking download as started", download, torrent);
+
+                    download.DownloadStarted = DateTime.UtcNow;
+                    await _downloads.UpdateDownloadStarted(download.DownloadId, download.DownloadStarted);
+
+                    ActiveDownloadClients.TryAdd(download.DownloadId, downloadClient);
                 }
 
                 // Check if there are any unpacks that are queued and can be started.
