@@ -31,13 +31,12 @@ public class InternalDownloader : IDownloader
         // For all options, see https://github.com/bezzad/Downloader
         _downloadConfiguration = new DownloadConfiguration
         {
-            BufferBlockSize = 1024 * 8,
             MaxTryAgainOnFailover = 5,
             RangeDownload = false,
-            ClearPackageOnCompletionWithFailure = false,
-            MinimumSizeOfChunking = 1024,
+            ClearPackageOnCompletionWithFailure = true,
             ReserveStorageSpaceBeforeStartingDownload = false,
-            CheckDiskSizeBeforeDownload = true,
+            CheckDiskSizeBeforeDownload = false,
+            MaximumMemoryBufferBytes = 1024 * 1024 * 10,
             RequestConfiguration =
             {
                 Accept = "*/*",
@@ -122,7 +121,7 @@ public class InternalDownloader : IDownloader
 
         _ = Task.Run(StartTimer);
 
-        return null;
+        return Guid.NewGuid().ToString();
     }
 
     public Task Cancel()
@@ -146,13 +145,6 @@ public class InternalDownloader : IDownloader
 
     private void SetSettings()
     {
-        var settingDownloadParallelCount = Settings.Get.DownloadClient.ParallelCount;
-
-        if (settingDownloadParallelCount <= 0)
-        {
-            settingDownloadParallelCount = 1;
-        }
-
         var settingDownloadMaxSpeed = Settings.Get.DownloadClient.MaxSpeed;
 
         if (settingDownloadMaxSpeed <= 0)
@@ -170,8 +162,7 @@ public class InternalDownloader : IDownloader
         }
         
         _downloadConfiguration.MaximumBytesPerSecond = settingDownloadMaxSpeed;
-        _downloadConfiguration.ParallelDownload = settingDownloadParallelCount > 1;
-        _downloadConfiguration.ParallelCount = settingDownloadParallelCount;
+        _downloadConfiguration.ParallelDownload = true;
         _downloadConfiguration.Timeout = settingDownloadTimeout;
     }
 
