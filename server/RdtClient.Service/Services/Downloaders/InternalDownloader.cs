@@ -1,5 +1,7 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
 using Downloader;
+using Newtonsoft.Json;
 using Serilog;
 
 namespace RdtClient.Service.Services.Downloaders;
@@ -64,6 +66,8 @@ public class InternalDownloader : IDownloader
                 return;
             }
 
+            Debug.WriteLine(JsonConvert.SerializeObject(args));
+
             DownloadProgress.Invoke(this,
                                      new DownloadProgressEventArgs
                                      {
@@ -96,23 +100,9 @@ public class InternalDownloader : IDownloader
         };
     }
 
-    public async Task<String?> Download()
+    public Task<String?> Download()
     {
         _logger.Debug($"Starting download of {_uri}, writing to path: {_filePath}");
-
-        if (Settings.Get.DownloadClient.ChunkCount == 0)
-        {
-            var contentSize = await GetContentSize();
-
-            var chunkSize = contentSize switch
-            {
-                <= 1024 * 1024 * 10 => 1024 * 1024 * 10,
-                <= 1024 * 1024 * 100 => 1024 * 1024 * 25,
-                _ => 1024 * 1024 * 50
-            };
-
-            _downloadConfiguration.ChunkCount = (Int32) Math.Ceiling(contentSize / (Double) chunkSize);
-        }
 
         _ = Task.Run(async () =>
         {
@@ -121,7 +111,7 @@ public class InternalDownloader : IDownloader
 
         _ = Task.Run(StartTimer);
 
-        return Guid.NewGuid().ToString();
+        return Task.FromResult<String?>(Guid.NewGuid().ToString());
     }
 
     public Task Cancel()
@@ -160,9 +150,26 @@ public class InternalDownloader : IDownloader
         {
             settingDownloadTimeout = 1000;
         }
+
+        var settingParallelCount = Settings.Get.DownloadClient.ParallelCount;
+
+        if (settingParallelCount <= 0)
+        {
+            settingParallelCount = 4;
+        }
+
+        if (Settings.Get.DownloadClient.ChunkCount <= 0)
+        {
+            _downloadConfiguration.ChunkCount = 8;
+        }
+        else
+        {
+            _downloadConfiguration.ChunkCount = Settings.Get.DownloadClient.ChunkCount;
+        }
         
         _downloadConfiguration.MaximumBytesPerSecond = settingDownloadMaxSpeed;
-        _downloadConfiguration.ParallelDownload = true;
+        _downloadConfiguration.ParallelDownload = settingParallelCount > 1;
+        _downloadConfiguration.ParallelCount = settingParallelCount;
         _downloadConfiguration.Timeout = settingDownloadTimeout;
     }
 
@@ -179,22 +186,5 @@ public class InternalDownloader : IDownloader
 
             SetSettings();
         }
-    }
-
-    private async Task<Int64> GetContentSize()
-    {
-        var httpClient = new HttpClient();
-        var responseHeaders = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, _uri));
-
-        if (!responseHeaders.IsSuccessStatusCode)
-        {
-            var content = await responseHeaders.Content.ReadAsStringAsync();
-            var ex = new Exception($"Unable to retrieve content size before downloading, received response: {responseHeaders.StatusCode} {content}");
-
-            throw ex;
-        }
-
-        var result = responseHeaders.Content.Headers.ContentLength ?? -1;
-        return result;
     }
 }
