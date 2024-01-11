@@ -1,7 +1,5 @@
-﻿using System.Diagnostics;
-using System.Net;
+﻿using System.Net;
 using Downloader;
-using Newtonsoft.Json;
 using Serilog;
 
 namespace RdtClient.Service.Services.Downloaders;
@@ -65,8 +63,6 @@ public class InternalDownloader : IDownloader
             {
                 return;
             }
-
-            Debug.WriteLine(JsonConvert.SerializeObject(args));
 
             DownloadProgress.Invoke(this,
                                      new DownloadProgressEventArgs
