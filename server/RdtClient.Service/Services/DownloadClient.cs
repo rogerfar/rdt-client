@@ -58,6 +58,7 @@ public class DownloadClient
             Downloader = Settings.Get.DownloadClient.Client switch
             {
                 Data.Enums.DownloadClient.Internal => new InternalDownloader(_download.Link, filePath),
+                Data.Enums.DownloadClient.Bezzad => new BezzadDownloader(_download.Link, filePath),
                 Data.Enums.DownloadClient.Aria2c => new Aria2cDownloader(_download.RemoteId, _download.Link, filePath, downloadPath),
                 Data.Enums.DownloadClient.Symlink => new SymlinkDownloader(_download.Link, filePath),
                 _ => throw new Exception($"Unknown download client {Settings.Get.DownloadClient}")
