@@ -18,14 +18,16 @@ public class TorrentRunner
     public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new();
 
     private readonly ILogger<TorrentRunner> _logger;
+    private readonly ILoggerFactory _loggerFactory;
     private readonly Torrents _torrents;
     private readonly Downloads _downloads;
     private readonly RemoteService _remoteService;
     private readonly HttpClient _httpClient;
 
-    public TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Downloads downloads, RemoteService remoteService)
+    public TorrentRunner(ILogger<TorrentRunner> logger, ILoggerFactory loggerFactory, Torrents torrents, Downloads downloads, RemoteService remoteService)
     {
         _logger = logger;
+        _loggerFactory = loggerFactory;
         _torrents = torrents;
         _downloads = downloads;
         _remoteService = remoteService;
@@ -236,6 +238,31 @@ public class TorrentRunner
 
         var torrents = await _torrents.Get();
 
+        // Check for deleted torrents that are stuck in the ActiveDownloads or ActiveUnpacks
+        foreach (var activeDownload in ActiveDownloadClients)
+        {
+            var download = torrents.SelectMany(m => m.Downloads).FirstOrDefault(m => m.DownloadId == activeDownload.Key);
+
+            if (download == null)
+            {
+                await activeDownload.Value.Cancel();
+                ActiveDownloadClients.TryRemove(activeDownload.Key, out _);
+                break;
+            }
+        }
+
+        foreach (var activeUnpacks in ActiveUnpackClients)
+        {
+            var download = torrents.SelectMany(m => m.Downloads).FirstOrDefault(m => m.DownloadId == activeUnpacks.Key);
+
+            if (download == null)
+            {
+                activeUnpacks.Value.Cancel();
+                ActiveUnpackClients.TryRemove(activeUnpacks.Key, out _);
+                break;
+            }
+        }
+
         // Process torrent retries
         foreach (var torrent in torrents.Where(m => m.Retry != null))
         {
@@ -357,7 +384,7 @@ public class TorrentRunner
                     Log($"Setting download path to {downloadPath}", download, torrent);
 
                     // Start the download process
-                    var downloadClient = new DownloadClient(download, torrent, downloadPath);
+                    var downloadClient = new DownloadClient(_loggerFactory, download, torrent, downloadPath);
 
                     Log($"Starting download", download, torrent);
 

@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.60] - 2024-01-21
+### Changed
+- Fixed bug where downloads could get stuck in active state while deleted.
+
 ## [2.0.59] - 2024-01-21
 ### Changed
 - Added the simple downloader back and moved the current internal downloader to a new setting.
