@@ -19,16 +19,32 @@ public static class DownloadHelper
         var uri = new Uri(fileUrl);
         var torrentPath = Path.Combine(downloadPath, directory);
 
-        if (!Directory.Exists(torrentPath))
-        {
-            Directory.CreateDirectory(torrentPath);
-        }
-
         var fileName = uri.Segments.Last();
 
         fileName = HttpUtility.UrlDecode(fileName);
 
         fileName = FileHelper.RemoveInvalidFileNameChars(fileName);
+
+        var matchingTorrentFiles = torrent.Files.Where(m => m.Path.EndsWith(fileName)).Where(m => !String.IsNullOrWhiteSpace(m.Path)).ToList();
+
+        if (matchingTorrentFiles.Any())
+        {
+            var matchingTorrentFile = matchingTorrentFiles[0];
+
+            var subPath = Path.GetDirectoryName(matchingTorrentFile.Path);
+
+            if (!String.IsNullOrWhiteSpace(subPath))
+            {
+                subPath = subPath.Trim('/').Trim('\\');
+
+                torrentPath = Path.Combine(torrentPath, subPath);
+            }
+        }
+
+        if (!Directory.Exists(torrentPath))
+        {
+            Directory.CreateDirectory(torrentPath);
+        }
 
         var filePath = Path.Combine(torrentPath, fileName);
 
@@ -46,17 +62,33 @@ public static class DownloadHelper
 
         var uri = new Uri(fileUrl);
         var torrentPath = RemoveInvalidPathChars(torrent.RdName);
-        
-        if (!Directory.Exists(torrentPath))
-        {
-            Directory.CreateDirectory(torrentPath);
-        }
 
         var fileName = uri.Segments.Last();
 
         fileName = HttpUtility.UrlDecode(fileName);
 
         fileName = FileHelper.RemoveInvalidFileNameChars(fileName);
+
+        var matchingTorrentFiles = torrent.Files.Where(m => m.Path.EndsWith(fileName)).Where(m => !String.IsNullOrWhiteSpace(m.Path)).ToList();
+
+        if (matchingTorrentFiles.Any())
+        {
+            var matchingTorrentFile = matchingTorrentFiles[0];
+
+            var subPath = Path.GetDirectoryName(matchingTorrentFile.Path);
+
+            if (!String.IsNullOrWhiteSpace(subPath))
+            {
+                subPath = subPath.Trim('/').Trim('\\');
+
+                torrentPath = Path.Combine(torrentPath, subPath);
+            }
+        }
+
+        if (!Directory.Exists(torrentPath))
+        {
+            Directory.CreateDirectory(torrentPath);
+        }
 
         var filePath = Path.Combine(torrentPath, fileName);
 

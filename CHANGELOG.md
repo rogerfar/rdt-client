@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.60] - 2024-01-21
 ### Changed
 - Fixed bug where downloads could get stuck in active state while deleted.
+- Use the RD folder structure when downloading a file.
 
 ## [2.0.59] - 2024-01-21
 ### Changed

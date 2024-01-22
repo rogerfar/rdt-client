@@ -384,7 +384,7 @@ public class TorrentRunner
                     Log($"Setting download path to {downloadPath}", download, torrent);
 
                     // Start the download process
-                    var downloadClient = new DownloadClient(_loggerFactory, download, torrent, downloadPath);
+                    var downloadClient = new DownloadClient(download, torrent, downloadPath);
 
                     Log($"Starting download", download, torrent);
 
