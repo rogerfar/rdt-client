@@ -389,23 +389,40 @@ public class RealDebridTorrentClient : ITorrentClient
             Log($"{link}", torrent);
         }
 
+        Log($"Torrent has {torrent.Files.Count(m => m.Selected)} selected files out of {torrent.Files.Count} files, found {downloadLinks.Count} links, torrent ended: {torrent.RdEnded}", torrent);
+        
         // Check if all the links are set that have been selected
         if (torrent.Files.Count(m => m.Selected) == downloadLinks.Count)
         {
+            Log($"Matched {torrent.Files.Count(m => m.Selected)} selected files expected files to {downloadLinks.Count} found files", torrent);
+
             return downloadLinks;
         }
 
         // Check if all all the links are set for manual selection
         if (torrent.ManualFiles.Count == downloadLinks.Count)
         {
+            Log($"Matched {torrent.ManualFiles.Count} manual files expected files to {downloadLinks.Count} found files", torrent);
+
             return downloadLinks;
         }
 
         // If there is only 1 link, delay for 1 minute to see if more links pop up.
-        if (downloadLinks.Count == 1 && torrent.RdEnded.HasValue && DateTime.UtcNow > torrent.RdEnded.Value.ToUniversalTime().AddMinutes(1))
+        if (downloadLinks.Count == 1 && torrent.RdEnded.HasValue)
         {
-            return downloadLinks;
+            var expired = DateTime.UtcNow - torrent.RdEnded.Value.ToUniversalTime();
+
+            Log($"Waiting to see if more links appear, checked for {expired.TotalSeconds} seconds", torrent);
+
+            if (expired.TotalSeconds > 60.0)
+            {
+                Log($"Waited long enough", torrent);
+
+                return downloadLinks;
+            }
         }
+
+        Log($"Did not find any suiteable download links", torrent);
             
         return null;
     }
