@@ -9,6 +9,8 @@ export class Torrent {
   public downloadAction: number;
   public finishedAction: number;
   public downloadMinSize: number;
+  public includeRegex: string;
+  public excludeRegex: string;
   public downloadManualFiles: string;
 
   public added: Date;

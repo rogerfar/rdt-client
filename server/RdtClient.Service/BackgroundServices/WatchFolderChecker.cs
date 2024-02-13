@@ -96,6 +96,8 @@ public class WatchFolderChecker : BackgroundService
                                 : TorrentDownloadAction.DownloadAll,
                             FinishedAction = Settings.Get.Watch.Default.FinishedAction,
                             DownloadMinSize = Settings.Get.Watch.Default.MinFileSize,
+                            IncludeRegex = Settings.Get.Watch.Default.IncludeRegex,
+                            ExcludeRegex = Settings.Get.Watch.Default.ExcludeRegex,
                             TorrentRetryAttempts = Settings.Get.Watch.Default.TorrentRetryAttempts,
                             DownloadRetryAttempts = Settings.Get.Watch.Default.DownloadRetryAttempts,
                             DeleteOnError = Settings.Get.Watch.Default.DeleteOnError,

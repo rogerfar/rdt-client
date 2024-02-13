@@ -225,6 +225,14 @@ public class DbSettingsDefaults
     [Description("Files that are smaller than this setting are skipped and not downloaded. When set to 0 all files are downloaded. When downloading from Radarr or Sonarr it's recommended to keep this setting at atleast a few MB to avoid the debrid provider having to re-download the torrent.")]
     public Int32 MinFileSize { get; set; } = 0;
 
+    [DisplayName("Include files")]
+    [Description("Select only the files that are matching this regular expression. Only use this setting OR the Exclude files setting, not both.")]
+    public String? IncludeRegex { get; set; }
+
+    [DisplayName("Exclude files")]
+    [Description("Ignore files that are matching this regular expression. Only use this setting OR the Include files setting, not both.")]
+    public String? ExcludeRegex { get; set; }
+
     [DisplayName("Automatic retry torrent")]
     [Description("When a single download has failed multiple times (see setting above) or when the torrent itself received an error it will retry the full torrent this many times before marking it failed.")]
     public Int32 TorrentRetryAttempts { get; set; } = 1;

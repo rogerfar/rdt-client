@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MonoTorrent;
+using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
 using RdtClient.Service.Services;
 using Torrent = RdtClient.Data.Models.Data.Torrent;
@@ -216,6 +218,94 @@ public class TorrentsController : Controller
 
         return Ok();
     }
+
+    [HttpPost]
+    [Route("VerifyRegex")]
+    public async Task<ActionResult> VerifyRegex([FromForm] IFormFile? file, [FromBody] TorrentControllerVerifyRegexRequest? request)
+    {
+        if (request == null)
+        {
+            return Ok();
+        }
+
+        var includeError = "";
+        var excludeError = "";
+
+        IList<TorrentClientAvailableFile> availableFiles;
+
+        if (!String.IsNullOrWhiteSpace(request.MagnetLink))
+        {
+            var magnet = MagnetLink.Parse(request.MagnetLink);
+
+            availableFiles = await _torrents.GetAvailableFiles(magnet.InfoHash.ToHex());
+        }
+        else if (file != null)
+        {
+            var fileStream = file.OpenReadStream();
+
+            await using var memoryStream = new MemoryStream();
+
+            await fileStream.CopyToAsync(memoryStream);
+
+            var bytes = memoryStream.ToArray();
+
+            var torrent = await MonoTorrent.Torrent.LoadAsync(bytes);
+
+            availableFiles = await _torrents.GetAvailableFiles(torrent.InfoHash.ToHex());
+        }
+        else
+        {
+            return BadRequest();
+        }
+
+        var selectedFiles = new List<TorrentClientAvailableFile>();
+
+        if (!String.IsNullOrWhiteSpace(request.IncludeRegex))
+        {
+            foreach (var availableFile in availableFiles)
+            {
+                try
+                {
+                    if (Regex.IsMatch(availableFile.Filename, request.IncludeRegex))
+                    {
+                        selectedFiles.Add(availableFile);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    includeError = ex.Message;
+                }
+            }
+        } 
+        else if (!String.IsNullOrWhiteSpace(request.ExcludeRegex))
+        {
+            foreach (var availableFile in availableFiles)
+            {
+                try
+                {
+                    if (!Regex.IsMatch(availableFile.Filename, request.ExcludeRegex))
+                    {
+                        selectedFiles.Add(availableFile);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    excludeError = ex.Message;
+                }
+            }
+        }
+        else
+        {
+            selectedFiles = availableFiles.ToList();
+        }
+
+        return Ok(new
+        {
+            includeError,
+            excludeError,
+            selectedFiles
+        });
+    }
 }
 
 public class TorrentControllerUploadFileRequest
@@ -239,4 +329,11 @@ public class TorrentControllerDeleteRequest
 public class TorrentControllerCheckFilesRequest
 {
     public String? MagnetLink { get; set; }
+}
+
+public class TorrentControllerVerifyRegexRequest
+{
+    public String? IncludeRegex { get; set; }
+    public String? ExcludeRegex { get; set; }
+    public String? MagnetLink { get; set;}
 }

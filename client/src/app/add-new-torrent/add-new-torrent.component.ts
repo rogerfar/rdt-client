@@ -22,6 +22,8 @@ export class AddNewTorrentComponent implements OnInit {
   public downloadAction: number = 0;
   public finishedAction: number = 0;
   public downloadMinSize: number = 0;
+  public includeRegex: string = '';
+  public excludeRegex: string = '';
   public torrentRetryAttempts: number = 1;
   public downloadRetryAttempts: number = 3;
   public torrentDeleteOnError: number = 0;
@@ -35,12 +37,16 @@ export class AddNewTorrentComponent implements OnInit {
   public saving = false;
   public error: string;
 
+  public includeRegexError: string;
+  public excludeRegexError: string;
+  public regexSelected: TorrentFileAvailability[];
+
   private selectedFile: File;
 
   constructor(
     private router: Router,
     private torrentService: TorrentService,
-    private settingsService: SettingsService
+    private settingsService: SettingsService,
   ) {}
 
   ngOnInit(): void {
@@ -56,6 +62,8 @@ export class AddNewTorrentComponent implements OnInit {
         settings.first((m) => m.key === 'Gui:Default:OnlyDownloadAvailableFiles')?.value === true ? 1 : 0;
       this.finishedAction = settings.first((m) => m.key === 'Gui:Default:FinishedAction')?.value as number;
       this.downloadMinSize = settings.first((m) => m.key === 'Gui:Default:MinFileSize')?.value as number;
+      this.includeRegex = settings.first((m) => m.key === 'Gui:Default:IncludeRegex')?.value as string;
+      this.excludeRegex = settings.first((m) => m.key === 'Gui:Default:ExcludeRegex')?.value as string;
       this.torrentRetryAttempts = settings.first((m) => m.key === 'Gui:Default:TorrentRetryAttempts')?.value as number;
       this.downloadRetryAttempts = settings.first((m) => m.key === 'Gui:Default:DownloadRetryAttempts')
         ?.value as number;
@@ -68,10 +76,10 @@ export class AddNewTorrentComponent implements OnInit {
   }
 
   public setFinishAction() {
-    if (this.downloadClient === 2){
-      if (this.finishedAction === 1){
+    if (this.downloadClient === 2) {
+      if (this.finishedAction === 1) {
         this.finishedAction = 3;
-      } else if (this.finishedAction === 2){
+      } else if (this.finishedAction === 2) {
         this.finishedAction = 0;
       }
     }
@@ -140,6 +148,8 @@ export class AddNewTorrentComponent implements OnInit {
     torrent.downloadAction = this.downloadAction;
     torrent.finishedAction = this.finishedAction;
     torrent.downloadMinSize = this.downloadMinSize;
+    torrent.includeRegex = this.includeRegex;
+    torrent.excludeRegex = this.excludeRegex;
     torrent.downloadManualFiles = downloadManualFiles;
     torrent.priority = this.priority;
     torrent.torrentRetryAttempts = this.torrentRetryAttempts;
@@ -156,7 +166,7 @@ export class AddNewTorrentComponent implements OnInit {
         (err) => {
           this.error = err.error;
           this.saving = false;
-        }
+        },
       );
     } else if (this.selectedFile) {
       this.torrentService.uploadFile(this.selectedFile, torrent).subscribe(
@@ -166,7 +176,7 @@ export class AddNewTorrentComponent implements OnInit {
         (err) => {
           this.error = err.error;
           this.saving = false;
-        }
+        },
       );
     } else {
       this.error = 'No magnet or file uploaded';
@@ -204,7 +214,7 @@ export class AddNewTorrentComponent implements OnInit {
         (err) => {
           this.error = err.error;
           this.saving = false;
-        }
+        },
       );
     } else if (this.selectedFile) {
       this.torrentService.checkFiles(this.selectedFile).subscribe(
@@ -218,10 +228,34 @@ export class AddNewTorrentComponent implements OnInit {
         (err) => {
           this.error = err.error;
           this.saving = false;
-        }
+        },
       );
     } else {
       this.saving = false;
     }
+  }
+
+  public isRegexExcluded(file: TorrentFileAvailability): boolean {
+    if (this.regexSelected == null) {
+      return false;
+    }
+
+    if (this.regexSelected.find((m) => m.filename === file.filename) == null) {
+      return true;
+    }
+
+    return false;
+  }
+
+  public verifyRegex(): void {
+    this.includeRegexError = null;
+    this.excludeRegexError = null;
+    this.regexSelected = null;
+
+    this.torrentService.verifyRegex(this.includeRegex, this.excludeRegex, this.magnetLink).subscribe((result) => {
+      this.includeRegexError = result.includeError;
+      this.excludeRegexError = result.excludeError;
+      this.regexSelected = result.selectedFiles;
+    });
   }
 }

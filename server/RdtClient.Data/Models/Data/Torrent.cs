@@ -19,6 +19,8 @@ public class Torrent
     public TorrentFinishedAction FinishedAction { get; set; }
     public TorrentHostDownloadAction HostDownloadAction { get; set; }
     public Int32 DownloadMinSize { get; set; }
+    public String? IncludeRegex { get; set; }
+    public String? ExcludeRegex { get; set; }
     public String? DownloadManualFiles { get; set; }
     public DownloadClient DownloadClient { get; set; }
 

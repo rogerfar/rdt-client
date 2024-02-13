@@ -89,6 +89,14 @@
         <label class="label">Minimum file size to download</label>
         {{ torrent.downloadMinSize }}MB
       </div>
+      <div class="field">
+        <label class="label">Include files</label>
+        {{ torrent.includeRegex }}
+      </div>
+      <div class="field">
+        <label class="label">Exclude files</label>
+        {{ torrent.excludeRegex }}
+      </div>
       <div class="field" *ngIf="!torrent.isFile">
         <label class="label">Magnet</label>
         <span [cdkCopyToClipboard]="torrent.fileOrMagnet" (click)="copied = true" *ngIf="!copied"
@@ -477,7 +485,10 @@
       <button class="delete" aria-label="close" (click)="updateSettingsCancel()"></button>
     </header>
     <section class="modal-card-body">
-      <p>Settings that are blank do not have the same values for each torrent. Updating a setting with a blank value will not update it.</p>
+      <p>
+        Settings that are blank do not have the same values for each torrent. Updating a setting with a blank value will
+        not update it.
+      </p>
       <div class="field">
         <label class="label">Downloader</label>
         <div class="control select is-fullwidth">

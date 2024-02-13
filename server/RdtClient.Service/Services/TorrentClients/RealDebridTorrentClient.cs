@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RDNET;
 using RdtClient.Data.Enums;
@@ -200,6 +201,51 @@ public class RealDebridTorrentClient : ITorrentClient
                          .ToList();
 
             Log($"Found {files.Count} files that match the minimum file size criterea", torrent);
+        }
+
+        if (!String.IsNullOrWhiteSpace(torrent.IncludeRegex))
+        {
+            Log($"Using regular expression {torrent.IncludeRegex} to include only files matching this regex", torrent);
+
+            var newFiles = new List<TorrentClientFile>();
+            foreach (var file in files)
+            {
+                if (Regex.IsMatch(file.Path, torrent.IncludeRegex))
+                {
+                    Log($"* Including {file.Path}", torrent);
+                    newFiles.Add(file);
+                }
+                else
+                {
+                    Log($"* Excluding {file.Path}", torrent);
+                }
+            }
+
+            files = newFiles;
+
+            Log($"Found {files.Count} files that match the regex", torrent);
+        } 
+        else if (!String.IsNullOrWhiteSpace(torrent.ExcludeRegex))
+        {
+            Log($"Using regular expression {torrent.IncludeRegex} to ignore files matching this regex", torrent);
+
+            var newFiles = new List<TorrentClientFile>();
+            foreach (var file in files)
+            {
+                if (!Regex.IsMatch(file.Path, torrent.ExcludeRegex))
+                {
+                    Log($"* Including {file.Path}", torrent);
+                    newFiles.Add(file);
+                }
+                else
+                {
+                    Log($"* Excluding {file.Path}", torrent);
+                }
+            }
+
+            files = newFiles;
+
+            Log($"Found {files.Count} files that match the regex", torrent);
         }
 
         if (files.Count == 0)

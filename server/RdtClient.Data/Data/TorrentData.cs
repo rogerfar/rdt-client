@@ -94,6 +94,8 @@ public class TorrentData
             DownloadAction = torrent.DownloadAction,
             FinishedAction = torrent.FinishedAction,
             DownloadMinSize = torrent.DownloadMinSize,
+            IncludeRegex = torrent.IncludeRegex,
+            ExcludeRegex = torrent.ExcludeRegex,
             DownloadManualFiles = torrent.DownloadManualFiles,
             DownloadClient = downloadClient,
             FileOrMagnet = fileOrMagnetContents,

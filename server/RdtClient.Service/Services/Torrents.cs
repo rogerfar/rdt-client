@@ -425,6 +425,8 @@ public class Torrents
                         DownloadAction = Settings.Get.Provider.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
                         FinishedAction = Settings.Get.Provider.Default.FinishedAction,
                         DownloadMinSize = Settings.Get.Provider.Default.MinFileSize,
+                        IncludeRegex = Settings.Get.Provider.Default.IncludeRegex,
+                        ExcludeRegex = Settings.Get.Provider.Default.ExcludeRegex,
                         TorrentRetryAttempts = Settings.Get.Provider.Default.TorrentRetryAttempts,
                         DownloadRetryAttempts = Settings.Get.Provider.Default.DownloadRetryAttempts,
                         DeleteOnError = Settings.Get.Provider.Default.DeleteOnError,

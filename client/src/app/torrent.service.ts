@@ -13,7 +13,10 @@ export class TorrentService {
 
   private connection: signalR.HubConnection;
 
-  constructor(private http: HttpClient, @Inject(APP_BASE_HREF) private baseHref: string) {
+  constructor(
+    private http: HttpClient,
+    @Inject(APP_BASE_HREF) private baseHref: string,
+  ) {
     this.connect();
   }
 
@@ -71,7 +74,7 @@ export class TorrentService {
     torrentId: string,
     deleteData: boolean,
     deleteRdTorrent: boolean,
-    deleteLocalFiles: boolean
+    deleteLocalFiles: boolean,
   ): Observable<void> {
     return this.http.post<void>(`${this.baseHref}Api/Torrents/Delete/${torrentId}`, {
       deleteData,
@@ -90,5 +93,20 @@ export class TorrentService {
 
   public update(torrent: Torrent): Observable<void> {
     return this.http.put<void>(`${this.baseHref}Api/Torrents/Update`, torrent);
+  }
+
+  public verifyRegex(
+    includeRegex: string,
+    excludeRegex: string,
+    magnetLink: string,
+  ): Observable<{ includeError: string; excludeError: string; selectedFiles: TorrentFileAvailability[] }> {
+    return this.http.post<{ includeError: string; excludeError: string; selectedFiles: TorrentFileAvailability[] }>(
+      `${this.baseHref}Api/Torrents/VerifyRegex`,
+      {
+        includeRegex,
+        excludeRegex,
+        magnetLink,
+      },
+    );
   }
 }
