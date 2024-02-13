@@ -2,9 +2,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using RdtClient.Data.Data;
 using RdtClient.Service.Services;
-using Serilog;
+
 
 namespace RdtClient.Service.BackgroundServices;
 
@@ -22,9 +23,11 @@ public class Startup : IHostedService
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         var version = Assembly.GetEntryAssembly()?.GetName().Version;
-        Log.Warning($"Starting host on version {version}");
-
+        
         using var scope = _serviceProvider.CreateScope();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Startup>>();
+
+        logger.LogWarning($"Starting host on version {version}");
 
         var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
         await dbContext.Database.MigrateAsync(cancellationToken);

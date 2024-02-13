@@ -1,15 +1,16 @@
 ﻿using System.ComponentModel;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.Internal;
-using Serilog;
 
 namespace RdtClient.Data.Data;
 
 public class SettingData
 {
     private readonly DataContext _dataContext;
+    private readonly ILogger<SettingData> _logger;
 
     public static DbSettings Get { get; } = new DbSettings();
 
@@ -18,9 +19,10 @@ public class SettingData
         return GetSettings(Get, null).ToList();
     }
 
-    public SettingData(DataContext dataContext)
+    public SettingData(DataContext dataContext, ILogger<SettingData> logger)
     {
         _dataContext = dataContext;
+        _logger = logger;
     }
 
     public async Task Update(IList<SettingProperty> settings)
@@ -157,7 +159,7 @@ public class SettingData
         return result;
     }
 
-    private static void SetSettings(IList<Setting> settings, Object defaultSetting, String? parent)
+    private void SetSettings(IList<Setting> settings, Object defaultSetting, String? parent)
     {
         var properties = defaultSetting.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
@@ -198,7 +200,7 @@ public class SettingData
                         }
                         else
                         {
-                            Log.Warning($"Invalid value for setting {propertyName}: {setting.Value}");
+                            _logger.LogWarning($"Invalid value for setting {propertyName}: {setting.Value}");
                         }
                     }
                 }

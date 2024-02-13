@@ -18,16 +18,14 @@ public class TorrentRunner
     public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new();
 
     private readonly ILogger<TorrentRunner> _logger;
-    private readonly ILoggerFactory _loggerFactory;
     private readonly Torrents _torrents;
     private readonly Downloads _downloads;
     private readonly RemoteService _remoteService;
     private readonly HttpClient _httpClient;
 
-    public TorrentRunner(ILogger<TorrentRunner> logger, ILoggerFactory loggerFactory, Torrents torrents, Downloads downloads, RemoteService remoteService)
+    public TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Downloads downloads, RemoteService remoteService)
     {
         _logger = logger;
-        _loggerFactory = loggerFactory;
         _torrents = torrents;
         _downloads = downloads;
         _remoteService = remoteService;
