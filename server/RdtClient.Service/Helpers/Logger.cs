@@ -18,7 +18,12 @@ public static class Logger
 
         var done = (Int32)((Double)download.BytesDone / download.BytesTotal * 100);
 
-        return $"for download {fileName}. Completed: {done}%, avg speed: {download.Speed}bytes/s ({download.DownloadId})";
+        if (done < 0)
+        {
+            done = 0;
+        }
+
+        return $"for download {fileName}. Completed: {done}%, avg speed: {download.Speed}bytes/s ({download.DownloadId}) remoteID: {download.RemoteId}";
     }
 
     public static String ToLog(this Torrent torrent)

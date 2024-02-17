@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.62] - 2024-02-17
+### Changed
+- Fixed reporting a torrent as error when some downloads have failed but still need to be retried.
+- Fixed issue where downloads could get started over and over.
+
 ## [2.0.61] - 2024-01-21
 ### Added
 - Added setting to include or exclude files based on a given regex.

@@ -335,6 +335,8 @@ public class TorrentRunner
                                              .OrderBy(m => m.DownloadQueued)
                                              .ToList();
 
+                Log($"Currently {queuedDownloads.Count} queued downloads and {ActiveDownloadClients.Count} total active downloads", torrent);
+
                 foreach (var download in queuedDownloads)
                 {
                     Log($"Processing to download", download, torrent);
@@ -388,7 +390,7 @@ public class TorrentRunner
 
                     var remoteId = await downloadClient.Start();
 
-                    if (String.IsNullOrWhiteSpace(remoteId) || download.RemoteId == remoteId)
+                    if (String.IsNullOrWhiteSpace(remoteId))
                     {
                         Log($"No ID received", download, torrent);
                         continue;

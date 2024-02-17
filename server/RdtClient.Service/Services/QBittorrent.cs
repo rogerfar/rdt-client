@@ -290,27 +290,13 @@ public class QBittorrent
                 Upspeed = speed
             };
 
-            if (torrent.Retry != null)
-            {
-                result.State = "downloading";
-            }
-            else if (!String.IsNullOrWhiteSpace(torrent.Error))
+            if (!String.IsNullOrWhiteSpace(torrent.Error))
             {
                 result.State = "error";
             }
             else if (torrent.Completed.HasValue)
             {
-                var allDownloadsComplete = torrent.Downloads.All(m => m.Completed.HasValue);
-                var hasDownloadsWithErrors = torrent.Downloads.Any(m => m.Error != null);
-
-                if (torrent.Downloads.Count == 0 || hasDownloadsWithErrors || torrent.RdStatus == TorrentStatus.Error)
-                {
-                    result.State = "error";
-                }
-                else if (allDownloadsComplete)
-                {
-                    result.State = "pausedUP";
-                }
+                result.State = "pausedUP";
             }
 
             results.Add(result);

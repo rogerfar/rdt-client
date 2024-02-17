@@ -14,12 +14,6 @@ export class TorrentStatusPipe implements PipeTransform {
     }
 
     if (torrent.downloads.length > 0) {
-      const errors = torrent.downloads.where((m) => m.error != null);
-
-      if (errors.length > 0) {
-        return 'Error';
-      }
-
       const allFinished = torrent.downloads.all((m) => m.completed != null);
 
       if (allFinished) {
@@ -62,7 +56,7 @@ export class TorrentStatusPipe implements PipeTransform {
         }
 
         return `Extracting file ${unpacking.length + unpacked.length}/${torrent.downloads.length} (${progress.toFixed(
-          2
+          2,
         )}%)`;
       }
 
