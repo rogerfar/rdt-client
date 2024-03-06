@@ -398,7 +398,14 @@ public class QBittorrent
 
     public async Task TorrentsDelete(String hash, Boolean deleteFiles)
     {
-        _logger.LogDebug($"Delete {hash}");
+        if (deleteFiles)
+        {
+            _logger.LogDebug($"Delete {hash}, with files");
+        }
+        else
+        {
+            _logger.LogDebug($"Delete {hash}, no files");
+        }
 
         var torrent = await _torrents.GetByHash(hash);
 
@@ -411,17 +418,17 @@ public class QBittorrent
         {
             case TorrentFinishedAction.RemoveAllTorrents:
                 _logger.LogDebug("Removing torrents from debrid provider and RDT-Client, no files");
-                await _torrents.Delete(torrent.TorrentId, true, true, false);
+                await _torrents.Delete(torrent.TorrentId, true, true, deleteFiles);
 
                 break;
             case TorrentFinishedAction.RemoveRealDebrid:
                 _logger.LogDebug("Removing torrents from debrid provider, no files");
-                await _torrents.Delete(torrent.TorrentId, false, true, false);
+                await _torrents.Delete(torrent.TorrentId, false, true, deleteFiles);
 
                 break;
             case TorrentFinishedAction.RemoveClient:
                 _logger.LogDebug("Removing torrents from client, no files");
-                await _torrents.Delete(torrent.TorrentId, true, false, false);
+                await _torrents.Delete(torrent.TorrentId, true, false, deleteFiles);
 
                 break;
             case TorrentFinishedAction.None:
