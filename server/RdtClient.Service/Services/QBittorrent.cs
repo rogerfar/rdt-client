@@ -224,8 +224,10 @@ public class QBittorrent
                 torrentPath = Path.Combine(downloadPath, torrent.RdName) + Path.DirectorySeparatorChar;
             }
 
-            var bytesDone = torrent.RdProgress;
+            Decimal? rdProgress = torrent.RdProgress / 100.0m;
+            Decimal? downloadProgress = 0;
             var bytesTotal = torrent.RdSize;
+            var bytesDone = (long?)(torrent.RdSize * rdProgress);
             var speed = torrent.RdSpeed ?? 0;
 
             if (torrent.Downloads.Count > 0)
@@ -233,14 +235,10 @@ public class QBittorrent
                 bytesDone = torrent.Downloads.Sum(m => m.BytesDone);
                 bytesTotal = torrent.Downloads.Sum(m => m.BytesTotal);
                 speed = (Int32) torrent.Downloads.Average(m => m.Speed);
+                downloadProgress = bytesTotal > 0 ? (Decimal?)bytesDone / bytesTotal : 0;
             }
 
-            var progress = (bytesDone / (Single?)bytesTotal);
-
-            if (progress == null || !Single.IsNormal(progress.Value))
-            {
-                progress = 0;
-            }
+            Decimal? progress = (rdProgress + downloadProgress) / 2m;
 
             var result = new TorrentInfo
             {
@@ -267,10 +265,10 @@ public class QBittorrent
                 Name = torrent.RdName,
                 NumComplete = 10,
                 NumIncomplete = 0,
-                NumLeechs = 100,
-                NumSeeds = 100,
+                NumLeechs = 1,
+                NumSeeds = torrent.RdSeeders ?? 1,
                 Priority = ++prio,
-                Progress = (Single) progress,
+                Progress = (float)(progress ?? 0),
                 Ratio = 1,
                 RatioLimit = 1,
                 SavePath = downloadPath,
@@ -297,6 +295,10 @@ public class QBittorrent
             else if (torrent.Completed.HasValue)
             {
                 result.State = "pausedUP";
+            }
+            else if (torrent.RdStatus == TorrentStatus.Downloading && torrent.RdSeeders < 1)
+            {
+                result.State = "stalledDL";
             }
 
             results.Add(result);
