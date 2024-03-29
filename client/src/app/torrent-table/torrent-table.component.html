@@ -16,6 +16,7 @@
         <th>Name</th>
         <th>Category</th>
         <th>Priority</th>
+        <th>Seeders</th>
         <th>Files</th>
         <th>Downloads</th>
         <th>Size</th>
@@ -39,6 +40,9 @@
         </td>
         <td>
           {{ torrent.priority }}
+        </td>
+        <td>
+          {{ torrent.rdSeeders }}
         </td>
         <td>
           {{ torrent.files.length | number }}
@@ -74,7 +78,7 @@
     >
       Retry Selected
     </button>
-    
+
     <button
       class="button is-primary"
       (click)="changeSettingsModal()"
