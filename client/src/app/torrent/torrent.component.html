@@ -55,8 +55,9 @@
         <label class="label">Downloader</label>
         <ng-container [ngSwitch]="torrent.downloadClient">
           <ng-container *ngSwitchCase="0">Internal Downloader</ng-container>
-          <ng-container *ngSwitchCase="1">Aria2c</ng-container>
-          <ng-container *ngSwitchCase="2">Symlink Downloader</ng-container>
+          <ng-container *ngSwitchCase="1">Bezadd</ng-container>
+          <ng-container *ngSwitchCase="2">Aria2c</ng-container>
+          <ng-container *ngSwitchCase="3">Symlink Downloader</ng-container>
         </ng-container>
       </div>
       <div class="field">
@@ -494,8 +495,9 @@
         <div class="control select is-fullwidth">
           <select [(ngModel)]="updateSettingsDownloadClient">
             <option [ngValue]="0">Internal Downloader</option>
-            <option [ngValue]="1">Aria2c</option>
-            <option [ngValue]="2">Symlink Downloader</option>
+            <option [ngValue]="1">Bezzad</option>
+            <option [ngValue]="2">Aria2c</option>
+            <option [ngValue]="3">Symlink Downloader</option>
           </select>
         </div>
         <p class="help">

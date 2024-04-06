@@ -47,8 +47,9 @@
       <div class="control select is-fullwidth">
         <select [(ngModel)]="downloadClient" (ngModelChange)="setFinishAction()">
           <option [ngValue]="0">Internal Downloader</option>
-          <option [ngValue]="1">Aria2c</option>
-          <option [ngValue]="2">Symlink Downloader</option>
+          <option [ngValue]="1">Bezzad</option>
+          <option [ngValue]="2">Aria2c</option>
+          <option [ngValue]="3">Symlink Downloader</option>
         </select>
       </div>
       <p class="help">
