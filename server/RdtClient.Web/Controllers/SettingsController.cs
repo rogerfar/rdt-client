@@ -63,7 +63,7 @@ public class SettingsController(Settings settings, Torrents torrents) : Controll
 
         if (!Directory.Exists(path))
         {
-            throw new Exception($"Path {path} does not exist");
+            throw new($"Path {path} does not exist");
         }
 
         var testFile = $"{path}/test.txt";
@@ -88,7 +88,7 @@ public class SettingsController(Settings settings, Torrents torrents) : Controll
         var download = new Download
         {
             Link = "https://34.download.real-debrid.com/speedtest/testDefault.rar",
-            Torrent = new Torrent
+            Torrent = new()
             {
                 RdName = ""
             }

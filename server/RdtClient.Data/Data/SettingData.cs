@@ -9,7 +9,7 @@ namespace RdtClient.Data.Data;
 
 public class SettingData(DataContext dataContext, ILogger<SettingData> logger)
 {
-    public static DbSettings Get { get; } = new DbSettings();
+    public static DbSettings Get { get; } = new();
 
     public static IList<SettingProperty> GetAll()
     {
@@ -57,7 +57,7 @@ public class SettingData(DataContext dataContext, ILogger<SettingData> logger)
 
         if (settings.Count == 0)
         {
-            throw new Exception("No settings found, please restart");
+            throw new("No settings found, please restart");
         }
 
         SetSettings(settings, Get, null);
@@ -124,7 +124,7 @@ public class SettingData(DataContext dataContext, ILogger<SettingData> logger)
                 if (property.PropertyType.IsEnum)
                 {
                     settingProperty.Type = "Enum";
-                    settingProperty.EnumValues = new Dictionary<Int32, String>();
+                    settingProperty.EnumValues = new();
 
                     foreach (var e in Enum.GetValues(property.PropertyType).Cast<Enum>())
                     {

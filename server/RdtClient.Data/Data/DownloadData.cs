@@ -269,7 +269,7 @@ public class DownloadData(DataContext dataContext)
     {
         var dbDownload = await dataContext.Downloads
                                            .FirstOrDefaultAsync(m => m.DownloadId == downloadId) 
-                         ?? throw new Exception($"Cannot find download with ID {downloadId}");
+                         ?? throw new($"Cannot find download with ID {downloadId}");
 
         dbDownload.RetryCount = 0;
         dbDownload.Link = null;

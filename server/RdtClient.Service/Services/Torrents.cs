@@ -26,6 +26,11 @@ public class Torrents(
 {
     private static readonly SemaphoreSlim RealDebridUpdateLock = new(1, 1);
 
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        ReferenceHandler = ReferenceHandler.IgnoreCycles
+    };
+
     private ITorrentClient TorrentClient
     {
         get
@@ -35,7 +40,7 @@ public class Torrents(
                 Provider.Premiumize => premiumizeTorrentClient,
                 Provider.RealDebrid => realDebridTorrentClient,
                 Provider.AllDebrid => allDebridTorrentClient,
-                _ => throw new Exception("Invalid Provider")
+                _ => throw new("Invalid Provider")
             };
         }
     }
@@ -105,7 +110,7 @@ public class Torrents(
         catch (Exception ex)
         {
             logger.LogError(ex, "{ex.Message}, trying to parse {magnetLink}", ex.Message, magnetLink);
-            throw new Exception($"{ex.Message}, trying to parse {magnetLink}");
+            throw new($"{ex.Message}, trying to parse {magnetLink}");
         }
 
         var id = await TorrentClient.AddMagnet(magnetLink);
@@ -156,7 +161,7 @@ public class Torrents(
         }
         catch (Exception ex)
         {
-            throw new Exception($"{ex.Message}, trying to parse {fileAsBase64}");
+            throw new($"{ex.Message}, trying to parse {fileAsBase64}");
         }
 
         var id = await TorrentClient.AddFile(bytes);
@@ -352,12 +357,7 @@ public class Torrents(
 
     public async Task<String> UnrestrictLink(Guid downloadId)
     {
-        var download = await downloads.GetById(downloadId);
-
-        if (download == null)
-        {
-            throw new Exception($"Download with ID {downloadId} not found");
-        }
+        var download = await downloads.GetById(downloadId) ?? throw new($"Download with ID {downloadId} not found");
 
         Log($"Unrestricting link", download, download.Torrent);
 
@@ -494,7 +494,7 @@ public class Torrents(
 
             if (String.IsNullOrWhiteSpace(torrent.FileOrMagnet))
             {
-                throw new Exception($"Cannot re-add this torrent, original magnet or file not found");
+                throw new($"Cannot re-add this torrent, original magnet or file not found");
             }
 
             Torrent newTorrent;
@@ -681,14 +681,9 @@ public class Torrents(
             return;
         }
 
-        var torrent = await torrentData.GetById(torrentId);
+        var torrent = await torrentData.GetById(torrentId) ?? throw new($"Cannot find Torrent with ID {torrentId}");
 
-        if (torrent == null)
-        {
-            throw new Exception($"Cannot find Torrent with ID {torrentId}");
-        }
-
-        var downloads1 = await downloads.GetForTorrent(torrentId);
+        var downloadsForTorrent = await downloads.GetForTorrent(torrentId);
 
         var fileName = Settings.Get.General.RunOnTorrentCompleteFileName;
         var arguments = Settings.Get.General.RunOnTorrentCompleteArguments ?? "";
@@ -712,7 +707,7 @@ public class Torrents(
         arguments = arguments.Replace("%F", $"\"{filePath}\"");
         arguments = arguments.Replace("%R", $"\"{downloadPath}\"");
         arguments = arguments.Replace("%D", $"\"{torrentPath}\"");
-        arguments = arguments.Replace("%C", downloads1.Count.ToString(CultureInfo.InvariantCulture).Replace(",", "").Replace(".", ""));
+        arguments = arguments.Replace("%C", downloadsForTorrent.Count.ToString(CultureInfo.InvariantCulture).Replace(",", "").Replace(".", ""));
         arguments = arguments.Replace("%Z", torrent.RdSize?.ToString(CultureInfo.InvariantCulture).Replace(",", "").Replace(".", ""));
         arguments = arguments.Replace("%I", torrent.Hash);
 
@@ -778,19 +773,11 @@ public class Torrents(
     {
         try
         {
-            var originalTorrent = JsonSerializer.Serialize(torrent,
-                                                           new JsonSerializerOptions
-                                                           {
-                                                               ReferenceHandler = ReferenceHandler.IgnoreCycles
-                                                           });
+            var originalTorrent = JsonSerializer.Serialize(torrent, JsonSerializerOptions);
 
             await TorrentClient.UpdateData(torrent, torrentClientTorrent);
 
-            var newTorrent = JsonSerializer.Serialize(torrent,
-                                                      new JsonSerializerOptions
-                                                      {
-                                                          ReferenceHandler = ReferenceHandler.IgnoreCycles
-                                                      });
+            var newTorrent = JsonSerializer.Serialize(torrent, JsonSerializerOptions);
 
             if (originalTorrent != newTorrent)
             {

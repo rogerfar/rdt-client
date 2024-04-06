@@ -42,12 +42,12 @@ public class Aria2cDownloader : IDownloader
             Timeout = TimeSpan.FromSeconds(10)
         };
 
-        _aria2NetClient = new Aria2NetClient(Settings.Get.DownloadClient.Aria2cUrl, Settings.Get.DownloadClient.Aria2cSecret, httpClient, 10);
+        _aria2NetClient = new(Settings.Get.DownloadClient.Aria2cUrl, Settings.Get.DownloadClient.Aria2cSecret, httpClient, 10);
     }
         
     public async Task<String> Download()
     {
-        var path = Path.GetDirectoryName(_remotePath) ?? throw new Exception($"Invalid file path {_filePath}");
+        var path = Path.GetDirectoryName(_remotePath) ?? throw new($"Invalid file path {_filePath}");
         var fileName = Path.GetFileName(_filePath);
 
         _logger.Debug($"Starting download of {_uri}, writing to path: {_filePath} (on aria2: {_remotePath}), fileName: {fileName}");
@@ -58,7 +58,7 @@ public class Aria2cDownloader : IDownloader
 
             if (isAlreadyAdded)
             {
-                throw new Exception($"The download link {_uri} has already been added to Aria2");
+                throw new($"The download link {_uri} has already been added to Aria2");
             }
         }
 
@@ -172,7 +172,7 @@ public class Aria2cDownloader : IDownloader
 
         if (download == null)
         {
-            DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs
+            DownloadComplete?.Invoke(this, new()
             {
                 Error = $"Download was not found in Aria2"
             });
@@ -182,7 +182,7 @@ public class Aria2cDownloader : IDownloader
         if (!String.IsNullOrWhiteSpace(download.ErrorMessage) || download.Status == "error")
         {
             await Remove();
-            DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs
+            DownloadComplete?.Invoke(this, new()
             {
                 Error = $"{download.ErrorCode}: {download.ErrorMessage}"
             });
@@ -200,7 +200,7 @@ public class Aria2cDownloader : IDownloader
             {
                 if (retryCount >= 10)
                 {
-                    DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs
+                    DownloadComplete?.Invoke(this, new()
                     {
                         Error = $"File not found at {_filePath} (on aria2 {_remotePath})"
                     });
@@ -209,7 +209,7 @@ public class Aria2cDownloader : IDownloader
 
                 if (File.Exists(_filePath))
                 {
-                    DownloadComplete?.Invoke(this, new DownloadCompleteEventArgs());
+                    DownloadComplete?.Invoke(this, new());
                     break;
                 }
 
@@ -219,7 +219,7 @@ public class Aria2cDownloader : IDownloader
             return;
         }
 
-        DownloadProgress?.Invoke(this, new DownloadProgressEventArgs
+        DownloadProgress?.Invoke(this, new()
         {
             BytesDone = download.CompletedLength,
             BytesTotal = download.TotalLength,

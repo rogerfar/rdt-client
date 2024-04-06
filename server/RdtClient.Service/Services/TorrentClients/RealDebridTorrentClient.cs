@@ -20,7 +20,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
 
             if (String.IsNullOrWhiteSpace(apiKey))
             {
-                throw new Exception("Real-Debrid API Key not set in the settings");
+                throw new("Real-Debrid API Key not set in the settings");
             }
 
             var httpClient = httpClientFactory.CreateClient();
@@ -63,7 +63,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
 
     private TorrentClientTorrent Map(Torrent torrent)
     {
-        return new TorrentClientTorrent
+        return new()
         {
             Id = torrent.Id,
             Filename = torrent.Filename,
@@ -116,7 +116,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
     {
         var user = await GetClient().User.GetAsync();
             
-        return new TorrentClientUser
+        return new()
         {
             Username = user.Username,
             Expiration = user.Premium > 0 ? user.Expiration : null
@@ -272,7 +272,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
 
         if (result.Download == null)
         {
-            throw new Exception($"Unrestrict returned an invalid download");
+            throw new($"Unrestrict returned an invalid download");
         }
 
         return result.Download;
@@ -287,7 +287,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
                 return torrent;
             }
 
-            var rdTorrent = await GetInfo(torrent.RdId) ?? throw new Exception($"Resource not found");
+            var rdTorrent = await GetInfo(torrent.RdId) ?? throw new($"Resource not found");
 
             if (!String.IsNullOrWhiteSpace(rdTorrent.Filename))
             {

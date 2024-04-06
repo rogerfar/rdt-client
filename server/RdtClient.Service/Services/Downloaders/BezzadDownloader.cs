@@ -30,7 +30,7 @@ public class BezzadDownloader : IDownloader
         var settingProxyServer = Settings.Get.DownloadClient.ProxyServer;
 
         // For all options, see https://github.com/bezzad/Downloader
-        _downloadConfiguration = new DownloadConfiguration
+        _downloadConfiguration = new()
         {
             MaxTryAgainOnFailover = 5,
             RangeDownload = false,
@@ -56,7 +56,7 @@ public class BezzadDownloader : IDownloader
             _downloadConfiguration.RequestConfiguration.Proxy = new WebProxy(new Uri(settingProxyServer), false);
         }
 
-        _downloadService = new DownloadService(_downloadConfiguration);
+        _downloadService = new(_downloadConfiguration);
 
         _downloadService.DownloadProgressChanged += (_, args) =>
         {
@@ -66,7 +66,7 @@ public class BezzadDownloader : IDownloader
             }
 
             DownloadProgress.Invoke(this,
-                                     new DownloadProgressEventArgs
+                                     new()
                                      {
                                          Speed = (Int64)args.BytesPerSecondSpeed,
                                          BytesDone = args.ReceivedBytesSize,
@@ -88,7 +88,7 @@ public class BezzadDownloader : IDownloader
             }
 
             DownloadComplete?.Invoke(this,
-                                     new DownloadCompleteEventArgs
+                                     new()
                                      {
                                          Error = error
                                      });

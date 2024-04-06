@@ -15,9 +15,9 @@ public class UnpackClient(Download download, String destinationPath)
         
     public Int32 Progess { get; private set; }
 
-    private readonly Torrent _torrent = download.Torrent ?? throw new Exception($"Torrent is null");
+    private readonly Torrent _torrent = download.Torrent ?? throw new($"Torrent is null");
     
-    private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
 
     public void Start()
     {
@@ -25,12 +25,7 @@ public class UnpackClient(Download download, String destinationPath)
 
         try
         {
-            var filePath = DownloadHelper.GetDownloadPath(destinationPath, _torrent, download);
-
-            if (filePath == null)
-            {
-                throw new Exception("Invalid download path");
-            }
+            var filePath = DownloadHelper.GetDownloadPath(destinationPath, _torrent, download) ?? throw new("Invalid download path");
 
             Task.Run(async delegate
             {

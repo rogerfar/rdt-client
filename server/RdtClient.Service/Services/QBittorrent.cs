@@ -127,7 +127,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             SavePath = "",
             SavePathChangedTmmEnabled = false,
             SaveResumeDataInterval = 60,
-            ScanDirs = new ScanDirs(),
+            ScanDirs = new(),
             ScheduleFromHour = 8,
             ScheduleFromMin = 0,
             ScheduleToHour = 20,
@@ -190,13 +190,13 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
 
         var results = new List<TorrentInfo>();
 
-        var torrents1 = await torrents.Get();
+        var allTorrents = await torrents.Get();
 
         var prio = 0;
 
         Decimal? downloadProgress = 0;
 
-        foreach (var torrent in torrents1)
+        foreach (var torrent in allTorrents)
         {
             var downloadPath = savePath;
 
@@ -485,9 +485,9 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
 
     public async Task<IDictionary<String, TorrentCategory>> TorrentsCategories()
     {
-        var torrents1 = await torrents.Get();
+        var allTorrents = await torrents.Get();
 
-        var torrentsToGroup = torrents1.Where(m => !String.IsNullOrWhiteSpace(m.Category))
+        var torrentsToGroup = allTorrents.Where(m => !String.IsNullOrWhiteSpace(m.Category))
                                       .Select(m => m.Category!.ToLower())
                                       .ToList();
 
@@ -580,9 +580,9 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             return;
         }
 
-        var downloads1 = await downloads.GetForTorrent(torrent.TorrentId);
+        var downloadsForTorrent = await downloads.GetForTorrent(torrent.TorrentId);
 
-        foreach (var download in downloads1)
+        foreach (var download in downloadsForTorrent)
         {
             if (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
             {
@@ -600,9 +600,9 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             return;
         }
 
-        var downloads1 = await downloads.GetForTorrent(torrent.TorrentId);
+        var downloadsForTorrent = await downloads.GetForTorrent(torrent.TorrentId);
 
-        foreach (var download in downloads1)
+        foreach (var download in downloadsForTorrent)
         {
             if (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
             {
@@ -619,7 +619,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
 
         var activeDownloads = TorrentRunner.ActiveDownloadClients.Sum(m => m.Value.Speed);
 
-        return new SyncMetaData
+        return new()
         {
             Categories = categories,
             FullUpdate = true,
@@ -627,7 +627,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             Tags = null,
             Trackers = new Dictionary<String, List<String>>(),
             Torrents = torrents.ToDictionary(m => m.Hash, m => m),
-            ServerState = new SyncMetaDataServerState
+            ServerState = new()
             {
                 DlInfoSpeed = activeDownloads,
                 UpInfoSpeed = 0
