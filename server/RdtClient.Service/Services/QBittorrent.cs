@@ -209,6 +209,8 @@ public class QBittorrent
 
         var prio = 0;
 
+        Decimal? downloadProgress = 0;
+
         foreach (var torrent in torrents)
         {
             var downloadPath = savePath;
@@ -224,10 +226,9 @@ public class QBittorrent
                 torrentPath = Path.Combine(downloadPath, torrent.RdName) + Path.DirectorySeparatorChar;
             }
 
-            Decimal? rdProgress = torrent.RdProgress / 100.0m;
-            Decimal? downloadProgress = 0;
+            var rdProgress = torrent.RdProgress / 100.0m;
             var bytesTotal = torrent.RdSize;
-            var bytesDone = (long?)(torrent.RdSize * rdProgress);
+            var bytesDone = (Int64?)(torrent.RdSize * rdProgress);
             var speed = torrent.RdSpeed ?? 0;
 
             if (torrent.Downloads.Count > 0)
@@ -238,7 +239,7 @@ public class QBittorrent
                 downloadProgress = bytesTotal > 0 ? (Decimal?)bytesDone / bytesTotal : 0;
             }
 
-            Decimal? progress = (rdProgress + downloadProgress) / 2m;
+            var progress = (rdProgress + downloadProgress) / 2m;
 
             var result = new TorrentInfo
             {
@@ -268,7 +269,7 @@ public class QBittorrent
                 NumLeechs = 1,
                 NumSeeds = torrent.RdSeeders ?? 1,
                 Priority = ++prio,
-                Progress = (float)(progress ?? 0),
+                Progress = (Single)(progress ?? 0),
                 Ratio = 1,
                 RatioLimit = 1,
                 SavePath = downloadPath,
