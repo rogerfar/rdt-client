@@ -24,7 +24,7 @@ public class RequestLoggingMiddleware(RequestDelegate next, ILoggerFactory logge
             requestLog += $", QueryString: {context.Request.QueryString}";
         }
 
-        if (context.Request.HasFormContentType && context.Request.Form.Count == 0)
+        if (context.Request.HasFormContentType && context.Request.Form.Count > 0)
         {
             requestLog += $", Form: {String.Join(", ", context.Request.Form.Select(f => $"{f.Key}: {f.Value}"))}";
         }

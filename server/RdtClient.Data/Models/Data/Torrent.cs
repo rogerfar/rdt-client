@@ -42,7 +42,7 @@ public class Torrent
     public String? Error { get; set; }
 
     [InverseProperty("Torrent")]
-    public IList<Download> Downloads { get; set; } = new List<Download>();
+    public IList<Download> Downloads { get; set; } = [];
 
     public String? RdId { get; set; }
     public String? RdName { get; set; }
@@ -65,16 +65,16 @@ public class Torrent
         {
             if (String.IsNullOrWhiteSpace(RdFiles))
             {
-                return new List<TorrentClientFile>();
+                return [];
             }
 
             try
             {
-                return JsonSerializer.Deserialize<List<TorrentClientFile>>(RdFiles) ?? new List<TorrentClientFile>();
+                return JsonSerializer.Deserialize<List<TorrentClientFile>>(RdFiles) ?? [];
             }
             catch
             {
-                return new List<TorrentClientFile>();
+                return [];
             }
         }
     }
@@ -86,7 +86,7 @@ public class Torrent
         {
             if (String.IsNullOrWhiteSpace(DownloadManualFiles))
             {
-                return new List<String>();
+                return [];
             }
 
             return DownloadManualFiles.Split(",");

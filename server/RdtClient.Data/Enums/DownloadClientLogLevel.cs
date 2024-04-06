@@ -2,7 +2,7 @@
 
 namespace RdtClient.Data.Enums;
 
-public enum LogLevel
+public enum DownloadClientLogLevel
 {
     [Description("Verbose")]
     Verbose,
@@ -17,5 +17,8 @@ public enum LogLevel
     Warning,
 
     [Description("Error")]
-    Error
+    Error,
+
+    [Description("None")]
+    None
 }

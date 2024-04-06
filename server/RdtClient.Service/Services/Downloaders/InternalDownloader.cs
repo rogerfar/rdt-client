@@ -33,7 +33,29 @@ public class InternalDownloader : IDownloader
 
         _downloadService = new(_uri, _filePath, _downloadConfiguration);
 
-        //_downloadService.OnLog += message => Debug.WriteLine(message.Message);
+        _downloadService.OnLog += (message, level) =>
+        {
+            if (message.Exception != null || level == 4)
+            {
+                _logger.Error(message.Exception, message.Message);
+            }
+
+            switch (level)
+            {
+                case 0:
+                    _logger.Verbose(message.Message);
+                    break;
+                case 1:
+                    _logger.Debug(message.Message);
+                    break;
+                case 2:
+                    _logger.Information(message.Message);
+                    break;
+                case 3:
+                    _logger.Warning(message.Message);
+                    break;
+            }
+        };
 
         _downloadService.OnProgress += (chunks, _) =>
         {
@@ -118,7 +140,8 @@ public class InternalDownloader : IDownloader
         {
             settingDownloadTimeout = 1000;
         }
-        
+
+        _downloadConfiguration.LogLevel = (Int32)Settings.Get.DownloadClient.LogLevel;
         _downloadConfiguration.Parallel = settingDownloadParallelCount;
         _downloadConfiguration.MaximumBytesPerSecond = settingDownloadMaxSpeed;
         _downloadConfiguration.Timeout = settingDownloadTimeout;

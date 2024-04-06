@@ -21,7 +21,7 @@ public class TorrentData(DataContext dataContext)
                                                 .Include(m => m.Downloads)
                                                 .ToListAsync();
 
-            return _torrentCache.OrderBy(m => m.Priority ?? 9999).ThenBy(m => m.Added).ToList();
+            return [.. _torrentCache.OrderBy(m => m.Priority ?? 9999).ThenBy(m => m.Added)];
         }
         finally
         {
@@ -51,10 +51,12 @@ public class TorrentData(DataContext dataContext)
 
     public async Task<Torrent?> GetByHash(String hash)
     {
+#pragma warning disable CA1862 // Use the 'StringComparison' method overloads to perform case-insensitive string comparisons
         var dbTorrent = await dataContext.Torrents
                                           .AsNoTracking()
                                           .Include(m => m.Downloads)
                                           .FirstOrDefaultAsync(m => m.Hash.ToLower() == hash.ToLower());
+#pragma warning restore CA1862 // Use the 'StringComparison' method overloads to perform case-insensitive string comparisons
 
         if (dbTorrent == null)
         {
@@ -189,7 +191,7 @@ public class TorrentData(DataContext dataContext)
             var downloads = await dataContext.Downloads.AsNoTracking().Where(m => m.TorrentId == torrentId).ToListAsync();
             var downloadWithErrors = downloads.Where(m => !String.IsNullOrWhiteSpace(m.Error)).ToList();
 
-            if (downloadWithErrors.Any())
+            if (downloadWithErrors.Count > 0)
             {
                 error = $"{downloadWithErrors.Count}/{downloads.Count} downloads failed with errors";
             }

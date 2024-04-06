@@ -19,7 +19,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
             if (String.IsNullOrWhiteSpace(apiKey))
             {
-                throw new Exception("All-Debrid API Key not set in the settings");
+                throw new("All-Debrid API Key not set in the settings");
             }
 
             var httpClient = httpClientFactory.CreateClient();
@@ -45,7 +45,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
     private static TorrentClientTorrent Map(Magnet torrent)
     {
-        return new TorrentClientTorrent
+        return new()
         {
             Id = torrent.Id.ToString(),
             Filename = torrent.Filename,
@@ -81,14 +81,9 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
     public async Task<TorrentClientUser> GetUser()
     {
-        var user = await GetClient().User.GetAsync();
+        var user = await GetClient().User.GetAsync() ?? throw new("Unable to get user");
 
-        if (user == null)
-        {
-            throw new Exception("Unable to get user");
-        }
-
-        return new TorrentClientUser
+        return new()
         {
             Username = user.Username,
             Expiration = user.PremiumUntil > 0 ? new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(user.PremiumUntil) : null
@@ -101,15 +96,10 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
         if (result?.Id == null)
         {
-            throw new Exception("Unable to add magnet link");
+            throw new("Unable to add magnet link");
         }
 
-        var resultId = result.Id.ToString();
-
-        if (resultId == null)
-        {
-            throw new Exception($"Invalid responseID {result.Id}");
-        }
+        var resultId = result.Id.ToString() ?? throw new($"Invalid responseID {result.Id}");
 
         return resultId;
     }
@@ -120,15 +110,10 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
         if (result?.Id == null)
         {
-            throw new Exception("Unable to add torrent file");
+            throw new("Unable to add torrent file");
         }
 
-        var resultId = result.Id.ToString();
-
-        if (resultId == null)
-        {
-            throw new Exception($"Invalid responseID {result.Id}");
-        }
+        var resultId = result.Id.ToString() ?? throw new($"Invalid responseID {result.Id}");
 
         return resultId;
     }
@@ -139,17 +124,17 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
         if (isAvailable)
         {
-            return new List<TorrentClientAvailableFile>
-            {
+            return
+            [
                 new()
                 {
                     Filename = "All files",
                     Filesize = 0
                 }
-            };
+            ];
         }
 
-        return new List<TorrentClientAvailableFile>();
+        return [];
     }
 
     public Task SelectFiles(Torrent torrent)
@@ -168,7 +153,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
         if (result.Link == null)
         {
-            throw new Exception("Invalid result link");
+            throw new("Invalid result link");
         }
 
         return result.Link;
@@ -294,17 +279,12 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
     private async Task<TorrentClientTorrent> GetInfo(String torrentId)
     {
-        var result = await GetClient().Magnet.StatusAsync(torrentId);
-
-        if (result == null)
-        {
-            throw new Exception($"Unable to find magnet with ID {torrentId}");
-        }
+        var result = await GetClient().Magnet.StatusAsync(torrentId) ?? throw new($"Unable to find magnet with ID {torrentId}");
 
         return Map(result);
     }
 
-    private static IEnumerable<String> GetFiles(IList<File> files, String parent)
+    private static List<String> GetFiles(IList<File> files, String parent)
     {
         var result = new List<String>();
 
@@ -324,7 +304,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
         return result;
     }
 
-    private static IEnumerable<String> GetFiles(IList<FileE1> files, String parent)
+    private static List<String> GetFiles(IList<FileE1> files, String parent)
     {
         var result = new List<String>();
 
@@ -344,7 +324,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
         return result;
     }
 
-    private static IEnumerable<String> GetFiles(IList<FileE2> files, String parent)
+    private static List<String> GetFiles(IList<FileE2> files, String parent)
     {
         var result = new List<String>();
 

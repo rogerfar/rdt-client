@@ -6,17 +6,8 @@ using RdtClient.Service.Services;
 namespace RdtClient.Web.Controllers;
 
 [Route("Api/Authentication")]
-public class AuthController : Controller
+public class AuthController(Authentication authentication, Settings settings) : Controller
 {
-    private readonly Authentication _authentication;
-    private readonly Settings _settings;
-
-    public AuthController(Authentication authentication, Settings settings)
-    {
-        _authentication = authentication;
-        _settings = settings;
-    }
-        
     [AllowAnonymous]
     [Route("IsLoggedIn")]
     [HttpGet]
@@ -29,7 +20,7 @@ public class AuthController : Controller
 
         if (User.Identity?.IsAuthenticated == false)
         {
-            var user = await _authentication.GetUser();
+            var user = await authentication.GetUser();
 
             if (user == null)
             {
@@ -52,7 +43,7 @@ public class AuthController : Controller
             return BadRequest();
         }
 
-        var user = await _authentication.GetUser();
+        var user = await authentication.GetUser();
 
         if (user != null)
         {
@@ -64,14 +55,14 @@ public class AuthController : Controller
             return BadRequest("Invalid UserName or Password");
         }
 
-        var registerResult = await _authentication.Register(request.UserName, request.Password);
+        var registerResult = await authentication.Register(request.UserName, request.Password);
 
         if (!registerResult.Succeeded)
         {
             return BadRequest(registerResult.Errors.First().Description);
         }
             
-        await _authentication.Login(request.UserName, request.Password);
+        await authentication.Login(request.UserName, request.Password);
 
         return Ok();
     }
@@ -91,8 +82,8 @@ public class AuthController : Controller
             return StatusCode(401);
         }
 
-        await _settings.Update("Provider:Provider", request.Provider);
-        await _settings.Update("Provider:ApiKey", request.Token);
+        await settings.Update("Provider:Provider", request.Provider);
+        await settings.Update("Provider:ApiKey", request.Token);
 
         return Ok();
     }
@@ -107,7 +98,7 @@ public class AuthController : Controller
             return BadRequest();
         }
 
-        var user = await _authentication.GetUser();
+        var user = await authentication.GetUser();
 
         if (user == null)
         {
@@ -119,7 +110,7 @@ public class AuthController : Controller
             return BadRequest("Invalid credentials");
         }
 
-        var result = await _authentication.Login(request.UserName, request.Password);
+        var result = await authentication.Login(request.UserName, request.Password);
 
         if (!result.Succeeded)
         {
@@ -133,7 +124,7 @@ public class AuthController : Controller
     [HttpPost]
     public async Task<ActionResult> Logout()
     {
-        await _authentication.Logout();
+        await authentication.Logout();
         return Ok();
     }
                 
@@ -151,7 +142,7 @@ public class AuthController : Controller
             return BadRequest("Invalid UserName or Password");
         }
 
-        var updateResult = await _authentication.Update(request.UserName, request.Password);
+        var updateResult = await authentication.Update(request.UserName, request.Password);
 
         if (!updateResult.Succeeded)
         {

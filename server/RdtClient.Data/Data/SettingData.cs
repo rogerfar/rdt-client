@@ -13,7 +13,7 @@ public class SettingData(DataContext dataContext, ILogger<SettingData> logger)
 
     public static IList<SettingProperty> GetAll()
     {
-        return GetSettings(Get, null).ToList();
+        return GetSettings(Get, null);
     }
 
     public async Task Update(IList<SettingProperty> settings)
@@ -75,7 +75,7 @@ public class SettingData(DataContext dataContext, ILogger<SettingData> logger)
 
         var newSettings = expectedSettings.Where(m => dbSettings.All(p => p.SettingId != m.SettingId)).ToList();
 
-        if (newSettings.Any())
+        if (newSettings.Count > 0)
         {
             await dataContext.Settings.AddRangeAsync(newSettings);
             await dataContext.SaveChangesAsync();
@@ -83,14 +83,14 @@ public class SettingData(DataContext dataContext, ILogger<SettingData> logger)
 
         var oldSettings = dbSettings.Where(m => expectedSettings.All(p => p.SettingId != m.SettingId)).ToList();
 
-        if (oldSettings.Any())
+        if (oldSettings.Count > 0)
         {
             dataContext.Settings.RemoveRange(oldSettings);
             await dataContext.SaveChangesAsync();
         }
     }
 
-    private static IEnumerable<SettingProperty> GetSettings(Object defaultSetting, String? parent)
+    private static List<SettingProperty> GetSettings(Object defaultSetting, String? parent)
     {
         var result = new List<SettingProperty>();
 
@@ -124,7 +124,7 @@ public class SettingData(DataContext dataContext, ILogger<SettingData> logger)
                 if (property.PropertyType.IsEnum)
                 {
                     settingProperty.Type = "Enum";
-                    settingProperty.EnumValues = new();
+                    settingProperty.EnumValues = [];
 
                     foreach (var e in Enum.GetValues(property.PropertyType).Cast<Enum>())
                     {
@@ -173,8 +173,18 @@ public class SettingData(DataContext dataContext, ILogger<SettingData> logger)
                 {
                     if (property.PropertyType.IsEnum)
                     {
-                        var newValue = Enum.Parse(property.PropertyType, setting.Value ?? "0");
-                        property.SetValue(defaultSetting, newValue);
+                        try
+                        {
+                            var newValue = Enum.Parse(property.PropertyType, setting.Value ?? "0");
+                            property.SetValue(defaultSetting, newValue);
+                        }
+                        catch
+                        {
+                            logger.LogWarning("Invalid value for setting {propertyName}: {setting.Value}", propertyName, setting.Value);
+
+                            var defaultValue = property.GetValue(defaultSetting);
+                            property.SetValue(defaultSetting, defaultValue);
+                        }
                     }
                     else
                     {
@@ -191,7 +201,10 @@ public class SettingData(DataContext dataContext, ILogger<SettingData> logger)
                         }
                         else
                         {
-                            logger.LogWarning($"Invalid value for setting {propertyName}: {setting.Value}");
+                            logger.LogWarning("Invalid value for setting {propertyName}: {setting.Value}", propertyName, setting.Value);
+
+                            var defaultValue = property.GetValue(defaultSetting);
+                            property.SetValue(defaultSetting, defaultValue);
                         }
                     }
                 }

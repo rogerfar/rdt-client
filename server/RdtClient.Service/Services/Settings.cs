@@ -48,6 +48,7 @@ public class Settings(SettingData settingData)
 
         LoggingLevelSwitch.MinimumLevel = Settings.Get.General.LogLevel switch
         {
+            LogLevel.Verbose => LogEventLevel.Verbose,
             LogLevel.Debug => LogEventLevel.Debug,
             LogLevel.Information => LogEventLevel.Information,
             LogLevel.Warning => LogEventLevel.Warning,

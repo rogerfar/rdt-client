@@ -164,7 +164,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
             return BadRequest();
         }
 
-        logger.LogDebug($"Delete {torrentId}");
+        logger.LogDebug("Delete {torrentId}", torrentId);
 
         await torrents.Delete(torrentId, request.DeleteData, request.DeleteRdTorrent, request.DeleteLocalFiles);
 
@@ -175,7 +175,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
     [Route("Retry/{torrentId:guid}")]
     public async Task<ActionResult> Retry(Guid torrentId)
     {
-        logger.LogDebug($"Retry {torrentId}");
+        logger.LogDebug("Retry {torrentId}", torrentId);
 
         await torrents.UpdateRetry(torrentId, DateTimeOffset.UtcNow, 0);
         await torrents.RetryTorrent(torrentId, 0);
@@ -187,7 +187,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
     [Route("RetryDownload/{downloadId:guid}")]
     public async Task<ActionResult> RetryDownload(Guid downloadId)
     {
-        logger.LogDebug($"Retry download {downloadId}");
+        logger.LogDebug("Retry download {downloadId}", downloadId);
 
         await torrents.RetryDownload(downloadId);
 
@@ -285,7 +285,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
         }
         else
         {
-            selectedFiles = availableFiles.ToList();
+            selectedFiles = [.. availableFiles];
         }
 
         return Ok(new

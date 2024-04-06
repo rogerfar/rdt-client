@@ -36,7 +36,7 @@ public class DbSettingsGeneral
 {
     [DisplayName("Log level")]
     [Description("Recommended level is Warning, set to Debug to get the most info.")]
-    public LogLevel LogLevel { get; set; } = LogLevel.Warning;
+    public LogLevel LogLevel { get; set; } = LogLevel.Error;
 
     [DisplayName("Maximum parallel downloads")]
     [Description("Maximum amount of torrents that get downloaded to your host at the same time.")]
@@ -127,6 +127,10 @@ http://127.0.0.1:6800/jsonrpc.")]
     [DisplayName("Rclone mount path (only used for the Symlink Downloader)")]
     [Description("Path where Rclone is mounted. Required for Symlink Downloader.")]
     public String RcloneMountPath { get; set; } = "/mnt/rd/";
+
+    [DisplayName("Log level")]
+    [Description("Only set when trying to debug a download client, can generate a lot of logs.")]
+    public DownloadClientLogLevel LogLevel { get; set; } = DownloadClientLogLevel.None;
 }
 
 public class DbSettingsProvider

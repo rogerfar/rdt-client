@@ -38,7 +38,7 @@ public class Authentication(SignInManager<IdentityUser> signInManager, UserManag
 
     public async Task<IdentityResult> Update(String newUserName, String newPassword)
     {
-        var user = await GetUser() ?? throw new Exception("No logged in user found");
+        var user = await GetUser() ?? throw new("No logged in user found");
 
         if (!String.IsNullOrWhiteSpace(newUserName))
         {
