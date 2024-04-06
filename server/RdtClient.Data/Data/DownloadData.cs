@@ -186,6 +186,24 @@ public class DownloadData(DataContext dataContext)
         await TorrentData.VoidCache();
     }
 
+    public async Task UpdateErrors(Dictionary<Guid, String> downloadIds)
+    {
+        foreach (var entry in downloadIds)
+        {
+            var dbDownload = await dataContext.Downloads
+                                              .FirstOrDefaultAsync(m => m.DownloadId == entry.Key);
+
+            if (dbDownload == null)
+            {
+                continue;
+            }
+
+            dbDownload.Error = entry.Value;
+        }
+
+        await dataContext.SaveChangesAsync();
+    }
+
     public async Task UpdateRetryCount(Guid downloadId, Int32 retryCount)
     {
         var dbDownload = await dataContext.Downloads
@@ -218,6 +236,22 @@ public class DownloadData(DataContext dataContext)
         await dataContext.SaveChangesAsync();
     }
 
+    public async Task UpdateRemoteIds(Dictionary<Guid, String> remoteIds)
+    {
+        foreach (var entry in remoteIds)
+        {
+            var dbDownload = await dataContext.Downloads.FirstOrDefaultAsync(m => m.DownloadId == entry.Key);
+            if (dbDownload == null)
+            {
+                continue;
+            }
+
+            dbDownload.RemoteId = entry.Value;
+        }
+
+        await dataContext.SaveChangesAsync();
+    }
+
     public async Task DeleteForTorrent(Guid torrentId)
     {
         var downloads = await dataContext.Downloads
@@ -234,12 +268,8 @@ public class DownloadData(DataContext dataContext)
     public async Task Reset(Guid downloadId)
     {
         var dbDownload = await dataContext.Downloads
-                                           .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
-
-        if (dbDownload == null)
-        {
-            throw new Exception($"Cannot find download with ID {downloadId}");
-        }
+                                           .FirstOrDefaultAsync(m => m.DownloadId == downloadId) 
+                         ?? throw new Exception($"Cannot find download with ID {downloadId}");
 
         dbDownload.RetryCount = 0;
         dbDownload.Link = null;

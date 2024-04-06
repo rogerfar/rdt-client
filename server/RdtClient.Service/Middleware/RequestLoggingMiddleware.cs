@@ -24,11 +24,11 @@ public class RequestLoggingMiddleware(RequestDelegate next, ILoggerFactory logge
             requestLog += $", QueryString: {context.Request.QueryString}";
         }
 
-        if (context.Request.HasFormContentType && context.Request.Form.Any())
+        if (context.Request.HasFormContentType && context.Request.Form.Count == 0)
         {
             requestLog += $", Form: {String.Join(", ", context.Request.Form.Select(f => $"{f.Key}: {f.Value}"))}";
         }
-        else if (context.Request.ContentType?.ToLower().Contains("application/json") == true)
+        else if (context.Request.ContentType?.Contains("application/json", StringComparison.CurrentCultureIgnoreCase) == true)
         {
             var body = await ReadRequestBodyAsync(context.Request);
             requestLog += $", Body: {body}";

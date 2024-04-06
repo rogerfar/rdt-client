@@ -45,7 +45,7 @@ public class Aria2cDownloader : IDownloader
         _aria2NetClient = new Aria2NetClient(Settings.Get.DownloadClient.Aria2cUrl, Settings.Get.DownloadClient.Aria2cSecret, httpClient, 10);
     }
         
-    public async Task<String?> Download()
+    public async Task<String> Download()
     {
         var path = Path.GetDirectoryName(_remotePath) ?? throw new Exception($"Invalid file path {_filePath}");
         var fileName = Path.GetFileName(_filePath);

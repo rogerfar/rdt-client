@@ -76,7 +76,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
             Progress = torrent.Progress,
             Status = torrent.Status,
             Added = ChangeTimeZone(torrent.Added)!.Value,
-            Files = (torrent.Files ?? new List<TorrentFile>()).Select(m => new TorrentClientFile
+            Files = (torrent.Files ?? []).Select(m => new TorrentClientFile
             {
                 Path = m.Path,
                 Bytes = m.Bytes,
@@ -173,7 +173,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         else if (torrent.DownloadAction == TorrentDownloadAction.DownloadAll)
         {
             Log("Selecting all files", torrent);
-            files = torrent.Files.ToList();
+            files = [.. torrent.Files];
         }
         else if (torrent.DownloadAction == TorrentDownloadAction.DownloadManual)
         {
@@ -258,7 +258,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
 
         Log("", torrent);
 
-        await GetClient().Torrents.SelectFilesAsync(torrent.RdId!, fileIds.ToArray());
+        await GetClient().Torrents.SelectFilesAsync(torrent.RdId!, [.. fileIds]);
     }
 
     public async Task Delete(String torrentId)
@@ -287,12 +287,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
                 return torrent;
             }
 
-            var rdTorrent = await GetInfo(torrent.RdId);
-
-            if (rdTorrent == null)
-            {
-                throw new Exception($"Resource not found");
-            }
+            var rdTorrent = await GetInfo(torrent.RdId) ?? throw new Exception($"Resource not found");
 
             if (!String.IsNullOrWhiteSpace(rdTorrent.Filename))
             {

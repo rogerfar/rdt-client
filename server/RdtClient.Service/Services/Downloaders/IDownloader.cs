@@ -16,7 +16,7 @@ public interface IDownloader
 {
     event EventHandler<DownloadCompleteEventArgs>? DownloadComplete;
     event EventHandler<DownloadProgressEventArgs>? DownloadProgress;
-    Task<String?> Download();
+    Task<String> Download();
     Task Cancel();
     Task Pause();
     Task Resume();

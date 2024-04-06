@@ -6,11 +6,6 @@ namespace RdtClient.Service.Services;
 
 public class DownloadClient(Download download, Torrent torrent, String destinationPath)
 {
-    private readonly String _destinationPath = destinationPath;
-
-    private readonly Download _download = download;
-    private readonly Torrent _torrent = torrent;
-
     public IDownloader? Downloader;
 
     public Data.Enums.DownloadClient Type { get; private set; }
@@ -23,7 +18,7 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
     public Int64 BytesTotal { get; private set; }
     public Int64 BytesDone { get; private set; }
 
-    public async Task<String?> Start()
+    public async Task<String> Start()
     {
         BytesDone = 0;
         BytesTotal = 0;
@@ -31,13 +26,13 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
 
         try
         {
-            if (_download.Link == null)
+            if (download.Link == null)
             {
                 throw new Exception($"Invalid download link");
             }
 
-            var filePath = DownloadHelper.GetDownloadPath(_destinationPath, _torrent, _download);
-            var downloadPath = DownloadHelper.GetDownloadPath(_torrent, _download);
+            var filePath = DownloadHelper.GetDownloadPath(destinationPath, torrent, download);
+            var downloadPath = DownloadHelper.GetDownloadPath(torrent, download);
 
             if (filePath == null || downloadPath == null)
             {
@@ -50,10 +45,10 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
 
             Downloader = Settings.Get.DownloadClient.Client switch
             {
-                Data.Enums.DownloadClient.Internal => new InternalDownloader(_download.Link, filePath),
-                Data.Enums.DownloadClient.Bezzad => new BezzadDownloader(_download.Link, filePath),
-                Data.Enums.DownloadClient.Aria2c => new Aria2cDownloader(_download.RemoteId, _download.Link, filePath, downloadPath),
-                Data.Enums.DownloadClient.Symlink => new SymlinkDownloader(_download.Link, filePath),
+                Data.Enums.DownloadClient.Internal => new InternalDownloader(download.Link, filePath),
+                Data.Enums.DownloadClient.Bezzad => new BezzadDownloader(download.Link, filePath),
+                Data.Enums.DownloadClient.Aria2c => new Aria2cDownloader(download.RemoteId, download.Link, filePath, downloadPath),
+                Data.Enums.DownloadClient.Symlink => new SymlinkDownloader(download.Link, filePath),
                 _ => throw new Exception($"Unknown download client {Settings.Get.DownloadClient}")
             };
 
@@ -83,10 +78,9 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
                 await Downloader.Cancel();
             }
 
-            Error = $"An unexpected error occurred preparing download {_download.Link} for torrent {_torrent.RdName}: {ex.Message}";
             Finished = true;
 
-            return null;
+            throw new($"An unexpected error occurred preparing download {download.Link} for torrent {torrent.RdName}: {ex.Message}");
         }
     }
 

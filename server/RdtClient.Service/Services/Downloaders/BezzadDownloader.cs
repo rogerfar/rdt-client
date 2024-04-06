@@ -97,7 +97,7 @@ public class BezzadDownloader : IDownloader
         };
     }
 
-    public Task<String?> Download()
+    public Task<String> Download()
     {
         _logger.Debug($"Starting download of {_uri}, writing to path: {_filePath}");
 
@@ -108,7 +108,7 @@ public class BezzadDownloader : IDownloader
 
         _ = Task.Run(StartTimer);
 
-        return Task.FromResult<String?>(Guid.NewGuid().ToString());
+        return Task.FromResult(Guid.NewGuid().ToString());
     }
 
     public Task Cancel()

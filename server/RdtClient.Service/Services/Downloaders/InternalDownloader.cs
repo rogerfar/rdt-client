@@ -65,7 +65,7 @@ public class InternalDownloader : IDownloader
         };
     }
 
-    public async Task<String?> Download()
+    public async Task<String> Download()
     {
         _logger.Debug($"Starting download of {_uri}, writing to path: {_filePath}");
 

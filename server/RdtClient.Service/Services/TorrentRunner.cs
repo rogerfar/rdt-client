@@ -17,6 +17,9 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
     public static readonly ConcurrentDictionary<Guid, DownloadClient> ActiveDownloadClients = new();
     public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new();
 
+    private readonly Dictionary<Guid, String> _aggregatedDownloadResults = [];
+    private readonly Dictionary<Guid, String> _aggregatedDownloadErrors = [];
+
     private readonly HttpClient _httpClient = new()
     {
         Timeout = TimeSpan.FromSeconds(10)
@@ -37,13 +40,13 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
         }
 
         // When starting up reset any pending downloads or unpackings so that they are restarted.
-        var torrents1 = await torrents.Get();
+        var allTorrents = await torrents.Get();
             
-        torrents1 = torrents1.Where(m => m.Completed == null).ToList();
+        allTorrents = allTorrents.Where(m => m.Completed == null).ToList();
 
-        Log($"Found {torrents1.Count} not completed torrents");
+        Log($"Found {allTorrents.Count} not completed torrents");
 
-        foreach (var torrent in torrents1)
+        foreach (var torrent in allTorrents)
         {
             foreach (var download in torrent.Downloads)
             {
@@ -91,6 +94,16 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
         {
             logger.LogError("No DownloadPath set in settings");
             return;
+        }
+
+        if (Settings.Get.DownloadClient.Client == Data.Enums.DownloadClient.Symlink)
+        {
+            var rcloneMountPath = Settings.Get.DownloadClient.RcloneMountPath;
+
+            if (!Directory.Exists(rcloneMountPath))
+            {
+                throw new($"Rclone mount path ({rcloneMountPath}) was not found!");
+            }
         }
 
         var sw = new Stopwatch();
@@ -220,12 +233,12 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
             }
         }
 
-        var torrents1 = await torrents.Get();
+        var allTorrents = await torrents.Get();
 
         // Check for deleted torrents that are stuck in the ActiveDownloads or ActiveUnpacks
         foreach (var activeDownload in ActiveDownloadClients)
         {
-            var download = torrents1.SelectMany(m => m.Downloads).FirstOrDefault(m => m.DownloadId == activeDownload.Key);
+            var download = allTorrents.SelectMany(m => m.Downloads).FirstOrDefault(m => m.DownloadId == activeDownload.Key);
 
             if (download == null)
             {
@@ -237,7 +250,7 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
 
         foreach (var activeUnpacks in ActiveUnpackClients)
         {
-            var download = torrents1.SelectMany(m => m.Downloads).FirstOrDefault(m => m.DownloadId == activeUnpacks.Key);
+            var download = allTorrents.SelectMany(m => m.Downloads).FirstOrDefault(m => m.DownloadId == activeUnpacks.Key);
 
             if (download == null)
             {
@@ -248,7 +261,7 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
         }
 
         // Process torrent retries
-        foreach (var torrent in torrents1.Where(m => m.Retry != null))
+        foreach (var torrent in allTorrents.Where(m => m.Retry != null))
         {
             try
             {
@@ -271,7 +284,7 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
         }
 
         // Process torrent errors
-        foreach (var torrent in torrents1.Where(m => m.Error != null && m.DeleteOnError > 0))
+        foreach (var torrent in allTorrents.Where(m => m.Error != null && m.DeleteOnError > 0))
         {
             if (torrent.Completed == null)
             {
@@ -289,7 +302,7 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
         }
             
         // Process torrent lifetime
-        foreach (var torrent in torrents1.Where(m => m.Downloads.Count == 0 && m.Completed == null && m.Lifetime > 0))
+        foreach (var torrent in allTorrents.Where(m => m.Downloads.Count == 0 && m.Completed == null && m.Lifetime > 0))
         {
             if (torrent.Added.AddMinutes(torrent.Lifetime) > DateTime.UtcNow)
             {
@@ -302,16 +315,16 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
             await torrents.UpdateComplete(torrent.TorrentId, $"Torrent lifetime of {torrent.Lifetime} minutes reached", DateTimeOffset.UtcNow, false);
         }
 
-        torrents1 = await torrents.Get();
+        allTorrents = await torrents.Get();
 
-        torrents1 = torrents1.Where(m => m.Completed == null).ToList();
+        allTorrents = allTorrents.Where(m => m.Completed == null).ToList();
 
-        if (torrents1.Count > 0)
+        if (allTorrents.Count > 0)
         {
-            Log($"Processing {torrents1.Count} torrents");
+            Log($"Processing {allTorrents.Count} torrents");
         }
 
-        foreach (var torrent in torrents1)
+        foreach (var torrent in allTorrents)
         {
             try
             {
@@ -320,6 +333,9 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                                              .Where(m => m.Completed == null && m.DownloadQueued != null && m.DownloadStarted == null && m.Error == null)
                                              .OrderBy(m => m.DownloadQueued)
                                              .ToList();
+
+                _aggregatedDownloadResults.Clear();
+                _aggregatedDownloadErrors.Clear();
 
                 Log($"Currently {queuedDownloads.Count} queued downloads and {ActiveDownloadClients.Count} total active downloads", torrent);
 
@@ -343,10 +359,13 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
 
                     try
                     {
-                        Log($"Unrestricting links", download, torrent);
+                        if (download.Link == null)
+                        {
+                            Log($"Unrestricting links", download, torrent);
 
-                        var downloadLink = await torrents.UnrestrictLink(download.DownloadId);
-                        download.Link = downloadLink;
+                            var downloadLink = await torrents.UnrestrictLink(download.DownloadId);
+                            download.Link = downloadLink;
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -360,6 +379,11 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                         continue;
                     }
 
+                    Log($"Marking download as started", download, torrent);
+
+                    download.DownloadStarted = DateTime.UtcNow;
+                    await downloads.UpdateDownloadStarted(download.DownloadId, download.DownloadStarted);
+
                     var downloadPath = settingDownloadPath;
 
                     if (!String.IsNullOrWhiteSpace(torrent.Category))
@@ -372,28 +396,48 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                     // Start the download process
                     var downloadClient = new DownloadClient(download, torrent, downloadPath);
 
-                    Log($"Starting download", download, torrent);
-
-                    var remoteId = await downloadClient.Start();
-
-                    if (String.IsNullOrWhiteSpace(remoteId))
+                    if (ActiveDownloadClients.TryAdd(download.DownloadId, downloadClient))
                     {
-                        Log($"No ID received", download, torrent);
-                        continue;
+                        Log($"Starting download", download, torrent);
+
+                        try
+                        {
+                            var remoteId = await downloadClient.Start();
+
+                            if (String.IsNullOrWhiteSpace(remoteId))
+                            {
+                                throw new($"No remote ID received from download client");
+                            }
+
+                            Log($"Received ID {remoteId}", download, torrent);
+
+                            if (download.RemoteId != remoteId)
+                            {
+                                _aggregatedDownloadResults.Add(download.DownloadId, remoteId);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            LogError($"Unable to start download: {ex.Message}", download, torrent);
+                            _aggregatedDownloadErrors.Add(download.DownloadId, ex.Message);
+                        }
+
+                        Log($"Started download", download, torrent);
                     }
-
-                    Log($"Received ID {remoteId}", download, torrent);
-
-                    download.RemoteId = remoteId;
-                    await downloads.UpdateRemoteId(download.DownloadId, remoteId);
-
-                    Log($"Marking download as started", download, torrent);
-
-                    download.DownloadStarted = DateTime.UtcNow;
-                    await downloads.UpdateDownloadStarted(download.DownloadId, download.DownloadStarted);
-
-                    ActiveDownloadClients.TryAdd(download.DownloadId, downloadClient);
                 }
+
+                if (_aggregatedDownloadResults.Count > 0)
+                {
+                    await downloads.UpdateRemoteIds(_aggregatedDownloadResults);
+                }
+
+                if (_aggregatedDownloadErrors.Count > 0)
+                {
+                    await downloads.UpdateErrors(_aggregatedDownloadErrors);
+                }
+
+                _aggregatedDownloadResults.Clear();
+                _aggregatedDownloadErrors.Clear();
 
                 // Check if there are any unpacks that are queued and can be started.
                 var queuedUnpacks = torrent.Downloads
@@ -425,7 +469,8 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
 
                     var extension = Path.GetExtension(fileName);
 
-                    if (extension != ".rar" && extension != ".zip")
+                    if ((extension != ".rar" && extension != ".zip") ||
+                        torrent.DownloadClient == Data.Enums.DownloadClient.Symlink)
                     {
                         Log($"No need to unpack, setting it as unpacked", download, torrent);
 
