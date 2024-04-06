@@ -180,7 +180,7 @@ try
 
     app.MapControllers();
 
-    app.MapWhen(x => !x.Request.Path.StartsWithSegments("/api"), routeBuilder =>
+    app.UseWhen(x => !x.Request.Path.StartsWithSegments("/api"), routeBuilder =>
     {
         routeBuilder.UseSpaStaticFiles();
         routeBuilder.UseSpa(spa =>
