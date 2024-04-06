@@ -6,17 +6,10 @@ using Newtonsoft.Json;
 
 namespace RdtClient.Service.BackgroundServices;
 
-public class UpdateChecker : BackgroundService
+public class UpdateChecker(ILogger<UpdateChecker> logger) : BackgroundService
 {
     public static String? CurrentVersion { get; private set; }
     public static String? LatestVersion { get; private set; }
-
-    private readonly ILogger<UpdateChecker> _logger;
-
-    public UpdateChecker(ILogger<UpdateChecker> logger)
-    {
-        _logger = logger;
-    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -36,7 +29,7 @@ public class UpdateChecker : BackgroundService
 
         CurrentVersion = $"v{version[..version.LastIndexOf(".", StringComparison.Ordinal)]}";
 
-        _logger.LogInformation("UpdateChecker started, currently on version {CurrentVersion}.", CurrentVersion);
+        logger.LogInformation("UpdateChecker started, currently on version {CurrentVersion}.", CurrentVersion);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -57,26 +50,26 @@ public class UpdateChecker : BackgroundService
 
                 if (latestRelease == null)
                 {
-                    _logger.LogWarning($"Unable to find latest version on GitHub");
+                    logger.LogWarning($"Unable to find latest version on GitHub");
                     return;
                 }
 
                 if (latestRelease != CurrentVersion)
                 {
-                    _logger.LogInformation("New version found on GitHub: {latestRelease}", latestRelease);
+                    logger.LogInformation("New version found on GitHub: {latestRelease}", latestRelease);
                 }
 
                 LatestVersion = latestRelease;
             }
             catch (Exception ex)
             {
-                _logger.LogDebug(ex, "Unexpected error occurred while checking for updates. This error is safe to ignore.");
+                logger.LogDebug(ex, "Unexpected error occurred while checking for updates. This error is safe to ignore.");
             }
 
             await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
         }
 
-        _logger.LogInformation("UpdateChecker stopped.");
+        logger.LogInformation("UpdateChecker stopped.");
     }
 }
 

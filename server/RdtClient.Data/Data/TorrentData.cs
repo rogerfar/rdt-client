@@ -4,18 +4,11 @@ using RdtClient.Data.Models.Data;
 
 namespace RdtClient.Data.Data;
 
-public class TorrentData
+public class TorrentData(DataContext dataContext)
 {
     private static IList<Torrent>? _torrentCache;
 
     private static readonly SemaphoreSlim TorrentCacheLock = new(1, 1);
-
-    private readonly DataContext _dataContext;
-
-    public TorrentData(DataContext dataContext)
-    {
-        _dataContext = dataContext;
-    }
 
     public async Task<IList<Torrent>> Get()
     {
@@ -23,7 +16,7 @@ public class TorrentData
 
         try
         {
-            _torrentCache ??= await _dataContext.Torrents
+            _torrentCache ??= await dataContext.Torrents
                                                 .AsNoTracking()
                                                 .Include(m => m.Downloads)
                                                 .ToListAsync();
@@ -38,7 +31,7 @@ public class TorrentData
 
     public async Task<Torrent?> GetById(Guid torrentId)
     {
-        var dbTorrent = await _dataContext.Torrents
+        var dbTorrent = await dataContext.Torrents
                                           .AsNoTracking()
                                           .Include(m => m.Downloads)
                                           .FirstOrDefaultAsync(m => m.TorrentId == torrentId);
@@ -58,7 +51,7 @@ public class TorrentData
 
     public async Task<Torrent?> GetByHash(String hash)
     {
-        var dbTorrent = await _dataContext.Torrents
+        var dbTorrent = await dataContext.Torrents
                                           .AsNoTracking()
                                           .Include(m => m.Downloads)
                                           .FirstOrDefaultAsync(m => m.Hash.ToLower() == hash.ToLower());
@@ -107,9 +100,9 @@ public class TorrentData
             Lifetime = torrent.Lifetime
         };
 
-        await _dataContext.Torrents.AddAsync(newTorrent);
+        await dataContext.Torrents.AddAsync(newTorrent);
 
-        await _dataContext.SaveChangesAsync();
+        await dataContext.SaveChangesAsync();
 
         await VoidCache();
 
@@ -118,7 +111,7 @@ public class TorrentData
 
     public async Task UpdateRdData(Torrent torrent)
     {
-        var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrent.TorrentId);
+        var dbTorrent = await dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrent.TorrentId);
 
         if (dbTorrent == null)
         {
@@ -138,14 +131,14 @@ public class TorrentData
         dbTorrent.RdSeeders = torrent.RdSeeders;
         dbTorrent.RdFiles = torrent.RdFiles;
         
-        await _dataContext.SaveChangesAsync();
+        await dataContext.SaveChangesAsync();
 
         await VoidCache();
     }
 
     public async Task Update(Torrent torrent)
     {
-        var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrent.TorrentId);
+        var dbTorrent = await dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrent.TorrentId);
 
         if (dbTorrent == null)
         {
@@ -161,14 +154,14 @@ public class TorrentData
         dbTorrent.DeleteOnError = torrent.DeleteOnError;
         dbTorrent.Lifetime = torrent.Lifetime;
 
-        await _dataContext.SaveChangesAsync();
+        await dataContext.SaveChangesAsync();
 
         await VoidCache();
     }
 
     public async Task UpdateCategory(Guid torrentId, String? category)
     {
-        var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
+        var dbTorrent = await dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
 
         if (dbTorrent == null)
         {
@@ -177,14 +170,14 @@ public class TorrentData
 
         dbTorrent.Category = category;
 
-        await _dataContext.SaveChangesAsync();
+        await dataContext.SaveChangesAsync();
 
         await VoidCache();
     }
 
     public async Task UpdateComplete(Guid torrentId, String? error, DateTimeOffset? datetime, Boolean retry)
     {
-        var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
+        var dbTorrent = await dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
 
         if (dbTorrent == null)
         {
@@ -193,7 +186,7 @@ public class TorrentData
 
         if (String.IsNullOrWhiteSpace(error))
         {
-            var downloads = await _dataContext.Downloads.AsNoTracking().Where(m => m.TorrentId == torrentId).ToListAsync();
+            var downloads = await dataContext.Downloads.AsNoTracking().Where(m => m.TorrentId == torrentId).ToListAsync();
             var downloadWithErrors = downloads.Where(m => !String.IsNullOrWhiteSpace(m.Error)).ToList();
 
             if (downloadWithErrors.Any())
@@ -214,14 +207,14 @@ public class TorrentData
         dbTorrent.Completed = datetime;
         dbTorrent.Error = error;
 
-        await _dataContext.SaveChangesAsync();
+        await dataContext.SaveChangesAsync();
 
         await VoidCache();
     }
 
     public async Task UpdateFilesSelected(Guid torrentId, DateTimeOffset datetime)
     {
-        var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
+        var dbTorrent = await dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
 
         if (dbTorrent == null)
         {
@@ -230,14 +223,14 @@ public class TorrentData
 
         dbTorrent.FilesSelected = datetime;
 
-        await _dataContext.SaveChangesAsync();
+        await dataContext.SaveChangesAsync();
 
         await VoidCache();
     }
 
     public async Task UpdatePriority(Guid torrentId, Int32? priority)
     {
-        var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
+        var dbTorrent = await dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
 
         if (dbTorrent == null)
         {
@@ -246,14 +239,14 @@ public class TorrentData
 
         dbTorrent.Priority = priority;
 
-        await _dataContext.SaveChangesAsync();
+        await dataContext.SaveChangesAsync();
 
         await VoidCache();
     }
 
     public async Task UpdateRetry(Guid torrentId, DateTimeOffset? dateTime, Int32 retryCount)
     {
-        var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
+        var dbTorrent = await dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
 
         if (dbTorrent == null)
         {
@@ -263,14 +256,14 @@ public class TorrentData
         dbTorrent.RetryCount = retryCount;
         dbTorrent.Retry = dateTime;
 
-        await _dataContext.SaveChangesAsync();
+        await dataContext.SaveChangesAsync();
 
         await VoidCache();
     }
 
     public async Task UpdateError(Guid torrentId, String error)
     {
-        var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
+        var dbTorrent = await dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
 
         if (dbTorrent == null)
         {
@@ -279,23 +272,23 @@ public class TorrentData
 
         dbTorrent.Error = error;
 
-        await _dataContext.SaveChangesAsync();
+        await dataContext.SaveChangesAsync();
 
         await VoidCache();
     }
 
     public async Task Delete(Guid torrentId)
     {
-        var dbTorrent = await _dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
+        var dbTorrent = await dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
 
         if (dbTorrent == null)
         {
             return;
         }
 
-        _dataContext.Torrents.Remove(dbTorrent);
+        dataContext.Torrents.Remove(dbTorrent);
 
-        await _dataContext.SaveChangesAsync();
+        await dataContext.SaveChangesAsync();
 
         await VoidCache();
     }

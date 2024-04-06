@@ -9,17 +9,8 @@ using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
-public class AllDebridTorrentClient : ITorrentClient
+public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHttpClientFactory httpClientFactory) : ITorrentClient
 {
-    private readonly ILogger<AllDebridTorrentClient> _logger;
-    private readonly IHttpClientFactory _httpClientFactory;
-
-    public AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHttpClientFactory httpClientFactory)
-    {
-        _logger = logger;
-        _httpClientFactory = httpClientFactory;
-    }
-
     private AllDebridNETClient GetClient()
     {
         try
@@ -31,7 +22,7 @@ public class AllDebridTorrentClient : ITorrentClient
                 throw new Exception("All-Debrid API Key not set in the settings");
             }
 
-            var httpClient = _httpClientFactory.CreateClient();
+            var httpClient = httpClientFactory.CreateClient();
             httpClient.Timeout = TimeSpan.FromSeconds(10);
 
             var allDebridNetClient = new AllDebridNETClient("RealDebridClient", apiKey, httpClient);
@@ -40,13 +31,13 @@ public class AllDebridTorrentClient : ITorrentClient
         }
         catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
         {
-            _logger.LogError(ex, $"The connection to AllDebrid has timed out: {ex.Message}");
+            logger.LogError(ex, $"The connection to AllDebrid has timed out: {ex.Message}");
 
             throw;
         }
         catch (TaskCanceledException ex)
         {
-            _logger.LogError(ex, $"The connection to AllDebrid has timed out: {ex.Message}");
+            logger.LogError(ex, $"The connection to AllDebrid has timed out: {ex.Message}");
 
             throw; 
         }
@@ -375,6 +366,6 @@ public class AllDebridTorrentClient : ITorrentClient
             message = $"{message} {torrent.ToLog()}";
         }
 
-        _logger.LogDebug(message);
+        logger.LogDebug(message);
     }
 }

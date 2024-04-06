@@ -12,29 +12,15 @@ using RdtClient.Service.Services.Downloaders;
 
 namespace RdtClient.Service.Services;
 
-public class TorrentRunner
+public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Downloads downloads, RemoteService remoteService)
 {
     public static readonly ConcurrentDictionary<Guid, DownloadClient> ActiveDownloadClients = new();
     public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new();
 
-    private readonly ILogger<TorrentRunner> _logger;
-    private readonly Torrents _torrents;
-    private readonly Downloads _downloads;
-    private readonly RemoteService _remoteService;
-    private readonly HttpClient _httpClient;
-
-    public TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Downloads downloads, RemoteService remoteService)
+    private readonly HttpClient _httpClient = new()
     {
-        _logger = logger;
-        _torrents = torrents;
-        _downloads = downloads;
-        _remoteService = remoteService;
-
-        _httpClient = new HttpClient
-        {
-            Timeout = TimeSpan.FromSeconds(10)
-        };
-    }
+        Timeout = TimeSpan.FromSeconds(10)
+    };
 
     public async Task Initialize()
     {
@@ -51,13 +37,13 @@ public class TorrentRunner
         }
 
         // When starting up reset any pending downloads or unpackings so that they are restarted.
-        var torrents = await _torrents.Get();
+        var torrents1 = await torrents.Get();
             
-        torrents = torrents.Where(m => m.Completed == null).ToList();
+        torrents1 = torrents1.Where(m => m.Completed == null).ToList();
 
-        Log($"Found {torrents.Count} not completed torrents");
+        Log($"Found {torrents1.Count} not completed torrents");
 
-        foreach (var torrent in torrents)
+        foreach (var torrent in torrents1)
         {
             foreach (var download in torrent.Downloads)
             {
@@ -65,14 +51,14 @@ public class TorrentRunner
                 {
                     Log("Resetting download status", download, torrent);
 
-                    await _downloads.UpdateDownloadStarted(download.DownloadId, null);
+                    await downloads.UpdateDownloadStarted(download.DownloadId, null);
                 }
 
                 if (download.UnpackingQueued != null && download.UnpackingStarted != null && download.UnpackingFinished == null && download.Error == null)
                 {
                     Log("Resetting unpack status", download, torrent);
 
-                    await _downloads.UpdateUnpackingStarted(download.DownloadId, null);
+                    await downloads.UpdateUnpackingStarted(download.DownloadId, null);
                 }
             }
         }
@@ -103,7 +89,7 @@ public class TorrentRunner
         var settingDownloadPath = Settings.Get.DownloadClient.DownloadPath;
         if (String.IsNullOrWhiteSpace(settingDownloadPath))
         {
-            _logger.LogError("No DownloadPath set in settings");
+            logger.LogError("No DownloadPath set in settings");
             return;
         }
 
@@ -145,7 +131,7 @@ public class TorrentRunner
 
             foreach (var (downloadId, downloadClient) in completedActiveDownloads)
             {
-                var download = await _downloads.GetById(downloadId);
+                var download = await downloads.GetById(downloadId);
 
                 if (download == null)
                 {
@@ -168,23 +154,23 @@ public class TorrentRunner
                     {
                         Log($"Retrying download", download, download.Torrent);
 
-                        await _downloads.Reset(downloadId);
-                        await _downloads.UpdateRetryCount(downloadId, download.RetryCount + 1);
+                        await downloads.Reset(downloadId);
+                        await downloads.UpdateRetryCount(downloadId, download.RetryCount + 1);
                     }
                     else
                     {
                         Log($"Not retrying download", download, download.Torrent);
 
-                        await _downloads.UpdateError(downloadId, downloadClient.Error);
-                        await _downloads.UpdateCompleted(downloadId, DateTimeOffset.UtcNow);
+                        await downloads.UpdateError(downloadId, downloadClient.Error);
+                        await downloads.UpdateCompleted(downloadId, DateTimeOffset.UtcNow);
                     }
                 }
                 else
                 {
                     Log($"Download finished successfully", download, download.Torrent);
 
-                    await _downloads.UpdateDownloadFinished(downloadId, DateTimeOffset.UtcNow);
-                    await _downloads.UpdateUnpackingQueued(downloadId, DateTimeOffset.UtcNow);
+                    await downloads.UpdateDownloadFinished(downloadId, DateTimeOffset.UtcNow);
+                    await downloads.UpdateUnpackingQueued(downloadId, DateTimeOffset.UtcNow);
                 }
 
                 ActiveDownloadClients.TryRemove(downloadId, out _);
@@ -202,7 +188,7 @@ public class TorrentRunner
 
             foreach (var (downloadId, unpackClient) in completedUnpacks)
             {
-                var download = await _downloads.GetById(downloadId);
+                var download = await downloads.GetById(downloadId);
 
                 if (download == null)
                 {
@@ -217,15 +203,15 @@ public class TorrentRunner
                 {
                     Log($"Unpack reported an error: {unpackClient.Error}", download, download.Torrent);
                         
-                    await _downloads.UpdateError(downloadId, unpackClient.Error);
-                    await _downloads.UpdateCompleted(downloadId, DateTimeOffset.UtcNow);
+                    await downloads.UpdateError(downloadId, unpackClient.Error);
+                    await downloads.UpdateCompleted(downloadId, DateTimeOffset.UtcNow);
                 }
                 else
                 {
                     Log($"Unpack finished successfully", download, download.Torrent);
 
-                    await _downloads.UpdateUnpackingFinished(downloadId, DateTimeOffset.UtcNow);
-                    await _downloads.UpdateCompleted(downloadId, DateTimeOffset.UtcNow);
+                    await downloads.UpdateUnpackingFinished(downloadId, DateTimeOffset.UtcNow);
+                    await downloads.UpdateCompleted(downloadId, DateTimeOffset.UtcNow);
                 }
 
                 ActiveUnpackClients.TryRemove(downloadId, out _);
@@ -234,12 +220,12 @@ public class TorrentRunner
             }
         }
 
-        var torrents = await _torrents.Get();
+        var torrents1 = await torrents.Get();
 
         // Check for deleted torrents that are stuck in the ActiveDownloads or ActiveUnpacks
         foreach (var activeDownload in ActiveDownloadClients)
         {
-            var download = torrents.SelectMany(m => m.Downloads).FirstOrDefault(m => m.DownloadId == activeDownload.Key);
+            var download = torrents1.SelectMany(m => m.Downloads).FirstOrDefault(m => m.DownloadId == activeDownload.Key);
 
             if (download == null)
             {
@@ -251,7 +237,7 @@ public class TorrentRunner
 
         foreach (var activeUnpacks in ActiveUnpackClients)
         {
-            var download = torrents.SelectMany(m => m.Downloads).FirstOrDefault(m => m.DownloadId == activeUnpacks.Key);
+            var download = torrents1.SelectMany(m => m.Downloads).FirstOrDefault(m => m.DownloadId == activeUnpacks.Key);
 
             if (download == null)
             {
@@ -262,7 +248,7 @@ public class TorrentRunner
         }
 
         // Process torrent retries
-        foreach (var torrent in torrents.Where(m => m.Retry != null))
+        foreach (var torrent in torrents1.Where(m => m.Retry != null))
         {
             try
             {
@@ -270,22 +256,22 @@ public class TorrentRunner
 
                 if (torrent.RetryCount > torrent.TorrentRetryAttempts)
                 {
-                    await _torrents.UpdateRetry(torrent.TorrentId, null, torrent.RetryCount);
+                    await torrents.UpdateRetry(torrent.TorrentId, null, torrent.RetryCount);
                     Log($"Torrent reach max retry count");
                     continue;
                 }
 
-                await _torrents.RetryTorrent(torrent.TorrentId, torrent.RetryCount);
+                await torrents.RetryTorrent(torrent.TorrentId, torrent.RetryCount);
             }
             catch (Exception ex)
             {
-                await _torrents.UpdateRetry(torrent.TorrentId, null, torrent.RetryCount);
-                await _torrents.UpdateError(torrent.TorrentId, ex.Message);
+                await torrents.UpdateRetry(torrent.TorrentId, null, torrent.RetryCount);
+                await torrents.UpdateError(torrent.TorrentId, ex.Message);
             }
         }
 
         // Process torrent errors
-        foreach (var torrent in torrents.Where(m => m.Error != null && m.DeleteOnError > 0))
+        foreach (var torrent in torrents1.Where(m => m.Error != null && m.DeleteOnError > 0))
         {
             if (torrent.Completed == null)
             {
@@ -299,11 +285,11 @@ public class TorrentRunner
 
             Log($"Removing torrent because it has been {torrent.DeleteOnError} minutes in the error state", torrent);
 
-            await _torrents.Delete(torrent.TorrentId, true, true, true);
+            await torrents.Delete(torrent.TorrentId, true, true, true);
         }
             
         // Process torrent lifetime
-        foreach (var torrent in torrents.Where(m => m.Downloads.Count == 0 && m.Completed == null && m.Lifetime > 0))
+        foreach (var torrent in torrents1.Where(m => m.Downloads.Count == 0 && m.Completed == null && m.Lifetime > 0))
         {
             if (torrent.Added.AddMinutes(torrent.Lifetime) > DateTime.UtcNow)
             {
@@ -312,20 +298,20 @@ public class TorrentRunner
 
             Log($"Torrent has reached its {torrent.Lifetime} minutes lifetime, marking as error", torrent);
 
-            await _torrents.UpdateRetry(torrent.TorrentId, null, torrent.TorrentRetryAttempts);
-            await _torrents.UpdateComplete(torrent.TorrentId, $"Torrent lifetime of {torrent.Lifetime} minutes reached", DateTimeOffset.UtcNow, false);
+            await torrents.UpdateRetry(torrent.TorrentId, null, torrent.TorrentRetryAttempts);
+            await torrents.UpdateComplete(torrent.TorrentId, $"Torrent lifetime of {torrent.Lifetime} minutes reached", DateTimeOffset.UtcNow, false);
         }
 
-        torrents = await _torrents.Get();
+        torrents1 = await torrents.Get();
 
-        torrents = torrents.Where(m => m.Completed == null).ToList();
+        torrents1 = torrents1.Where(m => m.Completed == null).ToList();
 
-        if (torrents.Count > 0)
+        if (torrents1.Count > 0)
         {
-            Log($"Processing {torrents.Count} torrents");
+            Log($"Processing {torrents1.Count} torrents");
         }
 
-        foreach (var torrent in torrents)
+        foreach (var torrent in torrents1)
         {
             try
             {
@@ -359,15 +345,15 @@ public class TorrentRunner
                     {
                         Log($"Unrestricting links", download, torrent);
 
-                        var downloadLink = await _torrents.UnrestrictLink(download.DownloadId);
+                        var downloadLink = await torrents.UnrestrictLink(download.DownloadId);
                         download.Link = downloadLink;
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Cannot unrestrict link: {ex.Message}", ex.Message);
+                        logger.LogError(ex, "Cannot unrestrict link: {ex.Message}", ex.Message);
 
-                        await _downloads.UpdateError(download.DownloadId, ex.Message);
-                        await _downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
+                        await downloads.UpdateError(download.DownloadId, ex.Message);
+                        await downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
                         download.Error = ex.Message;
                         download.Completed = DateTimeOffset.UtcNow;
 
@@ -399,12 +385,12 @@ public class TorrentRunner
                     Log($"Received ID {remoteId}", download, torrent);
 
                     download.RemoteId = remoteId;
-                    await _downloads.UpdateRemoteId(download.DownloadId, remoteId);
+                    await downloads.UpdateRemoteId(download.DownloadId, remoteId);
 
                     Log($"Marking download as started", download, torrent);
 
                     download.DownloadStarted = DateTime.UtcNow;
-                    await _downloads.UpdateDownloadStarted(download.DownloadId, download.DownloadStarted);
+                    await downloads.UpdateDownloadStarted(download.DownloadId, download.DownloadStarted);
 
                     ActiveDownloadClients.TryAdd(download.DownloadId, downloadClient);
                 }
@@ -423,8 +409,8 @@ public class TorrentRunner
                     {
                         Log($"No download link found", download, torrent);
 
-                        await _downloads.UpdateError(download.DownloadId, "Download Link cannot be null");
-                        await _downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
+                        await downloads.UpdateError(download.DownloadId, "Download Link cannot be null");
+                        await downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
 
                         continue;
                     }
@@ -447,9 +433,9 @@ public class TorrentRunner
                         download.UnpackingFinished = DateTimeOffset.UtcNow;
                         download.Completed = DateTimeOffset.UtcNow;
 
-                        await _downloads.UpdateUnpackingStarted(download.DownloadId, download.UnpackingStarted);
-                        await _downloads.UpdateUnpackingFinished(download.DownloadId, download.UnpackingFinished);
-                        await _downloads.UpdateCompleted(download.DownloadId, download.Completed);
+                        await downloads.UpdateUnpackingStarted(download.DownloadId, download.UnpackingStarted);
+                        await downloads.UpdateUnpackingFinished(download.DownloadId, download.UnpackingFinished);
+                        await downloads.UpdateCompleted(download.DownloadId, download.Completed);
 
                         continue;
                     }
@@ -470,7 +456,7 @@ public class TorrentRunner
                     }
 
                     download.UnpackingStarted = DateTimeOffset.UtcNow;
-                    await _downloads.UpdateUnpackingStarted(download.DownloadId, download.UnpackingStarted);
+                    await downloads.UpdateUnpackingStarted(download.DownloadId, download.UnpackingStarted);
 
                     var downloadPath = settingDownloadPath;
 
@@ -502,7 +488,7 @@ public class TorrentRunner
 
                     Log($"Received RealDebrid error: {torrent.RdStatusRaw}, not processing further", torrent);
 
-                    await _torrents.UpdateComplete(torrent.TorrentId, $"Received RealDebrid error: {torrent.RdStatusRaw}.", DateTimeOffset.UtcNow, true);
+                    await torrents.UpdateComplete(torrent.TorrentId, $"Received RealDebrid error: {torrent.RdStatusRaw}.", DateTimeOffset.UtcNow, true);
 
                     continue;
                 }
@@ -514,9 +500,9 @@ public class TorrentRunner
                 {
                     Log($"Selecting files", torrent);
 
-                    await _torrents.SelectFiles(torrent.TorrentId);
+                    await torrents.SelectFiles(torrent.TorrentId);
 
-                    await _torrents.UpdateFilesSelected(torrent.TorrentId, DateTime.UtcNow);
+                    await torrents.UpdateFilesSelected(torrent.TorrentId, DateTime.UtcNow);
                 }
 
                 // Debrid provider finished downloading the torrent, process the file to host.
@@ -529,7 +515,7 @@ public class TorrentRunner
 
                         if (torrent.HostDownloadAction == TorrentHostDownloadAction.DownloadAll)
                         {
-                            await _torrents.CreateDownloads(torrent.TorrentId);
+                            await torrents.CreateDownloads(torrent.TorrentId);
                         }
                     }
                 }
@@ -554,15 +540,15 @@ public class TorrentRunner
                     {
                         Log($"All downloads complete, marking torrent as complete", torrent);
 
-                        await _torrents.UpdateComplete(torrent.TorrentId, null, DateTimeOffset.UtcNow, true);
+                        await torrents.UpdateComplete(torrent.TorrentId, null, DateTimeOffset.UtcNow, true);
 
                         try
                         {
-                            await _torrents.RunTorrentComplete(torrent.TorrentId);
+                            await torrents.RunTorrentComplete(torrent.TorrentId);
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex.Message, "Unable to run post process: {Message}", ex.Message);
+                            logger.LogError(ex.Message, "Unable to run post process: {Message}", ex.Message);
                         }
 
                         if (torrent.DownloadClient == Data.Enums.DownloadClient.Symlink)
@@ -586,17 +572,17 @@ public class TorrentRunner
                         {
                             case TorrentFinishedAction.RemoveAllTorrents:
                                 Log($"Removing torrents from debrid provider and RDT-Client, no files", torrent);
-                                await _torrents.Delete(torrent.TorrentId, true, true, false);
+                                await torrents.Delete(torrent.TorrentId, true, true, false);
 
                                 break;
                             case TorrentFinishedAction.RemoveRealDebrid:
                                 Log($"Removing torrents from debrid provider, no files", torrent);
-                                await _torrents.Delete(torrent.TorrentId, false, true, false);
+                                await torrents.Delete(torrent.TorrentId, false, true, false);
 
                                 break;
                             case TorrentFinishedAction.RemoveClient:
                                 Log($"Removing torrents from client, no files", torrent);
-                                await _torrents.Delete(torrent.TorrentId, true, false, false);
+                                await torrents.Delete(torrent.TorrentId, true, false, false);
 
                                 break;
                             case TorrentFinishedAction.None:
@@ -617,12 +603,12 @@ public class TorrentRunner
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message, "Torrent processing result in an unexpected exception: {Message}", ex.Message);
-                await _torrents.UpdateComplete(torrent.TorrentId, ex.Message, DateTimeOffset.UtcNow, true);
+                logger.LogError(ex.Message, "Torrent processing result in an unexpected exception: {Message}", ex.Message);
+                await torrents.UpdateComplete(torrent.TorrentId, ex.Message, DateTimeOffset.UtcNow, true);
             }
         }
             
-        await _remoteService.Update();
+        await remoteService.Update();
 
         sw.Stop();
 
@@ -644,7 +630,7 @@ public class TorrentRunner
             message = $"{message} {torrent.ToLog()}";
         }
 
-        _logger.LogDebug(message);
+        logger.LogDebug(message);
     }
 
     private void Log(String message, Torrent? torrent = null)
@@ -654,7 +640,7 @@ public class TorrentRunner
             message = $"{message} {torrent.ToLog()}";
         }
 
-        _logger.LogDebug(message);
+        logger.LogDebug(message);
     }
 
     private void LogError(String message, Download? download, Torrent? torrent)
@@ -669,6 +655,6 @@ public class TorrentRunner
             message = $"{message} {torrent.ToLog()}";
         }
 
-        _logger.LogError(message);
+        logger.LogError(message);
     }
 }

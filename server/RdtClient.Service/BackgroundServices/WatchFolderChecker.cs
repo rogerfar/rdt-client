@@ -8,18 +8,9 @@ using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace RdtClient.Service.BackgroundServices;
 
-public class WatchFolderChecker : BackgroundService
+public class WatchFolderChecker(ILogger<WatchFolderChecker> logger, IServiceProvider serviceProvider) : BackgroundService
 {
-    private readonly ILogger<WatchFolderChecker> _logger;
-    private readonly IServiceProvider _serviceProvider;
-
     private DateTime _prevCheck = DateTime.MinValue;
-
-    public WatchFolderChecker(ILogger<WatchFolderChecker> logger, IServiceProvider serviceProvider)
-    {
-        _logger = logger;
-        _serviceProvider = serviceProvider;
-    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -28,10 +19,10 @@ public class WatchFolderChecker : BackgroundService
             await Task.Delay(1000, stoppingToken);
         }
 
-        using var scope = _serviceProvider.CreateScope();
+        using var scope = serviceProvider.CreateScope();
         var torrentService = scope.ServiceProvider.GetRequiredService<Torrents>();
             
-        _logger.LogInformation("WatchFolderChecker started.");
+        logger.LogInformation("WatchFolderChecker started.");
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -84,7 +75,7 @@ public class WatchFolderChecker : BackgroundService
 
                     try
                     {
-                        _logger.Log(LogLevel.Debug, "Processing {torrentFile}", torrentFile);
+                        logger.Log(LogLevel.Debug, "Processing {torrentFile}", torrentFile);
 
                         var torrent = new Torrent
                         {
@@ -125,7 +116,7 @@ public class WatchFolderChecker : BackgroundService
 
                         File.Move(torrentFile, processedPath);
 
-                        _logger.Log(LogLevel.Debug, "Moved {torrentFile} to {processedPath}", torrentFile, processedPath);
+                        logger.Log(LogLevel.Debug, "Moved {torrentFile} to {processedPath}", torrentFile, processedPath);
                     }
                     catch
                     {
@@ -141,7 +132,7 @@ public class WatchFolderChecker : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unexpected error occurred in ProviderUpdater: {ex.Message}");
+                logger.LogError(ex, $"Unexpected error occurred in ProviderUpdater: {ex.Message}");
             }
         }
     }

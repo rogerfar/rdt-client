@@ -6,16 +6,9 @@ using Serilog.Events;
 
 namespace RdtClient.Service.Services;
 
-public class Settings
+public class Settings(SettingData settingData)
 {
     public static readonly LoggingLevelSwitch LoggingLevelSwitch = new(LogEventLevel.Debug);
-
-    private readonly SettingData _settingData;
-
-    public Settings(SettingData settingData)
-    {
-        _settingData = settingData;
-    }
 
     public static DbSettings Get => SettingData.Get;
 
@@ -36,22 +29,22 @@ public class Settings
 
     public async Task Update(IList<SettingProperty> settings)
     {
-        await _settingData.Update(settings);
+        await settingData.Update(settings);
     }
 
     public async Task Update(String settingId, Object? value)
     {
-        await _settingData.Update(settingId, value);
+        await settingData.Update(settingId, value);
     }
 
     public async Task Seed()
     {
-        await _settingData.Seed();
+        await settingData.Seed();
     }
 
     public async Task ResetCache()
     {
-        await _settingData.ResetCache();
+        await settingData.ResetCache();
 
         LoggingLevelSwitch.MinimumLevel = Settings.Get.General.LogLevel switch
         {

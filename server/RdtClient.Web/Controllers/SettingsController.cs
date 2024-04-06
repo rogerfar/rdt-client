@@ -13,17 +13,8 @@ namespace RdtClient.Web.Controllers;
 
 [Authorize(Policy = "AuthSetting")]
 [Route("Api/Settings")]
-public class SettingsController : Controller
+public class SettingsController(Settings settings, Torrents torrents) : Controller
 {
-    private readonly Settings _settings;
-    private readonly Torrents _torrents;
-
-    public SettingsController(Settings settings, Torrents torrents)
-    {
-        _settings = settings;
-        _torrents = torrents;
-    }
-
     [HttpGet]
     [Route("")]
     public ActionResult Get()
@@ -34,14 +25,14 @@ public class SettingsController : Controller
 
     [HttpPut]
     [Route("")]
-    public async Task<ActionResult> Update([FromBody] IList<SettingProperty>? settings)
+    public async Task<ActionResult> Update([FromBody] IList<SettingProperty>? settings1)
     {
-        if (settings == null)
+        if (settings1 == null)
         {
             return BadRequest();
         }
 
-        await _settings.Update(settings);
+        await settings.Update(settings1);
         
         return Ok();
     }
@@ -50,7 +41,7 @@ public class SettingsController : Controller
     [Route("Profile")]
     public async Task<ActionResult<Profile>> Profile()
     {
-        var profile = await _torrents.GetProfile();
+        var profile = await torrents.GetProfile();
         return Ok(profile);
     }
         

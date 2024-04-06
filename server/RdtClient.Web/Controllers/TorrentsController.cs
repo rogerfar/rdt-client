@@ -11,24 +11,13 @@ namespace RdtClient.Web.Controllers;
 
 [Authorize(Policy = "AuthSetting")]
 [Route("Api/Torrents")]
-public class TorrentsController : Controller
+public class TorrentsController(ILogger<TorrentsController> logger, Torrents torrents, TorrentRunner torrentRunner) : Controller
 {
-    private readonly TorrentRunner _torrentRunner;
-    private readonly ILogger<TorrentsController> _logger;
-    private readonly Torrents _torrents;
-
-    public TorrentsController(ILogger<TorrentsController> logger, Torrents torrents, TorrentRunner torrentRunner)
-    {
-        _logger = logger;
-        _torrents = torrents;
-        _torrentRunner = torrentRunner;
-    }
-
     [HttpGet]
     [Route("")]
     public async Task<ActionResult<IList<Torrent>>> GetAll()
     {
-        var results = await _torrents.Get();
+        var results = await torrents.Get();
 
         // Prevent infinite recursion when serializing
         foreach (var file in results.SelectMany(torrent => torrent.Downloads))
@@ -43,7 +32,7 @@ public class TorrentsController : Controller
     [Route("Get/{torrentId:guid}")]
     public async Task<ActionResult<Torrent>> GetById(Guid torrentId)
     {
-        var torrent = await _torrents.GetById(torrentId);
+        var torrent = await torrents.GetById(torrentId);
 
         if (torrent?.Downloads != null)
         {
@@ -64,7 +53,7 @@ public class TorrentsController : Controller
     [Route("Tick")]
     public async Task<ActionResult> Tick()
     {
-        await _torrentRunner.Tick();
+        await torrentRunner.Tick();
 
         return Ok();
     }
@@ -85,7 +74,7 @@ public class TorrentsController : Controller
             return BadRequest("Invalid Torrent");
         }
 
-        _logger.LogDebug($"Add file");
+        logger.LogDebug($"Add file");
 
         var fileStream = file.OpenReadStream();
 
@@ -95,7 +84,7 @@ public class TorrentsController : Controller
 
         var bytes = memoryStream.ToArray();
 
-        await _torrents.UploadFile(bytes, formData.Torrent);
+        await torrents.UploadFile(bytes, formData.Torrent);
 
         return Ok();
     }
@@ -119,9 +108,9 @@ public class TorrentsController : Controller
             return BadRequest("Invalid Torrent");
         }
 
-        _logger.LogDebug($"Add magnet");
+        logger.LogDebug($"Add magnet");
 
-        await _torrents.UploadMagnet(request.MagnetLink, request.Torrent);
+        await torrents.UploadMagnet(request.MagnetLink, request.Torrent);
 
         return Ok();
     }
@@ -145,7 +134,7 @@ public class TorrentsController : Controller
 
         var torrent = await MonoTorrent.Torrent.LoadAsync(bytes);
 
-        var result = await _torrents.GetAvailableFiles(torrent.InfoHash.ToHex());
+        var result = await torrents.GetAvailableFiles(torrent.InfoHash.ToHex());
 
         return Ok(result);
     }
@@ -161,7 +150,7 @@ public class TorrentsController : Controller
 
         var magnet = MagnetLink.Parse(request.MagnetLink);
 
-        var result = await _torrents.GetAvailableFiles(magnet.InfoHash.ToHex());
+        var result = await torrents.GetAvailableFiles(magnet.InfoHash.ToHex());
 
         return Ok(result);
     }
@@ -175,9 +164,9 @@ public class TorrentsController : Controller
             return BadRequest();
         }
 
-        _logger.LogDebug($"Delete {torrentId}");
+        logger.LogDebug($"Delete {torrentId}");
 
-        await _torrents.Delete(torrentId, request.DeleteData, request.DeleteRdTorrent, request.DeleteLocalFiles);
+        await torrents.Delete(torrentId, request.DeleteData, request.DeleteRdTorrent, request.DeleteLocalFiles);
 
         return Ok();
     }
@@ -186,10 +175,10 @@ public class TorrentsController : Controller
     [Route("Retry/{torrentId:guid}")]
     public async Task<ActionResult> Retry(Guid torrentId)
     {
-        _logger.LogDebug($"Retry {torrentId}");
+        logger.LogDebug($"Retry {torrentId}");
 
-        await _torrents.UpdateRetry(torrentId, DateTimeOffset.UtcNow, 0);
-        await _torrents.RetryTorrent(torrentId, 0);
+        await torrents.UpdateRetry(torrentId, DateTimeOffset.UtcNow, 0);
+        await torrents.RetryTorrent(torrentId, 0);
 
         return Ok();
     }
@@ -198,9 +187,9 @@ public class TorrentsController : Controller
     [Route("RetryDownload/{downloadId:guid}")]
     public async Task<ActionResult> RetryDownload(Guid downloadId)
     {
-        _logger.LogDebug($"Retry download {downloadId}");
+        logger.LogDebug($"Retry download {downloadId}");
 
-        await _torrents.RetryDownload(downloadId);
+        await torrents.RetryDownload(downloadId);
 
         return Ok();
     }
@@ -214,7 +203,7 @@ public class TorrentsController : Controller
             return BadRequest();
         }
 
-        await _torrents.Update(torrent);
+        await torrents.Update(torrent);
 
         return Ok();
     }
@@ -237,7 +226,7 @@ public class TorrentsController : Controller
         {
             var magnet = MagnetLink.Parse(request.MagnetLink);
 
-            availableFiles = await _torrents.GetAvailableFiles(magnet.InfoHash.ToHex());
+            availableFiles = await torrents.GetAvailableFiles(magnet.InfoHash.ToHex());
         }
         else if (file != null)
         {
@@ -251,7 +240,7 @@ public class TorrentsController : Controller
 
             var torrent = await MonoTorrent.Torrent.LoadAsync(bytes);
 
-            availableFiles = await _torrents.GetAvailableFiles(torrent.InfoHash.ToHex());
+            availableFiles = await torrents.GetAvailableFiles(torrent.InfoHash.ToHex());
         }
         else
         {

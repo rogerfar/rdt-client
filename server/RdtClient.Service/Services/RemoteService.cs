@@ -2,31 +2,22 @@
 
 namespace RdtClient.Service.Services;
 
-public class RemoteService 
+public class RemoteService(IHubContext<RdtHub> hub, Torrents torrents)
 {
-    private readonly IHubContext<RdtHub> _hub;
-    private readonly Torrents _torrents;
-
-    public RemoteService(IHubContext<RdtHub> hub, Torrents torrents)
-    {
-        _hub = hub;
-        _torrents = torrents;
-    }
-
     public async Task Update()
     {
-        var torrents = await _torrents.Get();
+        var torrents1 = await torrents.Get();
             
         // Prevent infinite recursion when serializing
-        foreach (var file in torrents.SelectMany(torrent => torrent.Downloads))
+        foreach (var file in torrents1.SelectMany(torrent => torrent.Downloads))
         {
             file.Torrent = null;
         }
             
-        await _hub.Clients.All.SendCoreAsync("update",
+        await hub.Clients.All.SendCoreAsync("update",
                                              new Object[]
                                              {
-                                                 torrents
+                                                 torrents1
                                              });
     }
 }

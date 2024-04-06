@@ -6,12 +6,8 @@ namespace RdtClient.Data.Data;
 
 #nullable disable
 
-public class DataContext : IdentityDbContext
+public class DataContext(DbContextOptions options) : IdentityDbContext(options)
 {
-    public DataContext(DbContextOptions options) : base(options)
-    {
-    }
-
     public DbSet<Download> Downloads { get; set; }
     public DbSet<Setting> Settings { get; set; }
     public DbSet<Torrent> Torrents { get; set; }

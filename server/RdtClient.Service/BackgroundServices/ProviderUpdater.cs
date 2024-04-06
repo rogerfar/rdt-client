@@ -5,18 +5,9 @@ using RdtClient.Service.Services;
 
 namespace RdtClient.Service.BackgroundServices;
 
-public class ProviderUpdater : BackgroundService
+public class ProviderUpdater(ILogger<TaskRunner> logger, IServiceProvider serviceProvider) : BackgroundService
 {
-    private readonly ILogger<TaskRunner> _logger;
-    private readonly IServiceProvider _serviceProvider;
-
     private static DateTime _nextUpdate = DateTime.UtcNow;
-    
-    public ProviderUpdater(ILogger<TaskRunner> logger, IServiceProvider serviceProvider)
-    {
-        _logger = logger;
-        _serviceProvider = serviceProvider;
-    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -25,10 +16,10 @@ public class ProviderUpdater : BackgroundService
             await Task.Delay(1000, stoppingToken);
         }
 
-        using var scope = _serviceProvider.CreateScope();
+        using var scope = serviceProvider.CreateScope();
         var torrentService = scope.ServiceProvider.GetRequiredService<Torrents>();
             
-        _logger.LogInformation("ProviderUpdater started.");
+        logger.LogInformation("ProviderUpdater started.");
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -38,7 +29,7 @@ public class ProviderUpdater : BackgroundService
                 
                 if (_nextUpdate < DateTime.UtcNow && ((torrents.Count > 0 && !Settings.Get.Provider.AutoImport) || Settings.Get.Provider.AutoImport))
                 {
-                    _logger.LogDebug($"Updating torrent info from debrid provider");
+                    logger.LogDebug($"Updating torrent info from debrid provider");
                     
                     var updateTime = Settings.Get.Provider.CheckInterval * 3;
 
@@ -61,17 +52,17 @@ public class ProviderUpdater : BackgroundService
 
                     await torrentService.UpdateRdData();
 
-                    _logger.LogDebug($"Finished updating torrent info from debrid provider, next update in {updateTime} seconds");
+                    logger.LogDebug($"Finished updating torrent info from debrid provider, next update in {updateTime} seconds");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unexpected error occurred in ProviderUpdater: {ex.Message}");
+                logger.LogError(ex, $"Unexpected error occurred in ProviderUpdater: {ex.Message}");
             }
 
             await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
         }
 
-        _logger.LogInformation("ProviderUpdater stopped.");
+        logger.LogInformation("ProviderUpdater stopped.");
     }
 }

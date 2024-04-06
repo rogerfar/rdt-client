@@ -3,17 +3,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace RdtClient.Data.Data;
 
-public class UserData
+public class UserData(DataContext dataContext)
 {
-    private readonly DataContext _dataContext;
-
-    public UserData(DataContext dataContext)
-    {
-        _dataContext = dataContext;
-    }
-
     public async Task<IdentityUser?> GetUser()
     {
-        return await _dataContext.Users.OrderBy(m => m.Id).FirstOrDefaultAsync();
+        return await dataContext.Users.OrderBy(m => m.Id).FirstOrDefaultAsync();
     }
 }

@@ -3,16 +3,9 @@ using Microsoft.AspNetCore.Http;
 
 namespace RdtClient.Service.Middleware;
 
-public class BaseHrefMiddleware
+public class BaseHrefMiddleware(RequestDelegate next, String basePath)
 {
-    private readonly RequestDelegate _next;
-    private readonly String _basePath;
-
-    public BaseHrefMiddleware(RequestDelegate next, String basePath)
-    {
-        _next = next;
-        _basePath = $"/{basePath.TrimStart('/').TrimEnd('/')}/";
-    }
+    private readonly String _basePath = $"/{basePath.TrimStart('/').TrimEnd('/')}/";
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -24,7 +17,7 @@ public class BaseHrefMiddleware
 
             context.Response.Body = newBody;
 
-            await _next(context);
+            await next(context);
 
             context.Response.Body = originalBody;
             newBody.Seek(0, SeekOrigin.Begin);

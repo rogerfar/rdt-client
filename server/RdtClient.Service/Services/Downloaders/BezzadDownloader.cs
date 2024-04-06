@@ -22,6 +22,7 @@ public class BezzadDownloader : IDownloader
     public BezzadDownloader(String uri, String filePath)
     {
         _logger = Log.ForContext<BezzadDownloader>();
+        _logger.Debug($"Instantiated new Bezzad Downloader for URI {uri} to filePath {filePath}");
 
         _uri = uri;
         _filePath = filePath;

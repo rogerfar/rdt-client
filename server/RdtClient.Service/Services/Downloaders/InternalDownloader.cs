@@ -22,6 +22,7 @@ public class InternalDownloader : IDownloader
     public InternalDownloader(String uri, String filePath)
     {
         _logger = Log.ForContext<InternalDownloader>();
+        _logger.Debug($"Instantiated new Internal Downloader for URI {uri} to filePath {filePath}");
 
         _uri = uri;
         _filePath = filePath;

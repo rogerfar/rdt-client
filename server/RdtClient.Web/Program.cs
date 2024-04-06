@@ -68,13 +68,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
            options.SlidingExpiration = true;
        });
 
-builder.Services.AddAuthorization( options => 
-{ 
-    options.AddPolicy("AuthSetting",
-                      policyCorrectUser =>
-                      {
-                          policyCorrectUser.Requirements.Add(new AuthSettingRequirement());
-                      }); 
+
+builder.Services.AddAuthorizationBuilder().AddPolicy("AuthSetting", policyCorrectUser =>
+{
+    policyCorrectUser.Requirements.Add(new AuthSettingRequirement());
 });
 
 
@@ -178,12 +175,10 @@ try
     app.UseAuthentication();
 
     app.UseAuthorization();
-            
-    app.UseEndpoints(endpoints =>
-    {
-        endpoints.MapHub<RdtHub>("/hub");
-        endpoints.MapControllers();
-    });
+
+    app.MapHub<RdtHub>("/hub");
+
+    app.MapControllers();
 
     app.MapWhen(x => !x.Request.Path.StartsWithSegments("/api"), routeBuilder =>
     {

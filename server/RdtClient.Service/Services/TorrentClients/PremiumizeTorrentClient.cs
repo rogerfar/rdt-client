@@ -8,17 +8,8 @@ using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
-public class PremiumizeTorrentClient : ITorrentClient
+public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IHttpClientFactory httpClientFactory) : ITorrentClient
 {
-    private readonly ILogger<PremiumizeTorrentClient> _logger;
-    private readonly IHttpClientFactory _httpClientFactory;
-
-    public PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IHttpClientFactory httpClientFactory)
-    {
-        _logger = logger;
-        _httpClientFactory = httpClientFactory;
-    }
-
     private PremiumizeNETClient GetClient()
     {
         try
@@ -30,7 +21,7 @@ public class PremiumizeTorrentClient : ITorrentClient
                 throw new Exception("Premiumize API Key not set in the settings");
             }
 
-            var httpClient = _httpClientFactory.CreateClient();
+            var httpClient = httpClientFactory.CreateClient();
             httpClient.Timeout = TimeSpan.FromSeconds(10);
 
             var premiumizeNetClient = new PremiumizeNETClient(apiKey, httpClient);
@@ -39,13 +30,13 @@ public class PremiumizeTorrentClient : ITorrentClient
         }
         catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
         {
-            _logger.LogError(ex, $"The connection to Premiumize has timed out: {ex.Message}");
+            logger.LogError(ex, $"The connection to Premiumize has timed out: {ex.Message}");
 
             throw;
         }
         catch (TaskCanceledException ex)
         {
-            _logger.LogError(ex, $"The connection to Premiumize has timed out: {ex.Message}");
+            logger.LogError(ex, $"The connection to Premiumize has timed out: {ex.Message}");
 
             throw; 
         }
@@ -329,6 +320,6 @@ public class PremiumizeTorrentClient : ITorrentClient
             message = $"{message} {torrent.ToLog()}";
         }
 
-        _logger.LogDebug(message);
+        logger.LogDebug(message);
     }
 }

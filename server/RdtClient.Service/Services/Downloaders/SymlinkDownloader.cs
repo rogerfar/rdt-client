@@ -17,6 +17,7 @@ public class SymlinkDownloader : IDownloader
     public SymlinkDownloader(String uri, String filePath)
     {
         _logger = Log.ForContext<SymlinkDownloader>();
+        _logger.Debug($"Instantiated new Symlink Downloader for URI {uri} to filePath {filePath}");
 
         _uri = uri;
         _filePath = filePath;
@@ -38,13 +39,13 @@ public class SymlinkDownloader : IDownloader
         _logger.Debug($"Searching {Settings.Get.DownloadClient.RcloneMountPath} for {fileName}");
 
         // Recursively search for the fileName in the rclone mount location.
-        var foundFiles = Directory.GetFiles(Settings.Get.DownloadClient.RcloneMountPath, fileName, SearchOption.AllDirectories);
+        var foundFiles = Directory.GetFiles(Settings.Get.DownloadClient.RcloneMountPath, fileName, SearchOption.AllDirectories).ToList();
 
-        if (foundFiles.Any())
+        if (foundFiles.Count > 0)
         {
-            if (foundFiles.Length > 1)
+            if (foundFiles.Count > 1)
             {
-                _logger.Warning($"Found {foundFiles.Length} files named {fileName}");
+                _logger.Warning($"Found {foundFiles.Count} files named {fileName}");
             }
 
             // Assume first matching filename is the one we want.

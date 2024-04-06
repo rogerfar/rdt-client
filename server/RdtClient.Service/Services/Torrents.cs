@@ -16,17 +16,15 @@ using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services;
 
-public class Torrents
+public class Torrents(
+    ILogger<Torrents> logger,
+    TorrentData torrentData,
+    Downloads downloads,
+    AllDebridTorrentClient allDebridTorrentClient,
+    PremiumizeTorrentClient premiumizeTorrentClient,
+    RealDebridTorrentClient realDebridTorrentClient)
 {
     private static readonly SemaphoreSlim RealDebridUpdateLock = new(1, 1);
-
-    private readonly ILogger<Torrents> _logger;
-    private readonly TorrentData _torrentData;
-    private readonly Downloads _downloads;
-
-    private readonly AllDebridTorrentClient _allDebridTorrentClient;
-    private readonly PremiumizeTorrentClient _premiumizeTorrentClient;
-    private readonly RealDebridTorrentClient _realDebridTorrentClient;
 
     private ITorrentClient TorrentClient
     {
@@ -34,9 +32,9 @@ public class Torrents
         {
             return Settings.Get.Provider.Provider switch
             {
-                Provider.Premiumize => _premiumizeTorrentClient,
-                Provider.RealDebrid => _realDebridTorrentClient,
-                Provider.AllDebrid => _allDebridTorrentClient,
+                Provider.Premiumize => premiumizeTorrentClient,
+                Provider.RealDebrid => realDebridTorrentClient,
+                Provider.AllDebrid => allDebridTorrentClient,
                 _ => throw new Exception("Invalid Provider")
             };
         }
@@ -44,24 +42,9 @@ public class Torrents
 
     private static readonly SemaphoreSlim TorrentResetLock = new(1, 1);
 
-    public Torrents(ILogger<Torrents> logger,
-                    TorrentData torrentData, 
-                    Downloads downloads,
-                    AllDebridTorrentClient allDebridTorrentClient,
-                    PremiumizeTorrentClient premiumizeTorrentClient,
-                    RealDebridTorrentClient realDebridTorrentClient)
-    {
-        _logger = logger;
-        _torrentData = torrentData;
-        _downloads = downloads;
-        _allDebridTorrentClient = allDebridTorrentClient;
-        _premiumizeTorrentClient = premiumizeTorrentClient;
-        _realDebridTorrentClient = realDebridTorrentClient;
-    }
-
     public async Task<IList<Torrent>> Get()
     {
-        var torrents = await _torrentData.Get();
+        var torrents = await torrentData.Get();
 
         foreach (var torrent in torrents)
         {
@@ -87,7 +70,7 @@ public class Torrents
 
     public async Task<Torrent?> GetByHash(String hash)
     {
-        var torrent = await _torrentData.GetByHash(hash);
+        var torrent = await torrentData.GetByHash(hash);
 
         if (torrent != null)
         {
@@ -99,7 +82,7 @@ public class Torrents
 
     public async Task UpdateCategory(String hash, String? category)
     {
-        var torrent = await _torrentData.GetByHash(hash);
+        var torrent = await torrentData.GetByHash(hash);
 
         if (torrent == null)
         {
@@ -108,7 +91,7 @@ public class Torrents
 
         Log($"Update category to {category}", torrent);
 
-        await _torrentData.UpdateCategory(torrent.TorrentId, category);
+        await torrentData.UpdateCategory(torrent.TorrentId, category);
     }
 
     public async Task<Torrent> UploadMagnet(String magnetLink, Torrent torrent)
@@ -121,7 +104,7 @@ public class Torrents
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ex.Message}, trying to parse {magnetLink}", ex.Message, magnetLink);
+            logger.LogError(ex, "{ex.Message}, trying to parse {magnetLink}", ex.Message, magnetLink);
             throw new Exception($"{ex.Message}, trying to parse {magnetLink}");
         }
 
@@ -153,7 +136,7 @@ public class Torrents
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unable to create torrent blackhole directory: {Settings.Get.General.CopyAddedTorrents}: {ex.Message}");
+                logger.LogError(ex, $"Unable to create torrent blackhole directory: {Settings.Get.General.CopyAddedTorrents}: {ex.Message}");
             }
         }
 
@@ -165,7 +148,7 @@ public class Torrents
         MonoTorrent.Torrent monoTorrent;
 
         var fileAsBase64 = Convert.ToBase64String(bytes);
-        _logger.LogDebug($"bytes {bytes}");
+        logger.LogDebug($"bytes {bytes}");
 
         try
         {
@@ -204,7 +187,7 @@ public class Torrents
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unable to create torrent blackhole directory: {Settings.Get.General.CopyAddedTorrents}: {ex.Message}");
+                logger.LogError(ex, $"Unable to create torrent blackhole directory: {Settings.Get.General.CopyAddedTorrents}: {ex.Message}");
             }
         }
 
@@ -249,11 +232,11 @@ public class Torrents
         foreach (var downloadLink in downloadLinks)
         {
             // Make sure downloads don't get added multiple times
-            var downloadExists = await _downloads.Get(torrent.TorrentId, downloadLink);
+            var downloadExists = await downloads.Get(torrent.TorrentId, downloadLink);
 
             if (downloadExists == null && !String.IsNullOrWhiteSpace(downloadLink))
             {
-                await _downloads.Add(torrent.TorrentId, downloadLink);
+                await downloads.Add(torrent.TorrentId, downloadLink);
             }
         }
     }
@@ -314,8 +297,8 @@ public class Torrents
         {
             Log($"Deleting RdtClient data", torrent);
 
-            await _downloads.DeleteForTorrent(torrent.TorrentId);
-            await _torrentData.Delete(torrentId);
+            await downloads.DeleteForTorrent(torrent.TorrentId);
+            await torrentData.Delete(torrentId);
         }
 
         if (deleteRdTorrent && torrent.RdId != null)
@@ -369,7 +352,7 @@ public class Torrents
 
     public async Task<String> UnrestrictLink(Guid downloadId)
     {
-        var download = await _downloads.GetById(downloadId);
+        var download = await downloads.GetById(downloadId);
 
         if (download == null)
         {
@@ -380,7 +363,7 @@ public class Torrents
 
         var unrestrictedLink = await TorrentClient.Unrestrict(download.Path);
 
-        await _downloads.UpdateUnrestrictedLink(downloadId, unrestrictedLink);
+        await downloads.UpdateUnrestrictedLink(downloadId, unrestrictedLink);
 
         return unrestrictedLink;
     }
@@ -440,7 +423,7 @@ public class Torrents
                         continue;
                     }
 
-                    torrent = await _torrentData.Add(rdTorrent.Id, rdTorrent.Hash, null, false, Settings.Get.DownloadClient.Client, newTorrent);
+                    torrent = await torrentData.Add(rdTorrent.Id, rdTorrent.Hash, null, false, Settings.Get.DownloadClient.Client, newTorrent);
 
                     await UpdateTorrentClientData(torrent, rdTorrent);
                 }
@@ -472,7 +455,7 @@ public class Torrents
 
         try
         {
-            var torrent = await _torrentData.GetById(torrentId);
+            var torrent = await torrentData.GetById(torrentId);
 
             if (torrent?.Retry == null)
             {
@@ -486,8 +469,8 @@ public class Torrents
 
             foreach (var download in torrent.Downloads)
             {
-                await _downloads.UpdateError(download.DownloadId, null);
-                await _downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
+                await downloads.UpdateError(download.DownloadId, null);
+                await downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
             }
 
             foreach (var download in torrent.Downloads)
@@ -527,7 +510,7 @@ public class Torrents
                 newTorrent = await UploadMagnet(torrent.FileOrMagnet, torrent);
             }
 
-            await _torrentData.UpdateRetry(newTorrent.TorrentId, null, retryCount);
+            await torrentData.UpdateRetry(newTorrent.TorrentId, null, retryCount);
         }
         finally
         {
@@ -537,7 +520,7 @@ public class Torrents
 
     public async Task RetryDownload(Guid downloadId)
     {
-        var download = await _downloads.GetById(downloadId);
+        var download = await downloads.GetById(downloadId);
 
         if (download == null)
         {
@@ -573,46 +556,46 @@ public class Torrents
 
         Log($"Resetting", download, download.Torrent);
 
-        await _downloads.Reset(downloadId);
+        await downloads.Reset(downloadId);
 
-        await _torrentData.UpdateComplete(download.TorrentId, null, null, false);
+        await torrentData.UpdateComplete(download.TorrentId, null, null, false);
     }
         
     public async Task UpdateComplete(Guid torrentId, String? error, DateTimeOffset datetime, Boolean retry)
     {
-        await _torrentData.UpdateComplete(torrentId, error, datetime, retry);
+        await torrentData.UpdateComplete(torrentId, error, datetime, retry);
     }
 
     public async Task UpdateFilesSelected(Guid torrentId, DateTimeOffset datetime)
     {
-        await _torrentData.UpdateFilesSelected(torrentId, datetime);
+        await torrentData.UpdateFilesSelected(torrentId, datetime);
     }
 
     public async Task UpdatePriority(String hash, Int32 priority)
     {
-        var torrent = await _torrentData.GetByHash(hash);
+        var torrent = await torrentData.GetByHash(hash);
 
         if (torrent == null)
         {
             return;
         }
 
-        await _torrentData.UpdatePriority(torrent.TorrentId, priority);
+        await torrentData.UpdatePriority(torrent.TorrentId, priority);
     }
 
     public async Task UpdateRetry(Guid torrentId, DateTimeOffset? datetime, Int32 retry)
     {
-        await _torrentData.UpdateRetry(torrentId, datetime, retry);
+        await torrentData.UpdateRetry(torrentId, datetime, retry);
     }
 
     public async Task UpdateError(Guid torrentId, String error)
     {
-        await _torrentData.UpdateError(torrentId, error);
+        await torrentData.UpdateError(torrentId, error);
     }
 
     public async Task<Torrent?> GetById(Guid torrentId)
     {
-        var torrent = await _torrentData.GetById(torrentId);
+        var torrent = await torrentData.GetById(torrentId);
 
         if (torrent == null)
         {
@@ -662,14 +645,14 @@ public class Torrents
             
         try
         {
-            var existingTorrent = await _torrentData.GetByHash(infoHash);
+            var existingTorrent = await torrentData.GetByHash(infoHash);
 
             if (existingTorrent != null)
             {
                 return existingTorrent;
             }
 
-            var newTorrent = await _torrentData.Add(rdTorrentId,
+            var newTorrent = await torrentData.Add(rdTorrentId,
                                                     infoHash,
                                                     fileOrMagnetContents,
                                                     isFile,
@@ -688,7 +671,7 @@ public class Torrents
 
     public async Task Update(Torrent torrent)
     {
-        await _torrentData.Update(torrent);
+        await torrentData.Update(torrent);
     }
 
     public async Task RunTorrentComplete(Guid torrentId)
@@ -698,14 +681,14 @@ public class Torrents
             return;
         }
 
-        var torrent = await _torrentData.GetById(torrentId);
+        var torrent = await torrentData.GetById(torrentId);
 
         if (torrent == null)
         {
             throw new Exception($"Cannot find Torrent with ID {torrentId}");
         }
 
-        var downloads = await _downloads.GetForTorrent(torrentId);
+        var downloads1 = await downloads.GetForTorrent(torrentId);
 
         var fileName = Settings.Get.General.RunOnTorrentCompleteFileName;
         var arguments = Settings.Get.General.RunOnTorrentCompleteArguments ?? "";
@@ -729,7 +712,7 @@ public class Torrents
         arguments = arguments.Replace("%F", $"\"{filePath}\"");
         arguments = arguments.Replace("%R", $"\"{downloadPath}\"");
         arguments = arguments.Replace("%D", $"\"{torrentPath}\"");
-        arguments = arguments.Replace("%C", downloads.Count.ToString(CultureInfo.InvariantCulture).Replace(",", "").Replace(".", ""));
+        arguments = arguments.Replace("%C", downloads1.Count.ToString(CultureInfo.InvariantCulture).Replace(",", "").Replace(".", ""));
         arguments = arguments.Replace("%Z", torrent.RdSize?.ToString(CultureInfo.InvariantCulture).Replace(",", "").Replace(".", ""));
         arguments = arguments.Replace("%I", torrent.Hash);
 
@@ -811,7 +794,7 @@ public class Torrents
 
             if (originalTorrent != newTorrent)
             {
-                await _torrentData.UpdateRdData(torrent);
+                await torrentData.UpdateRdData(torrent);
             }
         }
         catch
@@ -832,7 +815,7 @@ public class Torrents
             message = $"{message} {torrent.ToLog()}";
         }
 
-        _logger.LogDebug(message);
+        logger.LogDebug(message);
     }
 
     private void Log(String message, Torrent? torrent = null)
@@ -842,6 +825,6 @@ public class Torrents
             message = $"{message} {torrent.ToLog()}";
         }
 
-        _logger.LogDebug(message);
+        logger.LogDebug(message);
     }
 }

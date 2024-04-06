@@ -5,37 +5,22 @@ using RdtClient.Data.Models.QBittorrent;
 
 namespace RdtClient.Service.Services;
 
-public class QBittorrent
+public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authentication authentication, Torrents torrents, Downloads downloads)
 {
-    private readonly Authentication _authentication;
-    private readonly ILogger<QBittorrent> _logger;
-    private readonly Settings _settings;
-    private readonly Torrents _torrents;
-    private readonly Downloads _downloads;
-
-    public QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authentication authentication, Torrents torrents, Downloads downloads)
-    {
-        _logger = logger;
-        _settings = settings;
-        _authentication = authentication;
-        _torrents = torrents;
-        _downloads = downloads;
-    }
-
     public async Task<Boolean> AuthLogin(String userName, String password)
     {
-        _logger.LogDebug("Auth login");
+        logger.LogDebug("Auth login");
 
-        var login = await _authentication.Login(userName, password);
+        var login = await authentication.Login(userName, password);
 
         return login.Succeeded;
     }
 
     public async Task AuthLogout()
     {
-        _logger.LogDebug("Auth logout");
+        logger.LogDebug("Auth logout");
 
-        await _authentication.Logout();
+        await authentication.Logout();
     }
 
     public async Task<AppPreferences> AppPreferences()
@@ -189,7 +174,7 @@ public class QBittorrent
         preferences.SavePath = savePath;
         preferences.TempPath = $"{savePath}temp{Path.DirectorySeparatorChar}";
 
-        var user = await _authentication.GetUser();
+        var user = await authentication.GetUser();
 
         if (user != null)
         {
@@ -205,13 +190,13 @@ public class QBittorrent
 
         var results = new List<TorrentInfo>();
 
-        var torrents = await _torrents.Get();
+        var torrents1 = await torrents.Get();
 
         var prio = 0;
 
         Decimal? downloadProgress = 0;
 
-        foreach (var torrent in torrents)
+        foreach (var torrent in torrents1)
         {
             var downloadPath = savePath;
 
@@ -312,7 +297,7 @@ public class QBittorrent
     {
         var results = new List<TorrentFileItem>();
 
-        var torrent = await _torrents.GetByHash(hash);
+        var torrent = await torrents.GetByHash(hash);
 
         if (torrent == null)
         {
@@ -336,7 +321,7 @@ public class QBittorrent
     {
         var savePath = Settings.AppDefaultSavePath;
 
-        var torrent = await _torrents.GetByHash(hash);
+        var torrent = await torrents.GetByHash(hash);
 
         if (torrent == null)
         {
@@ -403,14 +388,14 @@ public class QBittorrent
     {
         if (deleteFiles)
         {
-            _logger.LogDebug($"Delete {hash}, with files");
+            logger.LogDebug($"Delete {hash}, with files");
         }
         else
         {
-            _logger.LogDebug($"Delete {hash}, no files");
+            logger.LogDebug($"Delete {hash}, no files");
         }
 
-        var torrent = await _torrents.GetByHash(hash);
+        var torrent = await torrents.GetByHash(hash);
 
         if (torrent == null)
         {
@@ -420,26 +405,26 @@ public class QBittorrent
         switch (Settings.Get.Integrations.Default.FinishedAction)
         {
             case TorrentFinishedAction.RemoveAllTorrents:
-                _logger.LogDebug("Removing torrents from debrid provider and RDT-Client, no files");
-                await _torrents.Delete(torrent.TorrentId, true, true, deleteFiles);
+                logger.LogDebug("Removing torrents from debrid provider and RDT-Client, no files");
+                await torrents.Delete(torrent.TorrentId, true, true, deleteFiles);
 
                 break;
             case TorrentFinishedAction.RemoveRealDebrid:
-                _logger.LogDebug("Removing torrents from debrid provider, no files");
-                await _torrents.Delete(torrent.TorrentId, false, true, deleteFiles);
+                logger.LogDebug("Removing torrents from debrid provider, no files");
+                await torrents.Delete(torrent.TorrentId, false, true, deleteFiles);
 
                 break;
             case TorrentFinishedAction.RemoveClient:
-                _logger.LogDebug("Removing torrents from client, no files");
-                await _torrents.Delete(torrent.TorrentId, true, false, deleteFiles);
+                logger.LogDebug("Removing torrents from client, no files");
+                await torrents.Delete(torrent.TorrentId, true, false, deleteFiles);
 
                 break;
             case TorrentFinishedAction.None:
-                _logger.LogDebug("Not removing torrents or files");
+                logger.LogDebug("Not removing torrents or files");
 
                 break;
             default:
-                _logger.LogDebug($"Invalid torrent FinishedAction {torrent.FinishedAction}", torrent);
+                logger.LogDebug($"Invalid torrent FinishedAction {torrent.FinishedAction}", torrent);
 
                 break;
         }
@@ -447,7 +432,7 @@ public class QBittorrent
 
     public async Task TorrentsAddMagnet(String magnetLink, String? category, Int32? priority)
     {
-        _logger.LogDebug($"Add magnet {category}");
+        logger.LogDebug($"Add magnet {category}");
 
         var torrent = new Torrent
         {
@@ -466,12 +451,12 @@ public class QBittorrent
             Priority = priority ?? (Settings.Get.Integrations.Default.Priority > 0 ? Settings.Get.Integrations.Default.Priority : null)
         };
 
-        await _torrents.UploadMagnet(magnetLink, torrent);
+        await torrents.UploadMagnet(magnetLink, torrent);
     }
 
     public async Task TorrentsAddFile(Byte[] fileBytes, String? category, Int32? priority)
     {
-        _logger.LogDebug($"Add file {category}");
+        logger.LogDebug($"Add file {category}");
 
         var torrent = new Torrent
         {
@@ -490,19 +475,19 @@ public class QBittorrent
             Priority = priority ?? (Settings.Get.Integrations.Default.Priority > 0 ? Settings.Get.Integrations.Default.Priority : null)
         };
 
-        await _torrents.UploadFile(fileBytes, torrent);
+        await torrents.UploadFile(fileBytes, torrent);
     }
 
     public async Task TorrentsSetCategory(String hash, String? category)
     {
-        await _torrents.UpdateCategory(hash, category);
+        await torrents.UpdateCategory(hash, category);
     }
 
     public async Task<IDictionary<String, TorrentCategory>> TorrentsCategories()
     {
-        var torrents = await _torrents.Get();
+        var torrents1 = await torrents.Get();
 
-        var torrentsToGroup = torrents.Where(m => !String.IsNullOrWhiteSpace(m.Category))
+        var torrentsToGroup = torrents1.Where(m => !String.IsNullOrWhiteSpace(m.Category))
                                       .Select(m => m.Category!.ToLower())
                                       .ToList();
 
@@ -554,7 +539,7 @@ public class QBittorrent
 
         categoriesSetting = String.Join(",", categoryList);
 
-        await _settings.Update("General:Categories", categoriesSetting);
+        await settings.Update("General:Categories", categoriesSetting);
     }
 
     public async Task CategoryRemove(String? category)
@@ -578,26 +563,26 @@ public class QBittorrent
 
         categoriesSetting = String.Join(",", categoryList);
 
-        await _settings.Update("General:Categories", categoriesSetting);
+        await settings.Update("General:Categories", categoriesSetting);
     }
 
     public async Task TorrentsTopPrio(String hash)
     {
-        await _torrents.UpdatePriority(hash, 1);
+        await torrents.UpdatePriority(hash, 1);
     }
 
     public async Task TorrentPause(String hash)
     {
-        var torrent = await _torrents.GetByHash(hash);
+        var torrent = await torrents.GetByHash(hash);
 
         if (torrent == null)
         {
             return;
         }
 
-        var downloads = await _downloads.GetForTorrent(torrent.TorrentId);
+        var downloads1 = await downloads.GetForTorrent(torrent.TorrentId);
 
-        foreach (var download in downloads)
+        foreach (var download in downloads1)
         {
             if (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
             {
@@ -608,16 +593,16 @@ public class QBittorrent
 
     public async Task TorrentResume(String hash)
     {
-        var torrent = await _torrents.GetByHash(hash);
+        var torrent = await torrents.GetByHash(hash);
 
         if (torrent == null)
         {
             return;
         }
 
-        var downloads = await _downloads.GetForTorrent(torrent.TorrentId);
+        var downloads1 = await downloads.GetForTorrent(torrent.TorrentId);
 
-        foreach (var download in downloads)
+        foreach (var download in downloads1)
         {
             if (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
             {

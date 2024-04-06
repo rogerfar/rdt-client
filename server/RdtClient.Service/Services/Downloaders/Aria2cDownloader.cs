@@ -22,6 +22,8 @@ public class Aria2cDownloader : IDownloader
     public Aria2cDownloader(String? gid, String uri, String filePath, String downloadPath)
     {
         _logger = Log.ForContext<Aria2cDownloader>();
+        _logger.Debug($"Instantiated new Aria2c Downloader for URI {uri} to filePath {filePath} and downloadPath {downloadPath} and GID {gid}");
+
         _gid = gid;
         _uri = uri;
         _filePath = filePath;
@@ -45,13 +47,7 @@ public class Aria2cDownloader : IDownloader
         
     public async Task<String?> Download()
     {
-        var path = Path.GetDirectoryName(_remotePath);
-
-        if (path == null)
-        {
-            throw new Exception($"Invalid file path {_filePath}");
-        }
-
+        var path = Path.GetDirectoryName(_remotePath) ?? throw new Exception($"Invalid file path {_filePath}");
         var fileName = Path.GetFileName(_filePath);
 
         _logger.Debug($"Starting download of {_uri}, writing to path: {_filePath} (on aria2: {_remotePath}), fileName: {fileName}");
@@ -85,10 +81,9 @@ public class Aria2cDownloader : IDownloader
                     }
                 }
                     
-                _gid ??= await _aria2NetClient.AddUriAsync(new List<String>
-                                                           {
+                _gid ??= await _aria2NetClient.AddUriAsync([
                                                                _uri
-                                                           },
+                                                           ],
                                                            new Dictionary<String, Object>
                                                            {
                                                                {

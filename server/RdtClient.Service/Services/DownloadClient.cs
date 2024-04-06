@@ -4,12 +4,12 @@ using RdtClient.Service.Services.Downloaders;
 
 namespace RdtClient.Service.Services;
 
-public class DownloadClient
+public class DownloadClient(Download download, Torrent torrent, String destinationPath)
 {
-    private readonly String _destinationPath;
+    private readonly String _destinationPath = destinationPath;
 
-    private readonly Download _download;
-    private readonly Torrent _torrent;
+    private readonly Download _download = download;
+    private readonly Torrent _torrent = torrent;
 
     public IDownloader? Downloader;
 
@@ -22,13 +22,6 @@ public class DownloadClient
     public Int64 Speed { get; private set; }
     public Int64 BytesTotal { get; private set; }
     public Int64 BytesDone { get; private set; }
-
-    public DownloadClient(Download download, Torrent torrent, String destinationPath)
-    {
-        _download = download;
-        _torrent = torrent;
-        _destinationPath = destinationPath;
-    }
 
     public async Task<String?> Start()
     {

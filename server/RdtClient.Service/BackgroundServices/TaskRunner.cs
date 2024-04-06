@@ -7,17 +7,8 @@ using RdtClient.Service.Services;
 
 namespace RdtClient.Service.BackgroundServices;
 
-public class TaskRunner : BackgroundService
+public class TaskRunner(ILogger<TaskRunner> logger, IServiceProvider serviceProvider) : BackgroundService
 {
-    private readonly ILogger<TaskRunner> _logger;
-    private readonly IServiceProvider _serviceProvider;
-
-    public TaskRunner(ILogger<TaskRunner> logger, IServiceProvider serviceProvider)
-    {
-        _logger = logger;
-        _serviceProvider = serviceProvider;
-    }
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!Startup.Ready)
@@ -25,10 +16,10 @@ public class TaskRunner : BackgroundService
             await Task.Delay(1000, stoppingToken);
         }
 
-        using var scope = _serviceProvider.CreateScope();
+        using var scope = serviceProvider.CreateScope();
         var torrentRunner = scope.ServiceProvider.GetRequiredService<TorrentRunner>();
             
-        _logger.LogInformation("TaskRunner started.");
+        logger.LogInformation("TaskRunner started.");
 
         await torrentRunner.Initialize();
             
@@ -45,21 +36,21 @@ public class TaskRunner : BackgroundService
                     var proposedValues = entry.CurrentValues;
                     var databaseValues = await entry.GetDatabaseValuesAsync(stoppingToken);
                     
-                    _logger.LogWarning("DbUpdateConcurrencyException occurred:");
-                    _logger.LogWarning("Proposed Values:");
-                    _logger.LogWarning(JsonSerializer.Serialize(proposedValues));
-                    _logger.LogWarning("Database Values:");
-                    _logger.LogWarning(JsonSerializer.Serialize(databaseValues));
+                    logger.LogWarning("DbUpdateConcurrencyException occurred:");
+                    logger.LogWarning("Proposed Values:");
+                    logger.LogWarning(JsonSerializer.Serialize(proposedValues));
+                    logger.LogWarning("Database Values:");
+                    logger.LogWarning(JsonSerializer.Serialize(databaseValues));
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unexpected error occurred in TorrentDownloadManager.Tick: {ex.Message}");
+                logger.LogError(ex, $"Unexpected error occurred in TorrentDownloadManager.Tick: {ex.Message}");
             }
 
             await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
         }
 
-        _logger.LogInformation("TaskRunner stopped.");
+        logger.LogInformation("TaskRunner stopped.");
     }
 }

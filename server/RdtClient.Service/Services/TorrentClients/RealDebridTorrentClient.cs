@@ -8,17 +8,9 @@ using RdtClient.Service.Helpers;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
-public class RealDebridTorrentClient : ITorrentClient
+public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IHttpClientFactory httpClientFactory) : ITorrentClient
 {
-    private readonly ILogger<RealDebridTorrentClient> _logger;
-    private readonly IHttpClientFactory _httpClientFactory;
     private TimeSpan? _offset;
-
-    public RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IHttpClientFactory httpClientFactory)
-    {
-        _logger = logger;
-        _httpClientFactory = httpClientFactory;
-    }
 
     private RdNetClient GetClient()
     {
@@ -31,7 +23,7 @@ public class RealDebridTorrentClient : ITorrentClient
                 throw new Exception("Real-Debrid API Key not set in the settings");
             }
 
-            var httpClient = _httpClientFactory.CreateClient();
+            var httpClient = httpClientFactory.CreateClient();
             httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
 
             var rdtNetClient = new RdNetClient(null, httpClient, 5);
@@ -50,20 +42,20 @@ public class RealDebridTorrentClient : ITorrentClient
         {
             foreach (var inner in ae.InnerExceptions)
             {
-                _logger.LogError(inner, $"The connection to RealDebrid has failed: {inner.Message}");
+                logger.LogError(inner, $"The connection to RealDebrid has failed: {inner.Message}");
             }
 
             throw;
         }
         catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
         {
-            _logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
+            logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
 
             throw;
         }
         catch (TaskCanceledException ex)
         {
-            _logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
+            logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
 
             throw; 
         }
@@ -451,6 +443,6 @@ public class RealDebridTorrentClient : ITorrentClient
             message = $"{message} {torrent.ToLog()}";
         }
 
-        _logger.LogDebug(message);
+        logger.LogDebug(message);
     }
 }

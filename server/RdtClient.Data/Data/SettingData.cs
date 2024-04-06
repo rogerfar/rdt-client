@@ -7,11 +7,8 @@ using RdtClient.Data.Models.Internal;
 
 namespace RdtClient.Data.Data;
 
-public class SettingData
+public class SettingData(DataContext dataContext, ILogger<SettingData> logger)
 {
-    private readonly DataContext _dataContext;
-    private readonly ILogger<SettingData> _logger;
-
     public static DbSettings Get { get; } = new DbSettings();
 
     public static IList<SettingProperty> GetAll()
@@ -19,15 +16,9 @@ public class SettingData
         return GetSettings(Get, null).ToList();
     }
 
-    public SettingData(DataContext dataContext, ILogger<SettingData> logger)
-    {
-        _dataContext = dataContext;
-        _logger = logger;
-    }
-
     public async Task Update(IList<SettingProperty> settings)
     {
-        var dbSettings = await _dataContext.Settings.ToListAsync();
+        var dbSettings = await dataContext.Settings.ToListAsync();
 
         foreach (var dbSetting in dbSettings)
         {
@@ -39,14 +30,14 @@ public class SettingData
             }
         }
 
-        await _dataContext.SaveChangesAsync();
+        await dataContext.SaveChangesAsync();
 
         await ResetCache();
     }
 
     public async Task Update(String settingId, Object? value)
     {
-        var dbSetting = await _dataContext.Settings.FirstOrDefaultAsync(m => m.SettingId == settingId);
+        var dbSetting = await dataContext.Settings.FirstOrDefaultAsync(m => m.SettingId == settingId);
 
         if (dbSetting == null)
         {
@@ -55,14 +46,14 @@ public class SettingData
 
         dbSetting.Value = value?.ToString();
 
-        await _dataContext.SaveChangesAsync();
+        await dataContext.SaveChangesAsync();
 
         await ResetCache();
     }
 
     public async Task ResetCache()
     {
-        var settings = await _dataContext.Settings.AsNoTracking().ToListAsync();
+        var settings = await dataContext.Settings.AsNoTracking().ToListAsync();
 
         if (settings.Count == 0)
         {
@@ -74,7 +65,7 @@ public class SettingData
 
     public async Task Seed()
     {
-        var dbSettings = await _dataContext.Settings.AsNoTracking().ToListAsync();
+        var dbSettings = await dataContext.Settings.AsNoTracking().ToListAsync();
 
         var expectedSettings = GetSettings(Get, null).Where(m => m.Type != "Object").Select(m => new Setting
         {
@@ -86,16 +77,16 @@ public class SettingData
 
         if (newSettings.Any())
         {
-            await _dataContext.Settings.AddRangeAsync(newSettings);
-            await _dataContext.SaveChangesAsync();
+            await dataContext.Settings.AddRangeAsync(newSettings);
+            await dataContext.SaveChangesAsync();
         }
 
         var oldSettings = dbSettings.Where(m => expectedSettings.All(p => p.SettingId != m.SettingId)).ToList();
 
         if (oldSettings.Any())
         {
-            _dataContext.Settings.RemoveRange(oldSettings);
-            await _dataContext.SaveChangesAsync();
+            dataContext.Settings.RemoveRange(oldSettings);
+            await dataContext.SaveChangesAsync();
         }
     }
 
@@ -200,7 +191,7 @@ public class SettingData
                         }
                         else
                         {
-                            _logger.LogWarning($"Invalid value for setting {propertyName}: {setting.Value}");
+                            logger.LogWarning($"Invalid value for setting {propertyName}: {setting.Value}");
                         }
                     }
                 }
