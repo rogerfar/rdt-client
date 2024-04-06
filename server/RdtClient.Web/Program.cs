@@ -43,7 +43,8 @@ if (appSettings.Logging?.File?.Path != null)
                                                        rollOnFileSizeLimit: true,
                                                        fileSizeLimitBytes: appSettings.Logging.File.FileSizeLimitBytes,
                                                        retainedFileCountLimit: appSettings.Logging.File.MaxRollingFiles,
-                                                       outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
+                                                       outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}",
+                                                       restrictedToMinimumLevel: LogEventLevel.Verbose)
                                          .WriteTo.Console()
                                          .MinimumLevel.ControlledBy(Settings.LoggingLevelSwitch)
                                          .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
