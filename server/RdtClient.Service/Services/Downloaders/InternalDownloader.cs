@@ -118,6 +118,13 @@ public class InternalDownloader : IDownloader
 
     private void SetSettings()
     {
+        var settingBufferSize = Settings.Get.DownloadClient.BufferSize;
+
+        if (settingBufferSize <= 4096)
+        {
+            settingBufferSize = 4096;
+        }
+
         var settingDownloadParallelCount = Settings.Get.DownloadClient.ParallelCount;
 
         if (settingDownloadParallelCount <= 0)
@@ -141,6 +148,7 @@ public class InternalDownloader : IDownloader
             settingDownloadTimeout = 1000;
         }
 
+        _downloadConfiguration.BufferSize = settingBufferSize;
         _downloadConfiguration.LogLevel = (Int32)Settings.Get.DownloadClient.LogLevel;
         _downloadConfiguration.Parallel = settingDownloadParallelCount;
         _downloadConfiguration.MaximumBytesPerSecond = settingDownloadMaxSpeed;

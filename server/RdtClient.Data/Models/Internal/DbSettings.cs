@@ -103,6 +103,10 @@ public class DbSettingsDownloadClient
     [Description("Split the downloaded file in this amount of chunks.")]
     public Int32 ChunkCount { get; set; } = 8;
 
+    [DisplayName("Buffer Size")]
+    [Description("Buffersize in bytes for the internal downloader, used to read data and write it to disk.")]
+    public Int32 BufferSize { get; set; } = 1024 * 1024;
+
     [DisplayName("Connection Timeout (only used for the Internal Downloader)")]
     [Description("Timeout in milliseconds before the downloader times out.")]
     public Int32 Timeout { get; set; } = 5000;
