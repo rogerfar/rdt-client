@@ -17,9 +17,6 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
     public static readonly ConcurrentDictionary<Guid, DownloadClient> ActiveDownloadClients = new();
     public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new();
 
-    private readonly Dictionary<Guid, String> _aggregatedDownloadResults = [];
-    private readonly Dictionary<Guid, String> _aggregatedDownloadErrors = [];
-
     private readonly HttpClient _httpClient = new()
     {
         Timeout = TimeSpan.FromSeconds(10)
@@ -334,27 +331,24 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                                              .OrderBy(m => m.DownloadQueued)
                                              .ToList();
 
-                _aggregatedDownloadResults.Clear();
-                _aggregatedDownloadErrors.Clear();
-
                 Log($"Currently {queuedDownloads.Count} queued downloads and {ActiveDownloadClients.Count} total active downloads", torrent);
 
                 foreach (var download in queuedDownloads)
                 {
                     Log($"Processing to download", download, torrent);
 
-                    if (ActiveDownloadClients.Count >= settingDownloadLimit)
+                    if (ActiveDownloadClients.Count >= settingDownloadLimit && torrent.DownloadClient != Data.Enums.DownloadClient.Symlink)
                     {
                         Log($"Not starting download because there are already the max number of downloads active", download, torrent);
 
-                        continue;
+                        return;
                     }
 
                     if (ActiveDownloadClients.ContainsKey(download.DownloadId))
                     {
                         Log($"Not starting download because this download is already active", download, torrent);
 
-                        continue;
+                        return;
                     }
 
                     try
@@ -376,7 +370,7 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                         download.Error = ex.Message;
                         download.Completed = DateTimeOffset.UtcNow;
 
-                        continue;
+                        return;
                     }
 
                     Log($"Marking download as started", download, torrent);
@@ -413,31 +407,17 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
 
                             if (download.RemoteId != remoteId)
                             {
-                                _aggregatedDownloadResults.Add(download.DownloadId, remoteId);
+                                await downloads.UpdateRemoteId(download.DownloadId, remoteId);
                             }
                         }
                         catch (Exception ex)
                         {
                             LogError($"Unable to start download: {ex.Message}", download, torrent);
-                            _aggregatedDownloadErrors.Add(download.DownloadId, ex.Message);
                         }
 
                         Log($"Started download", download, torrent);
                     }
                 }
-
-                if (_aggregatedDownloadResults.Count > 0)
-                {
-                    await downloads.UpdateRemoteIds(_aggregatedDownloadResults);
-                }
-
-                if (_aggregatedDownloadErrors.Count > 0)
-                {
-                    await downloads.UpdateErrors(_aggregatedDownloadErrors);
-                }
-
-                _aggregatedDownloadResults.Clear();
-                _aggregatedDownloadErrors.Clear();
 
                 // Check if there are any unpacks that are queued and can be started.
                 var queuedUnpacks = torrent.Downloads

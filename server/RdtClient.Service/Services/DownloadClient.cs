@@ -48,7 +48,7 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
                 Data.Enums.DownloadClient.Internal => new InternalDownloader(download.Link, filePath),
                 Data.Enums.DownloadClient.Bezzad => new BezzadDownloader(download.Link, filePath),
                 Data.Enums.DownloadClient.Aria2c => new Aria2cDownloader(download.RemoteId, download.Link, filePath, downloadPath),
-                Data.Enums.DownloadClient.Symlink => new SymlinkDownloader(download.Link, filePath),
+                Data.Enums.DownloadClient.Symlink => new SymlinkDownloader(download.Link, filePath, downloadPath),
                 _ => throw new($"Unknown download client {Settings.Get.DownloadClient}")
             };
 

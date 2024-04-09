@@ -64,12 +64,7 @@ public class Downloads(DownloadData downloadData)
     {
         await downloadData.UpdateError(downloadId, error);
     }
-
-    public async Task UpdateErrors(Dictionary<Guid, String> downloadIds)
-    {
-        await downloadData.UpdateErrors(downloadIds);
-    }
-
+    
     public async Task UpdateRetryCount(Guid downloadId, Int32 retryCount)
     {
         await downloadData.UpdateRetryCount(downloadId, retryCount);
@@ -79,12 +74,7 @@ public class Downloads(DownloadData downloadData)
     {
         await downloadData.UpdateRemoteId(downloadId, remoteId);
     }
-
-    public async Task UpdateRemoteIds(Dictionary<Guid, String> downloadIds)
-    {
-        await downloadData.UpdateRemoteIds(downloadIds);
-    }
-
+    
     public async Task DeleteForTorrent(Guid torrentId)
     {
         await downloadData.DeleteForTorrent(torrentId);

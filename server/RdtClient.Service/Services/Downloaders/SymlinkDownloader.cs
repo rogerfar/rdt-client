@@ -2,7 +2,7 @@
 
 namespace RdtClient.Service.Services.Downloaders;
 
-public class SymlinkDownloader(String uri, String path) : IDownloader
+public class SymlinkDownloader(String uri, String destinationPath, String path) : IDownloader
 {
     public event EventHandler<DownloadCompleteEventArgs>? DownloadComplete;
     public event EventHandler<DownloadProgressEventArgs>? DownloadProgress;
@@ -11,83 +11,118 @@ public class SymlinkDownloader(String uri, String path) : IDownloader
 
     private readonly ILogger _logger = Log.ForContext<SymlinkDownloader>();
 
+    private const Int32 MaxRetries = 10;
+
     public async Task<String> Download()
     {
         _logger.Debug($"Starting symlink resolving of {uri}, writing to path: {path}");
 
-        var filePath = new DirectoryInfo(path);
-
-        var fileName = filePath.Name;
-        var fileExtension = filePath.Extension;
-        var directoryName = Path.GetDirectoryName(filePath.FullName) ?? throw new($"Cannot get directory name for file {filePath.FullName}");
-        var fileDirectory = Path.GetFileName(directoryName) ?? throw new($"Cannot get directory name for file {directoryName}");
-        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName) ?? throw new($"Cannot get directory name for file {fileName}");
-        var fileDirectoryWithoutExtension = Path.GetFileNameWithoutExtension(fileDirectory) ?? throw new($"Cannot get directory name for file {fileDirectory}");
-
-        String[] folders =
-        [
-            fileNameWithoutExtension, 
-            fileDirectoryWithoutExtension, 
-            fileName, 
-            fileDirectory
-        ];
-
-        List<String> unWantedExtensions =
-        [
-            "zip",
-            "rar",
-            "tar"
-        ];
-
-        if (unWantedExtensions.Any(m => fileExtension == m))
+        try
         {
-            throw new($"Cant handle compressed files with symlink downloader");
-        }
+            var filePath = new FileInfo(path);
 
-        DownloadProgress?.Invoke(this, new()
-                                 {
-                                     BytesDone = 0,
-                                     BytesTotal = 0,
-                                     Speed = 0
-                                 });
+            var rcloneMountPath = Settings.Get.DownloadClient.RcloneMountPath.TrimEnd(['\\', '/']);
+            var fileName = filePath.Name;
+            var fileExtension = filePath.Extension;
+            var pathWithoutFileName = path.Replace(fileName, "").TrimEnd(['\\', '/']);
+            var searchPath = Path.Combine(rcloneMountPath, pathWithoutFileName);
 
-        FileInfo? file = null;
+            List<String> unWantedExtensions =
+            [
+                "zip",
+                "rar",
+                "tar"
+            ];
 
-        var tries = 1;
+            if (unWantedExtensions.Any(m => fileExtension == m))
+            {
+                throw new($"Cant handle compressed files with symlink downloader");
+            }
 
-        while (file == null && tries <= 10)
-        {
-            _logger.Debug($"Searching {Settings.Get.DownloadClient.RcloneMountPath} for {fileName} (attempt #{tries})...");
+            DownloadProgress?.Invoke(this,
+                                     new()
+                                     {
+                                         BytesDone = 0,
+                                         BytesTotal = 0,
+                                         Speed = 0
+                                     });
 
-            var dirInfo = new DirectoryInfo(Settings.Get.DownloadClient.RcloneMountPath);
-            file = dirInfo.EnumerateDirectories().FirstOrDefault(dir => folders.Contains(dir.Name))?.EnumerateFiles().FirstOrDefault(x => x.Name == fileName);
+            var potentialFilePaths = new List<String>();
+
+            var directoryInfo = new DirectoryInfo(searchPath);
+            while (directoryInfo.Parent != null)
+            {
+                potentialFilePaths.Add(directoryInfo.FullName + @"\");
+                directoryInfo = directoryInfo.Parent;
+
+                if (directoryInfo.FullName == rcloneMountPath)
+                {
+                    break;
+                }
+            }
+
+            FileInfo? file = null;
+
+            for (var retryCount = 0; retryCount < MaxRetries; retryCount++)
+            {
+                DownloadProgress?.Invoke(this,
+                                         new()
+                                         {
+                                             BytesDone = retryCount,
+                                             BytesTotal = 10,
+                                             Speed = 1
+                                         });
+
+                _logger.Debug($"Searching {Settings.Get.DownloadClient.RcloneMountPath} for {fileName} (attempt #{retryCount})...");
+
+                foreach (var potentialFilePath in potentialFilePaths)
+                {
+                    var potentialFilePathWithFileName = Path.Combine(potentialFilePath, fileName);
+
+                    if (File.Exists(potentialFilePathWithFileName))
+                    {
+                        file = new(potentialFilePathWithFileName);
+                        break;
+                    }
+                }
+
+                if (file == null)
+                {
+                    await Task.Delay(1000 * retryCount);
+                }
+                else
+                {
+                    break;
+                }
+            }
 
             if (file == null)
             {
-                await Task.Delay(1000 * tries);
-
-                tries++;
+                throw new("Could not find file from rclone mount!");
             }
-        }
 
-        if (file == null)
+            _logger.Debug($"Found {file.FullName} at {file.FullName}");
+
+            var result = TryCreateSymbolicLink(file.FullName, destinationPath);
+
+            if (!result)
+            {
+                throw new("Could not find file from rclone mount!");
+            }
+
+            DownloadComplete?.Invoke(this, new());
+
+            return file.FullName;
+        }
+        catch (Exception ex)
         {
-            throw new("Could not find file from rclone mount!");
+            DownloadComplete?.Invoke(this, new()
+            {
+                Error = ex.Message
+            });
+
+            throw;
         }
-
-        _logger.Debug($"Found {file.FullName} after #{tries} attempts");
-
-        var result = TryCreateSymbolicLink(file.FullName, filePath.FullName);
-
-        if (!result)
-        {
-            throw new("Could not find file from rclone mount!");
-        }
-
-        DownloadComplete?.Invoke(this, new());
-
-        return file.FullName;
-
     }
 
     public Task Cancel()
