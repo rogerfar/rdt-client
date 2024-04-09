@@ -97,15 +97,15 @@ public class DbSettingsDownloadClient
 
     [DisplayName("Parallel connections per download (only used for the Internal Downloader)")]
     [Description("Maximum amount of parallel threads that are used to download a single file to your host. If set to 0 no parallel downloading will be done.")]
-    public Int32 ParallelCount { get; set; } = 4;
+    public Int32 ParallelCount { get; set; } = 8;
 
     [DisplayName("Chunk Count")]
     [Description("Split the downloaded file in this amount of chunks.")]
-    public Int32 ChunkCount { get; set; } = 8;
+    public Int32 ChunkCount { get; set; } = 0;
 
     [DisplayName("Buffer Size")]
     [Description("Buffersize in bytes for the internal downloader, used to read data and write it to disk.")]
-    public Int32 BufferSize { get; set; } = 1024 * 1024;
+    public Int32 BufferSize { get; set; } = 4 * 1024 * 1024;
 
     [DisplayName("Connection Timeout (only used for the Internal Downloader)")]
     [Description("Timeout in milliseconds before the downloader times out.")]
