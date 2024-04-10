@@ -23,6 +23,7 @@ import { SetupComponent } from './setup/setup.component';
 import { TorrentStatusPipe } from './torrent-status.pipe';
 import { TorrentTableComponent } from './torrent-table/torrent-table.component';
 import { TorrentComponent } from './torrent/torrent.component';
+import { SortPipe } from './sort.pipe';
 
 curray();
 
@@ -42,6 +43,7 @@ curray();
     DecodeURIPipe,
     ProfileComponent,
     Nl2BrPipe,
+    SortPipe,
   ],
   imports: [
     BrowserModule,

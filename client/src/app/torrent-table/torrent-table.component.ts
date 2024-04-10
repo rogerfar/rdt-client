@@ -13,6 +13,8 @@ export class TorrentTableComponent implements OnInit {
   public torrents: Torrent[] = [];
   public selectedTorrents: string[] = [];
   public error: string;
+  public sortProperty = 'rdName';
+  public sortDirection: 'asc' | 'desc' = 'asc';
 
   public isDeleteModalActive: boolean;
   public deleteError: string;
@@ -56,6 +58,11 @@ export class TorrentTableComponent implements OnInit {
         this.error = err.error;
       },
     );
+  }
+
+  public sort(property: string): void {
+    this.sortProperty = property;
+    this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
   }
 
   public openTorrent(torrentId: string): void {
