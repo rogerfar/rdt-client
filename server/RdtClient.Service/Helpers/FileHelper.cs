@@ -1,4 +1,6 @@
-﻿namespace RdtClient.Service.Helpers;
+﻿using System.Text;
+
+namespace RdtClient.Service.Helpers;
 
 public static class FileHelper
 {
@@ -77,5 +79,30 @@ public static class FileHelper
     public static String RemoveInvalidFileNameChars(String filename)
     {
         return String.Concat(filename.Split(Path.GetInvalidFileNameChars()));
+    }
+    
+    public static String GetDirectoryContents(String path)
+    {
+        var stringBuilder = new StringBuilder();
+        GetDirectoryContents(path, stringBuilder, "");
+        return stringBuilder.ToString();
+    }
+
+    private static void GetDirectoryContents(String path, StringBuilder stringBuilder, String indent)
+    {
+        var directoryInfo = new DirectoryInfo(path);
+
+        var directories = directoryInfo.GetDirectories();
+        foreach (var directory in directories)
+        {
+            stringBuilder.AppendLine($"{indent}{directory.Name}");
+            GetDirectoryContents(directory.FullName, stringBuilder, indent + "  ");
+        }
+
+        var files = directoryInfo.GetFiles();
+        foreach (var file in files)
+        {
+            stringBuilder.AppendLine($"{indent}{file.Name}");
+        }
     }
 }

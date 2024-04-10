@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using RdtClient.Service.Helpers;
+using Serilog;
 
 namespace RdtClient.Service.Services.Downloaders;
 
@@ -82,6 +83,8 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
                 {
                     var potentialFilePathWithFileName = Path.Combine(potentialFilePath, fileName);
 
+                    _logger.Debug($"Searching {potentialFilePathWithFileName}...");
+
                     if (File.Exists(potentialFilePathWithFileName))
                     {
                         file = new(potentialFilePathWithFileName);
@@ -101,6 +104,18 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
 
             if (file == null)
             {
+                _logger.Debug($"Unable to find file in rclone mount. Folders available in {rcloneMountPath}: ");
+                try
+                {
+                    var allFolders = FileHelper.GetDirectoryContents(rcloneMountPath);
+
+                    _logger.Debug(allFolders);
+                }
+                catch(Exception ex)
+                {
+                    _logger.Error(ex.Message);
+                }
+                
                 throw new("Could not find file from rclone mount!");
             }
 
