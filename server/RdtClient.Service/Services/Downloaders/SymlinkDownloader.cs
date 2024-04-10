@@ -47,7 +47,10 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
                                          Speed = 0
                                      });
 
-            var potentialFilePaths = new List<String>();
+            var potentialFilePaths = new List<String>
+            {
+                Path.Combine(rcloneMountPath, fileName)
+            };
 
             var directoryInfo = new DirectoryInfo(searchPath);
             while (directoryInfo.Parent != null)
@@ -73,7 +76,7 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
                                              Speed = 1
                                          });
 
-                _logger.Debug($"Searching {Settings.Get.DownloadClient.RcloneMountPath} for {fileName} (attempt #{retryCount})...");
+                _logger.Debug($"Searching {rcloneMountPath} for {fileName} (attempt #{retryCount})...");
 
                 foreach (var potentialFilePath in potentialFilePaths)
                 {
