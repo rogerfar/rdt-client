@@ -23,20 +23,22 @@ public class BaseHrefMiddleware(RequestDelegate next, String basePath)
             newBody.Seek(0, SeekOrigin.Begin);
             var responseBody = await new StreamReader(newBody).ReadToEndAsync();
 
-            // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
-            if (context.Response.ContentType?.Contains("text/html") == true)
+            if (context.Response.StatusCode == 200)
             {
-                responseBody = Regex.Replace(responseBody, @"<base href=""/""", @$"<base href=""{_basePath}""");
-                
-                responseBody = Regex.Replace(responseBody, "(<script.*?src=\")(.*?)(\".*?</script>)", $"$1{_basePath}$2$3");
-                responseBody = Regex.Replace(responseBody, "(<link.*?href=\")(.*?)(\".*?>)", $"$1{_basePath}$2$3");
+                if (context.Response.ContentType?.Contains("text/html") == true)
+                {
+                    responseBody = Regex.Replace(responseBody, @"<base href=""/""", @$"<base href=""{_basePath}""");
 
-                context.Response.Headers.Remove("Content-Length");
-                await context.Response.WriteAsync(responseBody);
-            }
-            else
-            {
-                await context.Response.BodyWriter.WriteAsync(newBody.ToArray());
+                    responseBody = Regex.Replace(responseBody, "(<script.*?src=\")(.*?)(\".*?</script>)", $"$1{_basePath}$2$3");
+                    responseBody = Regex.Replace(responseBody, "(<link.*?href=\")(.*?)(\".*?>)", $"$1{_basePath}$2$3");
+
+                    context.Response.Headers.Remove("Content-Length");
+                    await context.Response.WriteAsync(responseBody);
+                }
+                else
+                {
+                    await context.Response.BodyWriter.WriteAsync(newBody.ToArray());
+                }
             }
         }
         finally
