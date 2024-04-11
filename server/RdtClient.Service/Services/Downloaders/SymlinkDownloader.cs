@@ -48,15 +48,12 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
                                          Speed = 0
                                      });
 
-            var potentialFilePaths = new List<String>
-            {
-                Path.Combine(rcloneMountPath, fileName)
-            };
+            var potentialFilePaths = new List<String>();
 
             var directoryInfo = new DirectoryInfo(searchPath);
             while (directoryInfo.Parent != null)
             {
-                potentialFilePaths.Add(directoryInfo.FullName + @"\");
+                potentialFilePaths.Add(directoryInfo.FullName);
                 directoryInfo = directoryInfo.Parent;
 
                 if (directoryInfo.FullName == rcloneMountPath)
@@ -64,6 +61,8 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
                     break;
                 }
             }
+
+            potentialFilePaths.Add(Path.Combine(rcloneMountPath, fileName));
 
             FileInfo? file = null;
 
