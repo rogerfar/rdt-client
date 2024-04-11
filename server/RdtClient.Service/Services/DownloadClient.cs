@@ -41,15 +41,15 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
 
             await FileHelper.Delete(filePath);
 
-            Type = Settings.Get.DownloadClient.Client;
+            Type = torrent.DownloadClient;
 
-            Downloader = Settings.Get.DownloadClient.Client switch
+            Downloader = Type switch
             {
                 Data.Enums.DownloadClient.Internal => new InternalDownloader(download.Link, filePath),
                 Data.Enums.DownloadClient.Bezzad => new BezzadDownloader(download.Link, filePath),
                 Data.Enums.DownloadClient.Aria2c => new Aria2cDownloader(download.RemoteId, download.Link, filePath, downloadPath),
                 Data.Enums.DownloadClient.Symlink => new SymlinkDownloader(download.Link, filePath, downloadPath),
-                _ => throw new($"Unknown download client {Settings.Get.DownloadClient}")
+                _ => throw new($"Unknown download client {Type}")
             };
 
             Downloader.DownloadComplete += (_, args) =>
