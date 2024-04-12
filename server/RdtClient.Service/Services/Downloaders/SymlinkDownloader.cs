@@ -25,6 +25,7 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
             var rcloneMountPath = Settings.Get.DownloadClient.RcloneMountPath.TrimEnd(['\\', '/']);
             var fileName = filePath.Name;
             var fileExtension = filePath.Extension;
+            var fileNameWithoutExtension = fileName.Replace(fileExtension, "");
             var pathWithoutFileName = path.Replace(fileName, "").TrimEnd(['\\', '/']);
             var searchPath = Path.Combine(rcloneMountPath, pathWithoutFileName);
 
@@ -56,13 +57,14 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
                 potentialFilePaths.Add(directoryInfo.FullName);
                 directoryInfo = directoryInfo.Parent;
 
-                if (directoryInfo.FullName == rcloneMountPath)
+                if (directoryInfo.FullName.TrimEnd(['\\', '/']) == rcloneMountPath)
                 {
                     break;
                 }
             }
 
             potentialFilePaths.Add(Path.Combine(rcloneMountPath, fileName));
+            potentialFilePaths.Add(Path.Combine(rcloneMountPath, fileNameWithoutExtension));
 
             FileInfo? file = null;
 
