@@ -23,6 +23,14 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
             var filePath = new FileInfo(path);
 
             var rcloneMountPath = Settings.Get.DownloadClient.RcloneMountPath.TrimEnd(['\\', '/']);
+            var searchSubDirectories = rcloneMountPath.EndsWith("*");
+            rcloneMountPath = rcloneMountPath.TrimEnd('*').TrimEnd(['\\', '/']);
+
+            if (!Directory.Exists(rcloneMountPath))
+            {
+                throw new($"Mount path {rcloneMountPath} does not exist!");
+            }
+
             var fileName = filePath.Name;
             var fileExtension = filePath.Extension;
             var fileNameWithoutExtension = fileName.Replace(fileExtension, "");
@@ -31,9 +39,9 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
 
             List<String> unWantedExtensions =
             [
-                "zip",
-                "rar",
-                "tar"
+                ".zip",
+                ".rar",
+                ".tar"
             ];
 
             if (unWantedExtensions.Any(m => fileExtension == m))
@@ -54,7 +62,7 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
             var directoryInfo = new DirectoryInfo(searchPath);
             while (directoryInfo.Parent != null)
             {
-                potentialFilePaths.Add(directoryInfo.FullName);
+                potentialFilePaths.Add(directoryInfo.Name);
                 directoryInfo = directoryInfo.Parent;
 
                 if (directoryInfo.FullName.TrimEnd(['\\', '/']) == rcloneMountPath)
@@ -63,10 +71,12 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
                 }
             }
 
-            potentialFilePaths.Add(Path.Combine(rcloneMountPath, fileName));
-            potentialFilePaths.Add(Path.Combine(rcloneMountPath, fileNameWithoutExtension));
+            potentialFilePaths.Add(fileName);
+            potentialFilePaths.Add(fileNameWithoutExtension);
 
-            FileInfo? file = null;
+            potentialFilePaths = potentialFilePaths.Distinct().ToList();
+
+            String? file = null;
 
             for (var retryCount = 0; retryCount < MaxRetries; retryCount++)
             {
@@ -80,16 +90,15 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
 
                 _logger.Debug($"Searching {rcloneMountPath} for {fileName} (attempt #{retryCount})...");
 
-                foreach (var potentialFilePath in potentialFilePaths)
+                file = FindFile(rcloneMountPath, potentialFilePaths, fileName);
+
+                if (file == null && searchSubDirectories)
                 {
-                    var potentialFilePathWithFileName = Path.Combine(potentialFilePath, fileName);
+                    var subDirectories = Directory.GetDirectories(rcloneMountPath, "*.*", SearchOption.TopDirectoryOnly);
 
-                    _logger.Debug($"Searching {potentialFilePathWithFileName}...");
-
-                    if (File.Exists(potentialFilePathWithFileName))
+                    foreach (var subDirectory in subDirectories)
                     {
-                        file = new(potentialFilePathWithFileName);
-                        break;
+                        FindFile(Path.Combine(rcloneMountPath, subDirectory), potentialFilePaths, fileName);
                     }
                 }
 
@@ -120,9 +129,9 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
                 throw new("Could not find file from rclone mount!");
             }
 
-            _logger.Debug($"Found {file.FullName} at {file.FullName}");
+            _logger.Debug($"Creating symbolic link from {file} to {destinationPath}");
 
-            var result = TryCreateSymbolicLink(file.FullName, destinationPath);
+            var result = TryCreateSymbolicLink(file, destinationPath);
 
             if (!result)
             {
@@ -131,7 +140,7 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
 
             DownloadComplete?.Invoke(this, new());
 
-            return file.FullName;
+            return file;
         }
         catch (Exception ex)
         {
@@ -159,6 +168,23 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
     public Task Resume()
     {
         return Task.CompletedTask;
+    }
+
+    private String? FindFile(String rootPath, List<String> filePaths, String fileName)
+    {
+        foreach (var potentialFilePath in filePaths)
+        {
+            var potentialFilePathWithFileName = Path.Combine(rootPath, potentialFilePath, fileName);
+
+            _logger.Debug($"Searching {potentialFilePathWithFileName}...");
+
+            if (File.Exists(potentialFilePathWithFileName))
+            {
+                return potentialFilePathWithFileName;
+            }
+        }
+
+        return null;
     }
 
     private Boolean TryCreateSymbolicLink(String sourcePath, String symlinkPath)

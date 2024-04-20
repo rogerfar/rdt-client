@@ -93,16 +93,6 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
             return;
         }
 
-        if (Settings.Get.DownloadClient.Client == Data.Enums.DownloadClient.Symlink)
-        {
-            var rcloneMountPath = Settings.Get.DownloadClient.RcloneMountPath;
-
-            if (!Directory.Exists(rcloneMountPath))
-            {
-                throw new($"Rclone mount path ({rcloneMountPath}) was not found!");
-            }
-        }
-
         var sw = new Stopwatch();
         sw.Start();
 
