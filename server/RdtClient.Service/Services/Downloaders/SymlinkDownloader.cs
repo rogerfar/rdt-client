@@ -98,7 +98,12 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
 
                     foreach (var subDirectory in subDirectories)
                     {
-                        FindFile(Path.Combine(rcloneMountPath, subDirectory), potentialFilePaths, fileName);
+                        file = FindFile(Path.Combine(rcloneMountPath, subDirectory), potentialFilePaths, fileName);
+
+                        if (file != null)
+                        {
+                            break;
+                        }
                     }
                 }
 
