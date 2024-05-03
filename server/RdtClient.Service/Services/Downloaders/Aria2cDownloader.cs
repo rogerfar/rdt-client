@@ -19,7 +19,7 @@ public class Aria2cDownloader : IDownloader
 
     private String? _gid;
 
-    public Aria2cDownloader(String? gid, String uri, String filePath, String downloadPath)
+    public Aria2cDownloader(String? gid, String uri, String filePath, String downloadPath, String? category)
     {
         _logger = Log.ForContext<Aria2cDownloader>();
         _logger.Debug($"Instantiated new Aria2c Downloader for URI {uri} to filePath {filePath} and downloadPath {downloadPath} and GID {gid}");
@@ -31,6 +31,11 @@ public class Aria2cDownloader : IDownloader
         if (!String.IsNullOrWhiteSpace(Settings.Get.DownloadClient.Aria2cDownloadPath))
         {
             _remotePath = Path.Combine(Settings.Get.DownloadClient.Aria2cDownloadPath, downloadPath).Replace('\\', '/');
+
+            if (!String.IsNullOrWhiteSpace(category))
+            {
+                _remotePath = Path.Combine(_remotePath, category);
+            }
         }
         else
         {

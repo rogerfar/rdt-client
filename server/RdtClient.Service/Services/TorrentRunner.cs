@@ -378,7 +378,7 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                     Log($"Setting download path to {downloadPath}", download, torrent);
 
                     // Start the download process
-                    var downloadClient = new DownloadClient(download, torrent, downloadPath);
+                    var downloadClient = new DownloadClient(download, torrent, downloadPath, torrent.Category);
 
                     if (ActiveDownloadClients.TryAdd(download.DownloadId, downloadClient))
                     {
