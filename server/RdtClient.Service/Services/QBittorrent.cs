@@ -194,7 +194,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
 
         var prio = 0;
 
-        Decimal? downloadProgress = 0;
+        Decimal downloadProgress = 0;
 
         foreach (var torrent in allTorrents)
         {
@@ -211,9 +211,9 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
                 torrentPath = Path.Combine(downloadPath, torrent.RdName) + Path.DirectorySeparatorChar;
             }
 
-            var rdProgress = torrent.RdProgress / 100.0m;
-            var bytesTotal = torrent.RdSize;
-            var bytesDone = (Int64?)(torrent.RdSize * rdProgress);
+            var rdProgress = (torrent.RdProgress ?? 0) / 100.0m;
+            var bytesTotal = torrent.RdSize ?? 1;
+            var bytesDone = (Int64)(bytesTotal * rdProgress);
             var speed = torrent.RdSpeed ?? 0;
 
             if (torrent.Downloads.Count > 0)
@@ -221,7 +221,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
                 bytesDone = torrent.Downloads.Sum(m => m.BytesDone);
                 bytesTotal = torrent.Downloads.Sum(m => m.BytesTotal);
                 speed = (Int32) torrent.Downloads.Average(m => m.Speed);
-                downloadProgress = bytesTotal > 0 ? (Decimal?)bytesDone / bytesTotal : 0;
+                downloadProgress = bytesTotal > 0 ? (Decimal)bytesDone / bytesTotal : 0;
             }
 
             var progress = (rdProgress + downloadProgress) / 2m;
@@ -254,7 +254,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
                 NumLeechs = 1,
                 NumSeeds = torrent.RdSeeders ?? 1,
                 Priority = ++prio,
-                Progress = (Single)(progress ?? 0),
+                Progress = (Single)progress,
                 Ratio = 1,
                 RatioLimit = 1,
                 SavePath = downloadPath,
