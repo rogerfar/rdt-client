@@ -33,14 +33,21 @@ public class TaskRunner(ILogger<TaskRunner> logger, IServiceProvider serviceProv
             {
                 foreach (var entry in ex.Entries)
                 {
-                    var proposedValues = entry.CurrentValues;
-                    var databaseValues = await entry.GetDatabaseValuesAsync(stoppingToken);
-                    
-                    logger.LogWarning("DbUpdateConcurrencyException occurred:");
-                    logger.LogWarning("Proposed Values:");
-                    logger.LogWarning(JsonSerializer.Serialize(proposedValues));
-                    logger.LogWarning("Database Values:");
-                    logger.LogWarning(JsonSerializer.Serialize(databaseValues));
+                    try
+                    {
+                        var proposedValues = entry.CurrentValues;
+                        var databaseValues = await entry.GetDatabaseValuesAsync(stoppingToken);
+
+                        logger.LogWarning("DbUpdateConcurrencyException occurred:");
+                        logger.LogWarning("Proposed Values:");
+                        logger.LogWarning(JsonSerializer.Serialize(proposedValues));
+                        logger.LogWarning("Database Values:");
+                        logger.LogWarning(JsonSerializer.Serialize(databaseValues));
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
                 }
             }
             catch (Exception ex)
