@@ -34,7 +34,7 @@ public class Aria2cDownloader : IDownloader
 
             if (!String.IsNullOrWhiteSpace(category))
             {
-                _remotePath = Path.Combine(_remotePath, category);
+                _remotePath = Path.Combine(Settings.Get.DownloadClient.Aria2cDownloadPath, category, downloadPath).Replace('\\', '/');
             }
         }
         else
