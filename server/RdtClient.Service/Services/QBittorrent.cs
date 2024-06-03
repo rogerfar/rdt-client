@@ -211,20 +211,36 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
                 torrentPath = Path.Combine(downloadPath, torrent.RdName) + Path.DirectorySeparatorChar;
             }
 
-            var rdProgress = (torrent.RdProgress ?? 0) / 100.0m;
-            var bytesTotal = torrent.RdSize ?? 1;
-            var bytesDone = (Int64)(bytesTotal * rdProgress);
-            var speed = torrent.RdSpeed ?? 0;
+            Int64 bytesDone = 0;
+            Int64 bytesTotal = 0;
+            Int64 speed = 0;
+            Int64 rdProgress = 0;
+            try
+            {
+                rdProgress = (Int64) ((torrent.RdProgress ?? 0) / 100.0m);
+                bytesTotal = torrent.RdSize ?? 1;
+                bytesDone = bytesTotal * rdProgress;
+                speed = torrent.RdSpeed ?? 0;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"""
+                Error calculating progress:
+                RdProgress: {torrent.RdProgress}
+                RdSize: {torrent.RdSize}
+                RdSpeed: {torrent.RdSpeed}
+                """);
+            }
 
             if (torrent.Downloads.Count > 0)
             {
                 bytesDone = torrent.Downloads.Sum(m => m.BytesDone);
                 bytesTotal = torrent.Downloads.Sum(m => m.BytesTotal);
                 speed = (Int32) torrent.Downloads.Average(m => m.Speed);
-                downloadProgress = bytesTotal > 0 ? (Decimal)bytesDone / bytesTotal : 0;
+                downloadProgress = bytesTotal > 0 ? (Decimal) bytesDone / bytesTotal : 0;
             }
 
-            var progress = (rdProgress + downloadProgress) / 2m;
+            var progress = (Int64) ((rdProgress + downloadProgress) / 2m);
 
             var result = new TorrentInfo
             {
