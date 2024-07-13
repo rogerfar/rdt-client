@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using RdtClient.Data.Data;
 using RdtClient.Data.Models.Internal;
+using RdtClient.Service;
 using RdtClient.Service.Middleware;
 using RdtClient.Service.Services;
 using Serilog;
@@ -116,7 +117,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddResponseCaching();
 builder.Services.AddMemoryCache();
 builder.Services.AddDistributedMemoryCache();
-builder.Services.AddHttpClient();
+builder.Services.RegisterHttpClients();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSession();
 
@@ -133,7 +134,7 @@ builder.Services.AddSignalR(hubOptions =>
 builder.Host.UseWindowsService();
 
 RdtClient.Data.DiConfig.Config(builder.Services, appSettings);
-RdtClient.Service.DiConfig.Config(builder.Services);
+builder.Services.RegisterRdtServices();
 
 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
