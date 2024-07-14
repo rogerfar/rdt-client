@@ -23,7 +23,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
                 throw new("Real-Debrid API Key not set in the settings");
             }
 
-            var httpClient = httpClientFactory.CreateClient();
+            var httpClient = httpClientFactory.CreateClient(DiConfig.RD_CLIENT);
             httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
 
             var rdtNetClient = new RdNetClient(null, httpClient, 5);
