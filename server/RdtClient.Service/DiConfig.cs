@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using RdtClient.Service.BackgroundServices;
+using RdtClient.Service.Handlers;
 using RdtClient.Service.Middleware;
 using RdtClient.Service.Services;
 using RdtClient.Service.Services.TorrentClients;
@@ -9,7 +11,9 @@ namespace RdtClient.Service;
 
 public static class DiConfig
 {
-    public static void Config(IServiceCollection services)
+    public const String RD_CLIENT = "RdClient";
+    
+    public static void RegisterRdtServices(this IServiceCollection services)
     {
         services.AddScoped<AllDebridTorrentClient>();
         services.AddScoped<Authentication>();
@@ -29,5 +33,14 @@ public static class DiConfig
         services.AddHostedService<TaskRunner>();
         services.AddHostedService<UpdateChecker>();
         services.AddHostedService<WatchFolderChecker>();
+    }
+
+    public static void RegisterHttpClients(this IServiceCollection services)
+    {
+        services.AddHttpClient();
+        
+        services.AddHttpClient(RD_CLIENT)
+               .AddHttpMessageHandler(sp => new RateLimitingHandler(sp.GetRequiredService<ILogger<RateLimitingHandler>>(), 60, TimeSpan.FromSeconds(60)))
+               .SetHandlerLifetime(Timeout.InfiniteTimeSpan);
     }
 }
