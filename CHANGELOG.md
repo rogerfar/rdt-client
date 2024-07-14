@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.80] - 2024-07-13
+### Changed
+- Add rate limiter to retry requests that are rate limited from Real-Debrid.
+- Optimize calls to Real-Debrid API when torrents are finished and periodic updates.
+- Update to .NET 8.0.7
+
 ## [2.0.79] - 2024-06-03
 ### Changed
 - Fixed issue with qBittorrent progress sometimes throwing errors.

@@ -26,7 +26,7 @@ public class UpdateChecker(ILogger<UpdateChecker> logger) : BackgroundService
             return;
         }
 
-        CurrentVersion = $"v{version[..version.LastIndexOf(".", StringComparison.Ordinal)]}";
+        CurrentVersion = $"v{version[..version.LastIndexOf('.')]}";
 
         logger.LogInformation("UpdateChecker started, currently on version {CurrentVersion}.", CurrentVersion);
 

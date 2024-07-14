@@ -3,8 +3,17 @@ using Microsoft.AspNetCore.Http;
 
 namespace RdtClient.Service.Middleware;
 
-public class BaseHrefMiddleware(RequestDelegate next, String basePath)
+public partial class BaseHrefMiddleware(RequestDelegate next, String basePath)
 {
+    [GeneratedRegex(@"<base href=""/""")]
+    private partial Regex BodyRegex();
+
+    [GeneratedRegex("(<script.*?src=\")(.*?)(\".*?</script>)")]
+    private partial Regex ScriptRegex();
+
+    [GeneratedRegex("(<link.*?href=\")(.*?)(\".*?>)")]
+    private partial Regex LinkRegex();
+
     private readonly String _basePath = $"/{basePath.TrimStart('/').TrimEnd('/')}/";
 
     public async Task InvokeAsync(HttpContext context)
@@ -27,10 +36,10 @@ public class BaseHrefMiddleware(RequestDelegate next, String basePath)
             {
                 if (context.Response.ContentType?.Contains("text/html") == true)
                 {
-                    responseBody = Regex.Replace(responseBody, @"<base href=""/""", @$"<base href=""{_basePath}""");
+                    responseBody = BodyRegex().Replace(responseBody, @$"<base href=""{_basePath}""");
 
-                    responseBody = Regex.Replace(responseBody, "(<script.*?src=\")(.*?)(\".*?</script>)", $"$1{_basePath}$2$3");
-                    responseBody = Regex.Replace(responseBody, "(<link.*?href=\")(.*?)(\".*?>)", $"$1{_basePath}$2$3");
+                    responseBody = ScriptRegex().Replace(responseBody, $"$1{_basePath}$2$3");
+                    responseBody = LinkRegex().Replace(responseBody, $"$1{_basePath}$2$3");
 
                     context.Response.Headers.Remove("Content-Length");
                     await context.Response.WriteAsync(responseBody);

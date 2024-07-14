@@ -7,7 +7,7 @@ public class RdtHub : Hub
 {
     private static readonly ConcurrentDictionary<String, String> Users = new();
 
-    public static Boolean HasConnections => Users.Any();
+    public static Boolean HasConnections => !Users.IsEmpty;
 
     public override async Task OnConnectedAsync()
     {

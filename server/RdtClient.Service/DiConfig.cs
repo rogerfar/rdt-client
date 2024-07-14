@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Net;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Polly;
+using Polly.Extensions.Http;
 using RdtClient.Service.BackgroundServices;
-using RdtClient.Service.Handlers;
 using RdtClient.Service.Middleware;
 using RdtClient.Service.Services;
 using RdtClient.Service.Services.TorrentClients;
@@ -38,9 +39,13 @@ public static class DiConfig
     public static void RegisterHttpClients(this IServiceCollection services)
     {
         services.AddHttpClient();
-        
+
+        var retryPolicy = HttpPolicyExtensions
+                          .HandleTransientHttpError()
+                          .OrResult(r => r.StatusCode == HttpStatusCode.TooManyRequests)
+                          .WaitAndRetryAsync(retryCount: 5, sleepDurationProvider: attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)));
+
         services.AddHttpClient(RD_CLIENT)
-               .AddHttpMessageHandler(sp => new RateLimitingHandler(sp.GetRequiredService<ILogger<RateLimitingHandler>>(), 60, TimeSpan.FromSeconds(60)))
-               .SetHandlerLifetime(Timeout.InfiniteTimeSpan);
+                .AddPolicyHandler(retryPolicy);
     }
 }

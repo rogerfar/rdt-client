@@ -23,7 +23,7 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
             var filePath = new FileInfo(path);
 
             var rcloneMountPath = Settings.Get.DownloadClient.RcloneMountPath.TrimEnd(['\\', '/']);
-            var searchSubDirectories = rcloneMountPath.EndsWith("*");
+            var searchSubDirectories = rcloneMountPath.EndsWith('*');
             rcloneMountPath = rcloneMountPath.TrimEnd('*').TrimEnd(['\\', '/']);
 
             if (!Directory.Exists(rcloneMountPath))

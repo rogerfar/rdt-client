@@ -131,7 +131,7 @@ public class UnpackClient(Download download, String destinationPath)
 
         var entries = archive.Entries
                              .Where(entry => !entry.IsDirectory)
-                             .Select(m => m.Key)
+                             .Select(m => m.Key!)
                              .ToList();
 
         archive.Dispose();

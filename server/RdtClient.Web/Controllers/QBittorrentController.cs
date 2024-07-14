@@ -282,7 +282,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
             return BadRequest();
         }
 
-        logger.LogDebug($"Delete {request.Hashes}");
+        logger.LogDebug("Delete {Hashes}", request.Hashes);
 
         var hashes = request.Hashes.Split("|");
 
