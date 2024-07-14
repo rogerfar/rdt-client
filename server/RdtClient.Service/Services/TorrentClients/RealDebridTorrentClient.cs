@@ -92,12 +92,12 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
 
     public async Task<IList<TorrentClientTorrent>> GetTorrents()
     {
-        var page = 0;
+        var offset = 0;
         var results = new List<Torrent>();
 
         while (true)
         {
-            var pagedResults = await GetClient().Torrents.GetAsync(page, 100);
+            var pagedResults = await GetClient().Torrents.GetAsync(offset, 5000);
 
             results.AddRange(pagedResults);
 
@@ -106,7 +106,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
                 break;
             }
 
-            page += 100;
+            offset += 5000;
         }
 
         return results.Select(Map).ToList();
@@ -287,42 +287,45 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
                 return torrent;
             }
 
-            var rdTorrent = await GetInfo(torrent.RdId) ?? throw new($"Resource not found");
-
-            if (!String.IsNullOrWhiteSpace(rdTorrent.Filename))
+            if (torrentClientTorrent == null || torrentClientTorrent.Ended == null)
             {
-                torrent.RdName = rdTorrent.Filename;
+                torrentClientTorrent = await GetInfo(torrent.RdId) ?? throw new($"Resource not found");
             }
 
-            if (!String.IsNullOrWhiteSpace(rdTorrent.OriginalFilename))
+            if (!String.IsNullOrWhiteSpace(torrentClientTorrent.Filename))
             {
-                torrent.RdName = rdTorrent.OriginalFilename;
+                torrent.RdName = torrentClientTorrent.Filename;
             }
 
-            if (rdTorrent.Bytes > 0)
+            if (!String.IsNullOrWhiteSpace(torrentClientTorrent.OriginalFilename))
             {
-                torrent.RdSize = rdTorrent.Bytes;
-            }
-            else if (rdTorrent.OriginalBytes > 0)
-            {
-                torrent.RdSize = rdTorrent.OriginalBytes;
+                torrent.RdName = torrentClientTorrent.OriginalFilename;
             }
 
-            if (rdTorrent.Files != null)
+            if (torrentClientTorrent.Bytes > 0)
             {
-                torrent.RdFiles = JsonConvert.SerializeObject(rdTorrent.Files);
+                torrent.RdSize = torrentClientTorrent.Bytes;
+            }
+            else if (torrentClientTorrent.OriginalBytes > 0)
+            {
+                torrent.RdSize = torrentClientTorrent.OriginalBytes;
             }
 
-            torrent.RdHost = rdTorrent.Host;
-            torrent.RdSplit = rdTorrent.Split;
-            torrent.RdProgress = rdTorrent.Progress;
-            torrent.RdAdded = rdTorrent.Added;
-            torrent.RdEnded = rdTorrent.Ended;
-            torrent.RdSpeed = rdTorrent.Speed;
-            torrent.RdSeeders = rdTorrent.Seeders;
-            torrent.RdStatusRaw = rdTorrent.Status;
+            if (torrentClientTorrent.Files != null && torrentClientTorrent.Files.Count > 0)
+            {
+                torrent.RdFiles = JsonConvert.SerializeObject(torrentClientTorrent.Files);
+            }
 
-            torrent.RdStatus = rdTorrent.Status switch
+            torrent.RdHost = torrentClientTorrent.Host;
+            torrent.RdSplit = torrentClientTorrent.Split;
+            torrent.RdProgress = torrentClientTorrent.Progress;
+            torrent.RdAdded = torrentClientTorrent.Added;
+            torrent.RdEnded = torrentClientTorrent.Ended;
+            torrent.RdSpeed = torrentClientTorrent.Speed;
+            torrent.RdSeeders = torrentClientTorrent.Seeders;
+            torrent.RdStatusRaw = torrentClientTorrent.Status;
+
+            torrent.RdStatus = torrentClientTorrent.Status switch
             {
                 "magnet_error" => TorrentStatus.Error,
                 "magnet_conversion" => TorrentStatus.Processing,
