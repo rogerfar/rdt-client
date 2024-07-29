@@ -134,7 +134,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
 
         var torrent = await MonoTorrent.Torrent.LoadAsync(bytes);
 
-        var result = await torrents.GetAvailableFiles(torrent.InfoHash.ToHex());
+        var result = await torrents.GetAvailableFiles(torrent.InfoHashes.V1OrV2.ToHex());
 
         return Ok(result);
     }
@@ -148,9 +148,14 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
             return BadRequest();
         }
 
+        if (String.IsNullOrEmpty(request.MagnetLink))
+        {
+            return BadRequest("MagnetLink cannot be null or empty");
+        }
+
         var magnet = MagnetLink.Parse(request.MagnetLink);
 
-        var result = await torrents.GetAvailableFiles(magnet.InfoHash.ToHex());
+        var result = await torrents.GetAvailableFiles(magnet.InfoHashes.V1OrV2.ToHex());
 
         return Ok(result);
     }
@@ -226,7 +231,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
         {
             var magnet = MagnetLink.Parse(request.MagnetLink);
 
-            availableFiles = await torrents.GetAvailableFiles(magnet.InfoHash.ToHex());
+            availableFiles = await torrents.GetAvailableFiles(magnet.InfoHashes.V1OrV2.ToHex());
         }
         else if (file != null)
         {
@@ -240,7 +245,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
 
             var torrent = await MonoTorrent.Torrent.LoadAsync(bytes);
 
-            availableFiles = await torrents.GetAvailableFiles(torrent.InfoHash.ToHex());
+            availableFiles = await torrents.GetAvailableFiles(torrent.InfoHashes.V1OrV2.ToHex());
         }
         else
         {
