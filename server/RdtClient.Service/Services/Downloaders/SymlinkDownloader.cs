@@ -37,18 +37,6 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
             var pathWithoutFileName = path.Replace(fileName, "").TrimEnd(['\\', '/']);
             var searchPath = Path.Combine(rcloneMountPath, pathWithoutFileName);
 
-            List<String> unWantedExtensions =
-            [
-                ".zip",
-                ".rar",
-                ".tar"
-            ];
-
-            if (unWantedExtensions.Any(m => fileExtension == m))
-            {
-                throw new($"Cant handle compressed files with symlink downloader");
-            }
-
             DownloadProgress?.Invoke(this,
                                      new()
                                      {
@@ -134,6 +122,20 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
                 }
                 
                 throw new("Could not find file from rclone mount!");
+            }
+            
+            List<String> unWantedExtensions =
+            [
+                ".zip",
+                ".rar",
+                ".tar"
+            ];
+
+            if (unWantedExtensions.Any(m => fileExtension == m))
+            {
+                _logger.Debug($"Ignoring file {file}; has unwanted extension");
+                DownloadComplete?.Invoke(this, new());
+                return file;
             }
 
             _logger.Debug($"Creating symbolic link from {file} to {destinationPath}");
