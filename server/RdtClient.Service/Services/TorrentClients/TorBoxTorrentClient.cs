@@ -6,6 +6,7 @@ using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Diagnostics.Eventing.Reader;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
@@ -58,7 +59,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         {
             logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
 
-            throw; 
+            throw;
         }
     }
 
@@ -72,7 +73,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
             Hash = torrent.Hash,
             Bytes = torrent.Size,
             OriginalBytes = torrent.Size,
-            Host = null,
+            Host = torrent.DownloadPresent.ToString(),
             Split = 0,
             Progress = (Int64)((torrent.Progress) * 100.0),
             Status = torrent.DownloadState,
@@ -93,9 +94,22 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     public async Task<IList<TorrentClientTorrent>> GetTorrents()
     {
-        var results = await GetClient().Torrents.GetAsync(true);
+        var torrents = new List<Torrent>();
 
-        return results!.Select(Map).ToList();
+        var currentTorrents = await GetClient().Torrents.GetCurrentAsync(true);
+        if (currentTorrents != null)
+        {
+            torrents.AddRange(currentTorrents);
+        }
+
+        var queuedTorrents = await GetClient().Torrents.GetQueuedAsync(true);
+        if (queuedTorrents != null)
+        {
+            torrents.AddRange(queuedTorrents);
+
+        }
+
+        return torrents!.Select(Map).ToList();
     }
 
     public async Task<TorrentClientUser> GetUser()
@@ -105,7 +119,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         return new()
         {
             Username = user.Data!.Email,
-            Expiration = user.Data!.Plan != 0 ? user.Data!.PremiumExpiresAt.Value : null
+            Expiration = user.Data!.Plan != 0 ? user.Data!.PremiumExpiresAt!.Value : null
         };
     }
 
@@ -123,133 +137,20 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         return result.Data?.Torrent_ID.ToString()!;
     }
 
-    public async Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
+    public Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
     {
-        var result = await GetClient().Torrents.GetAvailableFiles(hash);
-
-        var files = result.SelectMany(m => m.Value).SelectMany(m => m.Value).SelectMany(m => m.Values);
-
-        var groups = files.Where(m => m.Filename != null).GroupBy(m => $"{m.Filename}-{m.Filesize}");
-
-        var torrentClientAvailableFiles = groups.Select(m => new TorrentClientAvailableFile
-        {
-            Filename = m.First().Filename!,
-            Filesize = m.First().Filesize
-        }).ToList();
-
-        return torrentClientAvailableFiles;
+        var result = new List<TorrentClientAvailableFile>();
+        return Task.FromResult<IList<TorrentClientAvailableFile>>(result);
     }
 
-    public async Task SelectFiles(Data.Models.Data.Torrent torrent)
+    public Task SelectFiles(Data.Models.Data.Torrent torrent)
     {
-        var files = torrent.Files;
-
-        Log("Seleting files", torrent);
-
-        if (torrent.DownloadAction == TorrentDownloadAction.DownloadAvailableFiles)
-        {
-            Log($"Determining which files are already available on RealDebrid", torrent);
-
-            var availableFiles = await GetAvailableFiles(torrent.Hash);
-
-            Log($"Found {files.Count}/{torrent.Files.Count} available files on RealDebrid", torrent);
-
-            files = torrent.Files.Where(m => availableFiles.Any(f => m.Path.EndsWith(f.Filename))).ToList();
-        }
-        else if (torrent.DownloadAction == TorrentDownloadAction.DownloadAll)
-        {
-            Log("Selecting all files", torrent);
-            files = [.. torrent.Files];
-        }
-        else if (torrent.DownloadAction == TorrentDownloadAction.DownloadManual)
-        {
-            Log("Selecting manual selected files", torrent);
-            files = torrent.Files.Where(m => torrent.ManualFiles.Any(f => m.Path.EndsWith(f))).ToList();
-        }
-
-        Log($"Selecting {files.Count}/{torrent.Files.Count} files", torrent);
-
-        if (torrent.DownloadAction != TorrentDownloadAction.DownloadManual && torrent.DownloadMinSize > 0)
-        {
-            var minFileSize = torrent.DownloadMinSize * 1024 * 1024;
-
-            Log($"Determining which files are over {minFileSize} bytes", torrent);
-
-            files = files.Where(m => m.Bytes > minFileSize)
-                         .ToList();
-
-            Log($"Found {files.Count} files that match the minimum file size criterea", torrent);
-        }
-
-        if (!String.IsNullOrWhiteSpace(torrent.IncludeRegex))
-        {
-            Log($"Using regular expression {torrent.IncludeRegex} to include only files matching this regex", torrent);
-
-            var newFiles = new List<TorrentClientFile>();
-            foreach (var file in files)
-            {
-                if (Regex.IsMatch(file.Path, torrent.IncludeRegex))
-                {
-                    Log($"* Including {file.Path}", torrent);
-                    newFiles.Add(file);
-                }
-                else
-                {
-                    Log($"* Excluding {file.Path}", torrent);
-                }
-            }
-
-            files = newFiles;
-
-            Log($"Found {files.Count} files that match the regex", torrent);
-        } 
-        else if (!String.IsNullOrWhiteSpace(torrent.ExcludeRegex))
-        {
-            Log($"Using regular expression {torrent.IncludeRegex} to ignore files matching this regex", torrent);
-
-            var newFiles = new List<TorrentClientFile>();
-            foreach (var file in files)
-            {
-                if (!Regex.IsMatch(file.Path, torrent.ExcludeRegex))
-                {
-                    Log($"* Including {file.Path}", torrent);
-                    newFiles.Add(file);
-                }
-                else
-                {
-                    Log($"* Excluding {file.Path}", torrent);
-                }
-            }
-
-            files = newFiles;
-
-            Log($"Found {files.Count} files that match the regex", torrent);
-        }
-
-        if (files.Count == 0)
-        {
-            Log($"Filtered all files out! Downloading ALL files instead!", torrent);
-
-            files = torrent.Files;
-        }
-
-        var fileIds = files.Select(m => m.Id.ToString()).ToArray();
-
-        Log($"Selecting files:");
-
-        foreach (var file in files)
-        {
-            Log($"{file.Id}: {file.Path} ({file.Bytes}b)");
-        }
-
-        Log("", torrent);
-
-        await GetClient().Torrents.SelectFilesAsync(torrent.RdId!, [.. fileIds]);
+        return Task.CompletedTask;
     }
 
     public async Task Delete(String torrentId)
     {
-        await GetClient().Torrents.DeleteAsync(torrentId);
+        await GetClient().Torrents.ControlAsync(Convert.ToInt32(torrentId), "delete");
     }
 
     public async Task<String> Unrestrict(String link)
@@ -273,7 +174,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                 return torrent;
             }
 
-            var rdTorrent = await GetInfo(torrent.RdId) ?? throw new($"Resource not found");
+            var rdTorrent = await GetInfo(torrent.Hash) ?? throw new($"Resource not found");
 
             if (!String.IsNullOrWhiteSpace(rdTorrent.Filename))
             {
@@ -308,21 +209,29 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
             torrent.RdSeeders = rdTorrent.Seeders;
             torrent.RdStatusRaw = rdTorrent.Status;
 
-            torrent.RdStatus = rdTorrent.Status switch
+            if (rdTorrent.Host == "true")
             {
-                "magnet_error" => TorrentStatus.Error,
-                "magnet_conversion" => TorrentStatus.Processing,
-                "waiting_files_selection" => TorrentStatus.WaitingForFileSelection,
-                "queued" => TorrentStatus.Downloading,
-                "downloading" => TorrentStatus.Downloading,
-                "downloaded" => TorrentStatus.Finished,
-                "error" => TorrentStatus.Error,
-                "virus" => TorrentStatus.Error,
-                "compressing" => TorrentStatus.Downloading,
-                "uploading" => TorrentStatus.Uploading,
-                "dead" => TorrentStatus.Error,
-                _ => TorrentStatus.Error
-            };
+                torrent.RdStatus = TorrentStatus.Finished;
+            } 
+            else
+            {
+                torrent.RdStatus = rdTorrent.Status switch
+                {
+                    "queued" => TorrentStatus.Processing,
+                    "metaDL" => TorrentStatus.Processing,
+                    "checkingResumeData" => TorrentStatus.Processing,
+                    "paused" => TorrentStatus.Downloading,
+                    "downloading" => TorrentStatus.Downloading,
+                    "completed" => TorrentStatus.Downloading,
+                    "uploading" => TorrentStatus.Downloading,
+                    "uploading (no peers)" => TorrentStatus.Downloading,
+                    "stalled" => TorrentStatus.Downloading,
+                    "stalled (no seeds)" => TorrentStatus.Downloading,
+                    "cached" => TorrentStatus.Finished,
+                    _ => TorrentStatus.Error
+                };
+            }
+            
         }
         catch (Exception ex)
         {
@@ -363,7 +272,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         }
 
         Log($"Torrent has {torrent.Files.Count(m => m.Selected)} selected files out of {torrent.Files.Count} files, found {downloadLinks.Count} links, torrent ended: {torrent.RdEnded}", torrent);
-        
+
         // Check if all the links are set that have been selected
         if (torrent.Files.Count(m => m.Selected) == downloadLinks.Count)
         {
@@ -396,7 +305,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         }
 
         Log($"Did not find any suiteable download links", torrent);
-            
+
         return null;
     }
 
@@ -410,11 +319,11 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         return dateTimeOffset?.Subtract(_offset.Value).ToOffset(_offset.Value);
     }
 
-    private async Task<TorrentClientTorrent> GetInfo(String torrentId)
+    private async Task<TorrentClientTorrent> GetInfo(String torrentHash)
     {
-        var result = await GetClient().Torrents.GetInfoAsync(torrentId);
+        var result = await GetClient().Torrents.GetInfoAsync(torrentHash);
 
-        return Map(result);
+        return Map(result!);
     }
 
     private void Log(String message, Data.Models.Data.Torrent? torrent = null)
