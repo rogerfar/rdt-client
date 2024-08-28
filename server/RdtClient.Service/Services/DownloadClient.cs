@@ -39,16 +39,16 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
                 throw new("Invalid download path");
             }
 
-            await FileHelper.Delete(filePath);
+            await FileHelper.Delete(filePath.Result!);
 
             Type = torrent.DownloadClient;
 
             Downloader = Type switch
             {
-                Data.Enums.DownloadClient.Internal => new InternalDownloader(download.Link, filePath),
-                Data.Enums.DownloadClient.Bezzad => new BezzadDownloader(download.Link, filePath),
-                Data.Enums.DownloadClient.Aria2c => new Aria2cDownloader(download.RemoteId, download.Link, filePath, downloadPath, category),
-                Data.Enums.DownloadClient.Symlink => new SymlinkDownloader(download.Link, filePath, downloadPath),
+                Data.Enums.DownloadClient.Internal => new InternalDownloader(download.Link, filePath.Result!),
+                Data.Enums.DownloadClient.Bezzad => new BezzadDownloader(download.Link, filePath.Result!),
+                Data.Enums.DownloadClient.Aria2c => new Aria2cDownloader(download.RemoteId, download.Link, filePath.Result!, downloadPath.Result!, category),
+                Data.Enums.DownloadClient.Symlink => new SymlinkDownloader(download.Link, filePath.Result!, downloadPath.Result!),
                 _ => throw new($"Unknown download client {Type}")
             };
 

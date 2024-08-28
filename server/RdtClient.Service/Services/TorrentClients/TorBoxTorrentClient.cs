@@ -1,12 +1,10 @@
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using TorBoxNET;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Diagnostics.Eventing.Reader;
+using Microsoft.AspNetCore.Routing.Constraints;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
@@ -80,7 +78,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
             Added = ChangeTimeZone(torrent.CreatedAt)!.Value,
             Files = (torrent.Files ?? []).Select(m => new TorrentClientFile
             {
-                Path = m.S3Path.Replace(m.Hash + "/", string.Empty),
+                Path = string.Join("/", m.Name.Split('/').Skip(1)),
                 Bytes = m.Size,
                 Id = m.Id,
                 Selected = true
@@ -125,14 +123,14 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     public async Task<String> AddMagnet(String magnetLink)
     {
-        var result = await GetClient().Torrents.AddMagnetAsync(magnetLink);
+        var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, seeding: 3);
 
         return result.Data?.Hash?.ToString()!;
     }
 
     public async Task<String> AddFile(Byte[] bytes)
     {
-        var result = await GetClient().Torrents.AddFileAsync(bytes);
+        var result = await GetClient().Torrents.AddFileAsync(bytes, seeding: 3);
 
         return result.Data?.Hash?.ToString()!;
     }
@@ -155,7 +153,10 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     public async Task<String> Unrestrict(String link)
     {
-        var result = await GetClient().Unrestrict.LinkAsync(link);
+        var torrentFile = new List<string>(link.Split('/'));
+        var torrentID = torrentFile[4];
+        var fileID = torrentFile[5];
+        var result = await GetClient().Unrestrict.LinkAsync(torrentID, fileID);
 
         if (result.Error != null)
         {
@@ -219,12 +220,13 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                 {
                     "queued" => TorrentStatus.Processing,
                     "metaDL" => TorrentStatus.Processing,
+                    "checking" => TorrentStatus.Processing,
                     "checkingResumeData" => TorrentStatus.Processing,
                     "paused" => TorrentStatus.Downloading,
                     "downloading" => TorrentStatus.Downloading,
                     "completed" => TorrentStatus.Downloading,
-                    "uploading" => TorrentStatus.Downloading,
-                    "uploading (no peers)" => TorrentStatus.Downloading,
+                    "uploading" => TorrentStatus.Finished,
+                    "uploading (no peers)" => TorrentStatus.Finished,
                     "stalled" => TorrentStatus.Downloading,
                     "stalled (no seeds)" => TorrentStatus.Downloading,
                     "cached" => TorrentStatus.Finished,
@@ -263,8 +265,8 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         {
             foreach (var file in rdTorrent.Files!)
             {
-                var newFile = new List<String> { rdTorrent.Id, file.Id.ToString() };
-                files.Add(newFile.ToString()!);
+                var newFile = $"https://torbox.app/fakedl/{rdTorrent.Id}/{file.Id}";
+                files.Add(newFile);
             }
         }
 
@@ -283,7 +285,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     private async Task<TorrentClientTorrent> GetInfo(String torrentHash)
     {
-        var result = await GetClient().Torrents.GetInfoAsync(torrentHash);
+        var result = await GetClient().Torrents.GetInfoAsync(torrentHash, skipCache: true);
 
         return Map(result!);
     }
