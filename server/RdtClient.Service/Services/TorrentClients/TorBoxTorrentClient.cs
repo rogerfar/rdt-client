@@ -123,14 +123,14 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     public async Task<String> AddMagnet(String magnetLink)
     {
-        var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, seeding: 3);
+        var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, seeding: 2);
 
         return result.Data?.Hash?.ToString()!;
     }
 
     public async Task<String> AddFile(Byte[] bytes)
     {
-        var result = await GetClient().Torrents.AddFileAsync(bytes, seeding: 3);
+        var result = await GetClient().Torrents.AddFileAsync(bytes, seeding: 2);
 
         return result.Data?.Hash?.ToString()!;
     }
@@ -210,7 +210,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
             torrent.RdSeeders = rdTorrent.Seeders;
             torrent.RdStatusRaw = rdTorrent.Status;
 
-            if (rdTorrent.Host == "true")
+            if (rdTorrent.Host == "True")
             {
                 torrent.RdStatus = TorrentStatus.Finished;
             } 
@@ -225,8 +225,8 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                     "paused" => TorrentStatus.Downloading,
                     "downloading" => TorrentStatus.Downloading,
                     "completed" => TorrentStatus.Downloading,
-                    "uploading" => TorrentStatus.Finished,
-                    "uploading (no peers)" => TorrentStatus.Finished,
+                    "uploading" => TorrentStatus.Downloading,
+                    "uploading (no peers)" => TorrentStatus.Downloading,
                     "stalled" => TorrentStatus.Downloading,
                     "stalled (no seeds)" => TorrentStatus.Downloading,
                     "cached" => TorrentStatus.Finished,
