@@ -135,10 +135,30 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         return result.Data?.Hash?.ToString()!;
     }
 
-    public Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
+    public async Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
     {
-        var result = new List<TorrentClientAvailableFile>();
-        return Task.FromResult<IList<TorrentClientAvailableFile>>(result);
+        var availability = await GetClient().Torrents.GetAvailabilityAsync(hash, listFiles: true);
+
+        if (availability.Data != null)
+        {
+            var availableFiles = new List<TorrentClientAvailableFile>();
+            foreach (var file in availability.Data[0]?.Files!)
+            {
+                availableFiles.Add(
+                    new TorrentClientAvailableFile
+                    {
+                        Filename = file!.Name,
+                        Filesize = file.Size
+                    });
+            }
+            return availableFiles;
+        }
+        else
+        {
+            return [];
+        }
+
+
     }
 
     public Task SelectFiles(Data.Models.Data.Torrent torrent)
@@ -213,7 +233,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
             if (rdTorrent.Host == "True")
             {
                 torrent.RdStatus = TorrentStatus.Finished;
-            } 
+            }
             else
             {
                 torrent.RdStatus = rdTorrent.Status switch
@@ -233,7 +253,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                     _ => TorrentStatus.Error
                 };
             }
-            
+
         }
         catch (Exception ex)
         {
