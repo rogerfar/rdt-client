@@ -168,15 +168,13 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     public async Task Delete(String torrentId)
     {
-        await GetClient().Torrents.ControlAsync(Convert.ToInt32(torrentId), "delete");
+        await GetClient().Torrents.ControlAsync(torrentId, "delete");
     }
 
     public async Task<String> Unrestrict(String link)
     {
         var torrentFile = new List<string>(link.Split('/'));
-        var torrentID = torrentFile[4];
-        var fileID = torrentFile[5];
-        var result = await GetClient().Unrestrict.LinkAsync(torrentID, fileID);
+        var result = await GetClient().Unrestrict.LinkAsync(torrentID: torrentFile[4], fileID: torrentFile[5]);
 
         if (result.Error != null)
         {
