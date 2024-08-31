@@ -104,7 +104,6 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         if (queuedTorrents != null)
         {
             torrents.AddRange(queuedTorrents);
-
         }
 
         return torrents!.Select(Map).ToList();
