@@ -4,7 +4,7 @@ using TorBoxNET;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
-using Microsoft.AspNetCore.Routing.Constraints;
+using MonoTorrent;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
@@ -61,11 +61,11 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         }
     }
 
-    private TorrentClientTorrent Map(Torrent torrent)
+    private TorrentClientTorrent Map(TorrentInfoResult torrent)
     {
         return new()
         {
-            Id = torrent.Id.ToString(),
+            Id = torrent.Hash,
             Filename = torrent.Name,
             OriginalFilename = torrent.Name,
             Hash = torrent.Hash,
@@ -92,7 +92,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     public async Task<IList<TorrentClientTorrent>> GetTorrents()
     {
-        var torrents = new List<Torrent>();
+        var torrents = new List<TorrentInfoResult>();
 
         var currentTorrents = await GetClient().Torrents.GetCurrentAsync(true);
         if (currentTorrents != null)
@@ -124,14 +124,31 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
     {
         var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, seeding: 2);
 
-        return result.Data?.Hash?.ToString()!;
+        if (result.Error == "ACTIVE_LIMIT")
+        {
+            var magnetLinkInfo = MonoTorrent.MagnetLink.Parse(magnetLink);
+            return magnetLinkInfo.InfoHash.ToHex().ToLowerInvariant();
+        }
+        else
+        {
+            return result.Data!.Hash!;
+        }
     }
 
     public async Task<String> AddFile(Byte[] bytes)
     {
         var result = await GetClient().Torrents.AddFileAsync(bytes, seeding: 2);
-
-        return result.Data?.Hash?.ToString()!;
+        if (result.Error == "ACTIVE_LIMIT")
+        {
+            using (var stream = new MemoryStream(bytes))
+            {
+                var torrent = MonoTorrent.Torrent.Load(stream);
+                return torrent!.InfoHash.ToHex()!.ToLowerInvariant();
+            }
+        } else
+        {
+            return result.Data!.Hash!;
+        }
     }
 
     public async Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
@@ -275,14 +292,15 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         }
 
         var rdTorrent = await GetInfo(torrent.Hash);
-
         var files = new List<String>();
+
+        var torrentId = await GetClient().Torrents.GetInfoAsync(torrent.Hash, skipCache: true);
 
         if (rdTorrent.Files?.Count != 0)
         {
             foreach (var file in rdTorrent.Files!)
             {
-                var newFile = $"https://torbox.app/fakedl/{rdTorrent.Id}/{file.Id}";
+                var newFile = $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}";
                 files.Add(newFile);
             }
         }
