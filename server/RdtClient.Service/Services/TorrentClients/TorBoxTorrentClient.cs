@@ -4,14 +4,14 @@ using TorBoxNET;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
-using MonoTorrent;
+using RdtClient.Data.Models.Internal;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
 public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClientFactory httpClientFactory) : ITorrentClient
 {
     private TimeSpan? _offset;
-
+    private DbSettingsDefaults _dbSettings = new DbSettingsDefaults();
     private TorBoxNetClient GetClient()
     {
         try
@@ -122,7 +122,8 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     public async Task<String> AddMagnet(String magnetLink)
     {
-        var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, seeding: 2);
+
+        var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, _dbSettings.Seeding, _dbSettings.Zipped);
 
         if (result.Error == "ACTIVE_LIMIT")
         {
@@ -137,7 +138,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     public async Task<String> AddFile(Byte[] bytes)
     {
-        var result = await GetClient().Torrents.AddFileAsync(bytes, seeding: 2);
+        var result = await GetClient().Torrents.AddFileAsync(bytes, _dbSettings.Seeding, _dbSettings.Zipped);
         if (result.Error == "ACTIVE_LIMIT")
         {
             using (var stream = new MemoryStream(bytes))
@@ -145,7 +146,8 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                 var torrent = MonoTorrent.Torrent.Load(stream);
                 return torrent!.InfoHash.ToHex()!.ToLowerInvariant();
             }
-        } else
+        }
+        else
         {
             return result.Data!.Hash!;
         }
