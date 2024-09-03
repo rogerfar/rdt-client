@@ -123,7 +123,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     [HttpPost]
     public ActionResult<AppPreferences> AppDefaultSavePath()
     {
-        var result = Service.Services.Settings.AppDefaultSavePath;
+        var result = Settings.AppDefaultSavePath;
         return Ok(result);
     }
         
