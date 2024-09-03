@@ -11,7 +11,8 @@
     "RdtClient.Web": {
       "commandName": "Project",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "BASE_PATH": "test"
       },
       "applicationUrl": "http://localhost:6500"
     },
