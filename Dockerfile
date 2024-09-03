@@ -60,7 +60,7 @@ RUN \
    echo "**** Updating package information ****" && \
    apk update && \
    echo "**** Install pre-reqs ****" && \
-   apk add bash icu-libs krb5-libs libgcc libintl libssl1.1 libstdc++ zlib && \
+   apk add bash icu-libs krb5-libs libgcc libintl libssl3 libstdc++ zlib && \
    echo "**** Installing dotnet ****" && \
    mkdir -p /usr/share/dotnet
 
