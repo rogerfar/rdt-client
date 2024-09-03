@@ -27,13 +27,17 @@ Please see our separate Docker setup Read Me.
 ## Run as a Service
 
 Instead of running in Docker you can install it as a service in Windows or Linux.
+
 ## Windows Service
 
 1. Make sure you have the ASP.NET Core Runtime 8 installed: [https://dotnet.microsoft.com/download/dotnet/8.0](https://dotnet.microsoft.com/download/dotnet/8.0)
-1. Get the latest zip file from the Releases page and extract it to your host.
-1. Open the `appsettings.json` file and replace the `LogLevel` `Path` to a path on your host.
-1. In `appsettings.json` replace the `Database` `Path` to a path on your host.
-1. When using Windows paths, make sure to escape the slashes. For example: `D:\\RdtClient\\db\\rdtclient.db`
+2. Get the latest zip file from the Releases page and extract it to your host.
+3. Open the `appsettings.json` file and replace the `LogLevel` `Path` to a path on your host.
+4. In `appsettings.json` replace the `Database` `Path` to a path on your host.
+5. When using Windows paths, make sure to escape the slashes. For example: `D:\\RdtClient\\db\\rdtclient.db`
+6. Do one of these:
+	* Run `RdtClient.Web.exe` to start the client.
+ 	* Run `service-install.bat` to install the client as a service. This will install `RdtClient.Web.exe` as a service which make the client start in the backgorund when the computer starts. (You probably want to do this if you are going to use this with Sonarr etc...)
 
 ## Linux Service
 
