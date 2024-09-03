@@ -38,7 +38,7 @@ RUN \
    dotnet restore --no-cache RdtClient.sln && dotnet publish --no-restore -c Release -o out ; 
 
 # Stage 3 - Build runtime image
-FROM ghcr.io/linuxserver/baseimage-alpine:3.18
+FROM ghcr.io/linuxserver/baseimage-alpine:3.20
 ARG TARGETPLATFORM
 ENV TARGETPLATFORM=${TARGETPLATFORM:-linux/amd64}
 ARG BUILDPLATFORM
