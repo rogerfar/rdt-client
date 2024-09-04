@@ -1,5 +1,4 @@
 ﻿using System.Web;
-using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 
 namespace RdtClient.Service.Helpers;
@@ -42,7 +41,7 @@ public static class DownloadHelper
             }
         }
 
-        if (torrent.DownloadClient != DownloadClient.Symlink && !Directory.Exists(torrentPath))
+        if (!Directory.Exists(torrentPath))
         {
             Directory.CreateDirectory(torrentPath);
         }
@@ -86,7 +85,7 @@ public static class DownloadHelper
             }
         }
 
-        if (torrent.DownloadClient != DownloadClient.Symlink && !Directory.Exists(torrentPath))
+        if (!Directory.Exists(torrentPath))
         {
             Directory.CreateDirectory(torrentPath);
         }
