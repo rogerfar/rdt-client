@@ -4,14 +4,12 @@ using TorBoxNET;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
-using RdtClient.Data.Models.Internal;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
 public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClientFactory httpClientFactory) : ITorrentClient
 {
     private TimeSpan? _offset;
-    private DbSettingsDefaults _dbSettings = new DbSettingsDefaults();
     private TorBoxNetClient GetClient()
     {
         try
@@ -122,8 +120,9 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     public async Task<String> AddMagnet(String magnetLink)
     {
-
-        var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, _dbSettings.Seeding, _dbSettings.Zipped);
+        var seeding = Settings.Get.Provider.Seeding;
+        var zipped = Settings.Get.Provider.Zipped;
+        var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, seeding, zipped);
 
         if (result.Error == "ACTIVE_LIMIT")
         {
@@ -138,7 +137,9 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     public async Task<String> AddFile(Byte[] bytes)
     {
-        var result = await GetClient().Torrents.AddFileAsync(bytes, _dbSettings.Seeding, _dbSettings.Zipped);
+        var seeding = Settings.Get.Provider.Seeding;
+        var zipped = Settings.Get.Provider.Zipped;
+        var result = await GetClient().Torrents.AddFileAsync(bytes, seeding, zipped);
         if (result.Error == "ACTIVE_LIMIT")
         {
             using (var stream = new MemoryStream(bytes))
@@ -189,17 +190,21 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         await GetClient().Torrents.ControlAsync(torrentId, "delete");
     }
 
-    public async Task<String> Unrestrict(String link)
+    public async Task<string> Unrestrict(string link)
     {
-        var torrentFile = new List<string>(link.Split('/'));
-        var result = await GetClient().Unrestrict.LinkAsync(torrentID: torrentFile[4], fileID: torrentFile[5]);
+        var segments = link.Split('/');
 
-        if (result.Error != null)
+        bool zipped = segments[5] == "zip";
+        string fileId = zipped ? "0" : segments[5];
+
+        var result = await GetClient().Unrestrict.LinkAsync(torrentID: segments[4], fileID: fileId, zipped: zipped);
+
+        if (result?.Error != null)
         {
-            throw new($"Unrestrict returned an invalid download");
+            throw new("Unrestrict returned an invalid download");
         }
 
-        return result.Data!;
+        return result!.Data!;
     }
 
     public async Task<Data.Models.Data.Torrent> UpdateData(Data.Models.Data.Torrent torrent, TorrentClientTorrent? torrentClientTorrent)
@@ -297,8 +302,12 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         var files = new List<String>();
 
         var torrentId = await GetClient().Torrents.GetInfoAsync(torrent.Hash, skipCache: true);
-
-        if (rdTorrent.Files?.Count != 0)
+        if (Settings.Get.Provider.Zipped == true && rdTorrent.Files!.Count() > 100 && torrentId!.AllowZipped == true)
+        {
+            var newFile = $"https://torbox.app/fakedl/{torrentId?.Id}/zip";
+            files.Add(newFile);
+        } 
+        else if (rdTorrent.Files?.Count != 0)
         {
             foreach (var file in rdTorrent.Files!)
             {
