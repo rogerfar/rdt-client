@@ -80,7 +80,11 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
 
                 _logger.Debug($"Searching {rcloneMountPath} for {fileName} (attempt #{retryCount})...");
 
-                file = FindFile(rcloneMountPath, potentialFilePaths, fileName);
+                file = FindFile(rcloneMountPath, potentialFilePaths, "");
+                if (file == null)
+                {
+                    file = FindFile(rcloneMountPath, potentialFilePaths, fileName);
+                }
 
                 if (file == null && searchSubDirectories)
                 {
