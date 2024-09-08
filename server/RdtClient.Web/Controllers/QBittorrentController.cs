@@ -316,6 +316,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
 
         foreach (var url in urls)
         {
+            try{
             if (url.StartsWith("magnet"))
             {
                 await qBittorrent.TorrentsAddMagnet(url.Trim(), request.Category, null);
@@ -329,6 +330,15 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
             else
             {
                 return BadRequest($"Invalid torrent link format {url}");
+            }
+            }
+            catch (RDNET.RealDebridException ex)
+            {
+                // Infringing file.
+                if (ex.ErrorCode == 35)
+                {
+                    return Ok("Fails.");
+                }
             }
         }
 

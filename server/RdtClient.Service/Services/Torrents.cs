@@ -117,7 +117,7 @@ public class Torrents(
 
         var id = await TorrentClient.AddMagnet(magnetLink);
 
-        var hash = magnet.InfoHash.ToHex();
+        var hash = magnet.InfoHashes.V1OrV2.ToHex();
 
         var newTorrent = await Add(id, hash, magnetLink, false, torrent);
 
@@ -132,7 +132,7 @@ public class Torrents(
                     Directory.CreateDirectory(Settings.Get.General.CopyAddedTorrents);
                 }
 
-                var copyFileName = Path.Combine(Settings.Get.General.CopyAddedTorrents, $"{FileHelper.RemoveInvalidFileNameChars(magnet.Name)}.magnet");
+                var copyFileName = Path.Combine(Settings.Get.General.CopyAddedTorrents, $"{FileHelper.RemoveInvalidFileNameChars(magnet.Name!)}.magnet");
 
                 if (File.Exists(copyFileName))
                 {
@@ -168,7 +168,7 @@ public class Torrents(
 
         var id = await TorrentClient.AddFile(bytes);
 
-        var hash = monoTorrent.InfoHash.ToHex();
+        var hash = monoTorrent.InfoHashes.V1OrV2.ToHex();
 
         var newTorrent = await Add(id, hash, fileAsBase64, true, torrent);
 

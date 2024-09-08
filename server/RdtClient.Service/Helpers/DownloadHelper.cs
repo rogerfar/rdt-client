@@ -118,11 +118,6 @@ public static class DownloadHelper
             }
         }
 
-        if (!Directory.Exists(torrentPath))
-        {
-            Directory.CreateDirectory(torrentPath);
-        }
-
         var filePath = Path.Combine(torrentPath, fileName);
 
         return filePath;

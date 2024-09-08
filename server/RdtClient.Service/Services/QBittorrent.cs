@@ -194,7 +194,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
 
         var prio = 0;
 
-        Decimal downloadProgress = 0;
+        Double downloadProgress = 0;
 
         foreach (var torrent in allTorrents)
         {
@@ -214,12 +214,12 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             Int64 bytesDone = 0;
             Int64 bytesTotal = 0;
             Int64 speed = 0;
-            Int64 rdProgress = 0;
+            Double rdProgress = 0;
             try
             {
-                rdProgress = (Int64) ((torrent.RdProgress ?? 0) / 100.0m);
+                rdProgress = (torrent.RdProgress ?? 0.0) / 100.0;
                 bytesTotal = torrent.RdSize ?? 1;
-                bytesDone = bytesTotal * rdProgress;
+                bytesDone = (Int64) (bytesTotal * rdProgress);
                 speed = torrent.RdSpeed ?? 0;
             }
             catch (Exception ex)
@@ -237,10 +237,10 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
                 bytesDone = torrent.Downloads.Sum(m => m.BytesDone);
                 bytesTotal = torrent.Downloads.Sum(m => m.BytesTotal);
                 speed = (Int32) torrent.Downloads.Average(m => m.Speed);
-                downloadProgress = bytesTotal > 0 ? (Decimal) bytesDone / bytesTotal : 0;
+                downloadProgress = bytesTotal > 0 ? (Double) bytesDone / bytesTotal : 0;
             }
 
-            var progress = (Int64) ((rdProgress + downloadProgress) / 2m);
+            var progress = (rdProgress + downloadProgress) / 2.0;
 
             var result = new TorrentInfo
             {

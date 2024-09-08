@@ -20,64 +20,24 @@ This is a web interface to manage your torrents on Real-Debrid, AllDebrid or Pre
 
 ## Docker Setup
 
-You can run the docker container on Windows, Linux. To get started either use _Docker Run_ or _Docker Compose_.
+Please see our separate Docker setup Read Me.
 
-### Docker Run
-
-```console
-docker run --pull=always
-		   --volume /your/download/path/:/data/downloads \
-		   --volume /your/storage/path/:/data/db \
-		   --log-driver json-file \
-		   --log-opt max-size=10m \
-		   -p 6500:6500 \
-		   --name rdtclient \
-		   rogerfar/rdtclient:latest
-```
-
-Replace `/your/download/path/` with your local path to download files to. For Windows i.e. `C:/Downloads`.
-Replace `/your/storage/path/` with your local path to store persistent database and log files in. For Windows i.e. `C:/Docker/rdt-client`.
-
-### Docker Compose
-
-You can use the provided docker compose to run:
-
-```yaml
-version: '3.3'
-services:
-    rdtclient:
-        container_name: rdtclient
-        volumes:
-            - 'D:/Downloads/:/data/downloads'
-            - 'D:/Docker/rdt-client/:/data/db'
-        image: rogerfar/rdtclient
-        restart: always
-        logging:
-            driver: json-file
-            options:
-                max-size: 10m
-        ports:
-            - '6500:6500'
-```
-
-And to run:
-
-```console
-docker-compose up -d
-```
-
-Replace the paths in `volumes` as in the above step.
+[Readme for Docker](README-DOCKER.md)
 
 ## Run as a Service
 
 Instead of running in Docker you can install it as a service in Windows or Linux.
+
 ## Windows Service
 
 1. Make sure you have the ASP.NET Core Runtime 8 installed: [https://dotnet.microsoft.com/download/dotnet/8.0](https://dotnet.microsoft.com/download/dotnet/8.0)
-1. Get the latest zip file from the Releases page and extract it to your host.
-1. Open the `appsettings.json` file and replace the `LogLevel` `Path` to a path on your host.
-1. In `appsettings.json` replace the `Database` `Path` to a path on your host.
-1. When using Windows paths, make sure to escape the slashes. For example: `D:\\RdtClient\\db\\rdtclient.db`
+2. Get the latest zip file from the Releases page and extract it to your host.
+3. Open the `appsettings.json` file and replace the `LogLevel` `Path` to a path on your host.
+4. In `appsettings.json` replace the `Database` `Path` to a path on your host.
+5. When using Windows paths, make sure to escape the slashes. For example: `D:\\RdtClient\\db\\rdtclient.db`
+6. Do one of these:
+	* Run `RdtClient.Web.exe` to start the client.
+ 	* Run `service-install.bat` to install the client as a service. This will install `RdtClient.Web.exe` as a service which make the client start in the backgorund when the computer starts. (You probably want to do this if you are going to use this with Sonarr etc...)
 
 ## Linux Service
 

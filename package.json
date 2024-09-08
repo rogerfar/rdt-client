@@ -1,6 +1,6 @@
 {
   "name": "rdt-client",
-  "version": "2.0.80",
+  "version": "2.0.86",
   "description": "This is a web interface to manage your torrents on Real-Debrid.",
   "main": "index.js",
   "dependencies": {

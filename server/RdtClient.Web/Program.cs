@@ -168,6 +168,7 @@ try
     if (basePath != null)
     {
         app.UseMiddleware<BaseHrefMiddleware>(basePath);
+        app.UsePathBase($"/{basePath.TrimStart('/').TrimEnd('/')}/");
     }
 
     app.UseMiddleware<RequestLoggingMiddleware>();
