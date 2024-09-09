@@ -30,7 +30,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
             // Get the server time to fix up the timezones on results
             if (_offset == null)
             {
-                var serverTime = rdtNetClient.Api.GetIsoTimeAsync();
+                var serverTime = DateTimeOffset.UtcNow;
                 _offset = serverTime.Offset;
             }
 
@@ -127,7 +127,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         if (result.Error == "ACTIVE_LIMIT")
         {
             var magnetLinkInfo = MonoTorrent.MagnetLink.Parse(magnetLink);
-            return magnetLinkInfo.InfoHash.ToHex().ToLowerInvariant();
+            return magnetLinkInfo.InfoHashes.V1!.ToHex().ToLowerInvariant();
         }
         else
         {
@@ -145,7 +145,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
             using (var stream = new MemoryStream(bytes))
             {
                 var torrent = MonoTorrent.Torrent.Load(stream);
-                return torrent!.InfoHash.ToHex()!.ToLowerInvariant();
+                return torrent!.InfoHashes.V1!.ToHex().ToLowerInvariant();
             }
         }
         else
@@ -197,7 +197,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         bool zipped = segments[5] == "zip";
         string fileId = zipped ? "0" : segments[5];
 
-        var result = await GetClient().Unrestrict.LinkAsync(torrentID: segments[4], fileID: fileId, zipped: zipped);
+        var result = await GetClient().Torrents.RequestDownloadAsync(Convert.ToInt32(segments[4]), Convert.ToInt32(fileId), zipped);
 
         if (result?.Error != null)
         {
@@ -302,7 +302,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         var files = new List<String>();
 
         var torrentId = await GetClient().Torrents.GetInfoAsync(torrent.Hash, skipCache: true);
-        if (Settings.Get.Provider.Zipped == true && rdTorrent.Files!.Count() > 100 && torrentId!.AllowZipped == true)
+        if (Settings.Get.Provider.Zipped == true)
         {
             var newFile = $"https://torbox.app/fakedl/{torrentId?.Id}/zip";
             files.Add(newFile);
