@@ -65,8 +65,6 @@ public static class DownloadHelper
 
         var filePath = Path.Combine(torrentPath, fileName);
 
-        Console.WriteLine($"FILEPATH HERE {filePath}");
-
         return filePath;
     }
 

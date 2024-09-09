@@ -43,7 +43,7 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
 
             if (Type != Data.Enums.DownloadClient.Symlink)
             {
-                await FileHelper.Delete(filePath);
+                await FileHelper.Delete(filePath.Result!);
             }
 
             Downloader = Type switch

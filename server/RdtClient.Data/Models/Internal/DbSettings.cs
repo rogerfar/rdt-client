@@ -123,7 +123,7 @@ http://127.0.0.1:6800/jsonrpc.")]
     [DisplayName("Aria2c Secret (only used for the Aria2c Downloader)")]
     [Description("The secret of your Aria2c instance. Optional.")]
     public String Aria2cSecret { get; set; } = "mysecret123";
-    
+
     [DisplayName("Aria2c Download Path")]
     [Description("The root path to download the file to on the Aria2c host, if empty use the Download path setting.")]
     public String? Aria2cDownloadPath { get; set; } = null;

@@ -270,6 +270,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                     "uploading (no peers)" => TorrentStatus.Downloading,
                     "stalled" => TorrentStatus.Downloading,
                     "stalled (no seeds)" => TorrentStatus.Downloading,
+                    "processing" => TorrentStatus.Downloading,
                     "cached" => TorrentStatus.Finished,
                     _ => TorrentStatus.Error
                 };
