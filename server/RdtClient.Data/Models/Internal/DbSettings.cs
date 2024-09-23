@@ -1,5 +1,5 @@
-﻿using System.ComponentModel;
-using RdtClient.Data.Enums;
+﻿using RdtClient.Data.Enums;
+using System.ComponentModel;
 
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
@@ -123,7 +123,7 @@ http://127.0.0.1:6800/jsonrpc.")]
     [DisplayName("Aria2c Secret (only used for the Aria2c Downloader)")]
     [Description("The secret of your Aria2c instance. Optional.")]
     public String Aria2cSecret { get; set; } = "mysecret123";
-    
+
     [DisplayName("Aria2c Download Path")]
     [Description("The root path to download the file to on the Aria2c host, if empty use the Download path setting.")]
     public String? Aria2cDownloadPath { get; set; } = null;
@@ -131,6 +131,21 @@ http://127.0.0.1:6800/jsonrpc.")]
     [DisplayName("Rclone mount path (only used for the Symlink Downloader)")]
     [Description("Path where Rclone is mounted. Required for Symlink Downloader. Suffix this path with a * to search subdirectories too.")]
     public String RcloneMountPath { get; set; } = "/mnt/rd/";
+
+    [DisplayName("Synology DownloadStation URL")]
+    [Description("The URL to the Synology DownloadStation. A common URL is http://127.0.0.1:5000")]
+    public String DownloadStationUrl { get; set; } = "http://127.0.0.1:5000";
+
+    [DisplayName("Synology DownloadStation Username")]
+    [Description("The username to use when connecting to the Synology DownloadStation.")]
+    public String? DownloadStationUsername { get; set; } = null;
+    [DisplayName("Synology DownloadStation Password")]
+    [Description("The password to use when connecting to the Synology DownloadStation.")]
+    public String? DownloadStationPassword { get; set; } = null;
+
+    [DisplayName("Synology Download Station Download Path")]
+    [Description("The root path to doawnload the file on the Synology DownloadStation host, if empty use the default DownloadStation path but won't create catagory folders.")]
+    public String? DownloadStationDownloadPath { get; set; } = null;
 
     [DisplayName("Log level")]
     [Description("Only set when trying to debug a download client, can generate a lot of logs.")]
