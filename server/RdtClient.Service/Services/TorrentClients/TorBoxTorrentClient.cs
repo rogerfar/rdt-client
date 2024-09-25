@@ -24,8 +24,8 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
             var httpClient = httpClientFactory.CreateClient();
             httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
 
-            var rdtNetClient = new TorBoxNetClient(null, httpClient, 5);
-            rdtNetClient.UseApiAuthentication(apiKey);
+            var torBoxNetClient = new TorBoxNetClient(null, httpClient, 5);
+            torBoxNetClient.UseApiAuthentication(apiKey);
 
             // Get the server time to fix up the timezones on results
             if (_offset == null)
@@ -34,7 +34,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                 _offset = serverTime.Offset;
             }
 
-            return rdtNetClient;
+            return torBoxNetClient;
         }
         catch (AggregateException ae)
         {
@@ -302,7 +302,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         var rdTorrent = await GetInfo(torrent.Hash);
         var files = new List<String>();
 
-        var torrentId = await GetClient().Torrents.GetInfoAsync(torrent.Hash, skipCache: true);
+        var torrentId = await GetClient().Torrents.GetHashInfoAsync(torrent.Hash, skipCache: true);
         if (Settings.Get.Provider.Zipped == true)
         {
             var newFile = $"https://torbox.app/fakedl/{torrentId?.Id}/zip";
@@ -332,18 +332,8 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     private async Task<TorrentClientTorrent> GetInfo(String torrentHash)
     {
-        var result = await GetClient().Torrents.GetInfoAsync(torrentHash, skipCache: true);
+        var result = await GetClient().Torrents.GetHashInfoAsync(torrentHash, skipCache: true);
 
         return Map(result!);
-    }
-
-    private void Log(String message, Data.Models.Data.Torrent? torrent = null)
-    {
-        if (torrent != null)
-        {
-            message = $"{message} {torrent.ToLog()}";
-        }
-
-        logger.LogDebug(message);
     }
 }
