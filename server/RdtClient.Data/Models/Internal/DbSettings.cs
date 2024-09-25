@@ -144,7 +144,7 @@ http://127.0.0.1:6800/jsonrpc.")]
     public String? DownloadStationPassword { get; set; } = null;
 
     [DisplayName("Synology Download Station Download Path")]
-    [Description("The root path to doawnload the file on the Synology DownloadStation host, if empty use the default DownloadStation path but won't create catagory folders.")]
+    [Description("The root path to doawnload the file on the Synology DownloadStation host, if empty use the default DownloadStation path.")]
     public String? DownloadStationDownloadPath { get; set; } = null;
 
     [DisplayName("Log level")]
