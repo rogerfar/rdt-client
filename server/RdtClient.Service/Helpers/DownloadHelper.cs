@@ -1,5 +1,5 @@
-﻿using System.Web;
-using RdtClient.Data.Models.Data;
+﻿using RdtClient.Data.Models.Data;
+using System.Web;
 
 namespace RdtClient.Service.Helpers;
 
@@ -15,6 +15,9 @@ public static class DownloadHelper
         }
 
         var directory = RemoveInvalidPathChars(torrent.RdName);
+
+        // RealDebrid sometimes change TorrentName when it's a single file torrent adding the extension of the single file
+        directory = Path.ChangeExtension(directory, null);
 
         var uri = new Uri(fileUrl);
         var torrentPath = Path.Combine(downloadPath, directory);
