@@ -31,7 +31,7 @@ public class UnpackClient(Download download, String destinationPath)
             {
                 if (!_cancellationTokenSource.IsCancellationRequested)
                 {
-                    await Unpack(filePath, _cancellationTokenSource.Token);
+                    await Unpack(filePath.Result!, _cancellationTokenSource.Token);
                 }
             });
         }

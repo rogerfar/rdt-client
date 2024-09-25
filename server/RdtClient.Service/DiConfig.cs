@@ -24,6 +24,7 @@ public static class DiConfig
         services.AddScoped<RemoteService>();
         services.AddScoped<RealDebridTorrentClient>();
         services.AddScoped<Settings>();
+        services.AddScoped<TorBoxTorrentClient>();
         services.AddScoped<Torrents>();
         services.AddScoped<TorrentRunner>();
 

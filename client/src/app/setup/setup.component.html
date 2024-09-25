@@ -42,7 +42,7 @@
             <div class="notification is-primary">
               To be able to use the Real-Debrid Client you need a premium subscription to download torrents.
               <br /><br />
-              Not premium yet? You have the choice of 2 providers:
+              Not premium yet? You have the choice of 4 providers:
               <br />
               <a href="https://real-debrid.com/?id=1348683" target="_blank" rel="noopener"
                 >Use this link to sign up to Real-Debrid.</a
@@ -55,6 +55,8 @@
               <a href="https://www.premiumize.me/" target="_blank" rel="noopener"
                 >Use this link to sign up to Premiumize.</a
               >
+              <a href="https://torbox.app/" target="_blank" rel="noopener"
+                >Use this link to sign up to TorBox.</a>
               <br />
               <small>(Referal links)</small>
             </div>
@@ -65,6 +67,7 @@
                   <option [ngValue]="0">Real-Debrid</option>
                   <option [ngValue]="1">AllDebrid</option>
                   <option [ngValue]="2">Premiumize</option>
+                  <option [ngValue]="3">TorBox</option>
                 </select>
               </div>
             </div>
@@ -90,6 +93,10 @@
                 <a href="https://www.premiumize.me/account" target="_blank" rel="noopener"
                   >https://www.premiumize.me/account</a
                 >.
+              </p>
+              <p class="help" *ngIf="provider === 3">
+                You can find your API key here:
+                <a href="https://torbox.app/settings" target="_blank" rel="noopener">https://torbox.app/settings</a>.
               </p>
             </div>
 
