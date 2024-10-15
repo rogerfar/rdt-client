@@ -59,7 +59,7 @@ public class DownloadStationDownloader : IDownloader
             }
             else
             {
-                remotePath = Path.Combine(downloadPath, category, downloadPath).Replace('\\', '/');
+                remotePath = Path.Combine(rootPath, category, downloadPath).Replace('\\', '/');
             }
         }
 
