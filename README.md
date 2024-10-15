@@ -193,7 +193,7 @@ By default the application runs in the root of your hosted address (i.e. https:/
 - (optional) Resharper
 
 1. Open the client folder project in VS Code and run `npm install`.
-1. To debug run `ng serve`, to build run `ng build --prod`.
+1. To debug run `ng serve`, to build run `ng build -c production`.
 1. Open the Visual Studio 2019 project `RdtClient.sln` and `Publish` the `RdtClient.Web` to the given `PublishFolder` target.
 1. When debugging, make sure to run `RdtClient.Web.dll` and not `IISExpress`.
 1. The result is found in `Publish`.
