@@ -94,7 +94,6 @@ public class DownloadStationDownloader : IDownloader
             }
         }
 
-
         var retryCount = 0;
         while (retryCount < 5)
         {
@@ -106,8 +105,6 @@ public class DownloadStationDownloader : IDownloader
             }
             try
             {
-                await CheckFolderOrCreate(path);
-
                 var createResult = await _synologyClient
                     .DownloadStationApi()
                     .TaskEndpoint()
@@ -115,32 +112,25 @@ public class DownloadStationDownloader : IDownloader
 
                 _logger.Debug($"Added download to DownloadStation, received ID {_gid}");
 
-                if (createResult.Success)
+                _gid = createResult.TaskId?.FirstOrDefault();
+                if (_gid == null) _gid = await GetGidFromUri();
+
+                if (_gid != null)
                 {
-                    _gid = await GetGidFromUri();
-                    if (_gid != null)
-                    {
-                        _logger.Debug($"Download with ID {_gid} found in DownloadStation");
-                        return _gid;
-                    }
-                    else
-                    {
-                        retryCount++;
-                        _logger.Debug($"Task not found in DownloadStation after creat Sucess. Retrying {retryCount}/{RetryCount}");
-                        await Task.Delay(retryCount * 1000);
-                    }
+                    _logger.Debug($"Download with ID {_gid} found in DownloadStation");
+                    return _gid;
                 }
                 else
                 {
                     retryCount++;
-                    _logger.Debug($"Error starting download: {createResult.Error.Code}. Retrying {retryCount}/{RetryCount}");
+                    _logger.Error($"Task not found in DownloadStation after creat Sucess. Retrying {retryCount}/{RetryCount}");
                     await Task.Delay(retryCount * 1000);
                 }
             }
             catch (Exception e)
             {
                 retryCount++;
-                _logger.Debug($"Error starting download: {e.Message}. Retrying {retryCount}/{RetryCount}");
+                _logger.Error($"Error starting download: {e.Message}. Retrying {retryCount}/{RetryCount}");
                 await Task.Delay(retryCount * 1000);
             }
         }
@@ -151,7 +141,7 @@ public class DownloadStationDownloader : IDownloader
     private async Task<String?> GetGidFromUri()
     {
         var tasks = await _synologyClient.DownloadStationApi().TaskEndpoint().ListAsync();
-        return tasks.Tasks.FirstOrDefault(t => t.Additional?.Detail?.Uri == _uri)?.Id;
+        return tasks.Task.FirstOrDefault(t => t.Additional?.Detail?.Uri == _uri)?.Id;
     }
 
     public async Task Pause()
@@ -181,7 +171,7 @@ public class DownloadStationDownloader : IDownloader
             return;
         }
 
-        if (task.Status == "finished")
+        if (task.Status == DownloadStationTaskStatus.Finished)
         {
             DownloadComplete?.Invoke(this, new() { Error = null });
             return;

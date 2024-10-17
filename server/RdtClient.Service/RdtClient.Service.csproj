@@ -22,11 +22,11 @@
     <PackageReference Include="Serilog" Version="4.0.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
     <PackageReference Include="SharpCompress" Version="0.38.0" />
-    <PackageReference Include="Synology.Api.Client" Version="0.2.68" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\RdtClient.Data\RdtClient.Data.csproj" />
+    <ProjectReference Include="..\..\..\Synology.Api.Client\src\Synology.Api.Client\Synology.Api.Client.csproj" />
   </ItemGroup>
 
 </Project>

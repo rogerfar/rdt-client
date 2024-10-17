@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RdtClient.Service", "RdtCli
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RdtClient.Data", "RdtClient.Data\RdtClient.Data.csproj", "{92EF8817-AD73-4301-93BD-745D7D61DD74}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Synology.Api.Client", "..\..\Synology.Api.Client\src\Synology.Api.Client\Synology.Api.Client.csproj", "{FDAAD49C-126C-4612-81C2-3CEB6D7A1105}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{92EF8817-AD73-4301-93BD-745D7D61DD74}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{92EF8817-AD73-4301-93BD-745D7D61DD74}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{92EF8817-AD73-4301-93BD-745D7D61DD74}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDAAD49C-126C-4612-81C2-3CEB6D7A1105}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDAAD49C-126C-4612-81C2-3CEB6D7A1105}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDAAD49C-126C-4612-81C2-3CEB6D7A1105}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDAAD49C-126C-4612-81C2-3CEB6D7A1105}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
