@@ -121,8 +121,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
     public async Task<String> AddMagnet(String magnetLink)
     {
         var seeding = Settings.Get.Provider.Seeding;
-        var zipped = Settings.Get.Provider.Zipped;
-        var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, seeding, zipped);
+        var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, seeding, false);
 
         if (result.Error == "ACTIVE_LIMIT")
         {
@@ -138,8 +137,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
     public async Task<String> AddFile(Byte[] bytes)
     {
         var seeding = Settings.Get.Provider.Seeding;
-        var zipped = Settings.Get.Provider.Zipped;
-        var result = await GetClient().Torrents.AddFileAsync(bytes, seeding, zipped);
+        var result = await GetClient().Torrents.AddFileAsync(bytes, seeding, false);
         if (result.Error == "ACTIVE_LIMIT")
         {
             using (var stream = new MemoryStream(bytes))
@@ -303,19 +301,9 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         var files = new List<String>();
 
         var torrentId = await GetClient().Torrents.GetHashInfoAsync(torrent.Hash, skipCache: true);
-        if (Settings.Get.Provider.Zipped == true)
-        {
-            var newFile = $"https://torbox.app/fakedl/{torrentId?.Id}/zip";
-            files.Add(newFile);
-        } 
-        else if (rdTorrent.Files?.Count != 0)
-        {
-            foreach (var file in rdTorrent.Files!)
-            {
-                var newFile = $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}";
-                files.Add(newFile);
-            }
-        }
+
+        var newFile = $"https://torbox.app/fakedl/{torrentId?.Id}/zip";
+        files.Add(newFile);
 
         return files;
     }
