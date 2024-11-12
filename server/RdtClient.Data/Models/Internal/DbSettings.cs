@@ -177,14 +177,6 @@ or
 
     [DisplayName("Auto Import Defaults")]
     public DbSettingsDefaultsWithCategory Default { get; set; } = new();
-
-    [DisplayName("Seeding")]
-    [Description("Set the priority of a torrent, 1 = Auto, 2 = Seed, 3 = disabled. [TorBox Only]")]
-    public Int32 Seeding { get; set; } = 3;
-
-    [DisplayName("Download as Zip")]
-    [Description("Whether to download the files individually or zipped. [TorBox Only]")]
-    public bool Zipped { get; set; } = true;
 }
 
 public class DbSettingsIntegrations
