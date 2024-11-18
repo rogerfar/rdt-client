@@ -26,7 +26,7 @@ public class InternalDownloader : IDownloader
 
         _uri = uri;
         _filePath = filePath;
-        
+
         _downloadConfiguration = new();
 
         SetSettings();
@@ -131,14 +131,14 @@ public class InternalDownloader : IDownloader
         {
             settingDownloadParallelCount = 1;
         }
-        
+
         var settingDownloadMaxSpeed = Settings.Get.DownloadClient.MaxSpeed;
 
         if (settingDownloadMaxSpeed <= 0)
         {
             settingDownloadMaxSpeed = 0;
         }
-
+        settingDownloadMaxSpeed = settingDownloadMaxSpeed / Math.Max(TorrentRunner.ActiveDownloadClients.Count, 1);
         settingDownloadMaxSpeed = settingDownloadMaxSpeed * 1024 * 1024;
 
         var settingDownloadTimeout = Settings.Get.DownloadClient.Timeout;
