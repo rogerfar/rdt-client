@@ -21,6 +21,11 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     {
         logger.LogDebug($"Auth login");
 
+        if (Settings.Get.General.AuthenticationType == AuthenticationType.None)
+        {
+            return Ok("Ok.");
+        }
+
         if (String.IsNullOrWhiteSpace(request.UserName) || String.IsNullOrEmpty(request.Password))
         {
             return Ok("Fails.");
