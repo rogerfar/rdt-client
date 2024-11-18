@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Net;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Hosting.WindowsServices;
@@ -135,8 +134,6 @@ builder.Host.UseWindowsService();
 
 RdtClient.Data.DiConfig.Config(builder.Services, appSettings);
 builder.Services.RegisterRdtServices();
-
-ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
 try
 {

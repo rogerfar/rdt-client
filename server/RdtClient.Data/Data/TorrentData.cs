@@ -51,12 +51,12 @@ public class TorrentData(DataContext dataContext)
 
     public async Task<Torrent?> GetByHash(String hash)
     {
-#pragma warning disable CA1862 // Use the 'StringComparison' method overloads to perform case-insensitive string comparisons
+        hash = hash.ToLower();
+
         var dbTorrent = await dataContext.Torrents
                                           .AsNoTracking()
                                           .Include(m => m.Downloads)
-                                          .FirstOrDefaultAsync(m => m.Hash.ToLower() == hash.ToLower());
-#pragma warning restore CA1862 // Use the 'StringComparison' method overloads to perform case-insensitive string comparisons
+                                          .FirstOrDefaultAsync(m => m.Hash == hash);
 
         if (dbTorrent == null)
         {

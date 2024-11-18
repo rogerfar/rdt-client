@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 using TorBoxNET;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
-using RdtClient.Service.Helpers;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
@@ -74,9 +73,9 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
             Progress = (Int64)((torrent.Progress) * 100.0),
             Status = torrent.DownloadState,
             Added = ChangeTimeZone(torrent.CreatedAt)!.Value,
-            Files = (torrent.Files ?? []).Select(m => new TorrentClientFile
+            Files = torrent.Files.Select(m => new TorrentClientFile
             {
-                Path = string.Join("/", m.Name.Split('/').Skip(1)),
+                Path = String.Join("/", m.Name.Split('/').Skip(1)),
                 Bytes = m.Size,
                 Id = m.Id,
                 Selected = true
@@ -104,7 +103,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
             torrents.AddRange(queuedTorrents);
         }
 
-        return torrents!.Select(Map).ToList();
+        return torrents.Select(Map).ToList();
     }
 
     public async Task<TorrentClientUser> GetUser()
@@ -141,26 +140,20 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     public async Task<String> AddFile(Byte[] bytes)
     {
-        var seeding = Settings.Get.Integrations.Default.FinishedAction;
-
         // Line is not working right now, will disable seeding and fix in december when I have time again.
         // var seed = (seeding == TorrentFinishedAction.RemoveAllTorrents || seeding == TorrentFinishedAction.RemoveRealDebrid) ? 3 : 2;
+        const Int32 seed = 3;
 
-        var seed = 3;
-
-        var result = await GetClient().Torrents.AddFileAsync(bytes, seed, false);
+        var result = await GetClient().Torrents.AddFileAsync(bytes, seed);
         if (result.Error == "ACTIVE_LIMIT")
         {
-            using (var stream = new MemoryStream(bytes))
-            {
-                var torrent = MonoTorrent.Torrent.Load(stream);
-                return torrent!.InfoHashes.V1!.ToHex().ToLowerInvariant();
-            }
+            using var stream = new MemoryStream(bytes);
+
+            var torrent = await MonoTorrent.Torrent.LoadAsync(stream);
+            return torrent.InfoHashes.V1!.ToHex().ToLowerInvariant();
         }
-        else
-        {
-            return result.Data!.Hash!;
-        }
+
+        return result.Data!.Hash!;
     }
 
     public async Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
@@ -169,24 +162,15 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
         if (availability.Data != null)
         {
-            var availableFiles = new List<TorrentClientAvailableFile>();
-            foreach (var file in availability.Data[0]?.Files!)
-            {
-                availableFiles.Add(
-                    new TorrentClientAvailableFile
-                    {
-                        Filename = file!.Name,
-                        Filesize = file.Size
-                    });
-            }
-            return availableFiles;
-        }
-        else
-        {
-            return [];
+            return (availability.Data[0]?.Files ?? []).Select(file => new TorrentClientAvailableFile()
+                                                      {
+                                                          Filename = file.Name,
+                                                          Filesize = file.Size
+                                                      })
+                                                      .ToList();
         }
 
-
+        return [];
     }
 
     public Task SelectFiles(Data.Models.Data.Torrent torrent)
@@ -199,21 +183,21 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         await GetClient().Torrents.ControlAsync(torrentId, "delete");
     }
 
-    public async Task<string> Unrestrict(string link)
+    public async Task<String> Unrestrict(String link)
     {
         var segments = link.Split('/');
 
-        bool zipped = segments[5] == "zip";
-        string fileId = zipped ? "0" : segments[5];
+        var zipped = segments[5] == "zip";
+        var fileId = zipped ? "0" : segments[5];
 
         var result = await GetClient().Torrents.RequestDownloadAsync(Convert.ToInt32(segments[4]), Convert.ToInt32(fileId), zipped);
 
-        if (result?.Error != null)
+        if (result.Error != null)
         {
             throw new("Unrestrict returned an invalid download");
         }
 
-        return result!.Data!;
+        return result.Data!;
     }
 
     public async Task<Data.Models.Data.Torrent> UpdateData(Data.Models.Data.Torrent torrent, TorrentClientTorrent? torrentClientTorrent)
@@ -303,12 +287,6 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     public async Task<IList<String>?> GetDownloadLinks(Data.Models.Data.Torrent torrent)
     {
-        if (torrent.Hash == null)
-        {
-            return null;
-        }
-
-        var rdTorrent = await GetInfo(torrent.Hash);
         var files = new List<String>();
 
         var torrentId = await GetClient().Torrents.GetHashInfoAsync(torrent.Hash, skipCache: true);

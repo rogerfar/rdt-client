@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RdtClient.Data.Enums;
 using RdtClient.Data.Models.QBittorrent;
 using RdtClient.Service.Services;
 

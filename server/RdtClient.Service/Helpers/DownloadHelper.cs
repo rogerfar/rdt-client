@@ -1,14 +1,11 @@
-﻿using System;
-using System.Web;
-using RdtClient.Data.Enums;
+﻿using System.Web;
 using RdtClient.Data.Models.Data;
-using RdtClient.Service.Services;
 
 namespace RdtClient.Service.Helpers;
 
 public static class DownloadHelper
 {
-    public static async Task<String?> GetDownloadPath(String downloadPath, Torrent torrent, Download download)
+    public static String? GetDownloadPath(String downloadPath, Torrent torrent, Download download)
     {
         var fileUrl = download.Link;
 
@@ -23,20 +20,6 @@ public static class DownloadHelper
         var torrentPath = Path.Combine(downloadPath, directory);
 
         var fileName = uri.Segments.Last();
-
-        if (Settings.Get.Provider.Provider == Provider.TorBox)
-        {
-            using (HttpClient client = new HttpClient())
-            {
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, uri);
-                HttpResponseMessage response = await client.SendAsync(request);
-
-                if (response.Content.Headers.ContentDisposition != null)
-                {
-                    fileName = response.Content.Headers.ContentDisposition.FileName!.Trim('"');
-                }
-            }
-        }
 
         fileName = HttpUtility.UrlDecode(fileName);
 
@@ -68,7 +51,7 @@ public static class DownloadHelper
         return filePath;
     }
 
-    public static async Task<String?> GetDownloadPath(Torrent torrent, Download download)
+    public static String? GetDownloadPath(Torrent torrent, Download download)
     {
         var fileUrl = download.Link;
 
@@ -81,20 +64,6 @@ public static class DownloadHelper
         var torrentPath = RemoveInvalidPathChars(torrent.RdName);
 
         var fileName = uri.Segments.Last();
-
-        if (Settings.Get.Provider.Provider == Provider.TorBox)
-        {
-            using (HttpClient client = new HttpClient())
-            {
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, uri);
-                HttpResponseMessage response = await client.SendAsync(request);
-
-                if (response.Content.Headers.ContentDisposition != null)
-                {
-                    fileName = response.Content.Headers.ContentDisposition.FileName!.Trim('"');
-                }
-            }
-        }
 
         fileName = HttpUtility.UrlDecode(fileName);
 

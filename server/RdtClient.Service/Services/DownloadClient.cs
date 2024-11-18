@@ -43,15 +43,15 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
 
             if (Type != Data.Enums.DownloadClient.Symlink)
             {
-                await FileHelper.Delete(filePath.Result!);
+                await FileHelper.Delete(filePath);
             }
 
             Downloader = Type switch
             {
-                Data.Enums.DownloadClient.Internal => new InternalDownloader(download.Link, filePath.Result!),
-                Data.Enums.DownloadClient.Bezzad => new BezzadDownloader(download.Link, filePath.Result!),
-                Data.Enums.DownloadClient.Aria2c => new Aria2cDownloader(download.RemoteId, download.Link, filePath.Result!, downloadPath.Result!, category),
-                Data.Enums.DownloadClient.Symlink => new SymlinkDownloader(download.Link, filePath.Result!, downloadPath.Result!),
+                Data.Enums.DownloadClient.Internal => new InternalDownloader(download.Link, filePath),
+                Data.Enums.DownloadClient.Bezzad => new BezzadDownloader(download.Link, filePath),
+                Data.Enums.DownloadClient.Aria2c => new Aria2cDownloader(download.RemoteId, download.Link, filePath, downloadPath, category),
+                Data.Enums.DownloadClient.Symlink => new SymlinkDownloader(download.Link, filePath, downloadPath),
                 _ => throw new($"Unknown download client {Type}")
             };
 
