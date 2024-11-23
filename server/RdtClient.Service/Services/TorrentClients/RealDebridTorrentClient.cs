@@ -57,7 +57,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         {
             logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
 
-            throw; 
+            throw;
         }
     }
 
@@ -115,7 +115,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
     public async Task<TorrentClientUser> GetUser()
     {
         var user = await GetClient().User.GetAsync();
-            
+
         return new()
         {
             Username = user.Username,
@@ -139,19 +139,9 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
 
     public async Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
     {
-        var result = await GetClient().Torrents.GetAvailableFiles(hash);
-
-        var files = result.SelectMany(m => m.Value).SelectMany(m => m.Value).SelectMany(m => m.Values);
-
-        var groups = files.Where(m => m.Filename != null).GroupBy(m => $"{m.Filename}-{m.Filesize}");
-
-        var torrentClientAvailableFiles = groups.Select(m => new TorrentClientAvailableFile
-        {
-            Filename = m.First().Filename!,
-            Filesize = m.First().Filesize
-        }).ToList();
-
-        return torrentClientAvailableFiles;
+        // Real-Debrid has removed there instant availability api, so we are now forced 
+        // to return an empty list
+        return await Task.Run(() => new List<TorrentClientAvailableFile>());
     }
 
     public async Task SelectFiles(Data.Models.Data.Torrent torrent)
@@ -216,7 +206,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
             files = newFiles;
 
             Log($"Found {files.Count} files that match the regex", torrent);
-        } 
+        }
         else if (!String.IsNullOrWhiteSpace(torrent.ExcludeRegex))
         {
             Log($"Using regular expression {torrent.IncludeRegex} to ignore files matching this regex", torrent);
@@ -380,7 +370,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         }
 
         Log($"Torrent has {torrent.Files.Count(m => m.Selected)} selected files out of {torrent.Files.Count} files, found {downloadLinks.Count} links, torrent ended: {torrent.RdEnded}", torrent);
-        
+
         // Check if all the links are set that have been selected
         if (torrent.Files.Count(m => m.Selected) == downloadLinks.Count)
         {
@@ -413,7 +403,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         }
 
         Log($"Did not find any suiteable download links", torrent);
-            
+
         return null;
     }
 
