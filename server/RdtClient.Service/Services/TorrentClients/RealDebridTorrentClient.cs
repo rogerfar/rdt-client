@@ -139,19 +139,32 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
 
     public async Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
     {
-        var result = await GetClient().Torrents.GetAvailableFiles(hash);
-
-        var files = result.SelectMany(m => m.Value).SelectMany(m => m.Value).SelectMany(m => m.Values);
-
-        var groups = files.Where(m => m.Filename != null).GroupBy(m => $"{m.Filename}-{m.Filesize}");
-
-        var torrentClientAvailableFiles = groups.Select(m => new TorrentClientAvailableFile
+        try
         {
-            Filename = m.First().Filename!,
-            Filesize = m.First().Filesize
-        }).ToList();
+            var result = await GetClient().Torrents.GetAvailableFiles(hash);
 
-        return torrentClientAvailableFiles;
+            var files = result.SelectMany(m => m.Value).SelectMany(m => m.Value).SelectMany(m => m.Values);
+
+            var groups = files.Where(m => m.Filename != null).GroupBy(m => $"{m.Filename}-{m.Filesize}");
+
+            var torrentClientAvailableFiles = groups.Select(m => new TorrentClientAvailableFile
+                                                    {
+                                                        Filename = m.First().Filename!,
+                                                        Filesize = m.First().Filesize
+                                                    })
+                                                    .ToList();
+
+            return torrentClientAvailableFiles;
+        }
+        catch (RealDebridException exception)
+        {
+            if (exception.ErrorCode == 36)
+            {
+                return [];
+            }
+
+            throw;
+        }
     }
 
     public async Task SelectFiles(Data.Models.Data.Torrent torrent)
