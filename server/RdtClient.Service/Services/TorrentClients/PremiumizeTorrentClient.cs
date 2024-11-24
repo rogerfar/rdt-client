@@ -117,8 +117,7 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
 
     public Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
     {
-        var result = new List<TorrentClientAvailableFile>();
-        return Task.FromResult<IList<TorrentClientAvailableFile>>(result);
+        return Task.FromResult<IList<TorrentClientAvailableFile>>([]);
     }
 
     public Task SelectFiles(Torrent torrent)

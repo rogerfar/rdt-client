@@ -71,24 +71,6 @@
       </p>
     </div>
 
-    <div class="field">
-      <label class="label">Post Torrent Download Action</label>
-      <div class="control select is-fullwidth">
-        <select
-          [(ngModel)]="downloadAction"
-          [disabled]="provider === 'AllDebrid' || provider === 'Premiumize' || provider === 'TorBox'"
-        >
-          <option [ngValue]="0">Download all files</option>
-          <option [ngValue]="1">Download all available files</option>
-          <option [ngValue]="2">Manually pick files</option>
-        </select>
-      </div>
-      <p class="help">When a torrent is fully downloaded on the provider, perform this action.</p>
-      <p class="help" *ngIf="provider === 'AllDebrid'">
-        This option is only available for RealDebrid. AllDebrid, Premiumize, and Torbox will always download the full torrent.
-      </p>
-    </div>
-
     <div
       class="notification is-success is-light"
       *ngIf="provider === 'AllDebrid' && availableFiles && availableFiles.length > 0"
@@ -221,39 +203,6 @@
         The maximum lifetime of a torrent in minutes. When this time has passed, mark the torrent as error. If the
         torrent is completed and has downloads, the lifetime setting will not apply. 0 to disable.
       </p>
-    </div>
-  </div>
-  <div fxFlex *ngIf="provider === 'RealDebrid'">
-    <div class="field">
-      <label class="label">Available files</label>
-      <p class="help">
-        These files are available for immediate download from your debrid provider. <br />
-        It is possible that there are more files in the torrent, which are not shown here.<br />
-      </p>
-      <div class="scroll-container">
-        <div class="field" *ngIf="downloadAction === 2">
-          <label class="checkbox is-fullwidth-label">
-            <input type="checkbox" [checked]="allSelected" (change)="downloadFileCheckedAll()" />
-            Select all
-          </label>
-        </div>
-        <div class="field" *ngIf="downloadAction === 2 && availableFiles !== null">
-          <label class="checkbox is-fullwidth-label" *ngFor="let file of availableFiles">
-            <input
-              type="checkbox"
-              [checked]="downloadFiles[file.filename]"
-              (change)="downloadFileChecked(file.filename)"
-            />
-            {{ file.filename }} ({{ file.filesize | filesize }})
-          </label>
-        </div>
-        <div class="field" *ngIf="downloadAction !== 2 && availableFiles !== null">
-          <label class="is-fullwidth-label is-block" *ngFor="let file of availableFiles">
-            <span [ngClass]="{ 'strike-through': isRegexExcluded(file) }">{{ file.filename }}</span>
-            <span *ngIf="file.filesize > 0">({{ file.filesize | filesize }})</span>
-          </label>
-        </div>
-      </div>
     </div>
   </div>
 </div>
