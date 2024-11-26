@@ -291,8 +291,11 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
         var torrentId = await GetClient().Torrents.GetHashInfoAsync(torrent.Hash, skipCache: true);
 
-        var newFile = $"https://torbox.app/fakedl/{torrentId?.Id}/zip";
-        files.Add(newFile);
+        foreach (var file in torrent.Files!)
+        {
+            var newFile = $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}";
+            files.Add(newFile);
+        }
 
         return files;
     }
