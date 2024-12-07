@@ -71,20 +71,6 @@
       </p>
     </div>
 
-    <div
-      class="notification is-success is-light"
-      *ngIf="provider === 'AllDebrid' && availableFiles && availableFiles.length > 0"
-    >
-      This torrent is available for immediate download.
-    </div>
-
-    <div
-      class="notification is-warning is-light"
-      *ngIf="provider === 'AllDebrid' && availableFiles && availableFiles.length === 0"
-    >
-      This torrent is not available for immediate download.
-    </div>
-
     <div class="field">
       <label class="label">Minimum file size to download</label>
       <div class="control">

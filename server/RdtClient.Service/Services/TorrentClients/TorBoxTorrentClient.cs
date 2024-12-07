@@ -162,7 +162,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
         if (availability.Data != null)
         {
-            return (availability.Data[0]?.Files ?? []).Select(file => new TorrentClientAvailableFile()
+            return (availability.Data[0]?.Files ?? []).Select(file => new TorrentClientAvailableFile
                                                       {
                                                           Filename = file.Name,
                                                           Filesize = file.Size
