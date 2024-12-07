@@ -30,7 +30,7 @@ Instead of running in Docker you can install it as a service in Windows or Linux
 
 ## Windows Service
 
-1. Make sure you have the .NET 9 Runtime installed: [https://dotnet.microsoft.com/download/dotnet/9.0](https://dotnet.microsoft.com/download/dotnet/9.0)
+1. Make sure you have the **ASP.NET Core Runtime 9.0.0** installed: [https://dotnet.microsoft.com/download/dotnet/9.0](https://dotnet.microsoft.com/download/dotnet/9.0)
 2. Get the latest zip file from the Releases page and extract it to your host.
 3. Open the `appsettings.json` file and replace the `LogLevel` `Path` to a path on your host.
 4. In `appsettings.json` replace the `Database` `Path` to a path on your host.
