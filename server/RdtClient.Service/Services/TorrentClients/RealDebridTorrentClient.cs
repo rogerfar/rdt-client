@@ -137,48 +137,26 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         return result.Id;
     }
 
-    public async Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
+    public Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
     {
-        var result = await GetClient().Torrents.GetAvailableFiles(hash);
-
-        var files = result.SelectMany(m => m.Value).SelectMany(m => m.Value).SelectMany(m => m.Values);
-
-        var groups = files.Where(m => m.Filename != null).GroupBy(m => $"{m.Filename}-{m.Filesize}");
-
-        var torrentClientAvailableFiles = groups.Select(m => new TorrentClientAvailableFile
-        {
-            Filename = m.First().Filename!,
-            Filesize = m.First().Filesize
-        }).ToList();
-
-        return torrentClientAvailableFiles;
+        return Task.FromResult<IList<TorrentClientAvailableFile>>([]);
     }
 
     public async Task SelectFiles(Data.Models.Data.Torrent torrent)
     {
-        var files = torrent.Files;
+        IList<TorrentClientFile> files;
 
         Log("Seleting files", torrent);
 
-        if (torrent.DownloadAction == TorrentDownloadAction.DownloadAvailableFiles)
-        {
-            Log($"Determining which files are already available on RealDebrid", torrent);
-
-            var availableFiles = await GetAvailableFiles(torrent.Hash);
-
-            Log($"Found {files.Count}/{torrent.Files.Count} available files on RealDebrid", torrent);
-
-            files = torrent.Files.Where(m => availableFiles.Any(f => m.Path.EndsWith(f.Filename))).ToList();
-        }
-        else if (torrent.DownloadAction == TorrentDownloadAction.DownloadAll)
-        {
-            Log("Selecting all files", torrent);
-            files = [.. torrent.Files];
-        }
-        else if (torrent.DownloadAction == TorrentDownloadAction.DownloadManual)
+        if (torrent.DownloadAction == TorrentDownloadAction.DownloadManual)
         {
             Log("Selecting manual selected files", torrent);
             files = torrent.Files.Where(m => torrent.ManualFiles.Any(f => m.Path.EndsWith(f))).ToList();
+        }
+        else
+        {
+            Log("Selecting all files", torrent);
+            files = [.. torrent.Files];
         }
 
         Log($"Selecting {files.Count}/{torrent.Files.Count} files", torrent);

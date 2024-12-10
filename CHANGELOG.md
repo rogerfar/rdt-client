@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.90] - 2024-12-06
+### Changed
+- Download individual files from Torbox instead of a zip file.
+
+### Removed
+- Removed ability to select instant files from AllDebrid.
+
+## [2.0.89] - 2024-11-24
+### Changed
+- Disabled selecting of files as Real-Debrid was the only provider that supported that.
+
+## [2.0.88] - 2024-11-24
+### Changed
+- Catch disabled instant availability endpoint from Real Debrid.
+
+## [2.0.87] - 2024-11-18
+### Added
+- Torbox support.
+- qBittorrent API authentication when no authentication is used.
+### Changed
+- .NET version changed to .NET 9.
+- Changed download limit to be split by active torrents.
+
 ## [2.0.86] - 2024-09-03
 ### Changed
 - Add potential fix for BASE_PATH.

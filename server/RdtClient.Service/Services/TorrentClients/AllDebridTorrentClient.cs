@@ -118,23 +118,9 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
         return resultId;
     }
 
-    public async Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
+    public Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
     {
-        var isAvailable = await GetClient().Magnet.InstantAvailabilityAsync(hash);
-
-        if (isAvailable)
-        {
-            return
-            [
-                new()
-                {
-                    Filename = "All files",
-                    Filesize = 0
-                }
-            ];
-        }
-
-        return [];
+        return Task.FromResult<IList<TorrentClientAvailableFile>>([]);
     }
 
     public Task SelectFiles(Torrent torrent)

@@ -15,7 +15,11 @@ export class NavbarComponent implements OnInit {
   public profile: Profile;
   public providerLink: string;
 
-  constructor(private settingsService: SettingsService, private authService: AuthService, private router: Router) {}
+  constructor(
+    private settingsService: SettingsService,
+    private authService: AuthService,
+    private router: Router,
+  ) {}
 
   ngOnInit(): void {
     this.settingsService.getProfile().subscribe((result) => {
@@ -31,6 +35,9 @@ export class NavbarComponent implements OnInit {
         case 'Premiumize':
           this.providerLink = 'https://www.premiumize.me/';
           break;
+        case 'TorBox':
+          this.providerLink = 'https://torbox.app/';
+          break;
       }
     });
   }
@@ -40,7 +47,7 @@ export class NavbarComponent implements OnInit {
       () => {
         this.router.navigate(['/login']);
       },
-      (err) => {}
+      (err) => {},
     );
   }
 }

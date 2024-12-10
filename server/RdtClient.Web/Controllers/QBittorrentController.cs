@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RdtClient.Data.Enums;
 using RdtClient.Data.Models.QBittorrent;
 using RdtClient.Service.Services;
 
@@ -20,6 +21,11 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     public async Task<ActionResult> AuthLogin([FromQuery] QBAuthLoginRequest request)
     {
         logger.LogDebug($"Auth login");
+
+        if (Settings.Get.General.AuthenticationType == AuthenticationType.None)
+        {
+            return Ok("Ok.");
+        }
 
         if (String.IsNullOrWhiteSpace(request.UserName) || String.IsNullOrEmpty(request.Password))
         {
