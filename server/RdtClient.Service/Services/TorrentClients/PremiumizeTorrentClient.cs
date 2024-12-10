@@ -4,6 +4,7 @@ using PremiumizeNET;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
+using System.Web;
 using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services.TorrentClients;
@@ -239,6 +240,18 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
         }
 
         return downloadLinks;
+    }
+
+    public Task<String?> GetFileName(Data.Models.Data.Download download)
+    {
+        if (String.IsNullOrWhiteSpace(download.Link))
+        {
+            return Task.FromResult<String?>(null);
+        }
+
+        var uri = new Uri(download.Link);
+
+        return Task.FromResult<String?>(HttpUtility.UrlDecode(uri.Segments.Last()));
     }
 
     private async Task<TorrentClientTorrent> GetInfo(String id)

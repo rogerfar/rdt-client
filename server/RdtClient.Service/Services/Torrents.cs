@@ -546,8 +546,10 @@ public class Torrents(
         }
 
         var downloadPath = DownloadPath(download.Torrent!);
+
+        var fileName = await TorrentClient.GetFileName(download);
             
-        var filePath = DownloadHelper.GetDownloadPath(downloadPath, download.Torrent!, download);
+        var filePath = DownloadHelper.GetDownloadPath(downloadPath, download.Torrent!, download, fileName);
 
         if (filePath != null)
         {

@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
+using System.Web;
 using File = AllDebridNET.File;
 using Torrent = RdtClient.Data.Models.Data.Torrent;
 
@@ -261,6 +262,17 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
         Log("", torrent);
 
         return links.Select(m => m.LinkUrl.ToString()).ToList();
+    }
+    public Task<String?> GetFileName(Data.Models.Data.Download download)
+    {
+        if (String.IsNullOrWhiteSpace(download.Link))
+        {
+            return Task.FromResult<String?>(null);
+        }
+
+        var uri = new Uri(download.Link);
+
+        return Task.FromResult<String?>(HttpUtility.UrlDecode(uri.Segments.Last()));
     }
 
     private async Task<TorrentClientTorrent> GetInfo(String torrentId)

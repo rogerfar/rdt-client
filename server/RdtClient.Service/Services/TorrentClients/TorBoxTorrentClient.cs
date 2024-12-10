@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using TorBoxNET;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
+using System.Web;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
@@ -298,6 +299,32 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         }
 
         return files;
+    }
+
+    public async Task<String?> GetFileName(Data.Models.Data.Download download)
+    {
+        if (String.IsNullOrWhiteSpace(download.Link))
+        {
+            return null;
+        }
+
+        var uri = new Uri(download.Link);
+
+        using (HttpClient client = new HttpClient())
+        {
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, uri);
+            HttpResponseMessage response = await client.SendAsync(request);
+            if (response.Content.Headers.ContentDisposition != null)
+            {
+                var fileName = response.Content.Headers.ContentDisposition.FileName;
+                if (!String.IsNullOrWhiteSpace(fileName))
+                {
+                    return fileName.Trim('"');
+                }
+            }
+        }
+
+        return HttpUtility.UrlDecode(uri.Segments.Last());
     }
 
     private DateTimeOffset? ChangeTimeZone(DateTimeOffset? dateTimeOffset)
