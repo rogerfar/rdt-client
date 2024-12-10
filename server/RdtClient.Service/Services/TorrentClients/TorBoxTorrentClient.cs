@@ -161,7 +161,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
     {
         var availability = await GetClient().Torrents.GetAvailabilityAsync(hash, listFiles: true);
 
-        if (availability.Data != null)
+        if (availability.Data != null || availability.Data?.Count < 0)
         {
             return (availability.Data[0]?.Files ?? []).Select(file => new TorrentClientAvailableFile
                                                       {
@@ -302,18 +302,18 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         return files;
     }
 
-    public async Task<String?> GetFileName(Data.Models.Data.Download download)
+    public async Task<String?> GetFileName(String downloadUrl)
     {
-        if (String.IsNullOrWhiteSpace(download.Link))
+        if (String.IsNullOrWhiteSpace(downloadUrl))
         {
             return null;
         }
 
-        var uri = new Uri(download.Link);
+        var uri = new Uri(downloadUrl);
 
-        using (HttpClient client = new HttpClient())
+        using (HttpClient client = new())
         {
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, uri);
+            HttpRequestMessage request = new(HttpMethod.Head, uri);
             HttpResponseMessage response = await client.SendAsync(request);
             if (response.Content.Headers.ContentDisposition != null)
             {
