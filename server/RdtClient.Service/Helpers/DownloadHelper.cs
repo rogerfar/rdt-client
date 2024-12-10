@@ -5,11 +5,11 @@ namespace RdtClient.Service.Helpers;
 
 public static class DownloadHelper
 {
-    public static String? GetDownloadPath(String downloadPath, Torrent torrent, Download download, String? fileName = null)
+    public static String? GetDownloadPath(String downloadPath, Torrent torrent, Download download)
     {
         var fileUrl = download.Link;
 
-        if (String.IsNullOrWhiteSpace(fileUrl) || torrent.RdName == null || fileName == null)
+        if (String.IsNullOrWhiteSpace(fileUrl) || torrent.RdName == null)
         {
             return null;
         }
@@ -18,6 +18,8 @@ public static class DownloadHelper
 
         var uri = new Uri(fileUrl);
         var torrentPath = Path.Combine(downloadPath, directory);
+
+        var fileName = download.FileName;
 
         if (String.IsNullOrWhiteSpace(fileName))
         {
@@ -66,11 +68,14 @@ public static class DownloadHelper
         var uri = new Uri(fileUrl);
         var torrentPath = RemoveInvalidPathChars(torrent.RdName);
 
-        var fileName = uri.Segments.Last();
+        var fileName = download.FileName;
 
-        fileName = HttpUtility.UrlDecode(fileName);
+        if (String.IsNullOrWhiteSpace(fileName))
+        {
+            fileName = uri.Segments.Last();
 
-        fileName = FileHelper.RemoveInvalidFileNameChars(fileName);
+            fileName = HttpUtility.UrlDecode(fileName);
+        }
 
         var matchingTorrentFiles = torrent.Files.Where(m => m.Path.EndsWith(fileName)).Where(m => !String.IsNullOrWhiteSpace(m.Path)).ToList();
 
