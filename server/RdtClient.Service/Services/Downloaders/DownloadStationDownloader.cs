@@ -1,7 +1,6 @@
 ﻿using Serilog;
 using Synology.Api.Client;
 using Synology.Api.Client.Apis.DownloadStation.Task.Models;
-using Synology.Api.Client.Apis.FileStation.List.Models;
 
 namespace RdtClient.Service.Services.Downloaders;
 
@@ -161,7 +160,10 @@ public class DownloadStationDownloader : IDownloader
     public async Task Update()
     {
         if (_gid == null)
+        {
+            DownloadComplete?.Invoke(this, new() { Error = "Task not found" });
             return;
+        }
 
         var task = await GetTask();
 
@@ -183,24 +185,6 @@ public class DownloadStationDownloader : IDownloader
             BytesTotal = task.Size,
             Speed = task.Additional.Transfer.SpeedDownload
         });
-    }
-
-    private async Task CheckFolderOrCreate(string path)
-    {
-        if (path != null)
-        {
-            try
-            {
-                await _synologyClient.FileStationApi().ListEndpoint()
-                    .ListAsync(new FileStationListRequest(path));
-            }
-            catch // if not exists create it
-            {
-                await _synologyClient.FileStationApi().CreateFolderEndpoint()
-                        .CreateAsync(new[] { path }, true);
-                //if error handle by the caller
-            }
-        }
     }
 
     private async Task<DownloadStationTask?> GetTask()
