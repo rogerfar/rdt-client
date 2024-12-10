@@ -109,9 +109,10 @@ public class DownloadStationDownloader : IDownloader
                     .TaskEndpoint()
                     .CreateAsync(new DownloadStationTaskCreateRequest(_uri, path.Substring(1)));
 
-                _logger.Debug($"Added download to DownloadStation, received ID {_gid}");
 
                 _gid = createResult.TaskId?.FirstOrDefault();
+                _logger.Debug($"Added download to DownloadStation, received ID {_gid}");
+
                 if (_gid == null) _gid = await GetGidFromUri();
 
                 if (_gid != null)
