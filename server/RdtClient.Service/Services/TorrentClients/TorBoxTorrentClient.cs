@@ -258,6 +258,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                     "checking" => TorrentStatus.Processing,
                     "checkingResumeData" => TorrentStatus.Processing,
                     "paused" => TorrentStatus.Downloading,
+                    "stalledDL" => TorrentStatus.Downloading,
                     "downloading" => TorrentStatus.Downloading,
                     "completed" => TorrentStatus.Downloading,
                     "uploading" => TorrentStatus.Downloading,
