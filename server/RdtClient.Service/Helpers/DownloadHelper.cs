@@ -5,7 +5,7 @@ namespace RdtClient.Service.Helpers;
 
 public static class DownloadHelper
 {
-    public static String? GetDownloadPath(String downloadPath, Torrent torrent, Download download, String? fileName)
+    public static String? GetDownloadPath(String downloadPath, Torrent torrent, Download download, String? fileName = null)
     {
         var fileUrl = download.Link;
 
@@ -18,6 +18,13 @@ public static class DownloadHelper
 
         var uri = new Uri(fileUrl);
         var torrentPath = Path.Combine(downloadPath, directory);
+
+        if (String.IsNullOrWhiteSpace(fileName))
+        {
+            fileName = uri.Segments.Last();
+
+            fileName = HttpUtility.UrlDecode(fileName);
+        }
 
         fileName = FileHelper.RemoveInvalidFileNameChars(fileName);
 
