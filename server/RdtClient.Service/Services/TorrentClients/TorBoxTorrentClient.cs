@@ -302,11 +302,11 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         return files;
     }
 
-    public async Task<String?> GetFileName(String downloadUrl)
+    public async Task<String> GetFileName(String downloadUrl)
     {
         if (String.IsNullOrWhiteSpace(downloadUrl))
         {
-            return null;
+            return "";
         }
 
         var uri = new Uri(downloadUrl);

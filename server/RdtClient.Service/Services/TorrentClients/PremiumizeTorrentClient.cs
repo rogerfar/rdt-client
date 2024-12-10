@@ -242,16 +242,16 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
         return downloadLinks;
     }
 
-    public Task<String?> GetFileName(String downloadUrl)
+    public Task<String> GetFileName(String downloadUrl)
     {
         if (String.IsNullOrWhiteSpace(downloadUrl))
         {
-            return Task.FromResult<String?>(null);
+            return Task.FromResult("");
         }
 
         var uri = new Uri(downloadUrl);
 
-        return Task.FromResult<String?>(HttpUtility.UrlDecode(uri.Segments.Last()));
+        return Task.FromResult(HttpUtility.UrlDecode(uri.Segments.Last()));
     }
 
     private async Task<TorrentClientTorrent> GetInfo(String id)

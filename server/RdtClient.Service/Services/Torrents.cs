@@ -374,7 +374,7 @@ public class Torrents(
     {
         var download = await downloads.GetById(downloadId) ?? throw new($"Download with ID {downloadId} not found");
 
-        Log($"Unrestricting link", download, download.Torrent);
+        Log($"Retrieving filename for", download, download.Torrent);
 
         var fileName = await TorrentClient.GetFileName(download.Link!);
 
