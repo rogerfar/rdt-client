@@ -15,4 +15,5 @@ public interface ITorrentClient
     Task<String> Unrestrict(String link);
     Task<Torrent> UpdateData(Torrent torrent, TorrentClientTorrent? torrentClientTorrent);
     Task<IList<String>?> GetDownloadLinks(Torrent torrent);
+    Task<String> GetFileName(String downloadUrl);
 }

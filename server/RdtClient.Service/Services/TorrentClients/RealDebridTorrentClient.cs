@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using System.Web;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RDNET;
@@ -393,6 +394,18 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         Log($"Did not find any suiteable download links", torrent);
             
         return null;
+    }
+
+    public Task<String> GetFileName(String downloadUrl)
+    {
+        if (String.IsNullOrWhiteSpace(downloadUrl))
+        {
+            return Task.FromResult("");
+        }
+
+        var uri = new Uri(downloadUrl);
+
+        return Task.FromResult(HttpUtility.UrlDecode(uri.Segments.Last()));
     }
 
     private DateTimeOffset? ChangeTimeZone(DateTimeOffset? dateTimeOffset)

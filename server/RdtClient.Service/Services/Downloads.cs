@@ -30,6 +30,11 @@ public class Downloads(DownloadData downloadData)
         await downloadData.UpdateUnrestrictedLink(downloadId, unrestrictedLink);
     }
 
+    public async Task UpdateFileName(Guid downloadId, String fileName)
+    {
+        await downloadData.UpdateFileName(downloadId, fileName);
+    }
+
     public async Task UpdateDownloadStarted(Guid downloadId, DateTimeOffset? dateTime)
     {
         await downloadData.UpdateDownloadStarted(downloadId, dateTime);

@@ -67,6 +67,23 @@ public class DownloadData(DataContext dataContext)
         await TorrentData.VoidCache();
     }
 
+    public async Task UpdateFileName(Guid downloadId, String fileName)
+    {
+        var dbDownload = await dataContext.Downloads
+                                           .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+        if (dbDownload == null)
+        {
+            return;
+        }
+
+        dbDownload.FileName = fileName;
+
+        await dataContext.SaveChangesAsync();
+
+        await TorrentData.VoidCache();
+    }
+
     public async Task UpdateDownloadStarted(Guid downloadId, DateTimeOffset? dateTime)
     {
         var dbDownload = await dataContext.Downloads

@@ -370,6 +370,19 @@ public class Torrents(
         return unrestrictedLink;
     }
 
+    public async Task<String> RetrieveFileName(Guid downloadId)
+    {
+        var download = await downloads.GetById(downloadId) ?? throw new($"Download with ID {downloadId} not found");
+
+        Log($"Retrieving filename for", download, download.Torrent);
+
+        var fileName = await TorrentClient.GetFileName(download.Link!);
+
+        await downloads.UpdateFileName(downloadId, fileName);
+
+        return fileName;
+    }
+
     public async Task<Profile> GetProfile()
     {
         var user = await TorrentClient.GetUser();
@@ -546,7 +559,7 @@ public class Torrents(
         }
 
         var downloadPath = DownloadPath(download.Torrent!);
-            
+
         var filePath = DownloadHelper.GetDownloadPath(downloadPath, download.Torrent!, download);
 
         if (filePath != null)
