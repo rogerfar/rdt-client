@@ -19,9 +19,14 @@ public static class DownloadHelper
         var uri = new Uri(fileUrl);
         var torrentPath = Path.Combine(downloadPath, directory);
 
-        var fileName = uri.Segments.Last();
+        var fileName = download.FileName;
 
-        fileName = HttpUtility.UrlDecode(fileName);
+        if (String.IsNullOrWhiteSpace(fileName))
+        {
+            fileName = uri.Segments.Last();
+
+            fileName = HttpUtility.UrlDecode(fileName);
+        }
 
         fileName = FileHelper.RemoveInvalidFileNameChars(fileName);
 
@@ -63,11 +68,14 @@ public static class DownloadHelper
         var uri = new Uri(fileUrl);
         var torrentPath = RemoveInvalidPathChars(torrent.RdName);
 
-        var fileName = uri.Segments.Last();
+        var fileName = download.FileName;
 
-        fileName = HttpUtility.UrlDecode(fileName);
+        if (String.IsNullOrWhiteSpace(fileName))
+        {
+            fileName = uri.Segments.Last();
 
-        fileName = FileHelper.RemoveInvalidFileNameChars(fileName);
+            fileName = HttpUtility.UrlDecode(fileName);
+        }
 
         var matchingTorrentFiles = torrent.Files.Where(m => m.Path.EndsWith(fileName)).Where(m => !String.IsNullOrWhiteSpace(m.Path)).ToList();
 
