@@ -71,10 +71,10 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
             OriginalBytes = torrent.Size,
             Host = torrent.DownloadPresent.ToString(),
             Split = 0,
-            Progress = (Int64)((torrent.Progress) * 100.0),
+            Progress = (Int64)(torrent.Progress * 100.0),
             Status = torrent.DownloadState,
             Added = ChangeTimeZone(torrent.CreatedAt)!.Value,
-            Files = (torrent.Files ?? []).Select(m => new TorrentClientFile
+            Files = (torrent.Files).Select(m => new TorrentClientFile
             {
                 Path = String.Join("/", m.Name.Split('/').Skip(1)),
                 Bytes = m.Size,
@@ -313,8 +313,8 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
         using (HttpClient client = new())
         {
-            HttpRequestMessage request = new(HttpMethod.Head, uri);
-            HttpResponseMessage response = await client.SendAsync(request);
+            var request = new HttpRequestMessage(HttpMethod.Head, uri);
+            var response = await client.SendAsync(request);
             if (response.Content.Headers.ContentDisposition != null)
             {
                 var fileName = response.Content.Headers.ContentDisposition.FileName;
