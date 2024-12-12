@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using TorBoxNET;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
+using System.Web;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
@@ -160,7 +161,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
     {
         var availability = await GetClient().Torrents.GetAvailabilityAsync(hash, listFiles: true);
 
-        if (availability.Data != null)
+        if (availability.Data != null || availability.Data?.Count < 0)
         {
             return (availability.Data[0]?.Files ?? []).Select(file => new TorrentClientAvailableFile
                                                       {
@@ -257,6 +258,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                     "checking" => TorrentStatus.Processing,
                     "checkingResumeData" => TorrentStatus.Processing,
                     "paused" => TorrentStatus.Downloading,
+                    "stalledDL" => TorrentStatus.Downloading,
                     "downloading" => TorrentStatus.Downloading,
                     "completed" => TorrentStatus.Downloading,
                     "uploading" => TorrentStatus.Downloading,
@@ -298,6 +300,32 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         }
 
         return files;
+    }
+
+    public async Task<String> GetFileName(String downloadUrl)
+    {
+        if (String.IsNullOrWhiteSpace(downloadUrl))
+        {
+            return "";
+        }
+
+        var uri = new Uri(downloadUrl);
+
+        using (HttpClient client = new())
+        {
+            HttpRequestMessage request = new(HttpMethod.Head, uri);
+            HttpResponseMessage response = await client.SendAsync(request);
+            if (response.Content.Headers.ContentDisposition != null)
+            {
+                var fileName = response.Content.Headers.ContentDisposition.FileName;
+                if (!String.IsNullOrWhiteSpace(fileName))
+                {
+                    return fileName.Trim('"');
+                }
+            }
+        }
+
+        return HttpUtility.UrlDecode(uri.Segments.Last());
     }
 
     private DateTimeOffset? ChangeTimeZone(DateTimeOffset? dateTimeOffset)

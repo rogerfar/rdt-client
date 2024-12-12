@@ -31,6 +31,8 @@ public class Download
 
     public String? RemoteId { get; set; }
 
+    public String? FileName { get; set; }
+
     [NotMapped]
     public Int64 BytesTotal { get; set; }
 
