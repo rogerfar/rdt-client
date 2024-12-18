@@ -74,7 +74,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
             Progress = (Int64)(torrent.Progress * 100.0),
             Status = torrent.DownloadState,
             Added = ChangeTimeZone(torrent.CreatedAt)!.Value,
-            Files = (torrent.Files).Select(m => new TorrentClientFile
+            Files = (torrent.Files ?? []).Select(m => new TorrentClientFile
             {
                 Path = String.Join("/", m.Name.Split('/').Skip(1)),
                 Bytes = m.Size,
