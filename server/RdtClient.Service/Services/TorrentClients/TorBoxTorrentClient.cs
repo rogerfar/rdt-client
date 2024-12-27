@@ -40,20 +40,20 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         {
             foreach (var inner in ae.InnerExceptions)
             {
-                logger.LogError(inner, $"The connection to RealDebrid has failed: {inner.Message}");
+                logger.LogError(inner, $"The connection to TorBox has failed: {inner.Message}");
             }
 
             throw;
         }
         catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
         {
-            logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
+            logger.LogError(ex, $"The connection to TorBox has timed out: {ex.Message}");
 
             throw;
         }
         catch (TaskCanceledException ex)
         {
-            logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
+            logger.LogError(ex, $"The connection to TorBox has timed out: {ex.Message}");
 
             throw;
         }
@@ -161,17 +161,16 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
     {
         var availability = await GetClient().Torrents.GetAvailabilityAsync(hash, listFiles: true);
 
-        if (availability.Data != null || availability.Data?.Count < 0)
+        if (availability.Data != null && availability.Data.Count > 0)
         {
             return (availability.Data[0]?.Files ?? []).Select(file => new TorrentClientAvailableFile
-                                                      {
-                                                          Filename = file.Name,
-                                                          Filesize = file.Size
-                                                      })
-                                                      .ToList();
+            {
+                Filename = file.Name,
+                Filesize = file.Size
+            }).ToList();
         }
 
-        return [];
+        return new List<TorrentClientAvailableFile>();
     }
 
     public Task SelectFiles(Data.Models.Data.Torrent torrent)
