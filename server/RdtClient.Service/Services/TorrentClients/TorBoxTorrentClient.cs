@@ -120,13 +120,9 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     public async Task<String> AddMagnet(String magnetLink)
     {
-        // var seeding = Settings.Get.Integrations.Default.FinishedAction;
+        var user = await GetClient().User.GetAsync(true);
 
-        // Line is not working right now, will disable seeding and fix in december when I have time again.
-        // var seed = (seeding == TorrentFinishedAction.RemoveAllTorrents || seeding == TorrentFinishedAction.RemoveRealDebrid) ? 3 : 2;
-
-        var seed = 3;
-        var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, seed, false);
+        var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, user.Data?.Settings?.SeedTorrents ?? 3, false);
 
         if (result.Error == "ACTIVE_LIMIT")
         {
@@ -141,11 +137,9 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     public async Task<String> AddFile(Byte[] bytes)
     {
-        // Line is not working right now, will disable seeding and fix in december when I have time again.
-        // var seed = (seeding == TorrentFinishedAction.RemoveAllTorrents || seeding == TorrentFinishedAction.RemoveRealDebrid) ? 3 : 2;
-        const Int32 seed = 3;
+        var user = await GetClient().User.GetAsync(true);
 
-        var result = await GetClient().Torrents.AddFileAsync(bytes, seed);
+        var result = await GetClient().Torrents.AddFileAsync(bytes, user.Data?.Settings?.SeedTorrents ?? 3);
         if (result.Error == "ACTIVE_LIMIT")
         {
             using var stream = new MemoryStream(bytes);
