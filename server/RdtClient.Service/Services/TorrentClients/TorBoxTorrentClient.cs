@@ -164,7 +164,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
             }).ToList();
         }
 
-        return new List<TorrentClientAvailableFile>();
+        return [];
     }
 
     public Task SelectFiles(Data.Models.Data.Torrent torrent)
