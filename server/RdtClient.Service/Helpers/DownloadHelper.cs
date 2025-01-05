@@ -43,6 +43,14 @@ public static class DownloadHelper
                 subPath = subPath.Trim('/').Trim('\\');
 
                 torrentPath = Path.Combine(torrentPath, subPath);
+            } else if (torrent.Files.Count == 1)
+            {
+                if (directory != fileName)
+                {
+                    throw new($"Torrent path {torrentPath} does not match file name {fileName}. This is a requirement for single file torrents.");
+                }
+            
+                return torrentPath;
             }
         }
 
@@ -90,6 +98,14 @@ public static class DownloadHelper
                 subPath = subPath.Trim('/').Trim('\\');
 
                 torrentPath = Path.Combine(torrentPath, subPath);
+            } else if (torrent.Files.Count == 1)
+            {
+                if (torrentPath != fileName)
+                {
+                    throw new($"Torrent path {torrentPath} does not match file name {fileName}. This is a requirement for single file torrents.");
+                }
+            
+                return torrentPath;
             }
         }
 
