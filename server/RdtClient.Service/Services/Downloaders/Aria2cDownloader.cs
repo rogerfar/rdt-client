@@ -203,6 +203,13 @@ public class Aria2cDownloader : IDownloader
             var retryCount = 0;
             while (true)
             {
+                DownloadProgress?.Invoke(this, new()
+                {
+                    BytesDone = download.CompletedLength,
+                    BytesTotal = download.TotalLength,
+                    Speed = download.DownloadSpeed
+                });
+
                 if (retryCount >= 10)
                 {
                     DownloadComplete?.Invoke(this, new()
