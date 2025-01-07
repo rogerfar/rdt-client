@@ -69,9 +69,13 @@ public class SymlinkDownloader(String uri, String destinationPath, String path, 
                 // If this somehow fails, fallback to the search below.
                 if (File.Exists(potentialFilePath))
                 {
+                    _logger.Debug($"Found file {path} at {potentialFilePath} using direct search");
                     file = potentialFilePath;
                     goto skipFileSearch;
                 }
+                
+                // Log if the file wasn't found and continue searching.
+                _logger.Warning($"Expected file {path} to be at {potentialFilePath} but it wasn't found. Continuing search (this will probably fail).");
             }
 
             var potentialFilePaths = new List<String> { searchPath };
