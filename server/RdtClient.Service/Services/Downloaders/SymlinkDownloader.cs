@@ -16,7 +16,7 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
 
     public async Task<String> Download()
     {
-        _logger.Debug($"Starting symlink resolving of {uri}, writing to path: {path}");
+        _logger.Debug($"Starting symlink resolving of {path} (uri = {uri}), writing to path: {destinationPath}");
 
         try
         {
@@ -57,7 +57,7 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
                                          Speed = 0
                                      });
 
-            var potentialFilePaths = new List<String>();
+            var potentialFilePaths = new List<String> { searchPath };
 
             var directoryInfo = new DirectoryInfo(searchPath);
             while (directoryInfo.Parent != null)
