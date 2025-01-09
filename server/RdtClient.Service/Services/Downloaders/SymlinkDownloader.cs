@@ -1,9 +1,10 @@
-﻿using RdtClient.Service.Helpers;
+﻿using RdtClient.Data.Models.Data;
+using RdtClient.Service.Helpers;
 using Serilog;
 
 namespace RdtClient.Service.Services.Downloaders;
 
-public class SymlinkDownloader(String uri, String destinationPath, String path) : IDownloader
+public class SymlinkDownloader(String uri, String destinationPath, String path, Torrent.TorrentClientKind? clientKind) : IDownloader
 {
     public event EventHandler<DownloadCompleteEventArgs>? DownloadComplete;
     public event EventHandler<DownloadProgressEventArgs>? DownloadProgress;
@@ -16,7 +17,7 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
 
     public async Task<String> Download()
     {
-        _logger.Debug($"Starting symlink resolving of {uri}, writing to path: {path}");
+        _logger.Debug($"Starting symlink resolving of {path} (uri = {uri}), writing to path: {destinationPath}");
 
         try
         {
@@ -56,8 +57,28 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
                                          BytesTotal = 0,
                                          Speed = 0
                                      });
+            
+            String? file = null;
 
-            var potentialFilePaths = new List<String>();
+            // When resolving symlinks for AllDebrid, we know the exact file path, so we can skip the search.
+            if (clientKind == Torrent.TorrentClientKind.AllDebrid)
+            {
+                var potentialFilePath = Path.Combine(rcloneMountPath, path);
+                
+                // Make sure the file exists before making any assumptions.
+                // If this somehow fails, fallback to the search below.
+                if (File.Exists(potentialFilePath))
+                {
+                    _logger.Debug($"Found file {path} at {potentialFilePath} using direct search");
+                    file = potentialFilePath;
+                    goto skipFileSearch;
+                }
+                
+                // Log if the file wasn't found and continue searching.
+                _logger.Warning($"Expected file {path} to be at {potentialFilePath} but it wasn't found. Continuing search (this will probably fail).");
+            }
+
+            var potentialFilePaths = new List<String> { searchPath };
 
             var directoryInfo = new DirectoryInfo(searchPath);
             while (directoryInfo.Parent != null)
@@ -77,8 +98,6 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
             potentialFilePaths.Add("");
 
             potentialFilePaths = potentialFilePaths.Distinct().ToList();
-
-            String? file = null;
 
             for (var retryCount = 0; retryCount < MaxRetries; retryCount++)
             {
@@ -135,6 +154,9 @@ public class SymlinkDownloader(String uri, String destinationPath, String path) 
                 
                 throw new("Could not find file from rclone mount!");
             }
+            
+            // Used by Alldebrid since we know the exact file path.
+            skipFileSearch:
 
             _logger.Debug($"Creating symbolic link from {file} to {destinationPath}");
 

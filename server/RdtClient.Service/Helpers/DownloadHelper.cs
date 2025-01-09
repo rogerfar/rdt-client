@@ -40,7 +40,6 @@ public static class DownloadHelper
             if (matchingTorrentFiles.Count > 0)
             {
                 var matchingTorrentFile = matchingTorrentFiles[0];
-
                 var subPath = Path.GetDirectoryName(matchingTorrentFile.Path);
 
                 if (!String.IsNullOrWhiteSpace(subPath))
@@ -49,22 +48,23 @@ public static class DownloadHelper
 
                     torrentPath = Path.Combine(torrentPath, subPath);
                 }
-                else if (torrent.Files.Count == 1)
-                {
-                    if (directory != fileName)
-                    {
-                        throw new($"Torrent path {torrentPath} does not match file name {fileName}. This is a requirement for single file torrents.");
-                    }
-
-                    return torrentPath;
-                }
             }
         }
         else if (torrent.Files.Count == 1)
         {
+            // Debrid servers such as RealDebrid store single file torrents in a subfolder, but AllDebrid doesn't.
+            // We should replicate this behavior so that both folder structures are equal.
+            // See issue: https://github.com/rogerfar/rdt-client/issues/648
+            if (torrent.ClientKind != Torrent.TorrentClientKind.AllDebrid)
+            {
+                torrentPath = Path.Combine(downloadPath, directory);
+            }
+            
             var torrentFile = torrent.Files[0];
             var subPath = Path.GetDirectoryName(torrentFile.Path);
-
+            
+            // What we think is a single file torrent may also be a folder with a single file in it.
+            // So make sure we handle that here. If this is not the case, torrentPath will be empty below.
             if (!String.IsNullOrWhiteSpace(subPath))
             {
                 subPath = subPath.Trim('/').Trim('\\');
