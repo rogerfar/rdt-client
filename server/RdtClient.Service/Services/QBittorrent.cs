@@ -208,12 +208,13 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             var torrentPath = downloadPath;
             if (!String.IsNullOrWhiteSpace(torrent.RdName))
             {
-                torrentPath = Path.Combine(downloadPath, torrent.RdName);
-
                 // Alldebrid stores single file torrents at the root folder.
-                if (torrent.ClientKind != Torrent.TorrentClientKind.AllDebrid || torrent.Files.Count > 1)
+                if (torrent is { ClientKind: Torrent.TorrentClientKind.AllDebrid, Files.Count: 1 })
                 {
-                    torrentPath += Path.DirectorySeparatorChar;
+                    torrentPath = Path.Combine(downloadPath, torrent.Files[0].Path);
+                } else
+                {
+                    torrentPath = Path.Combine(downloadPath, torrent.RdName) + Path.DirectorySeparatorChar;
                 }
             }
 
