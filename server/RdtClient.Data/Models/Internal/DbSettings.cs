@@ -167,11 +167,11 @@ At this point only 1 provider can be used at the time.")]
     [Description(@"You can find your API key here:
 <a href=""https://real-debrid.com/apitoken"" target=""_blank"" rel=""noopener"">https://real-debrid.com/apitoken</a>
 or
-<a href=""""https://alldebrid.com/apikeys/"""" target=""""_blank"""" rel=""""noopener"""">https://alldebrid.com/apikeys/</a>
+<a href=""https://alldebrid.com/apikeys/"" target=""_blank"" rel=""noopener"">https://alldebrid.com/apikeys/</a>
 or
 <a href=""https://www.premiumize.me/account/"" target=""_blank"" rel=""noopener"">https://www.premiumize.me/account/</a>
 or
-<a href=""""https://torbox.app/settings/"""" target=""""_blank"""" rel=""""noopener"""">https://torbox.app/settings/</a>")]
+<a href=""https://torbox.app/settings/"" target=""_blank"" rel=""noopener"">https://torbox.app/settings/</a>")]
     public String ApiKey { get; set; } = "";
 
     [DisplayName("Automatically import and process torrents added to provider")]

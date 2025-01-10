@@ -1,10 +1,13 @@
-﻿using AllDebridNET;
+﻿using System.Text.RegularExpressions;
+using AllDebridNET;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
+using System.Web;
 using File = AllDebridNET.File;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services.TorrentClients;
@@ -61,7 +64,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
             Added = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(torrent.UploadDate),
             Files = torrent.Links.Select((m, i) => new TorrentClientFile
             {
-                Path = m.Filename,
+                Path = GetFiles(m.Files),
                 Bytes = m.Size,
                 Id = i,
                 Selected = true,
@@ -241,6 +244,53 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
             Log($"Found {links.Count} files that match the minimum file size criterea", torrent);
         }
+        
+        if (!String.IsNullOrWhiteSpace(torrent.IncludeRegex))
+        {
+            Log($"Using regular expression {torrent.IncludeRegex} to include only files matching this regex", torrent);
+        
+            var newLinks = new List<Link>();
+            foreach (var link in links)
+            {
+                var path = GetFiles(link.Files);
+                if (Regex.IsMatch(path, torrent.IncludeRegex))
+                {
+                    Log($"* Including {path}", torrent);
+                    newLinks.Add(link);
+                }
+                else
+                {
+                    Log($"* Excluding {path}", torrent);
+                }
+            }
+        
+            links = newLinks;
+        
+            Log($"Found {newLinks.Count} files that match the regex", torrent);
+        } 
+        else if (!String.IsNullOrWhiteSpace(torrent.ExcludeRegex))
+        {
+            Log($"Using regular expression {torrent.IncludeRegex} to ignore files matching this regex", torrent);
+        
+            var newLinks = new List<Link>();
+            foreach (var link in links)
+            {
+                var path = GetFiles(link.Files);
+                if (!Regex.IsMatch(path, torrent.ExcludeRegex))
+                {
+                    Log($"* Including {path}", torrent);
+                    newLinks.Add(link);
+                }
+                else
+                {
+                    Log($"* Excluding {path}", torrent);
+                }
+            }
+        
+            links = newLinks;
+        
+            Log($"Found {newLinks.Count} files that match the regex", torrent);
+        }
 
         if (links.Count == 0)
         {
@@ -249,18 +299,30 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
             links = magnet.Links;
         }
 
-        Log($"Selecting links:");
-
-        foreach (var link in links)
+        if (logger.IsEnabled(LogLevel.Debug))
         {
-            var fileList = GetFiles(link.Files, "");
+            Log($"Selecting links:");
 
-            Log($"{link.Filename} ({link.Size}b) {link.LinkUrl}, contains files:{Environment.NewLine}{String.Join(Environment.NewLine, fileList)}");
+            foreach (var link in links)
+            {
+                Log($"{GetFiles(link.Files)} ({link.Size}b) {link.LinkUrl}");
+            }
         }
-
+        
         Log("", torrent);
 
         return links.Select(m => m.LinkUrl.ToString()).ToList();
+    }
+    public Task<String> GetFileName(String downloadUrl)
+    {
+        if (String.IsNullOrWhiteSpace(downloadUrl))
+        {
+            return Task.FromResult("");
+        }
+
+        var uri = new Uri(downloadUrl);
+
+        return Task.FromResult(HttpUtility.UrlDecode(uri.Segments.Last()));
     }
 
     private async Task<TorrentClientTorrent> GetInfo(String torrentId)
@@ -270,7 +332,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
         return Map(result);
     }
 
-    private static List<String> GetFiles(IList<File> files, String parent)
+    private static String GetFiles(IList<File> files)
     {
         var result = new List<String>();
 
@@ -278,19 +340,24 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
         {
             if (!String.IsNullOrWhiteSpace(file.N))
             {
-                result.Add($"{parent}/{file.N}");
+                result.Add(file.N);
             }
 
             if (file.E != null && file.E.Value.PurpleEArray != null && file.E.Value.PurpleEArray.Count > 0)
             {
-                result.AddRange(GetFiles(file.E.Value.PurpleEArray, file.N));
+                if (file.E.Value.PurpleEArray.Count != 1)
+                {
+                    throw new("Unexpected number of nested files");
+                }
+                
+                result.AddRange(GetFiles(file.E.Value.PurpleEArray));
             }
         }
 
-        return result;
+        return String.Join("/", result);
     }
 
-    private static List<String> GetFiles(IList<FileE1> files, String parent)
+    private static List<String> GetFiles(IList<FileE1> files)
     {
         var result = new List<String>();
 
@@ -298,19 +365,19 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
         {
             if (!String.IsNullOrWhiteSpace(file.N))
             {
-                result.Add($"{parent}/{file.N}");
+                result.Add(file.N);
             }
 
             if (file.E != null && file.E.Count > 0)
             {
-                result.AddRange(GetFiles(file.E, file.N));
+                result.AddRange(GetFiles(file.E));
             }
         }
 
         return result;
     }
 
-    private static List<String> GetFiles(IList<FileE2> files, String parent)
+    private static List<String> GetFiles(IList<FileE2> files)
     {
         var result = new List<String>();
 
@@ -318,7 +385,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
         {
             if (!String.IsNullOrWhiteSpace(file.N))
             {
-                result.Add($"{parent}/{file.N}");
+                result.Add(file.N);
             }
         }
 
