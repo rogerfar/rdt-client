@@ -44,6 +44,7 @@ public class Torrent
     [InverseProperty("Torrent")]
     public IList<Download> Downloads { get; set; } = [];
 
+    public TorrentClientKind? ClientKind { get; set; }
     public String? RdId { get; set; }
     public String? RdName { get; set; }
     public Int64? RdSize { get; set; }
@@ -91,5 +92,13 @@ public class Torrent
 
             return DownloadManualFiles.Split(",");
         }
+    }
+
+    public enum TorrentClientKind
+    {
+        AllDebrid,
+        Premiumize,
+        RealDebrid,
+        TorBox
     }
 }
