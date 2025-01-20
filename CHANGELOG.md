@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.95] - 2025-01-19
+### Added
+- Added the /api/v2/transfer/info qBittorrent endpoint.
+
+### Changed
+- AllDebrid Symlink path fixes.
+
 ## [2.0.94] - 2025-01-05
 ### Changed
 - AllDebrid path fixes.
