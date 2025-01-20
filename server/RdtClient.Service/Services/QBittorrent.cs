@@ -636,7 +636,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
 
     public async Task<SyncMetaData> SyncMainData()
     {
-        var torrents = await TorrentInfo();
+        var torrentInfo = await TorrentInfo();
 
         var categories = await TorrentsCategories();
 
@@ -649,12 +649,25 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             Rid = 0,
             Tags = null,
             Trackers = new Dictionary<String, List<String>>(),
-            Torrents = torrents.ToDictionary(m => m.Hash, m => m),
+            Torrents = torrentInfo.ToDictionary(m => m.Hash, m => m),
             ServerState = new()
             {
                 DlInfoSpeed = activeDownloads,
                 UpInfoSpeed = 0
             }
+        };
+    }
+
+    public static TransferInfo TransferInfo()
+    {
+        var activeDownloads = TorrentRunner.ActiveDownloadClients.Sum(m => m.Value.Speed);
+
+        return new()
+        {
+            ConnectionStatus = "connected",
+            DlInfoData = DownloadClient.GetTotalBytesDownloadedThisSession(),
+            DlInfoSpeed = activeDownloads,
+            DlRateLimit = Settings.Get.DownloadClient.MaxSpeed
         };
     }
 }
