@@ -59,6 +59,7 @@ public class SymlinkDownloader(String uri, String destinationPath, String path, 
                                      });
             
             String? file = null;
+            var shouldSearch = true;
 
             // When resolving symlinks for AllDebrid, we know the exact file path, so we can skip the search.
             if (clientKind == Torrent.TorrentClientKind.AllDebrid)
@@ -71,92 +72,100 @@ public class SymlinkDownloader(String uri, String destinationPath, String path, 
                 {
                     _logger.Debug($"Found file {path} at {potentialFilePath} using direct search");
                     file = potentialFilePath;
-                    goto skipFileSearch;
-                }
-                
-                // Log if the file wasn't found and continue searching.
-                _logger.Warning($"Expected file {path} to be at {potentialFilePath} but it wasn't found. Continuing search (this will probably fail).");
-            }
-
-            var potentialFilePaths = new List<String> { searchPath };
-
-            var directoryInfo = new DirectoryInfo(searchPath);
-            while (directoryInfo.Parent != null)
-            {
-                potentialFilePaths.Add(directoryInfo.Name);
-                directoryInfo = directoryInfo.Parent;
-
-                if (directoryInfo.FullName.TrimEnd(['\\', '/']) == rcloneMountPath)
-                {
-                    break;
-                }
-            }
-
-            potentialFilePaths.Add(fileName);
-            potentialFilePaths.Add(fileNameWithoutExtension);
-            // add an empty path so we can check for the new file in the base directory
-            potentialFilePaths.Add("");
-
-            potentialFilePaths = potentialFilePaths.Distinct().ToList();
-
-            for (var retryCount = 0; retryCount < MaxRetries; retryCount++)
-            {
-                DownloadProgress?.Invoke(this,
-                                         new()
-                                         {
-                                             BytesDone = retryCount,
-                                             BytesTotal = 10,
-                                             Speed = 1
-                                         });
-
-                _logger.Debug($"Searching {rcloneMountPath} for {fileName} (attempt #{retryCount})...");
-
-                file = FindFile(rcloneMountPath, potentialFilePaths, fileName);
-
-                if (file == null && searchSubDirectories)
-                {
-                    var subDirectories = Directory.GetDirectories(rcloneMountPath, "*.*", SearchOption.TopDirectoryOnly);
-
-                    foreach (var subDirectory in subDirectories)
-                    {
-                        file = FindFile(Path.Combine(rcloneMountPath, subDirectory), potentialFilePaths, fileName);
-
-                        if (file != null)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                if (file == null)
-                {
-                    await Task.Delay(1000 * retryCount);
+                    shouldSearch = false;
                 }
                 else
                 {
-                    break;
+                    // Log if the file wasn't found and continue searching.
+                    _logger.Warning($"Expected file {path} to be at {potentialFilePath} but it wasn't found. Continuing search (this will probably fail).");
+                }
+            }
+
+            if (shouldSearch)
+            {
+                var potentialFilePaths = new List<String>
+                {
+                    searchPath
+                };
+
+                var directoryInfo = new DirectoryInfo(searchPath);
+
+                while (directoryInfo.Parent != null)
+                {
+                    potentialFilePaths.Add(directoryInfo.Name);
+                    directoryInfo = directoryInfo.Parent;
+
+                    if (directoryInfo.FullName.TrimEnd(['\\', '/']) == rcloneMountPath)
+                    {
+                        break;
+                    }
+                }
+
+                potentialFilePaths.Add(fileName);
+                potentialFilePaths.Add(fileNameWithoutExtension);
+
+                // add an empty path so we can check for the new file in the base directory
+                potentialFilePaths.Add("");
+
+                potentialFilePaths = potentialFilePaths.Distinct().ToList();
+
+                for (var retryCount = 0; retryCount < MaxRetries; retryCount++)
+                {
+                    DownloadProgress?.Invoke(this,
+                                             new()
+                                             {
+                                                 BytesDone = retryCount,
+                                                 BytesTotal = 10,
+                                                 Speed = 1
+                                             });
+
+                    _logger.Debug($"Searching {rcloneMountPath} for {fileName} (attempt #{retryCount})...");
+
+                    file = FindFile(rcloneMountPath, potentialFilePaths, fileName);
+
+                    if (file == null && searchSubDirectories)
+                    {
+                        var subDirectories = Directory.GetDirectories(rcloneMountPath, "*.*", SearchOption.TopDirectoryOnly);
+
+                        foreach (var subDirectory in subDirectories)
+                        {
+                            file = FindFile(Path.Combine(rcloneMountPath, subDirectory), potentialFilePaths, fileName);
+
+                            if (file != null)
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (file == null)
+                    {
+                        await Task.Delay(1000 * retryCount);
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
             }
 
             if (file == null)
             {
                 _logger.Debug($"Unable to find file in rclone mount. Folders available in {rcloneMountPath}: ");
+
                 try
                 {
                     var allFolders = FileHelper.GetDirectoryContents(rcloneMountPath);
 
                     _logger.Debug(allFolders);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     _logger.Error(ex.Message);
                 }
-                
+
                 throw new("Could not find file from rclone mount!");
             }
-            
-            // Used by Alldebrid since we know the exact file path.
-            skipFileSearch:
 
             _logger.Debug($"Creating symbolic link from {file} to {destinationPath}");
 
