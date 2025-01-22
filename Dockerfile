@@ -10,9 +10,9 @@ WORKDIR /appclient
 
 RUN apk add --no-cache git python3 py3-pip make g++
 
+COPY client ./client
+COPY root ./root
 RUN \
-   echo "**** Cloning Source Code ****" && \
-   git clone https://github.com/rogerfar/rdt-client.git . && \
    cd client && \
    echo "**** Building Code  ****" && \
    npm ci && \
@@ -30,9 +30,8 @@ ENV BUILDPLATFORM=${BUILDPLATFORM:-linux/amd64}
 RUN mkdir /appserver
 WORKDIR /appserver
 
+COPY server ./server
 RUN \
-   echo "**** Cloning Source Code ****" && \
-   git clone https://github.com/rogerfar/rdt-client.git . && \
    echo "**** Building Source Code for $TARGETPLATFORM on $BUILDPLATFORM ****" && \
    cd server && \
    dotnet restore --no-cache RdtClient.sln && dotnet publish --no-restore -c Release -o out ; 

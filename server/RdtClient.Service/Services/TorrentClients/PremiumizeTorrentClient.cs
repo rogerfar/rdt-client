@@ -162,6 +162,7 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
                 torrent.RdFiles = JsonConvert.SerializeObject(torrentClientTorrent.Files);
             }
 
+            torrent.ClientKind = Torrent.TorrentClientKind.Premiumize;
             torrent.RdHost = torrentClientTorrent.Host;
             torrent.RdSplit = torrentClientTorrent.Split;
             torrent.RdProgress = torrentClientTorrent.Progress;

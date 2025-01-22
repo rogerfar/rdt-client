@@ -6,6 +6,9 @@ namespace RdtClient.Service.Services;
 
 public class DownloadClient(Download download, Torrent torrent, String destinationPath, String? category)
 {
+    private static Int64 _totalBytesDownloadedThisSession;
+    private static readonly Lock TotalBytesDownloadedLock = new();
+
     public IDownloader? Downloader;
 
     public Data.Enums.DownloadClient Type { get; private set; }
@@ -17,6 +20,8 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
     public Int64 Speed { get; private set; }
     public Int64 BytesTotal { get; private set; }
     public Int64 BytesDone { get; private set; }
+
+    private Int64 LastBytesDone { get; set; }
 
     public async Task<String> Start()
     {
@@ -51,7 +56,7 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
                 Data.Enums.DownloadClient.Internal => new InternalDownloader(download.Link, filePath),
                 Data.Enums.DownloadClient.Bezzad => new BezzadDownloader(download.Link, filePath),
                 Data.Enums.DownloadClient.Aria2c => new Aria2cDownloader(download.RemoteId, download.Link, filePath, downloadPath, category),
-                Data.Enums.DownloadClient.Symlink => new SymlinkDownloader(download.Link, filePath, downloadPath),
+                Data.Enums.DownloadClient.Symlink => new SymlinkDownloader(download.Link, filePath, downloadPath, torrent.ClientKind),
                 Data.Enums.DownloadClient.DownloadStation => await DownloadStationDownloader.Init(download.RemoteId, download.Link, filePath, downloadPath, category),
                 _ => throw new($"Unknown download client {Type}")
             };
@@ -67,6 +72,12 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
                 Speed = args.Speed;
                 BytesDone = args.BytesDone;
                 BytesTotal = args.BytesTotal;
+
+                var bytesAdded = BytesDone - LastBytesDone;
+
+                LastBytesDone = BytesDone;
+
+                AddToTotalBytesDownloadedThisSession(bytesAdded);
             };
 
             var result = await Downloader.Download();
@@ -114,5 +125,21 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
             return;
         }
         await Downloader.Resume();
+    }
+
+    public static Int64 GetTotalBytesDownloadedThisSession()
+    {
+        lock (TotalBytesDownloadedLock)
+        {
+            return _totalBytesDownloadedThisSession;
+        }
+    }
+
+    private static void AddToTotalBytesDownloadedThisSession(Int64 bytes)
+    {
+        lock (TotalBytesDownloadedLock)
+        {
+            _totalBytesDownloadedThisSession += bytes;
+        }
     }
 }

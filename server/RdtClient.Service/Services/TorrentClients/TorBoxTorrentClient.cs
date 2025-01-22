@@ -4,6 +4,7 @@ using TorBoxNET;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
 using System.Web;
+using RdtClient.Data.Models.Data;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
@@ -167,7 +168,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         return [];
     }
 
-    public Task SelectFiles(Data.Models.Data.Torrent torrent)
+    public Task SelectFiles(Torrent torrent)
     {
         return Task.CompletedTask;
     }
@@ -194,7 +195,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         return result.Data!;
     }
 
-    public async Task<Data.Models.Data.Torrent> UpdateData(Data.Models.Data.Torrent torrent, TorrentClientTorrent? torrentClientTorrent)
+    public async Task<Torrent> UpdateData(Torrent torrent, TorrentClientTorrent? torrentClientTorrent)
     {
         try
         {
@@ -229,6 +230,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                 torrent.RdFiles = JsonConvert.SerializeObject(rdTorrent.Files);
             }
 
+            torrent.ClientKind = Torrent.TorrentClientKind.TorBox;
             torrent.RdHost = rdTorrent.Host;
             torrent.RdSplit = rdTorrent.Split;
             torrent.RdProgress = rdTorrent.Progress;
@@ -280,7 +282,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         return torrent;
     }
 
-    public async Task<IList<String>?> GetDownloadLinks(Data.Models.Data.Torrent torrent)
+    public async Task<IList<String>?> GetDownloadLinks(Torrent torrent)
     {
         var files = new List<String>();
 

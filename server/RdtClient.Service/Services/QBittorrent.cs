@@ -208,7 +208,14 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             var torrentPath = downloadPath;
             if (!String.IsNullOrWhiteSpace(torrent.RdName))
             {
-                torrentPath = Path.Combine(downloadPath, torrent.RdName) + Path.DirectorySeparatorChar;
+                // Alldebrid stores single file torrents at the root folder.
+                if (torrent.ClientKind == Torrent.TorrentClientKind.AllDebrid && torrent.Files.Count == 1)
+                {
+                    torrentPath = Path.Combine(downloadPath, torrent.Files[0].Path);
+                } else
+                {
+                    torrentPath = Path.Combine(downloadPath, torrent.RdName) + Path.DirectorySeparatorChar;
+                }
             }
 
             Int64 bytesDone = 0;
@@ -629,7 +636,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
 
     public async Task<SyncMetaData> SyncMainData()
     {
-        var torrents = await TorrentInfo();
+        var torrentInfo = await TorrentInfo();
 
         var categories = await TorrentsCategories();
 
@@ -642,12 +649,25 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             Rid = 0,
             Tags = null,
             Trackers = new Dictionary<String, List<String>>(),
-            Torrents = torrents.ToDictionary(m => m.Hash, m => m),
+            Torrents = torrentInfo.ToDictionary(m => m.Hash, m => m),
             ServerState = new()
             {
                 DlInfoSpeed = activeDownloads,
                 UpInfoSpeed = 0
             }
+        };
+    }
+
+    public static TransferInfo TransferInfo()
+    {
+        var activeDownloads = TorrentRunner.ActiveDownloadClients.Sum(m => m.Value.Speed);
+
+        return new()
+        {
+            ConnectionStatus = "connected",
+            DlInfoData = DownloadClient.GetTotalBytesDownloadedThisSession(),
+            DlInfoSpeed = activeDownloads,
+            DlRateLimit = Settings.Get.DownloadClient.MaxSpeed
         };
     }
 }
