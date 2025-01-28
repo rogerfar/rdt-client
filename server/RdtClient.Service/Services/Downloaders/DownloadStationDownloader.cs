@@ -33,9 +33,16 @@ public class DownloadStationDownloader : IDownloader
 
     public static async Task<DownloadStationDownloader> Init(String? gid, String uri, String filePath, String downloadPath, String? category)
     {
+        if (Settings.Get.DownloadClient.DownloadStationUrl == null)
+        {
+            throw new("No URL specified for Synology download station");
+        }
+        if (Settings.Get.DownloadClient.DownloadStationUsername == null || Settings.Get.DownloadClient.DownloadStationPassword == null)
+        {
+            throw new("No username/password specified for Synology download station");
+        }
         var synologyClient = new SynologyClient(Settings.Get.DownloadClient.DownloadStationUrl);
-        if (Settings.Get.DownloadClient.DownloadStationUsername != null && Settings.Get.DownloadClient.DownloadStationPassword != null)
-            await synologyClient.LoginAsync(Settings.Get.DownloadClient.DownloadStationUsername, Settings.Get.DownloadClient.DownloadStationPassword);
+        await synologyClient.LoginAsync(Settings.Get.DownloadClient.DownloadStationUsername, Settings.Get.DownloadClient.DownloadStationPassword);
 
         String? remotePath = null;
         String? rootPath;
