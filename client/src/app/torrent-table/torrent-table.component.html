@@ -20,6 +20,7 @@
         <th (click)="sort('files.length')">Files</th>
         <th (click)="sort('downloads.length')">Downloads</th>
         <th (click)="sort('rdSize')">Size</th>
+        <th (click)="sort('added')">Requested</th>
         <th (click)="sort('status')">Status</th>
       </tr>
     </thead>
@@ -52,6 +53,9 @@
         </td>
         <td>
           {{ torrent.rdSize | filesize }}
+        </td>
+        <td>
+          {{ torrent.added | date : 'medium' }}
         </td>
         <td>
           {{ torrent | status }}
