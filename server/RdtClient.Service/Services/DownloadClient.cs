@@ -45,7 +45,7 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
                 throw new("Invalid download path");
             }
 
-            var symlinkPath = torrent.ClientKind switch
+            var symlinkSourcePath = torrent.ClientKind switch
             {
                 Torrent.TorrentClientKind.AllDebrid => AllDebridTorrentClient.GetSymlinkPath(torrent, download),
                 _ => downloadPath
@@ -63,7 +63,7 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
                 Data.Enums.DownloadClient.Internal => new InternalDownloader(download.Link, filePath),
                 Data.Enums.DownloadClient.Bezzad => new BezzadDownloader(download.Link, filePath),
                 Data.Enums.DownloadClient.Aria2c => new Aria2cDownloader(download.RemoteId, download.Link, filePath, downloadPath, category),
-                Data.Enums.DownloadClient.Symlink => new SymlinkDownloader(download.Link, filePath, symlinkPath, torrent.ClientKind),
+                Data.Enums.DownloadClient.Symlink => new SymlinkDownloader(download.Link, filePath, symlinkSourcePath, torrent.ClientKind),
                 _ => throw new($"Unknown download client {Type}")
             };
 
