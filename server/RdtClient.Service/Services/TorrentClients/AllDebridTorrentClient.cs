@@ -6,6 +6,7 @@ using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
 using System.Web;
+using RdtClient.Data.Models.Data;
 using File = AllDebridNET.File;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 using Torrent = RdtClient.Data.Models.Data.Torrent;
@@ -42,7 +43,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
         {
             logger.LogError(ex, $"The connection to AllDebrid has timed out: {ex.Message}");
 
-            throw; 
+            throw;
         }
     }
 
@@ -58,17 +59,18 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
             OriginalBytes = torrent.Size,
             Host = null,
             Split = 0,
-            Progress = (Int64) Math.Round(torrent.Downloaded * 100.0 / torrent.Size),
+            Progress = (Int64)Math.Round(torrent.Downloaded * 100.0 / torrent.Size),
             Status = torrent.Status,
             StatusCode = torrent.StatusCode,
             Added = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(torrent.UploadDate),
             Files = torrent.Links.Select((m, i) => new TorrentClientFile
-            {
-                Path = GetFiles(m.Files),
-                Bytes = m.Size,
-                Id = i,
-                Selected = true,
-            }).ToList(),
+                           {
+                               Path = GetFiles(m.Files),
+                               Bytes = m.Size,
+                               Id = i,
+                               Selected = true,
+                           })
+                           .ToList(),
             Links = torrent.Links.Select(m => m.LinkUrl.ToString()).ToList(),
             Ended = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(torrent.CompletionDate),
             Speed = torrent.DownloadSpeed,
@@ -79,6 +81,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
     public async Task<IList<TorrentClientTorrent>> GetTorrents()
     {
         var results = await GetClient().Magnet.StatusAllAsync();
+
         return results.Select(Map).ToList();
     }
 
@@ -245,15 +248,17 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
             Log($"Found {links.Count} files that match the minimum file size criterea", torrent);
         }
-        
+
         if (!String.IsNullOrWhiteSpace(torrent.IncludeRegex))
         {
             Log($"Using regular expression {torrent.IncludeRegex} to include only files matching this regex", torrent);
-        
+
             var newLinks = new List<Link>();
+
             foreach (var link in links)
             {
                 var path = GetFiles(link.Files);
+
                 if (Regex.IsMatch(path, torrent.IncludeRegex))
                 {
                     Log($"* Including {path}", torrent);
@@ -264,19 +269,21 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
                     Log($"* Excluding {path}", torrent);
                 }
             }
-        
+
             links = newLinks;
-        
+
             Log($"Found {newLinks.Count} files that match the regex", torrent);
-        } 
+        }
         else if (!String.IsNullOrWhiteSpace(torrent.ExcludeRegex))
         {
             Log($"Using regular expression {torrent.IncludeRegex} to ignore files matching this regex", torrent);
-        
+
             var newLinks = new List<Link>();
+
             foreach (var link in links)
             {
                 var path = GetFiles(link.Files);
+
                 if (!Regex.IsMatch(path, torrent.ExcludeRegex))
                 {
                     Log($"* Including {path}", torrent);
@@ -287,9 +294,9 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
                     Log($"* Excluding {path}", torrent);
                 }
             }
-        
+
             links = newLinks;
-        
+
             Log($"Found {newLinks.Count} files that match the regex", torrent);
         }
 
@@ -309,11 +316,12 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
                 Log($"{GetFiles(link.Files)} ({link.Size}b) {link.LinkUrl}");
             }
         }
-        
+
         Log("", torrent);
 
         return links.Select(m => m.LinkUrl.ToString()).ToList();
     }
+
     public Task<String> GetFileName(String downloadUrl)
     {
         if (String.IsNullOrWhiteSpace(downloadUrl))
@@ -350,7 +358,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
                 {
                     throw new("Unexpected number of nested files");
                 }
-                
+
                 result.AddRange(GetFiles(file.E.Value.PurpleEArray));
             }
         }
@@ -401,5 +409,32 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
         }
 
         logger.LogDebug(message);
+    }
+
+    public static String? GetSymlinkPath(Torrent torrent, Download download)
+    {
+        var fileName = DownloadHelper.GetFileName(download);
+
+        if (fileName == null || torrent.RdName == null)
+        {
+            return null;
+        }
+        
+        var directory = DownloadHelper.RemoveInvalidPathChars(torrent.RdName);
+
+        var matchingTorrentFiles = torrent.Files.Where(m => m.Path.EndsWith(fileName)).Where(m => !String.IsNullOrWhiteSpace(m.Path)).ToList();
+
+        if (matchingTorrentFiles.Count == 0)
+        {
+            throw new Exception($"Could not find file {fileName} in {torrent.RdName}");
+        }
+
+        // Torrents with a single file in them don't need to have the `RdName` added
+        if (torrent.Files.Count == 1)
+        {
+            return matchingTorrentFiles[0].Path;
+        }
+
+        return Path.Combine(directory, matchingTorrentFiles[0].Path);
     }
 }
