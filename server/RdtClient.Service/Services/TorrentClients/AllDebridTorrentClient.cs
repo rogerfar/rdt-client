@@ -426,7 +426,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
         if (matchingTorrentFiles.Count == 0)
         {
-            throw new Exception($"Could not find file {fileName} in {torrent.RdName}");
+            throw new($"Could not find file {fileName} in {torrent.RdName}");
         }
 
         // Torrents with a single file in them don't need to have the `RdName` added
