@@ -1,5 +1,5 @@
-﻿using System.ComponentModel;
-using RdtClient.Data.Enums;
+﻿using RdtClient.Data.Enums;
+using System.ComponentModel;
 
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
@@ -131,6 +131,21 @@ http://127.0.0.1:6800/jsonrpc.")]
     [DisplayName("Rclone mount path (only used for the Symlink Downloader)")]
     [Description("Path where Rclone is mounted. Required for Symlink Downloader. Suffix this path with a * to search subdirectories too.")]
     public String RcloneMountPath { get; set; } = "/mnt/rd/";
+
+    [DisplayName("Synology DownloadStation URL")]
+    [Description("The URL to the Synology DownloadStation. A common URL is http://127.0.0.1:5000")]
+    public String DownloadStationUrl { get; set; } = "http://127.0.0.1:5000";
+
+    [DisplayName("Synology DownloadStation Username")]
+    [Description("The username to use when connecting to the Synology DownloadStation.")]
+    public String? DownloadStationUsername { get; set; } = null;
+    [DisplayName("Synology DownloadStation Password")]
+    [Description("The password to use when connecting to the Synology DownloadStation.")]
+    public String? DownloadStationPassword { get; set; } = null;
+
+    [DisplayName("Synology Download Station Download Path")]
+    [Description("The root path to doawnload the file on the Synology DownloadStation host, if empty use the default DownloadStation path.")]
+    public String? DownloadStationDownloadPath { get; set; } = null;
 
     [DisplayName("Log level")]
     [Description("Only set when trying to debug a download client, can generate a lot of logs.")]
