@@ -19,7 +19,8 @@ public class DownloadStationDownloader : IDownloader
     private readonly String? _remotePath;
 
     private String? _gid;
-    private DownloadStationDownloader(String? gid, String uri, String? remotePath, String filePath, String downloadPath, String? category, SynologyClient synologyClient)
+
+    private DownloadStationDownloader(String? gid, String uri, String? remotePath, String filePath, String downloadPath, SynologyClient synologyClient)
     {
         _logger = Log.ForContext<DownloadStationDownloader>();
         _logger.Debug($"Instantiated new DownloadStation Downloader for URI {uri} to filePath {filePath} and downloadPath {downloadPath} and GID {gid}");
@@ -37,15 +38,18 @@ public class DownloadStationDownloader : IDownloader
         {
             throw new("No URL specified for Synology download station");
         }
+
         if (Settings.Get.DownloadClient.DownloadStationUsername == null || Settings.Get.DownloadClient.DownloadStationPassword == null)
         {
             throw new("No username/password specified for Synology download station");
         }
+
         var synologyClient = new SynologyClient(Settings.Get.DownloadClient.DownloadStationUrl);
         await synologyClient.LoginAsync(Settings.Get.DownloadClient.DownloadStationUsername, Settings.Get.DownloadClient.DownloadStationPassword);
 
         String? remotePath = null;
         String? rootPath;
+
         if (!String.IsNullOrWhiteSpace(Settings.Get.DownloadClient.DownloadStationDownloadPath))
         {
             rootPath = Settings.Get.DownloadClient.DownloadStationDownloadPath;
@@ -58,7 +62,6 @@ public class DownloadStationDownloader : IDownloader
 
         if (rootPath != null)
         {
-
             if (String.IsNullOrWhiteSpace(category))
             {
                 remotePath = Path.Combine(rootPath, downloadPath).Replace('\\', '/');
@@ -69,7 +72,7 @@ public class DownloadStationDownloader : IDownloader
             }
         }
 
-        return new DownloadStationDownloader(gid, uri, remotePath, filePath, downloadPath, category, synologyClient);
+        return new(gid, uri, remotePath, filePath, downloadPath, synologyClient);
     }
 
     public async Task Cancel()
@@ -78,61 +81,75 @@ public class DownloadStationDownloader : IDownloader
         {
             _logger.Debug($"Remove download {_uri} {_gid} from Synology DownloadStation");
 
-            await _synologyClient.DownloadStationApi().TaskEndpoint().DeleteAsync(new DownloadStationTaskDeleteRequest
-            {
-                Ids = new List<string> { _gid },
-                ForceComplete = false
-            });
+            await _synologyClient.DownloadStationApi()
+                                 .TaskEndpoint()
+                                 .DeleteAsync(new()
+                                 {
+                                     Ids =
+                                     [
+                                         _gid
+                                     ],
+                                     ForceComplete = false
+                                 });
         }
     }
 
-    public async Task<string> Download()
+    public async Task<String> Download()
     {
         var path = Path.GetDirectoryName(_remotePath)?.Replace('\\', '/') ?? throw new($"Invalid file path {_filePath}");
-        if (!path.StartsWith('/')) path = '/' + path;
+
+        if (!path.StartsWith('/'))
+        {
+            path = '/' + path;
+        }
+
         _logger.Debug($"Starting download of {_uri}, writing to path: {path}");
 
         if (_gid != null)
         {
-            if (GetTask() != null)
+            var task = await GetTask();
+
+            if (task != null)
             {
                 throw new($"The download link {_uri} has already been added to DownloadStation");
             }
         }
 
         var retryCount = 0;
+
         while (retryCount < 5)
         {
             _gid = await GetGidFromUri();
+
             if (_gid != null)
             {
                 _logger.Debug($"Download with ID {_gid} found in DownloadStation");
+
                 return _gid;
             }
+
             try
             {
                 var createResult = await _synologyClient
-                    .DownloadStationApi()
-                    .TaskEndpoint()
-                    .CreateAsync(new DownloadStationTaskCreateRequest(_uri, path.Substring(1)));
-
+                                         .DownloadStationApi()
+                                         .TaskEndpoint()
+                                         .CreateAsync(new(_uri, path[1..]));
 
                 _gid = createResult.TaskId?.FirstOrDefault();
                 _logger.Debug($"Added download to DownloadStation, received ID {_gid}");
 
-                if (_gid == null) _gid = await GetGidFromUri();
+                _gid ??= await GetGidFromUri();
 
                 if (_gid != null)
                 {
                     _logger.Debug($"Download with ID {_gid} found in DownloadStation");
+
                     return _gid;
                 }
-                else
-                {
-                    retryCount++;
-                    _logger.Error($"Task not found in DownloadStation after creat Sucess. Retrying {retryCount}/{RetryCount}");
-                    await Task.Delay(retryCount * 1000);
-                }
+
+                retryCount++;
+                _logger.Error($"Task not found in DownloadStation after creat Sucess. Retrying {retryCount}/{RetryCount}");
+                await Task.Delay(retryCount * 1000);
             }
             catch (Exception e)
             {
@@ -142,34 +159,46 @@ public class DownloadStationDownloader : IDownloader
             }
         }
 
-        throw new Exception($"Unable to download file");
+        throw new($"Unable to download file");
     }
 
     private async Task<String?> GetGidFromUri()
     {
         var tasks = await _synologyClient.DownloadStationApi().TaskEndpoint().ListAsync();
-        return tasks.Task.FirstOrDefault(t => t.Additional?.Detail?.Uri == _uri)?.Id;
+
+        return tasks.Task?.FirstOrDefault(t => t.Additional?.Detail?.Uri == _uri)?.Id;
     }
 
     public async Task Pause()
     {
         _logger.Debug($"Pausing download {_uri} {_gid}");
+
         if (_gid != null)
+        {
             await _synologyClient.DownloadStationApi().TaskEndpoint().PauseAsync(_gid);
+        }
     }
 
     public async Task Resume()
     {
         _logger.Debug($"Resuming download {_uri} {_gid}");
+
         if (_gid != null)
+        {
             await _synologyClient.DownloadStationApi().TaskEndpoint().ResumeAsync(_gid);
+        }
     }
 
     public async Task Update()
     {
         if (_gid == null)
         {
-            DownloadComplete?.Invoke(this, new() { Error = "Task not found" });
+            DownloadComplete?.Invoke(this,
+                                     new()
+                                     {
+                                         Error = "Task not found"
+                                     });
+
             return;
         }
 
@@ -177,28 +206,44 @@ public class DownloadStationDownloader : IDownloader
 
         if (task == null)
         {
-            DownloadComplete?.Invoke(this, new() { Error = "Task not found" });
+            DownloadComplete?.Invoke(this,
+                                     new()
+                                     {
+                                         Error = "Task not found"
+                                     });
+
             return;
         }
 
         if (task.Status == DownloadStationTaskStatus.Finished)
         {
-            DownloadComplete?.Invoke(this, new() { Error = null });
+            DownloadComplete?.Invoke(this,
+                                     new()
+                                     {
+                                         Error = null
+                                     });
+
             return;
         }
 
-        DownloadProgress?.Invoke(this, new()
-        {
-            BytesDone = task.Additional.Transfer.SizeDownloaded,
-            BytesTotal = task.Size,
-            Speed = task.Additional.Transfer.SpeedDownload
-        });
+        DownloadProgress?.Invoke(this,
+                                 new()
+                                 {
+                                     BytesDone = task.Additional?.Transfer?.SizeDownloaded ?? 0,
+                                     BytesTotal = task.Size,
+                                     Speed = task.Additional?.Transfer?.SpeedDownload ?? 0
+                                 });
     }
 
     private async Task<DownloadStationTask?> GetTask()
     {
         try
         {
+            if (_gid == null)
+            {
+                return null;
+            }
+
             return await _synologyClient.DownloadStationApi().TaskEndpoint().GetInfoAsync(_gid);
         }
         catch
