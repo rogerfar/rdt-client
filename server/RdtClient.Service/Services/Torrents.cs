@@ -671,7 +671,7 @@ public class Torrents(
                                                     infoHash,
                                                     fileOrMagnetContents,
                                                     isFile,
-                                                    Settings.Get.DownloadClient.Client,
+                                                    torrent.DownloadClient,
                                                     torrent);
 
             await UpdateTorrentClientData(newTorrent);
