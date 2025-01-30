@@ -22,6 +22,7 @@
     <PackageReference Include="Serilog" Version="4.2.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
     <PackageReference Include="SharpCompress" Version="0.39.0" />
+    <PackageReference Include="Synology.Api.Client" Version="0.3.87" />
     <PackageReference Include="TorBox.NET" Version="1.3.2" />
   </ItemGroup>
 
