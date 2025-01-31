@@ -38,6 +38,12 @@
         </span>
         <span>Settings</span>
       </a>
+      <button class="navbar-item" type="button" (click)="registerMagnetHandler()">
+        <span class="icon">
+          <i class="fas fa-magnet" aria-hidden="true"></i>
+        </span>
+        <span>Register Magnet Handler</span>
+      </button>      
       <a class="navbar-item" *ngIf="profile" href="{{ providerLink }}" target="_blank" rel="noopener">
         <span class="icon">
           <i class="fas fa-euro-sign" aria-hidden="true"></i>
