@@ -5,6 +5,7 @@ using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
 using DebridLinkFrNET.Models;
+using System.Web;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
@@ -313,5 +314,17 @@ public class DebridLinkFrClient : ITorrentClient
         }
 
         _logger.LogDebug(message);
+    }
+
+    public Task<string> GetFileName(string downloadUrl)
+    {
+        if (String.IsNullOrWhiteSpace(downloadUrl))
+        {
+            return Task.FromResult("");
+        }
+
+        var uri = new Uri(downloadUrl);
+
+        return Task.FromResult(HttpUtility.UrlDecode(uri.Segments.Last()));
     }
 }
