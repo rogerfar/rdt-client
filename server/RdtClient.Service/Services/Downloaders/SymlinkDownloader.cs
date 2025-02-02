@@ -62,7 +62,7 @@ public class SymlinkDownloader(String uri, String destinationPath, String path, 
             var shouldSearch = true;
 
             // When resolving symlinks for AllDebrid, we know the exact file path, so we can skip the search.
-            if (clientKind == Torrent.TorrentClientKind.AllDebrid)
+            if (clientKind is Torrent.TorrentClientKind.AllDebrid or Torrent.TorrentClientKind.DebridLink)
             {
                 var potentialFilePath = Path.Combine(rcloneMountPath, path);
                 

@@ -6,6 +6,8 @@ using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
 using DebridLinkFrNET.Models;
 using System.Web;
+using RdtClient.Data.Models.Data;
+using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
@@ -315,5 +317,21 @@ public class DebridLinkClient : ITorrentClient
         var uri = new Uri(downloadUrl);
 
         return Task.FromResult(HttpUtility.UrlDecode(uri.Segments.Last()));
+    }
+
+    public static String? GetSymlinkPath(Torrent torrent, Download download)
+    {
+        if (torrent.RdName == null || download.FileName == null)
+        {
+            return null;
+        }
+
+        // Single file torrents always have that file at `/mnt-root/Seedbox/filename.ext`
+        if (torrent.Files?.Count == 1)
+        {
+            return download.FileName;
+        }
+
+        return Path.Combine(torrent.RdName, download.FileName);
     }
 }
