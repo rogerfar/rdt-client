@@ -16,6 +16,6 @@ public enum Provider
     [Description("TorBox")]
     TorBox,
 
-    [Description("DebridLinkFr")]
-    DebridLinkFr
+    [Description("DebridLink")]
+    DebridLink
 }

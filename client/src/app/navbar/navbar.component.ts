@@ -38,7 +38,7 @@ export class NavbarComponent implements OnInit {
         case 'TorBox':
           this.providerLink = 'https://torbox.app/';
           break;
-        case 'DebridLinkFr':
+        case 'DebridLink':
           this.providerLink = 'https://debrid-link.com/';
           break;
       }

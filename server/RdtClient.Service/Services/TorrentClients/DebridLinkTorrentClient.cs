@@ -9,12 +9,12 @@ using System.Web;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
-public class DebridLinkFrClient : ITorrentClient
+public class DebridLinkClient : ITorrentClient
 {
-    private readonly ILogger<DebridLinkFrClient> _logger;
+    private readonly ILogger<DebridLinkClient> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
 
-    public DebridLinkFrClient(ILogger<DebridLinkFrClient> logger, IHttpClientFactory httpClientFactory)
+    public DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFactory httpClientFactory)
     {
         _logger = logger;
         _httpClientFactory = httpClientFactory;
@@ -34,28 +34,28 @@ public class DebridLinkFrClient : ITorrentClient
             var httpClient = _httpClientFactory.CreateClient();
             httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
 
-            var debridLinkFrClient = new DebridLinkFrNETClient(apiKey, httpClient);
+            var DebridLinkClient = new DebridLinkFrNETClient(apiKey, httpClient);
 
-            return debridLinkFrClient;
+            return DebridLinkClient;
         }
         catch (AggregateException ae)
         {
             foreach (var inner in ae.InnerExceptions)
             {
-                _logger.LogError(inner, $"The connection to DebridLinkFr has failed: {inner.Message}");
+                _logger.LogError(inner, $"The connection to DebridLink has failed: {inner.Message}");
             }
 
             throw;
         }
         catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
         {
-            _logger.LogError(ex, $"The connection to DebridLinkFr has timed out: {ex.Message}");
+            _logger.LogError(ex, $"The connection to DebridLink has timed out: {ex.Message}");
 
             throw;
         }
         catch (TaskCanceledException ex)
         {
-            _logger.LogError(ex, $"The connection to DebridLinkFr has timed out: {ex.Message}");
+            _logger.LogError(ex, $"The connection to DebridLink has timed out: {ex.Message}");
 
             throw; 
         }

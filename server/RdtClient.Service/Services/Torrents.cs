@@ -23,7 +23,7 @@ public class Torrents(
     AllDebridTorrentClient allDebridTorrentClient,
     PremiumizeTorrentClient premiumizeTorrentClient,
     RealDebridTorrentClient realDebridTorrentClient,
-    DebridLinkFrClient debridLinkFrClient,
+    DebridLinkClient DebridLinkClient,
     TorBoxTorrentClient torBoxTorrentClient)
 {
     private static readonly SemaphoreSlim RealDebridUpdateLock = new(1, 1);
@@ -42,7 +42,7 @@ public class Torrents(
                 Provider.Premiumize => premiumizeTorrentClient,
                 Provider.RealDebrid => realDebridTorrentClient,
                 Provider.AllDebrid => allDebridTorrentClient,
-                Provider.DebridLinkFr => debridLinkFrClient,
+                Provider.DebridLink => DebridLinkClient,
                 Provider.TorBox => torBoxTorrentClient,
                 _ => throw new("Invalid Provider")
             };
