@@ -137,21 +137,9 @@ public class DebridLinkFrClient : ITorrentClient
         return result.Id ?? "";
     }
 
-    public async Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
+    public Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
     {
-        var result = await GetClient().Seedbox.CachedAsync(hash);
-
-        var files = result.First().Value.Files ?? new List<TorrentFile>();
-
-        var groups = files.Where(m => m.Name != null).GroupBy(m => $"{m.Name}-{m.Size}");
-
-        var torrentClientAvailableFiles = groups.Select(m => new TorrentClientAvailableFile
-        {
-            Filename = m.First().Name!,
-            Filesize = m.First().Size
-        }).ToList();
-
-        return torrentClientAvailableFiles;
+        return Task.FromResult<IList<TorrentClientAvailableFile>>([]);
     }
 
     public Task SelectFiles(Data.Models.Data.Torrent torrent)
