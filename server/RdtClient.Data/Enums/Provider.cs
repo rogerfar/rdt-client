@@ -13,9 +13,9 @@ public enum Provider
     [Description("Premiumize")]
     Premiumize,
 
-    [Description("DebridLinkFr")]
-    DebridLinkFr,
-
     [Description("TorBox")]
-    TorBox
+    TorBox,
+
+    [Description("DebridLinkFr")]
+    DebridLinkFr
 }

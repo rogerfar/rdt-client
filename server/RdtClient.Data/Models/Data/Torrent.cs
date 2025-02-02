@@ -99,6 +99,7 @@ public class Torrent
         AllDebrid,
         Premiumize,
         RealDebrid,
-        TorBox
+        TorBox,
+        DebridLink
     }
 }

@@ -78,7 +78,7 @@ public class DebridLinkFrClient : ITorrentClient
             Added = DateTimeOffset.FromUnixTimeSeconds(torrent.Created),
             Files = (torrent.Files ?? new List<TorrentFile>()).Select((m, i) => new TorrentClientFile
             {
-                Path = m.Name ?? "",
+                Path = m.Name,
                 Bytes = m.Size,
                 Id = i,
                 Selected = true
@@ -197,6 +197,7 @@ public class DebridLinkFrClient : ITorrentClient
                 torrent.RdFiles = JsonConvert.SerializeObject(rdTorrent.Files);
             }
 
+            torrent.ClientKind = Data.Models.Data.Torrent.TorrentClientKind.DebridLink;
             torrent.RdHost = rdTorrent.Host;
             torrent.RdSplit = rdTorrent.Split;
             torrent.RdProgress = rdTorrent.Progress;
