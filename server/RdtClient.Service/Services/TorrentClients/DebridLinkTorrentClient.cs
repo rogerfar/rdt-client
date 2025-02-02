@@ -6,8 +6,7 @@ using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
 using DebridLinkFrNET.Models;
 using System.Web;
-using RdtClient.Data.Models.Data;
-using Torrent = RdtClient.Data.Models.Data.Torrent;
+using Download = RdtClient.Data.Models.Data.Download;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
@@ -319,7 +318,7 @@ public class DebridLinkClient : ITorrentClient
         return Task.FromResult(HttpUtility.UrlDecode(uri.Segments.Last()));
     }
 
-    public static String? GetSymlinkPath(Torrent torrent, Download download)
+    public static String? GetSymlinkPath(Data.Models.Data.Torrent torrent, Download download)
     {
         if (torrent.RdName == null || download.FileName == null)
         {
