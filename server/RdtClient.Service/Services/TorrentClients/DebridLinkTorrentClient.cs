@@ -29,7 +29,7 @@ public class DebridLinkClient : ITorrentClient
 
             if (String.IsNullOrWhiteSpace(apiKey))
             {
-                throw new Exception("Real-Debrid API Key not set in the settings");
+                throw new Exception("DebridLink API Key not set in the settings");
             }
 
             var httpClient = _httpClientFactory.CreateClient();
