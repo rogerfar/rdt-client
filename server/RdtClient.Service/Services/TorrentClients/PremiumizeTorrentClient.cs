@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PremiumizeNET;
 using RdtClient.Data.Enums;
@@ -287,6 +288,39 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
             if (!String.IsNullOrWhiteSpace(item.Link))
             {
                 Log($"Found item {item.Name} in folder {folder.Name} ({folderId}) with link {item.Link}", torrent);
+
+                if (item.Type == "file")
+                {
+                    if (torrent.DownloadMinSize > 0)
+                    {
+                        if (item.Link.Length < torrent.DownloadMinSize * 1024 * 1024)
+                        {
+                            Log($"Not downloading {item.Name}, its size of {item.Link.Length} bytes is smaller than the minimum size of {torrent.DownloadMinSize} bytes");
+
+                            continue;
+                        }
+                    }
+
+                    if (!String.IsNullOrWhiteSpace(torrent.IncludeRegex))
+                    {
+                        if (!Regex.IsMatch(item.Name, torrent.IncludeRegex))
+                        {
+                            Log($"Not downloading {item.Name}, it does not match regex {torrent.IncludeRegex}");
+
+                            continue;
+                        }
+                    }
+                    else if (!String.IsNullOrWhiteSpace(torrent.ExcludeRegex))
+                    {
+                        if (Regex.IsMatch(item.Name, torrent.ExcludeRegex))
+                        {
+                            Log($"Not downloading {item.Name}, it matches regex {torrent.ExcludeRegex}");
+
+                            continue;
+                        }
+                    }
+                }
+
                 downloadLinks.Add(item.Link);
             }
             else
