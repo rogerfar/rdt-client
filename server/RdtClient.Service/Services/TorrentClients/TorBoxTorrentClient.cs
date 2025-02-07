@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using TorBoxNET;
@@ -284,17 +285,30 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     public async Task<IList<String>?> GetDownloadLinks(Torrent torrent)
     {
-        var files = new List<String>();
-
         var torrentId = await GetClient().Torrents.GetHashInfoAsync(torrent.Hash, skipCache: true);
 
-        foreach (var file in torrent.Files)
+        var selectedFiles = torrent.Files.Where(file =>
         {
-            var newFile = $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}";
-            files.Add(newFile);
-        }
+            if (torrent.DownloadMinSize > 0 && file.Bytes < torrent.DownloadMinSize * 1024 * 1024)
+            {
+                return false;
+            }
 
-        return files;
+            if (!String.IsNullOrWhiteSpace(torrent.IncludeRegex))
+            {
+                return !Regex.IsMatch(Path.GetFileName(file.Path), torrent.IncludeRegex);
+            }
+
+            if (!String.IsNullOrWhiteSpace(torrent.ExcludeRegex))
+            {
+                return Regex.IsMatch(Path.GetFileName(file.Path), torrent.ExcludeRegex);
+            }
+
+            return true;
+        });
+
+        return selectedFiles.Select(file => $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}")
+                            .ToList();
     }
 
     public async Task<String> GetFileName(String downloadUrl)
