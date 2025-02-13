@@ -3,12 +3,12 @@
 This is a web interface to manage your torrents on Real-Debrid, AllDebrid, Premiumize TorBox or DebridLink. It supports the following features:
 
 - Add new torrents through magnets or files
-- Download all files from Real-Debrid, AllDebrid or Premiumize to your local machine automatically
+- Download all files from Real-Debrid, AllDebrid, Premiumize or TorBox to your local machine automatically
 - Unpack all files when finished downloading
 - Implements a fake qBittorrent API so you can hook up other applications like Sonarr, Radarr or Couchpotato.
 - Built with Angular 15 and .NET 9
 
-**You will need a Premium service at Real-Debrid, AllDebrid or Premiumize!**
+**You will need a Premium service at Real-Debrid, AllDebrid, Premiumize or Torbox!**
 
 [Click here to sign up for Real-Debrid.](https://real-debrid.com/?id=1348683)
 
@@ -18,7 +18,7 @@ This is a web interface to manage your torrents on Real-Debrid, AllDebrid, Premi
 
 [Click here to sign up for TorBox.](https://torbox.app/subscription?referral=3d25018e-f30d-4c4b-a714-48c04bc76765)
 
-[Click here to sign up for DebridLink.](https://debrid-link.fr/)
+[Click here to sign up for DebridLink.](https://debrid-link.fr/id/6duif)
 
 <sub>(referal links so I can get a few free premium days)</sub>
 
