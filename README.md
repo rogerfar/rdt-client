@@ -16,8 +16,9 @@ This is a web interface to manage your torrents on Real-Debrid, AllDebrid, Premi
 
 [Click here to sign up for Premiumize.](https://www.premiumize.me/)
 
-[//]: # (TODO: add referral link)
-[Click here to sign up for TorBox](https://torbox.app/subscription)
+[Click here to sign up for TorBox](https://torbox.app/subscription?referral=3d25018e-f30d-4c4b-a714-48c04bc76765)
+
+[Click here to sign up for DebridLink.](https://debrid-link.fr/id/6duif)
 
 <sub>(referal links so I can get a few free premium days)</sub>
 

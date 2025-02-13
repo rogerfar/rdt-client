@@ -8,13 +8,16 @@ using RdtClient.Service.Helpers;
 using System.Web;
 using RdtClient.Data.Models.Data;
 using File = AllDebridNET.File;
-using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
 public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHttpClientFactory httpClientFactory) : ITorrentClient
 {
+    private static readonly Int64 SessionId = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+    private static List<TorrentClientTorrent> _cache = [];
+    private static Int64 _sessionCounter = 0;
+
     private AllDebridNETClient GetClient()
     {
         try
@@ -49,30 +52,24 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
     private static TorrentClientTorrent Map(Magnet torrent)
     {
+        var files = GetFiles(torrent.Files);
         return new()
         {
             Id = torrent.Id.ToString(),
-            Filename = torrent.Filename,
+            Filename = torrent.Filename ?? "",
             OriginalFilename = torrent.Filename,
-            Hash = torrent.Hash,
-            Bytes = torrent.Size,
-            OriginalBytes = torrent.Size,
+            Hash = torrent.Hash ?? "",
+            Bytes = torrent.Size ?? 0,
+            OriginalBytes = torrent.Size ?? 0,
             Host = null,
             Split = 0,
-            Progress = (Int64)Math.Round(torrent.Downloaded * 100.0 / torrent.Size),
+            Progress = (Int64)Math.Round((torrent.Downloaded ?? 0) * 100.0 / (torrent.Size ?? 1)),
             Status = torrent.Status,
-            StatusCode = torrent.StatusCode,
-            Added = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(torrent.UploadDate),
-            Files = torrent.Links.Select((m, i) => new TorrentClientFile
-                           {
-                               Path = GetFiles(m.Files),
-                               Bytes = m.Size,
-                               Id = i,
-                               Selected = true,
-                           })
-                           .ToList(),
-            Links = torrent.Links.Select(m => m.LinkUrl.ToString()).ToList(),
-            Ended = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(torrent.CompletionDate),
+            StatusCode = torrent.StatusCode ?? 0,
+            Added = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(torrent.UploadDate ?? 0),
+            Files = files,
+            Links = [],
+            Ended = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(torrent.CompletionDate ?? 0),
             Speed = torrent.DownloadSpeed,
             Seeders = torrent.Seeders
         };
@@ -80,9 +77,31 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
     public async Task<IList<TorrentClientTorrent>> GetTorrents()
     {
-        var results = await GetClient().Magnet.StatusAllAsync();
+        var results = await GetClient().Magnet.StatusLiveAsync(SessionId, _sessionCounter);
 
-        return results.Select(Map).ToList();
+        _sessionCounter = results.Counter;
+
+        if (results.Fullsync == true)
+        {
+            _cache = (results.Magnets ?? []).Select(Map).ToList();
+        }
+        else
+        {
+            // Replace the existing items in the cache with the new ones based on the ID
+            foreach (var result in results.Magnets ?? [])
+            {
+                var existing = _cache.FirstOrDefault(m => m.Id == result.Id.ToString());
+                if (existing != null)
+                {
+                    _cache.Remove(existing);
+                }
+                _cache.Add(Map(result));
+            }
+        }
+
+        _cache = _cache.Where(m => m.Status != null).ToList();
+
+        return _cache;
     }
 
     public async Task<TorrentClientUser> GetUser()
@@ -177,7 +196,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
                 torrent.RdFiles = JsonConvert.SerializeObject(torrentClientTorrent.Files);
             }
 
-            torrent.ClientKind = Torrent.TorrentClientKind.AllDebrid;
+            torrent.ClientKind = Provider.AllDebrid;
             torrent.RdHost = torrentClientTorrent.Host;
             torrent.RdSplit = torrentClientTorrent.Split;
             torrent.RdProgress = torrentClientTorrent.Progress;
@@ -226,14 +245,9 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
             return null;
         }
 
-        var magnet = await GetClient().Magnet.StatusAsync(torrent.RdId);
+        var allFiles = await GetClient().Magnet.FilesAsync(Int64.Parse(torrent.RdId));
 
-        if (magnet == null)
-        {
-            return null;
-        }
-
-        var links = magnet.Links;
+        var files = GetFiles(allFiles);
 
         Log($"Getting download links", torrent);
 
@@ -243,83 +257,74 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
             Log($"Determining which files are over {minFileSize} bytes", torrent);
 
-            links = links.Where(m => m.Size > minFileSize)
+            files = files.Where(m => m.Bytes > minFileSize)
                          .ToList();
 
-            Log($"Found {links.Count} files that match the minimum file size criterea", torrent);
+            Log($"Found {files.Count} files that match the minimum file size criterea", torrent);
         }
 
         if (!String.IsNullOrWhiteSpace(torrent.IncludeRegex))
         {
             Log($"Using regular expression {torrent.IncludeRegex} to include only files matching this regex", torrent);
 
-            var newLinks = new List<Link>();
+            var newFiles = new List<TorrentClientFile>();
 
-            foreach (var link in links)
+            foreach (var file in files)
             {
-                var path = GetFiles(link.Files);
-
-                if (Regex.IsMatch(path, torrent.IncludeRegex))
+                if (Regex.IsMatch(file.Path, torrent.IncludeRegex))
                 {
-                    Log($"* Including {path}", torrent);
-                    newLinks.Add(link);
+                    Log($"* Including {file.Path}", torrent);
+                    newFiles.Add(file);
                 }
                 else
                 {
-                    Log($"* Excluding {path}", torrent);
+                    Log($"* Excluding {file.Path}", torrent);
                 }
             }
 
-            links = newLinks;
+            files = newFiles;
 
-            Log($"Found {newLinks.Count} files that match the regex", torrent);
+            Log($"Found {newFiles.Count} files that match the regex", torrent);
         }
         else if (!String.IsNullOrWhiteSpace(torrent.ExcludeRegex))
         {
             Log($"Using regular expression {torrent.IncludeRegex} to ignore files matching this regex", torrent);
 
-            var newLinks = new List<Link>();
+            var newLinks = new List<TorrentClientFile>();
 
-            foreach (var link in links)
+            foreach (var link in files)
             {
-                var path = GetFiles(link.Files);
-
-                if (!Regex.IsMatch(path, torrent.ExcludeRegex))
+                if (!Regex.IsMatch(link.Path, torrent.ExcludeRegex))
                 {
-                    Log($"* Including {path}", torrent);
+                    Log($"* Including {link.Path}", torrent);
                     newLinks.Add(link);
                 }
                 else
                 {
-                    Log($"* Excluding {path}", torrent);
+                    Log($"* Excluding {link.Path}", torrent);
                 }
             }
 
-            links = newLinks;
+            files = newLinks;
 
             Log($"Found {newLinks.Count} files that match the regex", torrent);
         }
 
-        if (links.Count == 0)
+        if (files.Count == 0)
         {
             Log($"Filtered all files out! Downloading ALL files instead!", torrent);
 
-            links = magnet.Links;
+            files = GetFiles(allFiles);
         }
 
-        if (logger.IsEnabled(LogLevel.Debug))
+        Log($"Selecting links:");
+
+        foreach (var file in files)
         {
-            Log($"Selecting links:");
-
-            foreach (var link in links)
-            {
-                Log($"{GetFiles(link.Files)} ({link.Size}b) {link.LinkUrl}");
-            }
+            Log($"{file.Path} ({file.Bytes}b) {file.DownloadLink}");
         }
-
-        Log("", torrent);
-
-        return links.Select(m => m.LinkUrl.ToString()).ToList();
+        
+        return files.Where(m => m.DownloadLink != null).Select(m => m.DownloadLink!.ToString()).ToList();
     }
 
     public Task<String> GetFileName(String downloadUrl)
@@ -340,65 +345,41 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
         return Map(result);
     }
-
-    private static String GetFiles(IList<File> files)
+    
+    private static List<TorrentClientFile> GetFiles(List<File>? files, String parentPath = "")
     {
-        var result = new List<String>();
-
-        foreach (var file in files)
+        if (files == null)
         {
-            if (!String.IsNullOrWhiteSpace(file.N))
-            {
-                result.Add(file.N);
-            }
+            return [];
+        }
 
-            if (file.E != null && file.E.Value.PurpleEArray != null && file.E.Value.PurpleEArray.Count > 0)
+        return files.SelectMany(file =>
+        {
+            var currentPath = String.IsNullOrEmpty(parentPath) 
+                ? file.FolderOrFileName 
+                : Path.Combine(parentPath, file.FolderOrFileName);
+
+            var result = new List<TorrentClientFile>();
+
+            // If it's a file (has size)
+            if (file.Size.HasValue)
             {
-                if (file.E.Value.PurpleEArray.Count != 1)
+                result.Add(new()
                 {
-                    throw new("Unexpected number of nested files");
-                }
-
-                result.AddRange(GetFiles(file.E.Value.PurpleEArray));
+                    Path = currentPath,
+                    Bytes = file.Size.Value,
+                    DownloadLink = file.DownloadLink
+                });
             }
-        }
 
-        return String.Join("/", result);
-    }
-
-    private static List<String> GetFiles(IList<FileE1> files)
-    {
-        var result = new List<String>();
-
-        foreach (var file in files)
-        {
-            if (!String.IsNullOrWhiteSpace(file.N))
+            // Process sub-nodes if they exist
+            if (file.SubNodes != null)
             {
-                result.Add(file.N);
+                result.AddRange(GetFiles(file.SubNodes, currentPath));
             }
 
-            if (file.E != null && file.E.Count > 0)
-            {
-                result.AddRange(GetFiles(file.E));
-            }
-        }
-
-        return result;
-    }
-
-    private static List<String> GetFiles(IList<FileE2> files)
-    {
-        var result = new List<String>();
-
-        foreach (var file in files)
-        {
-            if (!String.IsNullOrWhiteSpace(file.N))
-            {
-                result.Add(file.N);
-            }
-        }
-
-        return result;
+            return result;
+        }).ToList();
     }
 
     private void Log(String message, Torrent? torrent = null)
