@@ -1,6 +1,6 @@
 # Real-Debrid Torrent Client
 
-This is a web interface to manage your torrents on Real-Debrid, AllDebrid, Premiumize or TorBox. It supports the following features:
+This is a web interface to manage your torrents on Real-Debrid, AllDebrid, Premiumize TorBox or DebridLink. It supports the following features:
 
 - Add new torrents through magnets or files
 - Download all files from Real-Debrid, AllDebrid, Premiumize or TorBox to your local machine automatically
@@ -16,7 +16,7 @@ This is a web interface to manage your torrents on Real-Debrid, AllDebrid, Premi
 
 [Click here to sign up for Premiumize.](https://www.premiumize.me/)
 
-[Click here to sign up for TorBox](https://torbox.app/subscription?referral=3d25018e-f30d-4c4b-a714-48c04bc76765)
+[Click here to sign up for TorBox.](https://torbox.app/subscription?referral=3d25018e-f30d-4c4b-a714-48c04bc76765)
 
 [Click here to sign up for DebridLink.](https://debrid-link.fr/id/6duif)
 
