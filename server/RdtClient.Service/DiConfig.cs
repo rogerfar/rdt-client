@@ -27,6 +27,7 @@ public static class DiConfig
         services.AddScoped<TorBoxTorrentClient>();
         services.AddScoped<Torrents>();
         services.AddScoped<TorrentRunner>();
+        services.AddScoped<DebridLinkClient>();
 
         services.AddSingleton<IAuthorizationHandler, AuthSettingHandler>();
             
