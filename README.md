@@ -109,7 +109,7 @@ If you use Proxmox for your homelab, you can run rdt-client in a linux container
 
 ### Download Clients
 
-Currently there 4 available download clients:
+Currently there 5 available download clients:
 
 #### Internal Downloader
 
@@ -156,6 +156,17 @@ Required configuration:
 
 Suggested configuration:
 - Automatic retry downloads > 3
+
+### Synology Download Station
+
+The Synology Download Station downloader uses an external Download Station server. You will need to set this up yourself.
+
+It has the following options:
+
+- Url: The URL to the Synology DownloadStation. A common URL is `http://127.0.0.1:5000`
+- Username: The username to use when connecting to the Synology DownloadStation.
+- Password: The password to use when connecting to the Synology DownloadStation.
+- Download Path: The root path to download the file on the Synology DownloadStation host. If left empty, the default path configured on your Download Station server will be used.
 
 ### Troubleshooting
 
