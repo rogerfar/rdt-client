@@ -295,7 +295,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
                 torrent.RdFiles = JsonConvert.SerializeObject(torrentClientTorrent.Files);
             }
 
-            torrent.ClientKind = Data.Models.Data.Torrent.TorrentClientKind.RealDebrid;
+            torrent.ClientKind = Provider.RealDebrid;
             torrent.RdHost = torrentClientTorrent.Host;
             torrent.RdSplit = torrentClientTorrent.Split;
             torrent.RdProgress = torrentClientTorrent.Progress;

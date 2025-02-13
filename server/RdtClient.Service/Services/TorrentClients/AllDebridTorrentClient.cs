@@ -196,7 +196,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
                 torrent.RdFiles = JsonConvert.SerializeObject(torrentClientTorrent.Files);
             }
 
-            torrent.ClientKind = Torrent.TorrentClientKind.AllDebrid;
+            torrent.ClientKind = Provider.AllDebrid;
             torrent.RdHost = torrentClientTorrent.Host;
             torrent.RdSplit = torrentClientTorrent.Split;
             torrent.RdProgress = torrentClientTorrent.Progress;
