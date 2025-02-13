@@ -295,7 +295,7 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
                     {
                         if (item.Link.Length < torrent.DownloadMinSize * 1024 * 1024)
                         {
-                            Log($"Not downloading {item.Name}, its size of {item.Link.Length} bytes is smaller than the minimum size of {torrent.DownloadMinSize} bytes");
+                            Log($"Not downloading {item.Name}, its size of {item.Link.Length} bytes is smaller than the minimum size of {torrent.DownloadMinSize} bytes", torrent);
 
                             continue;
                         }
@@ -305,7 +305,7 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
                     {
                         if (!Regex.IsMatch(item.Name, torrent.IncludeRegex))
                         {
-                            Log($"Not downloading {item.Name}, it does not match regex {torrent.IncludeRegex}");
+                            Log($"Not downloading {item.Name}, it does not match regex {torrent.IncludeRegex}", torrent);
 
                             continue;
                         }
@@ -314,7 +314,7 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
                     {
                         if (Regex.IsMatch(item.Name, torrent.ExcludeRegex))
                         {
-                            Log($"Not downloading {item.Name}, it matches regex {torrent.ExcludeRegex}");
+                            Log($"Not downloading {item.Name}, it matches regex {torrent.ExcludeRegex}", torrent);
 
                             continue;
                         }
