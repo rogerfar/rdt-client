@@ -230,7 +230,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                 torrent.RdFiles = JsonConvert.SerializeObject(rdTorrent.Files);
             }
 
-            torrent.ClientKind = Torrent.TorrentClientKind.TorBox;
+            torrent.ClientKind = Provider.TorBox;
             torrent.RdHost = rdTorrent.Host;
             torrent.RdSplit = rdTorrent.Split;
             torrent.RdProgress = rdTorrent.Progress;

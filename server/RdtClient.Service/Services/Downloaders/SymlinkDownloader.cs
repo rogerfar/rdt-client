@@ -1,10 +1,10 @@
-﻿using RdtClient.Data.Models.Data;
+﻿using RdtClient.Data.Enums;
 using RdtClient.Service.Helpers;
 using Serilog;
 
 namespace RdtClient.Service.Services.Downloaders;
 
-public class SymlinkDownloader(String uri, String destinationPath, String path, Torrent.TorrentClientKind? clientKind) : IDownloader
+public class SymlinkDownloader(String uri, String destinationPath, String path, Provider? clientKind) : IDownloader
 {
     public event EventHandler<DownloadCompleteEventArgs>? DownloadComplete;
     public event EventHandler<DownloadProgressEventArgs>? DownloadProgress;
@@ -62,7 +62,7 @@ public class SymlinkDownloader(String uri, String destinationPath, String path, 
             var shouldSearch = true;
 
             // When resolving symlinks for AllDebrid, we know the exact file path, so we can skip the search.
-            if (clientKind is Torrent.TorrentClientKind.AllDebrid or Torrent.TorrentClientKind.DebridLink)
+            if (clientKind == Provider.AllDebrid)
             {
                 var potentialFilePath = Path.Combine(rcloneMountPath, path);
                 
