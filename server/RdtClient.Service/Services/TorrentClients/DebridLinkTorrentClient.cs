@@ -10,17 +10,8 @@ using Download = RdtClient.Data.Models.Data.Download;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
-public class DebridLinkClient : ITorrentClient
+public class DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFactory httpClientFactory) : ITorrentClient
 {
-    private readonly ILogger<DebridLinkClient> _logger;
-    private readonly IHttpClientFactory _httpClientFactory;
-
-    public DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFactory httpClientFactory)
-    {
-        _logger = logger;
-        _httpClientFactory = httpClientFactory;
-    }
-
     private DebridLinkFrNETClient GetClient()
     {
         try
@@ -29,34 +20,34 @@ public class DebridLinkClient : ITorrentClient
 
             if (String.IsNullOrWhiteSpace(apiKey))
             {
-                throw new Exception("DebridLink API Key not set in the settings");
+                throw new("DebridLink API Key not set in the settings");
             }
 
-            var httpClient = _httpClientFactory.CreateClient();
+            var httpClient = httpClientFactory.CreateClient();
             httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
 
-            var DebridLinkClient = new DebridLinkFrNETClient(apiKey, httpClient);
+            var debridLinkClient = new DebridLinkFrNETClient(apiKey, httpClient);
 
-            return DebridLinkClient;
+            return debridLinkClient;
         }
         catch (AggregateException ae)
         {
             foreach (var inner in ae.InnerExceptions)
             {
-                _logger.LogError(inner, $"The connection to DebridLink has failed: {inner.Message}");
+                logger.LogError(inner, $"The connection to DebridLink has failed: {inner.Message}");
             }
 
             throw;
         }
         catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
         {
-            _logger.LogError(ex, $"The connection to DebridLink has timed out: {ex.Message}");
+            logger.LogError(ex, $"The connection to DebridLink has timed out: {ex.Message}");
 
             throw;
         }
         catch (TaskCanceledException ex)
         {
-            _logger.LogError(ex, $"The connection to DebridLink has timed out: {ex.Message}");
+            logger.LogError(ex, $"The connection to DebridLink has timed out: {ex.Message}");
 
             throw; 
         }
@@ -64,7 +55,7 @@ public class DebridLinkClient : ITorrentClient
 
     private TorrentClientTorrent Map(Torrent torrent)
     {
-        return new TorrentClientTorrent
+        return new()
         {
             Id = torrent.Id ?? "",
             Filename = torrent.Name ?? "",
@@ -77,9 +68,9 @@ public class DebridLinkClient : ITorrentClient
             Progress = torrent.DownloadPercent,
             Status = torrent.Status.ToString(),
             Added = DateTimeOffset.FromUnixTimeSeconds(torrent.Created),
-            Files = (torrent.Files ?? new List<TorrentFile>()).Select((m, i) => new TorrentClientFile
+            Files = (torrent.Files ?? []).Select((m, i) => new TorrentClientFile
             {
-                Path = m.Name,
+                Path = m.Name ?? "",
                 Bytes = m.Size,
                 Id = i,
                 Selected = true
@@ -117,7 +108,7 @@ public class DebridLinkClient : ITorrentClient
     {
         var user = await GetClient().Account.Infos();
             
-        return new TorrentClientUser
+        return new()
         {
             Username = user.Username,
             Expiration = user.PremiumLeft > 0 ? DateTimeOffset.Now.AddSeconds(user.PremiumLeft) : null
@@ -153,9 +144,9 @@ public class DebridLinkClient : ITorrentClient
         await GetClient().Seedbox.DeleteAsync(torrentId);
     }
 
-    public async Task<String> Unrestrict(String link)
+    public Task<String> Unrestrict(String link)
     {
-        return link;
+        return Task.FromResult(link);
     }
 
     public async Task<Data.Models.Data.Torrent> UpdateData(Data.Models.Data.Torrent torrent, TorrentClientTorrent? torrentClientTorrent)
@@ -167,12 +158,7 @@ public class DebridLinkClient : ITorrentClient
                 return torrent;
             }
 
-            var rdTorrent = await GetInfo(torrent.RdId);
-
-            if (rdTorrent == null)
-            {
-                throw new Exception($"Resource not found");
-            }
+            var rdTorrent = await GetInfo(torrent.RdId) ?? throw new($"Resource not found");
 
             if (!String.IsNullOrWhiteSpace(rdTorrent.Filename))
             {
@@ -198,7 +184,7 @@ public class DebridLinkClient : ITorrentClient
                 torrent.RdFiles = JsonConvert.SerializeObject(rdTorrent.Files);
             }
 
-            torrent.ClientKind = Data.Models.Data.Torrent.TorrentClientKind.DebridLink;
+            torrent.ClientKind = Provider.DebridLink;
             torrent.RdHost = rdTorrent.Host;
             torrent.RdSplit = rdTorrent.Split;
             torrent.RdProgress = rdTorrent.Progress;
@@ -207,17 +193,18 @@ public class DebridLinkClient : ITorrentClient
             torrent.RdSpeed = rdTorrent.Speed;
             torrent.RdSeeders = rdTorrent.Seeders;
             torrent.RdStatusRaw = rdTorrent.Status;
-            /**
-             * 
-             *  0   Torrent is stopped
-             *  1   Torrent is queued to verify local data
-             *  2   Torrent is verifying local data
-             *  3   Torrent is queued to download
-             *  4   Torrent is downloading
-             *  5   Torrent is queued to seed
-             *  6   Torrent is seeding
-             *  100  Torrent is stored
+
+             /*
+              0   Torrent is stopped
+              1   Torrent is queued to verify local data
+              2   Torrent is verifying local data
+              3   Torrent is queued to download
+              4   Torrent is downloading
+              5   Torrent is queued to seed
+              6   Torrent is seeding
+              100  Torrent is stored
              */
+
             torrent.RdStatus = rdTorrent.Status switch
             {
                 "100" => TorrentStatus.Finished,
@@ -303,10 +290,10 @@ public class DebridLinkClient : ITorrentClient
             message = $"{message} {torrent.ToLog()}";
         }
 
-        _logger.LogDebug(message);
+        logger.LogDebug(message);
     }
 
-    public Task<string> GetFileName(string downloadUrl)
+    public Task<String> GetFileName(String downloadUrl)
     {
         if (String.IsNullOrWhiteSpace(downloadUrl))
         {
@@ -326,7 +313,7 @@ public class DebridLinkClient : ITorrentClient
         }
 
         // Single file torrents always have that file at `/mnt-root/Seedbox/filename.ext`
-        if (torrent.Files?.Count == 1)
+        if (torrent.Files.Count == 1)
         {
             return download.FileName;
         }

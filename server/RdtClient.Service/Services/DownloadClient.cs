@@ -46,7 +46,7 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
                 downloadPath = AllDebridTorrentClient.GetSymlinkPath(torrent, download);
             }
 
-            if (torrent.ClientKind == Torrent.TorrentClientKind.DebridLink && Type == Data.Enums.DownloadClient.Symlink)
+            if (torrent.ClientKind == Provider.DebridLink && Type == Data.Enums.DownloadClient.Symlink)
             {
                 downloadPath = DebridLinkClient.GetSymlinkPath(torrent, download);
             }
