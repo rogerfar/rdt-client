@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.97] - 2025-02-16
+### Added
+- Added support for DebridLink.fr.
+
+### Fixed
+- Fixed for the internal downloader.
+- Added a column for torrent add date.
+- Upgraded AllDebrid API.
+
 ## [2.0.96] - 2025-01-29
 ### Added
 - Added support for the synology download manager.
