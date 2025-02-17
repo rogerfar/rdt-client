@@ -1,25 +1,29 @@
-﻿using System.Diagnostics;
-using System.Globalization;
+﻿using System.Globalization;
+using System.IO.Abstractions;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using MonoTorrent;
-using System.Text.Json.Serialization;
 using RdtClient.Data.Data;
 using RdtClient.Data.Enums;
+using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.BackgroundServices;
 using RdtClient.Service.Helpers;
 using RdtClient.Service.Services.TorrentClients;
+using RdtClient.Service.Wrappers;
 using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services;
 
 public class Torrents(
     ILogger<Torrents> logger,
-    TorrentData torrentData,
-    Downloads downloads,
+    ITorrentData torrentData,
+    IDownloads downloads,
+    IProcessFactory processFactory,
+    IFileSystem fileSystem,
     AllDebridTorrentClient allDebridTorrentClient,
     PremiumizeTorrentClient premiumizeTorrentClient,
     RealDebridTorrentClient realDebridTorrentClient,
@@ -691,9 +695,11 @@ public class Torrents(
         await torrentData.Update(torrent);
     }
 
-    public async Task RunTorrentComplete(Guid torrentId)
+    public async Task RunTorrentComplete(Guid torrentId, DbSettings? settings = null)
     {
-        if (String.IsNullOrWhiteSpace(Settings.Get.General.RunOnTorrentCompleteFileName))
+        settings ??= Settings.Get;
+
+        if (String.IsNullOrWhiteSpace(settings.General.RunOnTorrentCompleteFileName))
         {
             return;
         }
@@ -702,8 +708,8 @@ public class Torrents(
 
         var downloadsForTorrent = await downloads.GetForTorrent(torrentId);
 
-        var fileName = Settings.Get.General.RunOnTorrentCompleteFileName;
-        var arguments = Settings.Get.General.RunOnTorrentCompleteArguments ?? "";
+        var fileName = settings.General.RunOnTorrentCompleteFileName;
+        var arguments = settings.General.RunOnTorrentCompleteArguments ?? "";
 
         Log($"Parsing external program {fileName} with arguments {arguments}", torrent);
 
@@ -712,7 +718,7 @@ public class Torrents(
 
         var filePath = torrentPath;
 
-        var files = Directory.GetFiles(filePath);
+        var files = fileSystem.Directory.GetFiles(filePath);
 
         if (files.Length == 1)
         {
@@ -733,7 +739,7 @@ public class Torrents(
         var errorSb = new StringBuilder();
         var outputSb = new StringBuilder();
 
-        using var process = new Process();
+        using var process = processFactory.NewProcess();
 
         process.StartInfo.FileName = fileName;
         process.StartInfo.Arguments = arguments;
@@ -744,21 +750,21 @@ public class Torrents(
 
         process.OutputDataReceived += (_, data) =>
         {
-            if (data.Data == null)
+            if (data == null)
             {
                 return;
             }
 
-            outputSb.AppendLine(data.Data.Trim());
+            outputSb.AppendLine(data.Trim());
         };
         process.ErrorDataReceived += (_, data) =>
         {
-            if (data.Data == null)
+            if (data == null)
             {
                 return;
             }
 
-            errorSb.AppendLine(data.Data.Trim());
+            errorSb.AppendLine(data.Trim());
         };
 
         process.Start();
