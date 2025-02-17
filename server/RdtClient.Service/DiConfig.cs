@@ -13,9 +13,10 @@ namespace RdtClient.Service;
 public static class DiConfig
 {
     public const String RD_CLIENT = "RdClient";
-    
+
     public static void RegisterRdtServices(this IServiceCollection services)
     {
+        services.AddSingleton<IAllDebridNetClientFactory, AllDebridNetClientFactory>();
         services.AddScoped<AllDebridTorrentClient>();
         services.AddScoped<Authentication>();
         services.AddScoped<Downloads>();
@@ -30,7 +31,7 @@ public static class DiConfig
         services.AddScoped<DebridLinkClient>();
 
         services.AddSingleton<IAuthorizationHandler, AuthSettingHandler>();
-            
+
         services.AddHostedService<ProviderUpdater>();
         services.AddHostedService<Startup>();
         services.AddHostedService<TaskRunner>();
