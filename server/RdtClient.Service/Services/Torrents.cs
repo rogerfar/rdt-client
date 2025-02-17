@@ -813,7 +813,7 @@ public class Torrents(
         }
     }
 
-    private void Log(String message, Data.Models.Data.Download? download, Torrent? torrent)
+    private void Log(String message, Download? download, Torrent? torrent)
     {
         if (download != null)
         {
