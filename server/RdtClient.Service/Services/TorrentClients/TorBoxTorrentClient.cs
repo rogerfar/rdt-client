@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using TorBoxNET;
@@ -6,7 +5,6 @@ using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
 using System.Web;
 using RdtClient.Data.Models.Data;
-using RdtClient.Service.Helpers;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
@@ -286,48 +284,17 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     public async Task<IList<String>?> GetDownloadLinks(Torrent torrent)
     {
+        var files = new List<String>();
+
         var torrentId = await GetClient().Torrents.GetHashInfoAsync(torrent.Hash, skipCache: true);
 
-        var selectedFiles = torrent.Files.Where(file =>
+        foreach (var file in torrent.Files)
         {
-            var fileName = Path.GetFileName(file.Path);
+            var newFile = $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}";
+            files.Add(newFile);
+        }
 
-            if (torrent.DownloadMinSize > 0 && file.Bytes < torrent.DownloadMinSize * 1024 * 1024)
-            {
-                Log($"Not downloading {fileName}, its size of {file.Bytes} bytes is smaller than the minimum size of {torrent.DownloadMinSize} bytes", torrent);
-
-                return false;
-            }
-
-            if (!String.IsNullOrWhiteSpace(torrent.IncludeRegex))
-            {
-                if (!Regex.IsMatch(fileName, torrent.IncludeRegex))
-                {
-                    Log($"Not downloading {fileName}, it does not match regex {torrent.IncludeRegex}", torrent);
-
-                    return false;
-                }
-
-                // If IncludeRegex is set, don't look at ExcludeRegex
-                return true;
-            }
-
-            if (!String.IsNullOrWhiteSpace(torrent.ExcludeRegex))
-            {
-                if (Regex.IsMatch(fileName, torrent.ExcludeRegex))
-
-                {
-                    Log($"Not downloading {fileName}, it matches regex {torrent.ExcludeRegex}", torrent);
-
-                    return false;
-                }
-            }
-
-            return true;
-        });
-
-        return selectedFiles.Select(file => $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}")
-                            .ToList();
+        return files;
     }
 
     public async Task<String> GetFileName(String downloadUrl)
@@ -371,15 +338,5 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         var result = await GetClient().Torrents.GetHashInfoAsync(torrentHash, skipCache: true);
 
         return Map(result!);
-    }
-    
-    private void Log(String message, Torrent? torrent = null)
-    {
-        if (torrent != null)
-        {
-            message = $"{message} {torrent.ToLog()}";
-        }
-
-        logger.LogDebug(message);
     }
 }
