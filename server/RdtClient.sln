@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RdtClient.Service", "RdtCli
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RdtClient.Data", "RdtClient.Data\RdtClient.Data.csproj", "{92EF8817-AD73-4301-93BD-745D7D61DD74}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RdtClient.Service.Test", "RdtClient.Service.Test\RdtClient.Service.Test.csproj", "{4F8F6313-5113-4E03-9DAB-195B0DF6C2B9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{92EF8817-AD73-4301-93BD-745D7D61DD74}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{92EF8817-AD73-4301-93BD-745D7D61DD74}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{92EF8817-AD73-4301-93BD-745D7D61DD74}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F8F6313-5113-4E03-9DAB-195B0DF6C2B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F8F6313-5113-4E03-9DAB-195B0DF6C2B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F8F6313-5113-4E03-9DAB-195B0DF6C2B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F8F6313-5113-4E03-9DAB-195B0DF6C2B9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
