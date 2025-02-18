@@ -285,51 +285,58 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
 
         foreach (var item in folder.Content)
         {
-            if (!String.IsNullOrWhiteSpace(item.Link))
+            if (item.Type == "file")
             {
-                Log($"Found item {item.Name} in folder {folder.Name} ({folderId}) with link {item.Link}", torrent);
-
-                if (item.Type == "file")
+                if (String.IsNullOrWhiteSpace(item.Link))
                 {
-                    if (torrent.DownloadMinSize > 0)
+                    Log($"Found item {item.Name} in folder {folder.Name} ({folderId}), but has no link", torrent);
+
+                    continue;
+                }
+
+                if (torrent.DownloadMinSize > 0)
+                {
+                    if (item.Link.Length < torrent.DownloadMinSize * 1024 * 1024)
                     {
-                        if (item.Link.Length < torrent.DownloadMinSize * 1024 * 1024)
-                        {
-                            Log($"Not downloading {item.Name}, its size of {item.Link.Length} bytes is smaller than the minimum size of {torrent.DownloadMinSize} bytes", torrent);
+                        Log($"Not downloading {item.Name}, its size of {item.Link.Length} bytes is smaller than the minimum size of {torrent.DownloadMinSize} bytes", torrent);
 
-                            continue;
-                        }
-                    }
-
-                    if (!String.IsNullOrWhiteSpace(torrent.IncludeRegex))
-                    {
-                        if (!Regex.IsMatch(item.Name, torrent.IncludeRegex))
-                        {
-                            Log($"Not downloading {item.Name}, it does not match regex {torrent.IncludeRegex}", torrent);
-
-                            continue;
-                        }
-                    }
-                    else if (!String.IsNullOrWhiteSpace(torrent.ExcludeRegex))
-                    {
-                        if (Regex.IsMatch(item.Name, torrent.ExcludeRegex))
-                        {
-                            Log($"Not downloading {item.Name}, it matches regex {torrent.ExcludeRegex}", torrent);
-
-                            continue;
-                        }
+                        continue;
                     }
                 }
 
+                if (!String.IsNullOrWhiteSpace(torrent.IncludeRegex))
+                {
+                    if (!Regex.IsMatch(item.Name, torrent.IncludeRegex))
+                    {
+                        Log($"Not downloading {item.Name}, it does not match regex {torrent.IncludeRegex}", torrent);
+
+                        continue;
+                    }
+                }
+                else if (!String.IsNullOrWhiteSpace(torrent.ExcludeRegex))
+                {
+                    if (Regex.IsMatch(item.Name, torrent.ExcludeRegex))
+                    {
+                        Log($"Not downloading {item.Name}, it matches regex {torrent.ExcludeRegex}", torrent);
+
+                        continue;
+                    }
+                }
+
+                Log($"Found item {item.Name} in folder {folder.Name} ({folderId})", torrent);
+
                 downloadLinks.Add(item.Link);
+            }
+            else if (item.Type == "folder")
+            {
+                Log($"Found subfolder {item.Name} in {folder.Name} ({folderId}), searching subfolder for files", torrent);
+                var subDownloadLinks = await GetAllDownloadLinks(torrent, item.Id);
+                downloadLinks.AddRange(subDownloadLinks);
             }
             else
             {
-                Log($"Found item {item.Name} in folder {folder.Name} ({folderId}), but has no link", torrent);
+                Log($"Found item {item.Name} with unknown type {item.Type} in folder {folder.Name} ({folderId})", torrent);
             }
-
-            var subDownloadLinks = await GetAllDownloadLinks(torrent, item.FolderId);
-            downloadLinks.AddRange(subDownloadLinks);
         }
 
         return downloadLinks;
