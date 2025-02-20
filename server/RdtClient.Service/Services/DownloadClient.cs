@@ -58,7 +58,6 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
                 throw new("Invalid download path");
             }
 
-
             if (Type != Data.Enums.DownloadClient.Symlink)
             {
                 await FileHelper.Delete(filePath);
