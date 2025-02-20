@@ -248,7 +248,6 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
         var allFiles = await GetClient().Magnet.FilesAsync(Int64.Parse(torrent.RdId));
 
         var files = GetFiles(allFiles);
-        // torrent.RdFiles = JsonConvert.SerializeObject(files);
 
         Log($"Getting download links", torrent);
 
