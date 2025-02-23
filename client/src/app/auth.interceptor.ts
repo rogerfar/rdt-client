@@ -17,7 +17,7 @@ export class AuthInterceptor implements HttpInterceptor {
           this.router.navigate(['/login']);
         }
         return throwError(error);
-      })
+      }),
     );
   }
 }

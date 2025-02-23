@@ -13,7 +13,10 @@ export class LoginComponent {
   public error: string;
   public loggingIn: boolean;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+  ) {}
 
   public setUserName(event: Event): void {
     this.userName = (event.target as any).value;
@@ -33,7 +36,7 @@ export class LoginComponent {
       (err) => {
         this.loggingIn = false;
         this.error = err.error;
-      }
+      },
     );
   }
 }

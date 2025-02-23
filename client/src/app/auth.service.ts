@@ -7,7 +7,10 @@ import { Observable } from 'rxjs/internal/Observable';
   providedIn: 'root',
 })
 export class AuthService {
-  constructor(private http: HttpClient, @Inject(APP_BASE_HREF) private baseHref: string) {}
+  constructor(
+    private http: HttpClient,
+    @Inject(APP_BASE_HREF) private baseHref: string,
+  ) {}
 
   public isLoggedIn(): Observable<boolean> {
     return this.http.get<boolean>(`${this.baseHref}Api/Authentication/IsLoggedIn`);

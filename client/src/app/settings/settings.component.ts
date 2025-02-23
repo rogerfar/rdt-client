@@ -57,7 +57,7 @@ export class SettingsComponent implements OnInit {
       (err) => {
         this.saving = false;
         this.error = err;
-      }
+      },
     );
   }
 
@@ -78,7 +78,7 @@ export class SettingsComponent implements OnInit {
       (err) => {
         this.testPathError = err.error;
         this.saving = false;
-      }
+      },
     );
   }
 
@@ -95,7 +95,7 @@ export class SettingsComponent implements OnInit {
       (err) => {
         this.testDownloadSpeedError = err.error;
         this.saving = false;
-      }
+      },
     );
   }
   public testWriteSpeed(): void {
@@ -111,7 +111,7 @@ export class SettingsComponent implements OnInit {
       (err) => {
         this.testWriteSpeedError = err.error;
         this.saving = false;
-      }
+      },
     );
   }
 
@@ -135,7 +135,7 @@ export class SettingsComponent implements OnInit {
       (err) => {
         this.testAria2cConnectionError = err.error;
         this.saving = false;
-      }
+      },
     );
   }
 }

@@ -6,7 +6,7 @@ import { AuthService } from './auth.service';
 @Injectable({
   providedIn: 'root',
 })
-export class AuthResolverService  {
+export class AuthResolverService {
   constructor(private authService: AuthService) {}
 
   resolve() {
