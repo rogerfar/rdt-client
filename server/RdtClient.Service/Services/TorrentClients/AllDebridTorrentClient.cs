@@ -199,7 +199,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IAll
                 torrent.RdSize = torrentClientTorrent.Bytes;
             }
 
-            if (torrentClientTorrent.Files != null)
+            if (torrentClientTorrent.Files != null && torrentClientTorrent.Files.Any())
             {
                 torrent.RdFiles = JsonConvert.SerializeObject(torrentClientTorrent.Files);
             }

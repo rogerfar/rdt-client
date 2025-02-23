@@ -33,6 +33,8 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
 
         try
         {
+            Type = torrent.DownloadClient;
+
             if (download.Link == null)
             {
                 throw new($"Invalid download link");
@@ -55,8 +57,6 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
             {
                 throw new("Invalid download path");
             }
-
-            Type = torrent.DownloadClient;
 
             if (Type != Data.Enums.DownloadClient.Symlink)
             {
