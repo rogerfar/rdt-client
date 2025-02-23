@@ -75,7 +75,7 @@ export class TorrentComponent implements OnInit {
   }
 
   public update(torrents: Torrent[]): void {
-    const updatedTorrent = torrents.firstOrDefault((m) => m.torrentId === this.torrent.torrentId);
+    const updatedTorrent = torrents.find((m) => m.torrentId === this.torrent.torrentId);
 
     if (updatedTorrent == null) {
       return;

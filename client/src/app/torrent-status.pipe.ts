@@ -15,25 +15,25 @@ export class TorrentStatusPipe implements PipeTransform {
     }
 
     if (torrent.downloads.length > 0) {
-      const allFinished = torrent.downloads.all((m) => m.completed != null);
+      const allFinished = torrent.downloads.every((m) => m.completed != null);
 
       if (allFinished) {
         return 'Finished';
       }
 
-      const downloading = torrent.downloads.where((m) => m.downloadStarted && !m.downloadFinished && m.bytesDone > 0);
-      const downloaded = torrent.downloads.where((m) => m.downloadFinished != null);
+      const downloading = torrent.downloads.filter((m) => m.downloadStarted && !m.downloadFinished && m.bytesDone > 0);
+      const downloaded = torrent.downloads.filter((m) => m.downloadFinished != null);
 
       if (downloading.length > 0) {
-        const bytesDone = downloading.sum((m) => m.bytesDone);
-        const bytesTotal = downloading.sum((m) => m.bytesTotal);
+        const bytesDone = downloading.reduce((sum, m) => sum + m.bytesDone, 0);
+        const bytesTotal = downloading.reduce((sum, m) => sum + m.bytesTotal, 0);
         let progress = (bytesDone / bytesTotal) * 100;
 
         if (isNaN(progress)) {
           progress = 0;
         }
 
-        let allSpeeds = downloading.sum((m) => m.speed);
+        let allSpeeds = downloading.reduce((sum, m) => sum + m.speed, 0);
 
         let speed: string | string[] = '0';
 
@@ -44,12 +44,12 @@ export class TorrentStatusPipe implements PipeTransform {
         } (${progress.toFixed(2)}% - ${speed}/s)`;
       }
 
-      const unpacking = torrent.downloads.where((m) => m.unpackingStarted && !m.unpackingFinished && m.bytesDone > 0);
-      const unpacked = torrent.downloads.where((m) => m.unpackingFinished != null);
+      const unpacking = torrent.downloads.filter((m) => m.unpackingStarted && !m.unpackingFinished && m.bytesDone > 0);
+      const unpacked = torrent.downloads.filter((m) => m.unpackingFinished != null);
 
       if (unpacking.length > 0) {
-        const bytesDone = unpacking.sum((m) => m.bytesDone);
-        const bytesTotal = unpacking.sum((m) => m.bytesTotal);
+        const bytesDone = unpacking.reduce((sum, m) => sum + m.bytesDone, 0);
+        const bytesTotal = unpacking.reduce((sum, m) => sum + m.bytesTotal, 0);
         let progress = (bytesDone / bytesTotal) * 100;
 
         if (isNaN(progress)) {
@@ -61,13 +61,13 @@ export class TorrentStatusPipe implements PipeTransform {
         )}%)`;
       }
 
-      const queuedForUnpacking = torrent.downloads.where((m) => m.unpackingQueued && !m.unpackingStarted);
+      const queuedForUnpacking = torrent.downloads.filter((m) => m.unpackingQueued && !m.unpackingStarted);
 
       if (queuedForUnpacking.length > 0) {
         return `Queued for unpacking`;
       }
 
-      const queuedForDownload = torrent.downloads.where((m) => !m.downloadStarted && !m.downloadFinished);
+      const queuedForDownload = torrent.downloads.filter((m) => !m.downloadStarted && !m.downloadFinished);
 
       if (queuedForDownload.length > 0) {
         return `Queued for downloading`;

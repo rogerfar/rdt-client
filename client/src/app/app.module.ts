@@ -1,4 +1,3 @@
-import 'curray';
 import { ClipboardModule } from '@angular/cdk/clipboard';
 import { APP_BASE_HREF } from '@angular/common';
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';

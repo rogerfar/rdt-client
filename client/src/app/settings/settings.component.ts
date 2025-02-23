@@ -39,10 +39,10 @@ export class SettingsComponent implements OnInit {
 
   public reset(): void {
     this.settingsService.get().subscribe((settings) => {
-      this.tabs = settings.where((m) => m.key.indexOf(':') === -1);
+      this.tabs = settings.filter((m) => m.key.indexOf(':') === -1);
 
       for (let tab of this.tabs) {
-        tab.settings = settings.where((m) => m.key.indexOf(`${tab.key}:`) > -1);
+        tab.settings = settings.filter((m) => m.key.indexOf(`${tab.key}:`) > -1);
       }
     });
   }
@@ -50,7 +50,7 @@ export class SettingsComponent implements OnInit {
   public ok(): void {
     this.saving = true;
 
-    const settingsToSave = this.tabs.selectMany((m) => m.settings).where((m) => m.type !== 'Object');
+    const settingsToSave = this.tabs.flatMap((m) => m.settings).filter((m) => m.type !== 'Object');
 
     this.settingsService.update(settingsToSave).subscribe(
       () => {
@@ -67,8 +67,8 @@ export class SettingsComponent implements OnInit {
 
   public testDownloadPath(): void {
     const settingDownloadPath = this.tabs
-      .first((m) => m.key === 'DownloadClient')
-      .settings.first((m) => m.key === 'DownloadClient:DownloadPath').value as string;
+      .find((m) => m.key === 'DownloadClient')
+      .settings.find((m) => m.key === 'DownloadClient:DownloadPath').value as string;
 
     this.saving = true;
     this.testPathError = null;
@@ -121,11 +121,11 @@ export class SettingsComponent implements OnInit {
 
   public testAria2cConnection(): void {
     const settingAria2cUrl = this.tabs
-      .first((m) => m.key === 'DownloadClient')
-      .settings.first((m) => m.key === 'DownloadClient:Aria2cUrl').value as string;
+      .find((m) => m.key === 'DownloadClient')
+      .settings.find((m) => m.key === 'DownloadClient:Aria2cUrl').value as string;
     const settingAria2cSecret = this.tabs
-      .first((m) => m.key === 'DownloadClient')
-      .settings.first((m) => m.key === 'DownloadClient:Aria2cSecret').value as string;
+      .find((m) => m.key === 'DownloadClient')
+      .settings.find((m) => m.key === 'DownloadClient:Aria2cSecret').value as string;
 
     this.saving = true;
     this.testAria2cConnectionError = null;

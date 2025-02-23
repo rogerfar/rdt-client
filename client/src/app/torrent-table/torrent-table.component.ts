@@ -163,30 +163,40 @@ export class TorrentTableComponent implements OnInit {
   public changeSettingsModal(): void {
     this.changeSettingsError = null;
 
-    const selectedTorrents = this.torrents.where((m) => this.selectedTorrents.indexOf(m.torrentId) > -1);
+    const selectedTorrents = this.torrents.filter((m) => this.selectedTorrents.indexOf(m.torrentId) > -1);
 
-    this.updateSettingsDownloadClient =
-      selectedTorrents.distinctBy((m) => m.downloadClient).count() == 1 ? selectedTorrents[0].downloadClient : null;
-    this.updateSettingsHostDownloadAction =
-      selectedTorrents.distinctBy((m) => m.hostDownloadAction).count() == 1
-        ? selectedTorrents[0].hostDownloadAction
-        : null;
-    this.updateSettingsCategory =
-      selectedTorrents.distinctBy((m) => m.category).count() == 1 ? selectedTorrents[0].category : null;
-    this.updateSettingsPriority =
-      selectedTorrents.distinctBy((m) => m.priority).count() == 1 ? selectedTorrents[0].priority : null;
-    this.updateSettingsDownloadRetryAttempts =
-      selectedTorrents.distinctBy((m) => m.downloadRetryAttempts).count() == 1
-        ? selectedTorrents[0].downloadRetryAttempts
-        : null;
-    this.updateSettingsTorrentRetryAttempts =
-      selectedTorrents.distinctBy((m) => m.torrentRetryAttempts).count() == 1
-        ? selectedTorrents[0].torrentRetryAttempts
-        : null;
-    this.updateSettingsDeleteOnError =
-      selectedTorrents.distinctBy((m) => m.deleteOnError).count() == 1 ? selectedTorrents[0].deleteOnError : null;
-    this.updateSettingsTorrentLifetime =
-      selectedTorrents.distinctBy((m) => m.lifetime).count() == 1 ? selectedTorrents[0].lifetime : null;
+    this.updateSettingsDownloadClient = selectedTorrents.every(
+      (m, _, arr) => m.downloadClient === arr[0].downloadClient,
+    )
+      ? selectedTorrents[0].downloadClient
+      : null;
+    this.updateSettingsHostDownloadAction = selectedTorrents.every(
+      (m, _, arr) => m.hostDownloadAction === arr[0].hostDownloadAction,
+    )
+      ? selectedTorrents[0].hostDownloadAction
+      : null;
+    this.updateSettingsCategory = selectedTorrents.every((m, _, arr) => m.category === arr[0].category)
+      ? selectedTorrents[0].category
+      : null;
+    this.updateSettingsPriority = selectedTorrents.every((m, _, arr) => m.priority === arr[0].priority)
+      ? selectedTorrents[0].priority
+      : null;
+    this.updateSettingsDownloadRetryAttempts = selectedTorrents.every(
+      (m, _, arr) => m.downloadRetryAttempts === arr[0].downloadRetryAttempts,
+    )
+      ? selectedTorrents[0].downloadRetryAttempts
+      : null;
+    this.updateSettingsTorrentRetryAttempts = selectedTorrents.every(
+      (m, _, arr) => m.torrentRetryAttempts === arr[0].torrentRetryAttempts,
+    )
+      ? selectedTorrents[0].torrentRetryAttempts
+      : null;
+    this.updateSettingsDeleteOnError = selectedTorrents.every((m, _, arr) => m.deleteOnError === arr[0].deleteOnError)
+      ? selectedTorrents[0].deleteOnError
+      : null;
+    this.updateSettingsTorrentLifetime = selectedTorrents.every((m, _, arr) => m.lifetime === arr[0].lifetime)
+      ? selectedTorrents[0].lifetime
+      : null;
 
     this.isChangeSettingsModalActive = true;
   }
@@ -200,7 +210,7 @@ export class TorrentTableComponent implements OnInit {
 
     let calls: Observable<void>[] = [];
 
-    const selectedTorrents = this.torrents.where((m) => this.selectedTorrents.indexOf(m.torrentId) > -1);
+    const selectedTorrents = this.torrents.filter((m) => this.selectedTorrents.indexOf(m.torrentId) > -1);
 
     selectedTorrents.forEach((torrent) => {
       if (this.updateSettingsDownloadClient != null) {
