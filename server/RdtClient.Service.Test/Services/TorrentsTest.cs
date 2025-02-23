@@ -38,7 +38,7 @@ class Mocks
 
 public class TorrentsTest
 {
-    public static IEnumerable<Object[]> TorrentAndDownload()
+    public static TheoryData<Torrent, List<Download>> TorrentAndDownload()
     {
         var torrent = new Torrent()
         {
@@ -58,10 +58,13 @@ public class TorrentsTest
             }
         ];
 
-        yield return
-        [
-            torrent, downloads
-        ];
+        return new ()
+        {
+            {
+              torrent,
+              downloads
+            }
+        };
     }
 
     [Theory]
