@@ -107,11 +107,21 @@ public class WatchFolderChecker(ILogger<WatchFolderChecker> logger, IServiceProv
                             await torrentService.UploadMagnet(magnetLink, torrent);
                         }
 
-                        var processedPath = Path.Combine(processedStorePath, fileInfo.Name);
-
                         if (!Directory.Exists(processedStorePath))
                         {
                             Directory.CreateDirectory(processedStorePath);
+                        }
+                        
+                        var processedPath = Path.Combine(processedStorePath, fileInfo.Name);
+
+                        if (File.Exists(processedPath))
+                        {
+                            File.Delete(processedPath);
+
+                            logger.Log(LogLevel.Warning,
+                                       "File {torrentFileName} replaced in {processedStorePath} - it already existed and new torrent with same filename was added",
+                                       fileInfo.Name,
+                                       processedStorePath);
                         }
 
                         File.Move(torrentFile, processedPath);
@@ -126,6 +136,16 @@ public class WatchFolderChecker(ILogger<WatchFolderChecker> logger, IServiceProv
                         }
 
                         var processedPath = Path.Combine(errorStorePath, fileInfo.Name);
+
+                        if (File.Exists(processedPath))
+                        {
+                            File.Delete(processedPath);
+
+                            logger.Log(LogLevel.Warning,
+                                       "File {torrentFileName} replaced in {errorStorePath} - it already existed and new torrent with same filename was added",
+                                       fileInfo.Name,
+                                       errorStorePath);
+                        }
                         File.Move(torrentFile, processedPath);
                     }
                 }
