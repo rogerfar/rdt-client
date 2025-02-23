@@ -11,17 +11,24 @@
 
     <ItemGroup>
         <PackageReference Include="AllDebrid.NET" Version="1.0.17" />
-        <PackageReference Include="coverlet.collector" Version="6.0.2"/>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1"/>
+        <PackageReference Include="coverlet.collector" Version="6.0.4">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
         <PackageReference Include="Moq" Version="4.20.72" />
-        <PackageReference Include="TestableIO.System.IO.Abstractions" Version="21.3.1" />
-        <PackageReference Include="TestableIO.System.IO.Abstractions.TestingHelpers" Version="21.3.1" />
-        <PackageReference Include="xunit" Version="2.9.2"/>
-        <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2"/>
+        <PackageReference Include="TestableIO.System.IO.Abstractions" Version="22.0.10" />
+        <PackageReference Include="TestableIO.System.IO.Abstractions.TestingHelpers" Version="22.0.10" />
+        <PackageReference Include="TestableIO.System.IO.Abstractions.Wrappers" Version="22.0.10" />
+        <PackageReference Include="xunit" Version="2.9.3" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
     </ItemGroup>
 
     <ItemGroup>
-        <Using Include="Xunit"/>
+        <Using Include="Xunit" />
     </ItemGroup>
 
     <ItemGroup>

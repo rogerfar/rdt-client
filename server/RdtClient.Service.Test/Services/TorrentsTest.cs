@@ -46,7 +46,7 @@ public class TorrentsTest
             Hash = "123ABC",
             Category = "Movies",
             RdSize = 100,
-            TorrentId = new Guid()
+            TorrentId = Guid.Empty
         };
 
         List<Download> downloads =
@@ -58,10 +58,10 @@ public class TorrentsTest
             }
         ];
 
-        yield return new Object[]
-        {
+        yield return
+        [
             torrent, downloads
-        };
+        ];
     }
 
     [Theory]
@@ -71,7 +71,7 @@ public class TorrentsTest
         // Arrange
         var settings = new DbSettings
         {
-            General = new DbSettingsGeneral()
+            General = new()
             {
                 RunOnTorrentCompleteFileName = "/bin/echo",
                 RunOnTorrentCompleteArguments = "%N %L %F %R %D %C %Z %I"
@@ -90,7 +90,7 @@ public class TorrentsTest
         var fileSystemMock = new MockFileSystem(new Dictionary<String, MockFileData>
         {
             {
-                filePath, new MockFileData("Test file")
+                filePath, new("Test file")
             },
         });
 
@@ -134,7 +134,7 @@ public class TorrentsTest
         // Arrange
         var settings = new DbSettings()
         {
-            General = new DbSettingsGeneral()
+            General = new()
             {
                 RunOnTorrentCompleteFileName = null
             }
@@ -152,7 +152,7 @@ public class TorrentsTest
         var fileSystemMock = new MockFileSystem(new Dictionary<String, MockFileData>
         {
             {
-                filePath, new MockFileData("Test file")
+                filePath, new("Test file")
             },
         });
 
@@ -181,7 +181,7 @@ public class TorrentsTest
         // Arrange
         var settings = new DbSettings()
         {
-            General = new DbSettingsGeneral()
+            General = new()
             {
                 RunOnTorrentCompleteFileName = "/bin/echo"
             }
@@ -199,7 +199,7 @@ public class TorrentsTest
         var fileSystemMock = new MockFileSystem(new Dictionary<String, MockFileData>
         {
             {
-                filePath, new MockFileData("Test file")
+                filePath, new("Test file")
             },
         });
 
@@ -247,7 +247,7 @@ public class TorrentsTest
         // Arrange
         var settings = new DbSettings()
         {
-            General = new DbSettingsGeneral()
+            General = new()
             {
                 RunOnTorrentCompleteFileName = "/bin/echo"
             }
@@ -265,7 +265,7 @@ public class TorrentsTest
         var fileSystemMock = new MockFileSystem(new Dictionary<String, MockFileData>
         {
             {
-                filePath, new MockFileData("Test file")
+                filePath, new("Test file")
             },
         });
 

@@ -82,7 +82,7 @@ public class DownloadStationDownloaderTest
     {
         // Arrange
         var mocks = new Mocks();
-        mocks.TaskEndpointMock.Setup(t => t.GetInfoAsync(mocks.Gid)).ThrowsAsync(new Exception());
+        mocks.TaskEndpointMock.Setup(t => t.GetInfoAsync(mocks.Gid)).ThrowsAsync(new());
 
         mocks.TaskEndpointMock.Setup(t => t.ListAsync())
              .ReturnsAsync(new DownloadStationTaskListResponse
@@ -120,7 +120,7 @@ public class DownloadStationDownloaderTest
     public async Task Download_After5Tries_Throws()
     {
         var mocks = new Mocks();
-        mocks.TaskEndpointMock.Setup(t => t.GetInfoAsync(mocks.Gid)).ThrowsAsync(new Exception());
+        mocks.TaskEndpointMock.Setup(t => t.GetInfoAsync(mocks.Gid)).ThrowsAsync(new());
 
         var emptyListResponse = new DownloadStationTaskListResponse
         {
@@ -136,11 +136,11 @@ public class DownloadStationDownloaderTest
              .ReturnsAsync(emptyListResponse);
 
         mocks.TaskEndpointMock.SetupSequence(t => t.CreateAsync(It.IsAny<DownloadStationTaskCreateRequest>()))
-             .ThrowsAsync(new Exception())
-             .ThrowsAsync(new Exception())
-             .ThrowsAsync(new Exception())
-             .ThrowsAsync(new Exception())
-             .ThrowsAsync(new Exception());
+             .ThrowsAsync(new())
+             .ThrowsAsync(new())
+             .ThrowsAsync(new())
+             .ThrowsAsync(new())
+             .ThrowsAsync(new());
 
         var downloadStationDownloader = new DownloadStationDownloader(mocks.Gid,
                                                                       "https://fake.url/file.txt",
@@ -166,7 +166,7 @@ public class DownloadStationDownloaderTest
     public async Task Download_WhenSuccessfulAfter4Tries_ReturnsGid()
     {
         var mocks = new Mocks();
-        mocks.TaskEndpointMock.Setup(t => t.GetInfoAsync(mocks.Gid)).ThrowsAsync(new Exception());
+        mocks.TaskEndpointMock.Setup(t => t.GetInfoAsync(mocks.Gid)).ThrowsAsync(new());
 
         var emptyListResponse = new DownloadStationTaskListResponse
         {
@@ -182,10 +182,10 @@ public class DownloadStationDownloaderTest
              .ReturnsAsync(emptyListResponse);
 
         mocks.TaskEndpointMock.SetupSequence(t => t.CreateAsync(It.IsAny<DownloadStationTaskCreateRequest>()))
-             .ThrowsAsync(new Exception())
-             .ThrowsAsync(new Exception())
-             .ThrowsAsync(new Exception())
-             .ThrowsAsync(new Exception())
+             .ThrowsAsync(new())
+             .ThrowsAsync(new())
+             .ThrowsAsync(new())
+             .ThrowsAsync(new())
              .ReturnsAsync(new DownloadStationTaskCreateResponse
              {
                  TaskId = [mocks.Gid]

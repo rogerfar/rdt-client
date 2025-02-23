@@ -208,9 +208,9 @@ public class AllDebridTorrentClientTest
         var secondResult = await allDebridTorrentClient.GetTorrents();
 
         // Assert
-        Assert.Equal(1, firstResult.Count);
+        Assert.Single(firstResult);
         Assert.Equal(Magnet1Finished.Id.ToString(), firstResult.First().Id);
-        Assert.Equal(1, secondResult.Count);
+        Assert.Single(secondResult);
         Assert.Equal(Magnet2Finished.Id.ToString(), secondResult.First().Id);
     }
 
@@ -244,7 +244,7 @@ public class AllDebridTorrentClientTest
         var secondResult = await allDebridTorrentClient.GetTorrents();
 
         // Assert
-        Assert.Equal(1, firstResult.Count);
+        Assert.Single(firstResult);
         Assert.Equal(Magnet1Finished.Id.ToString(), firstResult[0].Id);
         Assert.Equal(2, secondResult.Count);
         Assert.Contains(secondResult, t => t.Id == Magnet1Finished.Id.ToString());
@@ -696,9 +696,9 @@ public class AllDebridTorrentClientTest
 
         public Mocks()
         {
-            LoggerMock = new Mock<ILogger<AllDebridTorrentClient>>();
-            AllDebridClientMock = new Mock<IAllDebridNETClient>();
-            AllDebridClientFactoryMock = new Mock<IAllDebridNetClientFactory>();
+            LoggerMock = new();
+            AllDebridClientMock = new();
+            AllDebridClientFactoryMock = new();
             AllDebridClientFactoryMock.Setup(f => f.GetClient()).Returns(AllDebridClientMock.Object);
         }
     }

@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.98] - 2025-02-16
+### Added
+- Added unit tests, thanks @Cucumberrbob!
+
+### Changed
+- Fixed symlinks for AllDebrid.
+- Upgraded DebridLink.fr to the latest version.
+- Fixed nested files in the Premiumize Provider.
+- Fixed deleting of torrents in the watch folders.
+
 ## [2.0.97] - 2025-02-16
 ### Added
 - Added support for DebridLink.fr.
