@@ -1,11 +1,12 @@
-﻿using RdtClient.Data.Models.Data;
+﻿using System.IO.Abstractions;
+using RdtClient.Data.Models.Data;
 using System.Web;
 
 namespace RdtClient.Service.Helpers;
 
 public static class DownloadHelper
 {
-    public static String? GetDownloadPath(String downloadPath, Torrent torrent, Download download)
+    public static String? GetDownloadPath(String downloadPath, Torrent torrent, Download download, IFileSystem? fileSystem = null)
     {
         var fileUrl = download.Link;
 
@@ -41,9 +42,11 @@ public static class DownloadHelper
             }
         }
 
-        if (!Directory.Exists(torrentPath))
+        fileSystem ??= new FileSystem();
+
+        if (!fileSystem.Directory.Exists(torrentPath))
         {
-            Directory.CreateDirectory(torrentPath);
+            fileSystem.Directory.CreateDirectory(torrentPath);
         }
 
         var filePath = Path.Combine(torrentPath, fileName);

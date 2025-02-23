@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.IO.Abstractions;
+using System.Net;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
@@ -7,17 +8,24 @@ using RdtClient.Service.BackgroundServices;
 using RdtClient.Service.Middleware;
 using RdtClient.Service.Services;
 using RdtClient.Service.Services.TorrentClients;
+using RdtClient.Service.Wrappers;
 
 namespace RdtClient.Service;
 
 public static class DiConfig
 {
     public const String RD_CLIENT = "RdClient";
-    
+
     public static void RegisterRdtServices(this IServiceCollection services)
     {
+        services.AddSingleton<IAllDebridNetClientFactory, AllDebridNetClientFactory>();
         services.AddScoped<AllDebridTorrentClient>();
+
+        services.AddSingleton<IProcessFactory, ProcessFactory>();
+        services.AddSingleton<IFileSystem, FileSystem>();
+
         services.AddScoped<Authentication>();
+        services.AddScoped<IDownloads, Downloads>();
         services.AddScoped<Downloads>();
         services.AddScoped<PremiumizeTorrentClient>();
         services.AddScoped<QBittorrent>();
@@ -30,7 +38,7 @@ public static class DiConfig
         services.AddScoped<DebridLinkClient>();
 
         services.AddSingleton<IAuthorizationHandler, AuthSettingHandler>();
-            
+
         services.AddHostedService<ProviderUpdater>();
         services.AddHostedService<Startup>();
         services.AddHostedService<TaskRunner>();

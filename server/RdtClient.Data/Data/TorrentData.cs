@@ -4,7 +4,7 @@ using RdtClient.Data.Models.Data;
 
 namespace RdtClient.Data.Data;
 
-public class TorrentData(DataContext dataContext)
+public class TorrentData(DataContext dataContext) : ITorrentData
 {
     private static IList<Torrent>? _torrentCache;
 

@@ -1,8 +1,17 @@
-﻿using Serilog;
+﻿using RdtClient.Service.Helpers;
+using Serilog;
 using Synology.Api.Client;
 using Synology.Api.Client.Apis.DownloadStation.Task.Models;
 
 namespace RdtClient.Service.Services.Downloaders;
+
+class DelayProvider : IDelayProvider
+{
+    public Task Delay(Int32 delay)
+    {
+        return Task.Delay(delay);
+    }
+}
 
 public class DownloadStationDownloader : IDownloader
 {
@@ -11,16 +20,17 @@ public class DownloadStationDownloader : IDownloader
 
     private const Int32 RetryCount = 5;
 
-    private readonly SynologyClient _synologyClient;
+    private readonly ISynologyClient _synologyClient;
 
     private readonly ILogger _logger;
     private readonly String _filePath;
     private readonly String _uri;
     private readonly String? _remotePath;
+    private readonly IDelayProvider _delayProvider;
 
     private String? _gid;
 
-    private DownloadStationDownloader(String? gid, String uri, String? remotePath, String filePath, String downloadPath, SynologyClient synologyClient)
+    public DownloadStationDownloader(String? gid, String uri, String? remotePath, String filePath, String downloadPath, ISynologyClient synologyClient, IDelayProvider? delayProvider = null)
     {
         _logger = Log.ForContext<DownloadStationDownloader>();
         _logger.Debug($"Instantiated new DownloadStation Downloader for URI {uri} to filePath {filePath} and downloadPath {downloadPath} and GID {gid}");
@@ -30,6 +40,7 @@ public class DownloadStationDownloader : IDownloader
         _uri = uri;
         _remotePath = remotePath;
         _synologyClient = synologyClient;
+        _delayProvider = delayProvider ?? new DelayProvider();
     }
 
     public static async Task<DownloadStationDownloader> Init(String? gid, String uri, String filePath, String downloadPath, String? category)
@@ -149,13 +160,13 @@ public class DownloadStationDownloader : IDownloader
 
                 retryCount++;
                 _logger.Error($"Task not found in DownloadStation after creat Sucess. Retrying {retryCount}/{RetryCount}");
-                await Task.Delay(retryCount * 1000);
+                await _delayProvider.Delay(retryCount * 1000);
             }
             catch (Exception e)
             {
                 retryCount++;
                 _logger.Error($"Error starting download: {e.Message}. Retrying {retryCount}/{RetryCount}");
-                await Task.Delay(retryCount * 1000);
+                await _delayProvider.Delay(retryCount * 1000);
             }
         }
 

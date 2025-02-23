@@ -3,7 +3,7 @@ using Download = RdtClient.Data.Models.Data.Download;
 
 namespace RdtClient.Service.Services;
 
-public class Downloads(DownloadData downloadData)
+public class Downloads(DownloadData downloadData) : IDownloads
 {
     public async Task<List<Download>> GetForTorrent(Guid torrentId)
     {

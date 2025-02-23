@@ -12,13 +12,14 @@ using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
-public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHttpClientFactory httpClientFactory) : ITorrentClient
+public interface IAllDebridNetClientFactory
 {
-    private static readonly Int64 SessionId = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-    private static List<TorrentClientTorrent> _cache = [];
-    private static Int64 _sessionCounter = 0;
+    public IAllDebridNETClient GetClient();
+}
 
-    private AllDebridNETClient GetClient()
+public class AllDebridNetClientFactory(ILogger<AllDebridNetClientFactory> logger, IHttpClientFactory httpClientFactory) : IAllDebridNetClientFactory
+{
+    public IAllDebridNETClient GetClient()
     {
         try
         {
@@ -49,6 +50,13 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
             throw;
         }
     }
+}
+
+public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IAllDebridNetClientFactory allDebridNetClientFactory) : ITorrentClient
+{
+    private static readonly Int64 SessionId = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+    private static List<TorrentClientTorrent> _cache = [];
+    private static Int64 _sessionCounter = 0;
 
     private static TorrentClientTorrent Map(Magnet torrent)
     {
@@ -77,7 +85,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
     public async Task<IList<TorrentClientTorrent>> GetTorrents()
     {
-        var results = await GetClient().Magnet.StatusLiveAsync(SessionId, _sessionCounter);
+        var results = await allDebridNetClientFactory.GetClient().Magnet.StatusLiveAsync(SessionId, _sessionCounter);
 
         _sessionCounter = results.Counter;
 
@@ -106,7 +114,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
     public async Task<TorrentClientUser> GetUser()
     {
-        var user = await GetClient().User.GetAsync() ?? throw new("Unable to get user");
+        var user = await allDebridNetClientFactory.GetClient().User.GetAsync() ?? throw new("Unable to get user");
 
         return new()
         {
@@ -117,7 +125,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
     public async Task<String> AddMagnet(String magnetLink)
     {
-        var result = await GetClient().Magnet.UploadMagnetAsync(magnetLink);
+        var result = await allDebridNetClientFactory.GetClient().Magnet.UploadMagnetAsync(magnetLink);
 
         if (result?.Id == null)
         {
@@ -131,7 +139,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
     public async Task<String> AddFile(Byte[] bytes)
     {
-        var result = await GetClient().Magnet.UploadFileAsync(bytes);
+        var result = await allDebridNetClientFactory.GetClient().Magnet.UploadFileAsync(bytes);
 
         if (result?.Id == null)
         {
@@ -155,12 +163,12 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
     public async Task Delete(String torrentId)
     {
-        await GetClient().Magnet.DeleteAsync(torrentId);
+        await allDebridNetClientFactory.GetClient().Magnet.DeleteAsync(torrentId);
     }
 
     public async Task<String> Unrestrict(String link)
     {
-        var result = await GetClient().Links.DownloadLinkAsync(link);
+        var result = await allDebridNetClientFactory.GetClient().Links.DownloadLinkAsync(link);
 
         if (result.Link == null)
         {
@@ -245,7 +253,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
             return null;
         }
 
-        var allFiles = await GetClient().Magnet.FilesAsync(Int64.Parse(torrent.RdId));
+        var allFiles = await allDebridNetClientFactory.GetClient().Magnet.FilesAsync(Int64.Parse(torrent.RdId));
 
         var files = GetFiles(allFiles);
 
@@ -323,7 +331,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
         {
             Log($"{file.Path} ({file.Bytes}b) {file.DownloadLink}");
         }
-        
+
         return files.Where(m => m.DownloadLink != null).Select(m => m.DownloadLink!.ToString()).ToList();
     }
 
@@ -341,7 +349,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IHtt
 
     private async Task<TorrentClientTorrent> GetInfo(String torrentId)
     {
-        var result = await GetClient().Magnet.StatusAsync(torrentId) ?? throw new($"Unable to find magnet with ID {torrentId}");
+        var result = await allDebridNetClientFactory.GetClient().Magnet.StatusAsync(torrentId) ?? throw new($"Unable to find magnet with ID {torrentId}");
 
         return Map(result);
     }
