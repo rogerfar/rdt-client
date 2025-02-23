@@ -30,7 +30,7 @@ export class ProfileComponent {
         this.error = err.error;
         this.success = false;
         this.saving = false;
-      }
+      },
     );
   }
 }

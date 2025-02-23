@@ -6,7 +6,7 @@ import { RealDebridStatus, Torrent } from './models/torrent.model';
   name: 'status',
 })
 export class TorrentStatusPipe implements PipeTransform {
-  constructor(private pipe: FileSizePipe) { }
+  constructor(private pipe: FileSizePipe) {}
 
   transform(torrent: Torrent): string {
     if (torrent.error) {
@@ -38,8 +38,9 @@ export class TorrentStatusPipe implements PipeTransform {
 
         speed = this.pipe.transform(allSpeeds, 'filesize');
 
-        return `Downloading file ${downloading.length + downloaded.length}/${torrent.downloads.length
-          } (${progress.toFixed(2)}% - ${speed}/s)`;
+        return `Downloading file ${downloading.length + downloaded.length}/${
+          torrent.downloads.length
+        } (${progress.toFixed(2)}% - ${speed}/s)`;
       }
 
       const unpacking = torrent.downloads.where((m) => m.unpackingStarted && !m.unpackingFinished && m.bytesDone > 0);
@@ -87,7 +88,7 @@ export class TorrentStatusPipe implements PipeTransform {
     switch (torrent.rdStatus) {
       case RealDebridStatus.Downloading:
         if (torrent.rdSeeders < 1) {
-          return `Torrent stalled`
+          return `Torrent stalled`;
         }
         const speed = this.pipe.transform(torrent.rdSpeed, 'filesize');
         return `Torrent downloading (${torrent.rdProgress}% - ${speed}/s)`;

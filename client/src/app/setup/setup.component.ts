@@ -18,7 +18,10 @@ export class SetupComponent {
 
   public step: number = 1;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+  ) {}
 
   public setup(): void {
     this.error = null;
@@ -32,7 +35,7 @@ export class SetupComponent {
       (err) => {
         this.working = false;
         this.error = err.error;
-      }
+      },
     );
   }
 
@@ -45,7 +48,7 @@ export class SetupComponent {
       (err: any) => {
         this.working = false;
         this.error = err.error;
-      }
+      },
     );
   }
 

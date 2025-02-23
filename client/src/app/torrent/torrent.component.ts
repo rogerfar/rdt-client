@@ -47,7 +47,11 @@ export class TorrentComponent implements OnInit {
 
   public updating: boolean;
 
-  constructor(private activatedRoute: ActivatedRoute, private router: Router, private torrentService: TorrentService) {}
+  constructor(
+    private activatedRoute: ActivatedRoute,
+    private router: Router,
+    private torrentService: TorrentService,
+  ) {}
 
   ngOnInit(): void {
     this.activatedRoute.params.subscribe((params) => {
@@ -63,7 +67,7 @@ export class TorrentComponent implements OnInit {
         },
         () => {
           this.router.navigate(['/']);
-        }
+        },
       );
     });
   }
@@ -85,7 +89,7 @@ export class TorrentComponent implements OnInit {
         .split('')
         .map(function (c) {
           return c.charCodeAt(0);
-        })
+        }),
     );
 
     var blob = new Blob([byteArray], { type: 'application/x-bittorrent' });
@@ -120,7 +124,7 @@ export class TorrentComponent implements OnInit {
         (err) => {
           this.deleteError = err.error;
           this.deleting = false;
-        }
+        },
       );
   }
 
@@ -147,7 +151,7 @@ export class TorrentComponent implements OnInit {
       (err) => {
         this.retryError = err.error;
         this.retrying = false;
-      }
+      },
     );
   }
 
@@ -173,7 +177,7 @@ export class TorrentComponent implements OnInit {
       (err) => {
         this.downloadRetryError = err.error;
         this.downloadRetrying = false;
-      }
+      },
     );
   }
 
@@ -214,7 +218,7 @@ export class TorrentComponent implements OnInit {
       () => {
         this.isUpdateSettingsModalActive = false;
         this.updating = false;
-      }
+      },
     );
   }
 }

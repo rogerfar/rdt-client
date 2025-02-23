@@ -9,7 +9,10 @@ import { APP_BASE_HREF } from '@angular/common';
   providedIn: 'root',
 })
 export class SettingsService {
-  constructor(private http: HttpClient, @Inject(APP_BASE_HREF) private baseHref: string) {}
+  constructor(
+    private http: HttpClient,
+    @Inject(APP_BASE_HREF) private baseHref: string,
+  ) {}
 
   public get(): Observable<Setting[]> {
     return this.http.get<Setting[]>(`${this.baseHref}Api/Settings`);
