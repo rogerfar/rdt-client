@@ -1,10 +1,10 @@
 {
   "/Api": {
-    "target": "http://localhost:6500/",
+    "target": "http://sativus.local:6500/",
     "secure": false
   },
   "/hub": {
-    "target": "http://localhost:6500/",
+    "target": "http://sativus.local:6500/",
     "secure": false,
     "ws": true
   }
