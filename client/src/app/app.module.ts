@@ -2,7 +2,6 @@ import { ClipboardModule } from '@angular/cdk/clipboard';
 import { APP_BASE_HREF } from '@angular/common';
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { NgModule } from '@angular/core';
-import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { curray } from 'curray';
@@ -27,32 +26,31 @@ import { SortPipe } from './sort.pipe';
 
 curray();
 
-@NgModule({ declarations: [
-        AppComponent,
-        MainLayoutComponent,
-        NavbarComponent,
-        AddNewTorrentComponent,
-        TorrentTableComponent,
-        SettingsComponent,
-        TorrentStatusPipe,
-        DownloadStatusPipe,
-        LoginComponent,
-        SetupComponent,
-        TorrentComponent,
-        DecodeURIPipe,
-        ProfileComponent,
-        Nl2BrPipe,
-        SortPipe,
-    ],
-    bootstrap: [AppComponent], imports: [BrowserModule,
-        AppRoutingModule,
-        FormsModule,
-        NgxFilesizeModule,
-        FlexLayoutModule,
-        ClipboardModule], providers: [
-        FileSizePipe,
-        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
-        { provide: APP_BASE_HREF, useValue: (window as any)['_app_base'] || '/' },
-        provideHttpClient(withInterceptorsFromDi()),
-    ] })
+@NgModule({
+  declarations: [
+    AppComponent,
+    MainLayoutComponent,
+    NavbarComponent,
+    AddNewTorrentComponent,
+    TorrentTableComponent,
+    SettingsComponent,
+    TorrentStatusPipe,
+    DownloadStatusPipe,
+    LoginComponent,
+    SetupComponent,
+    TorrentComponent,
+    DecodeURIPipe,
+    ProfileComponent,
+    Nl2BrPipe,
+    SortPipe,
+  ],
+  bootstrap: [AppComponent],
+  imports: [BrowserModule, AppRoutingModule, FormsModule, NgxFilesizeModule, ClipboardModule],
+  providers: [
+    FileSizePipe,
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+    { provide: APP_BASE_HREF, useValue: (window as any)['_app_base'] || '/' },
+    provideHttpClient(withInterceptorsFromDi()),
+  ],
+})
 export class AppModule {}
