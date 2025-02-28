@@ -27,7 +27,7 @@
     "bulma": "^0.9.4",
     "curray": "^1.0.11",
     "file-saver-es": "^2.0.5",
-    "ngx-filesize": "^3.0.2",
+    "ngx-filesize": "^3.0.5",
     "rxjs": "~7.8.1",
     "tslib": "^2.6.2",
     "zone.js": "~0.14.10"
