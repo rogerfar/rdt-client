@@ -5,9 +5,10 @@ import { TorrentService } from '../torrent.service';
 import { forkJoin, Observable } from 'rxjs';
 
 @Component({
-  selector: 'app-torrent-table',
-  templateUrl: './torrent-table.component.html',
-  styleUrls: ['./torrent-table.component.scss'],
+    selector: 'app-torrent-table',
+    templateUrl: './torrent-table.component.html',
+    styleUrls: ['./torrent-table.component.scss'],
+    standalone: false
 })
 export class TorrentTableComponent implements OnInit {
   public torrents: Torrent[] = [];

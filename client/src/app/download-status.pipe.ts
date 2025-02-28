@@ -3,7 +3,8 @@ import { FileSizePipe } from 'ngx-filesize';
 import { Download } from './models/download.model';
 
 @Pipe({
-  name: 'downloadStatus',
+    name: 'downloadStatus',
+    standalone: false
 })
 export class DownloadStatusPipe implements PipeTransform {
   constructor(private pipe: FileSizePipe) {}

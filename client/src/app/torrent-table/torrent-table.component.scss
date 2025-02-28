@@ -3,3 +3,14 @@ table {
     cursor: pointer;
   }
 }
+
+.flex-container {
+  display: flex;
+  flex: 1 1 0;
+  gap: 20px;
+  flex-direction: row;
+
+  @media screen and (max-width: 1279px) {
+    flex-direction: column;
+  }
+}

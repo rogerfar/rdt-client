@@ -1,8 +1,7 @@
 import { ClipboardModule } from '@angular/cdk/clipboard';
 import { APP_BASE_HREF } from '@angular/common';
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { NgModule } from '@angular/core';
-import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { curray } from 'curray';
@@ -45,20 +44,13 @@ curray();
     Nl2BrPipe,
     SortPipe,
   ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    FormsModule,
-    HttpClientModule,
-    NgxFilesizeModule,
-    FlexLayoutModule,
-    ClipboardModule,
-  ],
+  bootstrap: [AppComponent],
+  imports: [BrowserModule, AppRoutingModule, FormsModule, NgxFilesizeModule, ClipboardModule],
   providers: [
     FileSizePipe,
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
     { provide: APP_BASE_HREF, useValue: (window as any)['_app_base'] || '/' },
+    provideHttpClient(withInterceptorsFromDi()),
   ],
-  bootstrap: [AppComponent],
 })
 export class AppModule {}

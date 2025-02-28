@@ -3,7 +3,8 @@ import { FileSizePipe } from 'ngx-filesize';
 import { RealDebridStatus, Torrent } from './models/torrent.model';
 
 @Pipe({
-  name: 'status',
+    name: 'status',
+    standalone: false
 })
 export class TorrentStatusPipe implements PipeTransform {
   constructor(private pipe: FileSizePipe) {}
