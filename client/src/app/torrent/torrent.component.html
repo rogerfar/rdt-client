@@ -18,8 +18,8 @@
   </div>
 </div>
 <div *ngIf="torrent !== null && torrent !== undefined">
-  <div fxLayout.lt-lg="column" fxLayout.gt-sm="row" fxLayoutGap="20px" *ngIf="activeTab === 0">
-    <div fxFlex>
+  <div class="flex-container" *ngIf="activeTab === 0">
+    <div style="flex: 1 1 0">
       <div class="field is-grouped">
         <div class="control">
           <button class="button is-danger" (click)="showDeleteModal()">Delete Torrent</button>
@@ -129,7 +129,7 @@
         </ng-container>
       </div>
     </div>
-    <div fxFlex>
+    <div style="flex: 1 1 0">
       <div class="field">
         <label class="label">Real-Debrid ID</label>
         {{ torrent.rdId }}
@@ -251,8 +251,8 @@
             <tr *ngIf="downloadExpanded[download.downloadId]" class="separator">
               <td style="width: 35px"></td>
               <td colspan="5">
-                <div fxLayout.lt-lg="column" fxLayout.gt-sm="row" fxLayoutGap="20px">
-                  <div fxFlex>
+                <div class="flex-container">
+                  <div style="flex: 1 1 0;">
                     <div class="field is-grouped">
                       <div class="control">
                         <button class="button is-primary" (click)="showDownloadRetryModal(download.downloadId)">
@@ -285,7 +285,7 @@
                       {{ download.retryCount }} / {{ torrent.downloadRetryAttempts }}
                     </div>
                   </div>
-                  <div fxFlex>
+                  <div style="flex: 1 1 0;">
                     <div class="field">
                       <label class="label">Added</label>
                       <ng-container *ngIf="download.added">
