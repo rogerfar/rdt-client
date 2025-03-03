@@ -14,8 +14,8 @@ public class DownloadableFileFilter(ILogger<DownloadableFileFilter> logger) : ID
 {
     public Boolean IsDownloadable(Torrent torrent, String filePath, Int64 fileSize)
     {
-        var isDownloadable = SatisfiesMinSize(torrent, filePath, fileSize) &&
-                             SatisfiesFileNameRegex(torrent, filePath);
+        var isDownloadable = PassesSizeFilter(torrent, filePath, fileSize) &&
+                             PassesFilePathFilter(torrent, filePath);
 
         if (isDownloadable)
         {
@@ -25,7 +25,7 @@ public class DownloadableFileFilter(ILogger<DownloadableFileFilter> logger) : ID
         return isDownloadable;
     }
 
-    private Boolean SatisfiesMinSize(Torrent torrent, String filePath, Int64 fileSize)
+    private Boolean PassesSizeFilter(Torrent torrent, String filePath, Int64 fileSize)
     {
         if (torrent is { ClientKind: Provider.RealDebrid, DownloadAction: TorrentDownloadAction.DownloadManual })
         {
@@ -42,12 +42,12 @@ public class DownloadableFileFilter(ILogger<DownloadableFileFilter> logger) : ID
         return false;
     }
 
-    private Boolean SatisfiesFileNameRegex(Torrent torrent, String filePath)
+    private Boolean PassesFilePathFilter(Torrent torrent, String filePath)
     {
-        return IncludeFileName(torrent, filePath) && ExcludeFileName(torrent, filePath);
+        return PassesIncludeRegexFilter(torrent, filePath) && PassesExcludeRegexFilter(torrent, filePath);
     }
 
-    private Boolean IncludeFileName(Torrent torrent, String filePath)
+    private Boolean PassesIncludeRegexFilter(Torrent torrent, String filePath)
     {
         if (String.IsNullOrWhiteSpace(torrent.IncludeRegex) || Regex.IsMatch(filePath, torrent.IncludeRegex))
         {
@@ -59,7 +59,7 @@ public class DownloadableFileFilter(ILogger<DownloadableFileFilter> logger) : ID
         return false;
     }
 
-    private Boolean ExcludeFileName(Torrent torrent, String filePath)
+    private Boolean PassesExcludeRegexFilter(Torrent torrent, String filePath)
     {
         // If the IncludeRegex is set, ignore the ExcludeRegex 
         if (!String.IsNullOrWhiteSpace(torrent.IncludeRegex))
