@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using System.Web;
+﻿using System.Web;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RDNET;
@@ -9,7 +8,7 @@ using RdtClient.Service.Helpers;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
-public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IHttpClientFactory httpClientFactory) : ITorrentClient
+public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter) : ITorrentClient
 {
     private TimeSpan? _offset;
 
@@ -162,62 +161,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
 
         Log($"Selecting {files.Count}/{torrent.Files.Count} files", torrent);
 
-        if (torrent.DownloadAction != TorrentDownloadAction.DownloadManual && torrent.DownloadMinSize > 0)
-        {
-            var minFileSize = torrent.DownloadMinSize * 1024 * 1024;
-
-            Log($"Determining which files are over {minFileSize} bytes", torrent);
-
-            files = files.Where(m => m.Bytes > minFileSize)
-                         .ToList();
-
-            Log($"Found {files.Count} files that match the minimum file size criterea", torrent);
-        }
-
-        if (!String.IsNullOrWhiteSpace(torrent.IncludeRegex))
-        {
-            Log($"Using regular expression {torrent.IncludeRegex} to include only files matching this regex", torrent);
-
-            var newFiles = new List<TorrentClientFile>();
-            foreach (var file in files)
-            {
-                if (Regex.IsMatch(file.Path, torrent.IncludeRegex))
-                {
-                    Log($"* Including {file.Path}", torrent);
-                    newFiles.Add(file);
-                }
-                else
-                {
-                    Log($"* Excluding {file.Path}", torrent);
-                }
-            }
-
-            files = newFiles;
-
-            Log($"Found {files.Count} files that match the regex", torrent);
-        } 
-        else if (!String.IsNullOrWhiteSpace(torrent.ExcludeRegex))
-        {
-            Log($"Using regular expression {torrent.IncludeRegex} to ignore files matching this regex", torrent);
-
-            var newFiles = new List<TorrentClientFile>();
-            foreach (var file in files)
-            {
-                if (!Regex.IsMatch(file.Path, torrent.ExcludeRegex))
-                {
-                    Log($"* Including {file.Path}", torrent);
-                    newFiles.Add(file);
-                }
-                else
-                {
-                    Log($"* Excluding {file.Path}", torrent);
-                }
-            }
-
-            files = newFiles;
-
-            Log($"Found {files.Count} files that match the regex", torrent);
-        }
+        files = files.Where(f => fileFilter.IsDownloadable(torrent, f.Path, f.Bytes)).ToList();
 
         if (files.Count == 0)
         {

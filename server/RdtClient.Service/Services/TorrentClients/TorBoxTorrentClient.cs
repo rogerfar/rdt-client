@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using TorBoxNET;
@@ -10,7 +9,7 @@ using RdtClient.Service.Helpers;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
-public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClientFactory httpClientFactory) : ITorrentClient
+public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter) : ITorrentClient
 {
     private TimeSpan? _offset;
     private TorBoxNetClient GetClient()
@@ -288,46 +287,9 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
     {
         var torrentId = await GetClient().Torrents.GetHashInfoAsync(torrent.Hash, skipCache: true);
 
-        var selectedFiles = torrent.Files.Where(file =>
-        {
-            var fileName = Path.GetFileName(file.Path);
-
-            if (torrent.DownloadMinSize > 0 && file.Bytes < torrent.DownloadMinSize * 1024 * 1024)
-            {
-                Log($"Not downloading {fileName}, its size of {file.Bytes} bytes is smaller than the minimum size of {torrent.DownloadMinSize} bytes", torrent);
-
-                return false;
-            }
-
-            if (!String.IsNullOrWhiteSpace(torrent.IncludeRegex))
-            {
-                if (!Regex.IsMatch(fileName, torrent.IncludeRegex))
-                {
-                    Log($"Not downloading {fileName}, it does not match regex {torrent.IncludeRegex}", torrent);
-
-                    return false;
-                }
-
-                // If IncludeRegex is set, don't look at ExcludeRegex
-                return true;
-            }
-
-            if (!String.IsNullOrWhiteSpace(torrent.ExcludeRegex))
-            {
-                if (Regex.IsMatch(fileName, torrent.ExcludeRegex))
-
-                {
-                    Log($"Not downloading {fileName}, it matches regex {torrent.ExcludeRegex}", torrent);
-
-                    return false;
-                }
-            }
-
-            return true;
-        });
-
-        return selectedFiles.Select(file => $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}")
-                            .ToList();
+        return torrent.Files.Where(file => fileFilter.IsDownloadable(torrent, file.Path, file.Bytes))
+                      .Select(file => $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}")
+                      .ToList();
     }
 
     public async Task<String> GetFileName(String downloadUrl)
