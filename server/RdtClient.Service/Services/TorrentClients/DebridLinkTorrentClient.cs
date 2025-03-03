@@ -260,25 +260,7 @@ public class DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFacto
             Log($"{link}", torrent);
         }
 
-        // Check if all the links are set that have been selected
-        if (torrent.Files.Count(m => m.Selected) == downloadLinks.Count)
-        {
-            return downloadLinks;
-        }
-
-        // Check if all all the links are set for manual selection
-        if (torrent.ManualFiles.Count == downloadLinks.Count)
-        {
-            return downloadLinks;
-        }
-
-        // If there is only 1 link, delay for 1 minute to see if more links pop up.
-        if (downloadLinks.Count == 1 && torrent.RdEnded.HasValue && DateTime.UtcNow > torrent.RdEnded.Value.ToUniversalTime().AddMinutes(1))
-        {
-            return downloadLinks;
-        }
-            
-        return null;
+        return downloadLinks;
     }
 
     private async Task<TorrentClientTorrent> GetInfo(String torrentId)
