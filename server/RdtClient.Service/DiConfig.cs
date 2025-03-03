@@ -37,6 +37,8 @@ public static class DiConfig
         services.AddScoped<TorrentRunner>();
         services.AddScoped<DebridLinkClient>();
 
+        services.AddSingleton<IDownloadableFileFilter, DownloadableFileFilter>();
+
         services.AddSingleton<IAuthorizationHandler, AuthSettingHandler>();
 
         services.AddHostedService<ProviderUpdater>();
