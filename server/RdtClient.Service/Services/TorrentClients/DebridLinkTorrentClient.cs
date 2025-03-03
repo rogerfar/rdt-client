@@ -10,7 +10,7 @@ using Download = RdtClient.Data.Models.Data.Download;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
-public class DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFactory httpClientFactory) : ITorrentClient
+public class DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter) : ITorrentClient
 {
     private DebridLinkFrNETClient GetClient()
     {
@@ -69,12 +69,14 @@ public class DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFacto
             Status = torrent.Status.ToString(),
             Added = DateTimeOffset.FromUnixTimeSeconds(torrent.Created),
             Files = (torrent.Files ?? []).Select((m, i) => new TorrentClientFile
-            {
-                Path = m.Name ?? "",
-                Bytes = m.Size,
-                Id = i,
-                Selected = true
-            }).ToList(),
+                                         {
+                                             Path = m.Name ?? "",
+                                             Bytes = m.Size,
+                                             Id = i,
+                                             Selected = true,
+                                             DownloadLink = m.DownloadUrl
+                                         })
+                                         .ToList(),
             Links = torrent.Files?.Select(m => m.DownloadUrl.ToString()).ToList(),
             Ended = null,
             Speed = torrent.UploadSpeed,
@@ -246,7 +248,10 @@ public class DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFacto
             return null;
         }
 
-        var downloadLinks = rdTorrent.Links.Where(m => !String.IsNullOrWhiteSpace(m)).ToList();
+        var downloadLinks = rdTorrent.Files?
+                                     .Where(m => fileFilter.IsDownloadable(torrent, m.Path, m.Bytes) && m.DownloadLink != null)
+                                     .Select(m => m.DownloadLink!)
+                                     .ToList() ?? [];
 
         Log($"Found {downloadLinks.Count} links", torrent);
 
