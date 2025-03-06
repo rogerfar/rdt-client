@@ -1,0 +1,1640 @@
+{
+  "x-generator": "NSwag v14.2.0.0 (NJsonSchema v11.1.0.0 (Newtonsoft.Json v13.0.0.0))",
+  "openapi": "3.0.0",
+  "info": {
+    "title": "RdtClient API",
+    "description": "A web interface to manage your torrents on a Debrid provider.",
+    "contact": {
+      "name": "Source Code",
+      "url": "https://github.com/rogerfar/rdt-client"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://github.com/rogerfar/rdt-client/blob/master/LICENSE"
+    },
+    "version": "2.0.97.0"
+  },
+  "paths": {
+    "/Api/Authentication/IsLoggedIn": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Checks if the current session is authenticated",
+        "operationId": "Auth_IsLoggedIn",
+        "responses": {
+          "200": {
+            "description": "Session is valid and authenticated, or authentication is disabled"
+          },
+          "402": {
+            "description": "System requires initial setup - no users exist in the database",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Session is not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Api/Authentication/Create": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Creates the initial account for the system",
+        "description": "This endpoint can only be used when no account exists.\nIt creates the account and automatically logs in.",
+        "operationId": "Auth_Create",
+        "requestBody": {
+          "x-name": "request",
+          "description": "Registration details for the new account",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthControllerLoginRequest"
+              }
+            }
+          },
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "Account created successfully and user is logged in"
+          },
+          "400": {
+            "description": "Invalid request - username/password missing or validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Cannot create account - a user already exists in system",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Api/Authentication/SetupProvider": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Configures the provider settings for the application",
+        "description": "This endpoint can only be used when no provider is configured.\nIt sets up the initial provider configuration including the API key.",
+        "operationId": "Auth_SetupProvider",
+        "requestBody": {
+          "x-name": "request",
+          "description": "Provider configuration details including provider type and API token",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthControllerSetupProviderRequest"
+              }
+            }
+          },
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "Provider configured successfully"
+          },
+          "400": {
+            "description": "Invalid request - missing required fields"
+          },
+          "401": {
+            "description": "Provider already configured"
+          }
+        }
+      }
+    },
+    "/Api/Authentication/Login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Authenticates a user and creates a new session",
+        "description": "Validates the provided credentials and creates an authenticated session if valid.",
+        "operationId": "Auth_Login",
+        "requestBody": {
+          "x-name": "request",
+          "description": "Login credentials",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthControllerLoginRequest"
+              }
+            }
+          },
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid credentials or missing required fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "System requires initial setup - no users exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Api/Authentication/Logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Ends the current authenticated session",
+        "operationId": "Auth_Logout",
+        "responses": {
+          "200": {
+            "description": "Session terminated successfully"
+          }
+        }
+      }
+    },
+    "/Api/Authentication/Update": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Updates the authenticated user's password",
+        "description": "Requires authentication. Updates the password for the currently logged in user.",
+        "operationId": "Auth_Update",
+        "requestBody": {
+          "x-name": "request",
+          "description": "Password update request containing the new password",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthControllerUpdateRequest"
+              }
+            }
+          },
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "Password updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or password validation failed"
+          }
+        }
+      }
+    },
+    "/Api/Settings": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Retrieves all application settings",
+        "operationId": "Settings_Get",
+        "responses": {
+          "200": {
+            "description": "Returns the list of settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SettingProperty"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Updates multiple application settings",
+        "operationId": "Settings_Update",
+        "requestBody": {
+          "x-name": "settings1",
+          "description": "List of setting properties to update",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SettingKeyValuePair"
+                }
+              }
+            }
+          },
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "Settings were successfully updated"
+          },
+          "400": {
+            "description": "Invalid settings data provided"
+          }
+        }
+      }
+    },
+    "/Api/Settings/Profile": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Retrieves the profile information from the currently configured debrid service",
+        "operationId": "Settings_Profile",
+        "responses": {
+          "200": {
+            "description": "The profile information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Api/Settings/TestPath": {
+      "post": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Tests if a specified path is writable by attempting to create and delete a test file",
+        "description": "Creates a test file in the specified directory to verify write permissions.\nThe test file is automatically deleted after the test completes.",
+        "operationId": "Settings_TestPath",
+        "requestBody": {
+          "x-name": "request",
+          "description": "The path testing request containing the directory to test",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsControllerTestPathRequest"
+              }
+            }
+          },
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "The path is valid and writable"
+          },
+          "400": {
+            "description": "Invalid or empty path provided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Path does not exist or is not accessible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Api/Settings/TestDownloadSpeed": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Tests download speed by downloading a sample file and measuring throughput",
+        "description": "The test downloads a file up to 50MB and measures the download speed.",
+        "operationId": "Settings_TestDownloadSpeed",
+        "responses": {
+          "200": {
+            "description": "Returns the measured download speed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Api/Settings/TestWriteSpeed": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Tests write speed to the configured download directory",
+        "description": "Creates a 64MB test file with random data to measure disk write performance.\nThe test file is automatically deleted after the test completes.",
+        "operationId": "Settings_TestWriteSpeed",
+        "responses": {
+          "200": {
+            "description": "Returns the measured write speed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "number",
+                  "format": "double"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Api/Settings/TestAria2cConnection": {
+      "post": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Tests the connection to an Aria2c instance",
+        "description": "Attempts to connect to an Aria2c RPC endpoint and retrieve its version information.\nThis verifies both connectivity and authentication with the Aria2c server.",
+        "operationId": "Settings_TestAria2cConnection",
+        "requestBody": {
+          "x-name": "request",
+          "description": "The connection details for the Aria2c instance",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsControllerTestAria2cConnectionRequest"
+              }
+            }
+          },
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the Aria2c version information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing connection details"
+          },
+          "500": {
+            "description": "Connection to Aria2c failed"
+          }
+        }
+      }
+    },
+    "/Api/Torrents": {
+      "get": {
+        "tags": [
+          "Torrents"
+        ],
+        "summary": "Retrieves all torrents and their associated downloads",
+        "operationId": "Torrents_GetAll",
+        "responses": {
+          "200": {
+            "description": "Returns the list of torrents",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Torrent"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Api/Torrents/Get/{torrentId}": {
+      "get": {
+        "tags": [
+          "Torrents"
+        ],
+        "summary": "Retrieves a specific torrent by its ID",
+        "operationId": "Torrents_GetById",
+        "parameters": [
+          {
+            "name": "torrentId",
+            "in": "path",
+            "required": true,
+            "description": "The unique identifier of the torrent",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the requested torrent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Torrent"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Torrent not found"
+          }
+        }
+      }
+    },
+    "/Api/Torrents/Tick": {
+      "get": {
+        "tags": [
+          "Torrents"
+        ],
+        "summary": "Forces an immediate processing cycle for debugging purposes",
+        "operationId": "Torrents_Tick",
+        "responses": {
+          "200": {
+            "description": "Processing cycle completed successfully"
+          }
+        }
+      }
+    },
+    "/Api/Torrents/UploadFile": {
+      "post": {
+        "tags": [
+          "Torrents"
+        ],
+        "summary": "Adds a new torrent file with configuration",
+        "operationId": "Torrents_UploadFile",
+        "parameters": [
+          {
+            "name": "formData",
+            "in": "query",
+            "description": "Configuration for the torrent download",
+            "schema": {
+              "nullable": true,
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/TorrentControllerUploadFileRequest"
+                }
+              ]
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Torrent added successfully"
+          },
+          "400": {
+            "description": "Invalid file or configuration provided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Api/Torrents/UploadMagnet": {
+      "post": {
+        "tags": [
+          "Torrents"
+        ],
+        "summary": "Adds a new torrent using a magnet link",
+        "operationId": "Torrents_UploadMagnet",
+        "requestBody": {
+          "x-name": "request",
+          "description": "The magnet link and torrent configuration",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TorrentControllerUploadMagnetRequest"
+              }
+            }
+          },
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "Magnet link processed successfully"
+          },
+          "400": {
+            "description": "Invalid magnet link or configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Api/Torrents/CheckFiles": {
+      "post": {
+        "tags": [
+          "Torrents"
+        ],
+        "summary": "Checks available files in a torrent file",
+        "operationId": "Torrents_CheckFiles",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "ContentType": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "ContentDisposition": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "Headers": {
+                    "type": "array",
+                    "nullable": true,
+                    "items": {}
+                  },
+                  "Length": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "Name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "FileName": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the list of available files",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TorrentClientAvailableFile"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid torrent file provided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Api/Torrents/CheckFilesMagnet": {
+      "post": {
+        "tags": [
+          "Torrents"
+        ],
+        "summary": "Checks available files from a magnet link",
+        "operationId": "Torrents_CheckFilesMagnet",
+        "requestBody": {
+          "x-name": "request",
+          "description": "The magnet link to analyze",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TorrentControllerCheckFilesRequest"
+              }
+            }
+          },
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the list of available files",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TorrentClientAvailableFile"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid magnet link provided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Api/Torrents/Delete/{torrentId}": {
+      "post": {
+        "tags": [
+          "Torrents"
+        ],
+        "summary": "Deletes a torrent and optionally its associated data",
+        "operationId": "Torrents_Delete",
+        "parameters": [
+          {
+            "name": "torrentId",
+            "in": "path",
+            "required": true,
+            "description": "The unique identifier of the torrent to delete",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "Delete options specifying what should be removed",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TorrentControllerDeleteRequest"
+              }
+            }
+          },
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Torrent deleted successfully"
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          }
+        }
+      }
+    },
+    "/Api/Torrents/Retry/{torrentId}": {
+      "post": {
+        "tags": [
+          "Torrents"
+        ],
+        "summary": "Retries a failed torrent download",
+        "operationId": "Torrents_Retry",
+        "parameters": [
+          {
+            "name": "torrentId",
+            "in": "path",
+            "required": true,
+            "description": "The unique identifier of the torrent to retry",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retry initiated successfully"
+          }
+        }
+      }
+    },
+    "/Api/Torrents/RetryDownload/{downloadId}": {
+      "post": {
+        "tags": [
+          "Torrents"
+        ],
+        "summary": "Retries a failed download within a torrent",
+        "operationId": "Torrents_RetryDownload",
+        "parameters": [
+          {
+            "name": "downloadId",
+            "in": "path",
+            "required": true,
+            "description": "The unique identifier of the download to retry",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retry initiated successfully"
+          }
+        }
+      }
+    },
+    "/Api/Torrents/Update": {
+      "put": {
+        "tags": [
+          "Torrents"
+        ],
+        "summary": "Updates torrent configuration",
+        "operationId": "Torrents_Update",
+        "requestBody": {
+          "x-name": "torrent",
+          "description": "The updated torrent configuration",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Torrent"
+              }
+            }
+          },
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "Torrent updated successfully"
+          },
+          "400": {
+            "description": "Invalid torrent configuration"
+          }
+        }
+      }
+    },
+    "/Api/Torrents/VerifyRegex": {
+      "post": {
+        "tags": [
+          "Torrents"
+        ],
+        "summary": "Tests regex patterns against torrent files",
+        "operationId": "Torrents_VerifyRegex",
+        "requestBody": {
+          "x-name": "request",
+          "description": "The regex patterns and magnet link to test",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TorrentControllerVerifyRegexRequest"
+              }
+            }
+          },
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the regex test results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegexVerificationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ProblemDetails": {
+        "type": "object",
+        "additionalProperties": {
+          "nullable": true
+        },
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "AuthControllerLoginRequest": {
+        "type": "object",
+        "description": "Request model for login and user creation operations",
+        "additionalProperties": false,
+        "required": [
+          "userName",
+          "password"
+        ],
+        "properties": {
+          "userName": {
+            "type": "string",
+            "description": "Username for authentication",
+            "minLength": 1,
+            "example": "admin"
+          },
+          "password": {
+            "type": "string",
+            "description": "Password for authentication",
+            "minLength": 1,
+            "example": "MySecurePassword123!"
+          }
+        }
+      },
+      "AuthControllerSetupProviderRequest": {
+        "type": "object",
+        "description": "Request model for configuring the provider settings",
+        "additionalProperties": false,
+        "required": [
+          "provider",
+          "token"
+        ],
+        "properties": {
+          "provider": {
+            "type": "integer",
+            "description": "Provider type identifier",
+            "format": "int32",
+            "example": 1
+          },
+          "token": {
+            "type": "string",
+            "description": "API token or key for the provider",
+            "minLength": 1,
+            "example": "sk-1234567890abcdef"
+          }
+        }
+      },
+      "AuthControllerUpdateRequest": {
+        "type": "object",
+        "description": "Request model for updating user password",
+        "additionalProperties": false,
+        "required": [
+          "userName",
+          "password"
+        ],
+        "properties": {
+          "userName": {
+            "type": "string",
+            "description": "Username for the account",
+            "minLength": 1,
+            "example": "myusername"
+          },
+          "password": {
+            "type": "string",
+            "description": "New password for the user account",
+            "minLength": 1,
+            "example": "NewSecurePassword123!"
+          }
+        }
+      },
+      "SettingProperty": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SettingKeyValuePair"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "displayName": {
+                "type": "string",
+                "nullable": true
+              },
+              "description": {
+                "type": "string",
+                "nullable": true
+              },
+              "type": {
+                "type": "string"
+              },
+              "enumValues": {
+                "type": "object",
+                "nullable": true,
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "SettingKeyValuePair": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "nullable": true
+          }
+        }
+      },
+      "Profile": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "provider": {
+            "type": "string",
+            "nullable": true
+          },
+          "userName": {
+            "type": "string",
+            "nullable": true
+          },
+          "expiration": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "currentVersion": {
+            "type": "string",
+            "nullable": true
+          },
+          "latestVersion": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "SettingsControllerTestPathRequest": {
+        "type": "object",
+        "description": "Request model for testing path accessibility",
+        "additionalProperties": false,
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "The directory path to test for write access",
+            "minLength": 1,
+            "example": "/path/to/downloads"
+          }
+        }
+      },
+      "SettingsControllerTestAria2cConnectionRequest": {
+        "type": "object",
+        "description": "Request model for testing Aria2c connection",
+        "additionalProperties": false,
+        "required": [
+          "url",
+          "secret"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The URL of the Aria2c RPC endpoint",
+            "minLength": 1,
+            "example": "http://localhost:6800/jsonrpc"
+          },
+          "secret": {
+            "type": "string",
+            "description": "The secret token for authenticating with the Aria2c server",
+            "minLength": 1,
+            "example": "your-secret-token"
+          }
+        }
+      },
+      "Torrent": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "torrentId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "hash": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "nullable": true
+          },
+          "downloadAction": {
+            "$ref": "#/components/schemas/TorrentDownloadAction"
+          },
+          "finishedAction": {
+            "$ref": "#/components/schemas/TorrentFinishedAction"
+          },
+          "hostDownloadAction": {
+            "$ref": "#/components/schemas/TorrentHostDownloadAction"
+          },
+          "downloadMinSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "includeRegex": {
+            "type": "string",
+            "nullable": true
+          },
+          "excludeRegex": {
+            "type": "string",
+            "nullable": true
+          },
+          "downloadManualFiles": {
+            "type": "string",
+            "nullable": true
+          },
+          "downloadClient": {
+            "$ref": "#/components/schemas/DownloadClient"
+          },
+          "added": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "filesSelected": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "completed": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "retry": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "fileOrMagnet": {
+            "type": "string",
+            "nullable": true
+          },
+          "isFile": {
+            "type": "boolean"
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "retryCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "downloadRetryAttempts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "torrentRetryAttempts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deleteOnError": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lifetime": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "downloads": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Download"
+            }
+          },
+          "clientKind": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Provider"
+              }
+            ]
+          },
+          "rdId": {
+            "type": "string",
+            "nullable": true
+          },
+          "rdName": {
+            "type": "string",
+            "nullable": true
+          },
+          "rdSize": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "rdHost": {
+            "type": "string",
+            "nullable": true
+          },
+          "rdSplit": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "rdProgress": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "rdStatus": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/TorrentStatus"
+              }
+            ]
+          },
+          "rdStatusRaw": {
+            "type": "string",
+            "nullable": true
+          },
+          "rdAdded": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "rdEnded": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "rdSpeed": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "rdSeeders": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "rdFiles": {
+            "type": "string",
+            "nullable": true
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TorrentClientFile"
+            }
+          },
+          "manualFiles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "TorrentDownloadAction": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "DownloadAll",
+          "DownloadAvailableFiles",
+          "DownloadManual"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "TorrentFinishedAction": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "None",
+          "RemoveAllTorrents",
+          "RemoveRealDebrid",
+          "RemoveClient"
+        ],
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "TorrentHostDownloadAction": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "DownloadAll",
+          "DownloadNone"
+        ],
+        "enum": [
+          0,
+          1
+        ]
+      },
+      "DownloadClient": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Internal",
+          "Bezzad",
+          "Aria2c",
+          "Symlink",
+          "DownloadStation"
+        ],
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "Download": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "downloadId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "torrentId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "torrent": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Torrent"
+              }
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "link": {
+            "type": "string",
+            "nullable": true
+          },
+          "added": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "downloadQueued": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "downloadStarted": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "downloadFinished": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "unpackingQueued": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "unpackingStarted": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "unpackingFinished": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "completed": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "retryCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "remoteId": {
+            "type": "string",
+            "nullable": true
+          },
+          "fileName": {
+            "type": "string",
+            "nullable": true
+          },
+          "bytesTotal": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "bytesDone": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "speed": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "Provider": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "RealDebrid",
+          "AllDebrid",
+          "Premiumize",
+          "TorBox",
+          "DebridLink"
+        ],
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "TorrentStatus": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Processing",
+          "WaitingForFileSelection",
+          "Downloading",
+          "Finished",
+          "Uploading",
+          "Error"
+        ],
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          99
+        ]
+      },
+      "TorrentClientFile": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "path": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "selected": {
+            "type": "boolean"
+          },
+          "downloadLink": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "TorrentControllerUploadFileRequest": {
+        "type": "object",
+        "description": "Request model for uploading a torrent file",
+        "additionalProperties": false,
+        "required": [
+          "torrent"
+        ],
+        "properties": {
+          "torrent": {
+            "description": "Configuration for the torrent download",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Torrent"
+              }
+            ]
+          }
+        }
+      },
+      "TorrentControllerUploadMagnetRequest": {
+        "type": "object",
+        "description": "Request model for adding a magnet link",
+        "additionalProperties": false,
+        "required": [
+          "magnetLink",
+          "torrent"
+        ],
+        "properties": {
+          "magnetLink": {
+            "type": "string",
+            "description": "The magnet URI to process",
+            "minLength": 1
+          },
+          "torrent": {
+            "description": "Configuration for the torrent download",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Torrent"
+              }
+            ]
+          }
+        }
+      },
+      "TorrentClientAvailableFile": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "filename": {
+            "type": "string"
+          },
+          "filesize": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "TorrentControllerCheckFilesRequest": {
+        "type": "object",
+        "description": "Request model for checking files in a magnet link",
+        "additionalProperties": false,
+        "required": [
+          "magnetLink"
+        ],
+        "properties": {
+          "magnetLink": {
+            "type": "string",
+            "description": "The magnet URI to analyze",
+            "minLength": 1
+          }
+        }
+      },
+      "TorrentControllerDeleteRequest": {
+        "type": "object",
+        "description": "Request model for deleting a torrent",
+        "additionalProperties": false,
+        "properties": {
+          "deleteData": {
+            "type": "boolean",
+            "description": "Whether to delete the downloaded data"
+          },
+          "deleteRdTorrent": {
+            "type": "boolean",
+            "description": "Whether to remove the torrent from the Debrid service"
+          },
+          "deleteLocalFiles": {
+            "type": "boolean",
+            "description": "Whether to delete local torrent files"
+          }
+        }
+      },
+      "RegexVerificationResult": {
+        "type": "object",
+        "description": "Response model for regex verification results",
+        "additionalProperties": false,
+        "properties": {
+          "includeError": {
+            "type": "string",
+            "description": "Error message for the include regex pattern, if any"
+          },
+          "excludeError": {
+            "type": "string",
+            "description": "Error message for the exclude regex pattern, if any"
+          },
+          "selectedFiles": {
+            "type": "array",
+            "description": "Files that match the specified patterns",
+            "items": {
+              "$ref": "#/components/schemas/TorrentClientAvailableFile"
+            }
+          }
+        }
+      },
+      "TorrentControllerVerifyRegexRequest": {
+        "type": "object",
+        "description": "Request model for verifying regex patterns",
+        "additionalProperties": false,
+        "properties": {
+          "includeRegex": {
+            "type": "string",
+            "description": "Pattern for including files",
+            "nullable": true
+          },
+          "excludeRegex": {
+            "type": "string",
+            "description": "Pattern for excluding files",
+            "nullable": true
+          },
+          "magnetLink": {
+            "type": "string",
+            "description": "Magnet link to test patterns against",
+            "nullable": true
+          }
+        }
+      }
+    }
+  }
+}
