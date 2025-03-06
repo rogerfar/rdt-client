@@ -1,7 +1,9 @@
 using System.Diagnostics;
+using System.Reflection;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Hosting.WindowsServices;
+using NSwag;
 using RdtClient.Data.Data;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Service;
@@ -24,6 +26,30 @@ builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.Environment
 var appSettings = new AppSettings();
 builder.Configuration.Bind(appSettings);
 builder.Services.AddSingleton(appSettings);
+
+// Add services for client generation
+builder.Services.AddOpenApiDocument(options => {
+    options.PostProcess = document =>
+    {
+        document.Info = new OpenApiInfo
+        {
+            Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(),
+            Title = "RdtClient API",
+            Description = "A web interface to manage your torrents on a Debrid provider.",
+            License = new OpenApiLicense
+            {
+                Name = "MIT",
+                Url = "https://github.com/rogerfar/rdt-client/blob/master/LICENSE"
+            },
+            Contact = new OpenApiContact()
+            {
+                Name = "Source Code",
+                Url = "https://github.com/rogerfar/rdt-client",
+            },
+            
+        };
+    };
+});
 
 // Configure URLs
 if (appSettings.Port <= 0)
