@@ -242,6 +242,20 @@ public class Torrents(
             return;
         }
 
+        if (downloadLinks.Count == 0)
+        {
+            logger.LogInformation("All files excluded by filters (IncludeRegex: {includeRegex}, ExcludeRegex: {excludeRegex}, DownloadMinSize: {downloadMinSize}  {torrentInfo}",
+                            torrent.IncludeRegex,
+                            torrent.ExcludeRegex,
+                            torrent.DownloadMinSize,
+                            torrent.ToLog());
+
+            await torrentData.UpdateRetry(torrentId, null, torrent.TorrentRetryAttempts);
+            await torrentData.UpdateComplete(torrentId, "All files excluded", DateTimeOffset.Now, false);
+
+            return;
+        }
+
         foreach (var downloadLink in downloadLinks)
         {
             // Make sure downloads don't get added multiple times
