@@ -216,6 +216,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
     [HttpPost]
     [Route("VerifyRegex")]
     public async Task<ActionResult> VerifyRegex([FromForm] IFormFile? file, [FromBody] TorrentControllerVerifyRegexRequest? request)
+    public async Task<ActionResult<RegexVerificationResult>> VerifyRegex([FromBody] TorrentControllerVerifyRegexRequest? request)
     {
         if (request == null)
         {
@@ -232,20 +233,6 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
             var magnet = MagnetLink.Parse(request.MagnetLink);
 
             availableFiles = await torrents.GetAvailableFiles(magnet.InfoHashes.V1OrV2.ToHex());
-        }
-        else if (file != null)
-        {
-            var fileStream = file.OpenReadStream();
-
-            await using var memoryStream = new MemoryStream();
-
-            await fileStream.CopyToAsync(memoryStream);
-
-            var bytes = memoryStream.ToArray();
-
-            var torrent = await MonoTorrent.Torrent.LoadAsync(bytes);
-
-            availableFiles = await torrents.GetAvailableFiles(torrent.InfoHashes.V1OrV2.ToHex());
         }
         else
         {
@@ -270,7 +257,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
                     includeError = ex.Message;
                 }
             }
-        } 
+        }
         else if (!String.IsNullOrWhiteSpace(request.ExcludeRegex))
         {
             foreach (var availableFile in availableFiles)
