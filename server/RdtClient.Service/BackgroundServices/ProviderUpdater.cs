@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using RdtClient.Data.Enums;
 using RdtClient.Service.Services;
 
 namespace RdtClient.Service.BackgroundServices;
@@ -60,7 +61,13 @@ public class ProviderUpdater(ILogger<TaskRunner> logger, IServiceProvider servic
                 logger.LogError(ex, $"Unexpected error occurred in ProviderUpdater: {ex.Message}");
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
+            var delaySeconds = Settings.Get.Provider.Provider switch
+            {
+                Provider.TorBox => 10,
+                _ => 1
+            };
+
+            await Task.Delay(TimeSpan.FromSeconds(delaySeconds), stoppingToken);
         }
 
         logger.LogInformation("ProviderUpdater stopped.");
