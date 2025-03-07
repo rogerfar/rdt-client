@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PremiumizeNET;
 using RdtClient.Data.Enums;
@@ -10,7 +9,7 @@ using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
-public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IHttpClientFactory httpClientFactory) : ITorrentClient
+public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter) : ITorrentClient
 {
     private PremiumizeNETClient GetClient()
     {
@@ -294,33 +293,9 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
                     continue;
                 }
 
-                if (torrent.DownloadMinSize > 0)
+                if (!fileFilter.IsDownloadable(torrent, item.Name, item.Size))
                 {
-                    if (item.Link.Length < torrent.DownloadMinSize * 1024 * 1024)
-                    {
-                        Log($"Not downloading {item.Name}, its size of {item.Link.Length} bytes is smaller than the minimum size of {torrent.DownloadMinSize} bytes", torrent);
-
-                        continue;
-                    }
-                }
-
-                if (!String.IsNullOrWhiteSpace(torrent.IncludeRegex))
-                {
-                    if (!Regex.IsMatch(item.Name, torrent.IncludeRegex))
-                    {
-                        Log($"Not downloading {item.Name}, it does not match regex {torrent.IncludeRegex}", torrent);
-
-                        continue;
-                    }
-                }
-                else if (!String.IsNullOrWhiteSpace(torrent.ExcludeRegex))
-                {
-                    if (Regex.IsMatch(item.Name, torrent.ExcludeRegex))
-                    {
-                        Log($"Not downloading {item.Name}, it matches regex {torrent.ExcludeRegex}", torrent);
-
-                        continue;
-                    }
+                    continue;
                 }
 
                 Log($"Found item {item.Name} in folder {folder.Name} ({folderId})", torrent);
@@ -329,6 +304,12 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
             }
             else if (item.Type == "folder")
             {
+                // Folders don't have Size, use maximum Int64 so it always passes min size check
+                if (!fileFilter.IsDownloadable(torrent, item.Name, Int64.MaxValue))
+                {
+                    continue;
+                }
+
                 Log($"Found subfolder {item.Name} in {folder.Name} ({folderId}), searching subfolder for files", torrent);
                 var subDownloadLinks = await GetAllDownloadLinks(torrent, item.Id);
                 downloadLinks.AddRange(subDownloadLinks);
