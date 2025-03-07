@@ -40,12 +40,11 @@
           "builder": "@angular/build:application",
           "options": {
             "outputPath": {
-              "base": "../server/RdtClient.Web/wwwroot"
+              "base": "../server/RdtClient.Web/wwwroot",
+              "browser": ""
             },
             "index": "src/index.html",
-            "polyfills": [
-              "src/polyfills.ts"
-            ],
+            "polyfills": ["src/polyfills.ts"],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": ["src/favicon.ico", "src/assets"],
