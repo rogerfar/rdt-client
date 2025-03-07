@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using TorBoxNET;
@@ -24,7 +25,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
             }
 
             var httpClient = httpClientFactory.CreateClient();
-            httpClient.DefaultRequestHeaders.Add("User-Agent", "rdt-client");
+            httpClient.DefaultRequestHeaders.Add("User-Agent", $"rdt-client {Assembly.GetExecutingAssembly().GetName().Version}");
             httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
 
             var torBoxNetClient = new TorBoxNetClient(null, httpClient, 5);
