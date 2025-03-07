@@ -25,7 +25,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
             }
 
             var httpClient = httpClientFactory.CreateClient();
-            httpClient.DefaultRequestHeaders.Add("User-Agent", $"rdt-client {Assembly.GetExecutingAssembly().GetName().Version}");
+            httpClient.DefaultRequestHeaders.Add("User-Agent", $"rdt-client {Assembly.GetEntryAssembly()?.GetName().Version}");
             httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
 
             var torBoxNetClient = new TorBoxNetClient(null, httpClient, 5);
