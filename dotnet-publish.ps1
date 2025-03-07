@@ -17,7 +17,7 @@ Write-Output "Commit and push now, press any key to continue"
 
 cd client
 npm install
-ng build --configuration production --output-path=..\server\RdtClient.Web\wwwroot
+ng build
 
 cd ..
 cd server
