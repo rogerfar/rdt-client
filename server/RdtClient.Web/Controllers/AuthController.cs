@@ -82,6 +82,13 @@ public class AuthController(Authentication authentication, Settings settings) : 
             return StatusCode(401);
         }
 
+        var user = await authentication.GetUser();
+
+        if (user != null)
+        {
+            return StatusCode(401);
+        }
+
         await settings.Update("Provider:Provider", request.Provider);
         await settings.Update("Provider:ApiKey", request.Token);
 
@@ -130,6 +137,7 @@ public class AuthController(Authentication authentication, Settings settings) : 
                 
     [Route("Update")]
     [HttpPost]
+    [Authorize(Policy = "AuthSetting")]
     public async Task<ActionResult> Update([FromBody] AuthControllerUpdateRequest? request)
     {
         if (request == null)
