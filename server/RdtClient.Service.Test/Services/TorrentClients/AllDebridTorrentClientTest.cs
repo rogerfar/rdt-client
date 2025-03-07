@@ -294,9 +294,17 @@ public class AllDebridTorrentClientTest
         Assert.Contains(secondResult, t => t.Id == Magnet2Finished.Id.ToString());
     }
 
-    public static IEnumerable<Object[]> DownloadingMagnetsWithProgress()
+    public static TheoryData<Magnet, Int64> DownloadingMagnetsWithProgress()
     {
-        return [[Magnet1HalfDownloaded, 50], [Magnet2QuarterDownloaded, 25]];
+        return new()
+        {
+            {
+                Magnet1HalfDownloaded, 50
+            },
+            {
+                Magnet2QuarterDownloaded, 25
+            }
+        };
     }
 
     [Theory]
