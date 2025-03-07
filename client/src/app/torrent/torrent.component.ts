@@ -5,9 +5,10 @@ import { Torrent } from '../models/torrent.model';
 import { TorrentService } from '../torrent.service';
 
 @Component({
-  selector: 'app-torrent',
-  templateUrl: './torrent.component.html',
-  styleUrls: ['./torrent.component.scss'],
+    selector: 'app-torrent',
+    templateUrl: './torrent.component.html',
+    styleUrls: ['./torrent.component.scss'],
+    standalone: false
 })
 export class TorrentComponent implements OnInit {
   public torrent: Torrent;

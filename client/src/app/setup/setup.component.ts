@@ -3,9 +3,10 @@ import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 
 @Component({
-  selector: 'app-setup',
-  templateUrl: './setup.component.html',
-  styleUrls: ['./setup.component.scss'],
+    selector: 'app-setup',
+    templateUrl: './setup.component.html',
+    styleUrls: ['./setup.component.scss'],
+    standalone: false
 })
 export class SetupComponent {
   public userName: string;
