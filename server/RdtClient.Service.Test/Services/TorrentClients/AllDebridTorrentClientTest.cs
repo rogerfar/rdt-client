@@ -476,7 +476,7 @@ public class AllDebridTorrentClientTest
     }
 
     [Fact]
-    public async Task GetDownloadLinks_WhenAllFilesExcluded_ReturnsAllFiles()
+    public async Task GetDownloadLinks_WhenAllFilesExcluded_ReturnsEmptyList()
     {
         // Arrange
         var mocks = new Mocks();
@@ -501,8 +501,7 @@ public class AllDebridTorrentClientTest
                 DownloadLink = "https://fake.url/file-2.txt"
             }
         ];
-
-        var expectedLinksSet = new HashSet<String>(files.Select(n => n.DownloadLink)!);
+        
         mocks.AllDebridClientMock.Setup(c => c.Magnet.FilesAsync(Int64.Parse(torrent.RdId), It.IsAny<CancellationToken>())).ReturnsAsync(files);
         mocks.FileFilterMock.Setup(f => f.IsDownloadable(torrent, It.IsAny<String>(), It.IsAny<Int64>())).Returns(false);
 
@@ -513,8 +512,7 @@ public class AllDebridTorrentClientTest
 
         // Assert
         Assert.NotNull(result);
-        var linksSet = new HashSet<String>(result);
-        Assert.Equal(expectedLinksSet, linksSet);
+        Assert.Empty(result);
 
         mocks.FileFilterMock.Verify(f => f.IsDownloadable(torrent, "file-1.txt", 100));
         mocks.FileFilterMock.Verify(f => f.IsDownloadable(torrent, "file-2.txt", 100));
