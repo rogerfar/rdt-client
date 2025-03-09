@@ -67,7 +67,7 @@ public class AuthController(Authentication authentication, Settings settings) : 
         return Ok();
     }
 
-    [AllowAnonymous]
+    [Authorize(Policy = "AuthSetting")]
     [Route("SetupProvider")]
     [HttpPost]
     public async Task<ActionResult> SetupProvider([FromBody] AuthControllerSetupProviderRequest? request)
@@ -78,13 +78,6 @@ public class AuthController(Authentication authentication, Settings settings) : 
         }
 
         if (!String.IsNullOrEmpty(Settings.Get.Provider.ApiKey))
-        {
-            return StatusCode(401);
-        }
-
-        var user = await authentication.GetUser();
-
-        if (user != null)
         {
             return StatusCode(401);
         }
