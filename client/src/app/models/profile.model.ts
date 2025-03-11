@@ -4,4 +4,5 @@ export class Profile {
   public expiration: Date;
   public currentVersion: string;
   public latestVersion: string;
+  public disableUpdateNotification: boolean;
 }

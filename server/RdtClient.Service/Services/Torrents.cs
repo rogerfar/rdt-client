@@ -413,7 +413,8 @@ public class Torrents(
             UserName = user.Username,
             Expiration = user.Expiration,
             CurrentVersion = UpdateChecker.CurrentVersion,
-            LatestVersion = UpdateChecker.LatestVersion
+            LatestVersion = UpdateChecker.LatestVersion,
+            DisableUpdateNotification = Settings.Get.General.DisableUpdateNotifications
         };
 
         return profile;

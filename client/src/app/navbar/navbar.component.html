@@ -63,7 +63,7 @@
 </nav>
 <div
   class="notification is-warning"
-  *ngIf="profile && profile.latestVersion && profile.currentVersion !== profile.latestVersion"
+  *ngIf="profile && !profile.disableUpdateNotification && profile.latestVersion && profile.currentVersion !== profile.latestVersion"
 >
   Version {{ profile.latestVersion }} of RealDebrid Client was found. You are currently on version
   {{ profile.currentVersion }}.
