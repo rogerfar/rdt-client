@@ -3,8 +3,11 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RDNET;
 using RdtClient.Data.Enums;
+using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
+using Download = RdtClient.Data.Models.Data.Download;
+using Torrent = RDNET.Torrent;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
@@ -280,7 +283,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         return torrent;
     }
 
-    public async Task<IList<String>?> GetDownloadLinks(Data.Models.Data.Torrent torrent)
+    public async Task<IList<DownloadInfo>?> GetDownloadInfos(Data.Models.Data.Torrent torrent)
     {
         if (torrent.RdId == null)
         {
@@ -294,7 +297,14 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
             return null;
         }
 
-        var downloadLinks = rdTorrent.Links.Where(m => !String.IsNullOrWhiteSpace(m)).ToList();
+        var downloadLinks = rdTorrent.Links
+                                     .Where(m => !String.IsNullOrWhiteSpace(m))
+                                     .Select(l => new DownloadInfo
+                                     {
+                                         RestrictedLink = l,
+                                         FileName = null
+                                     })
+                                     .ToList();
 
         Log($"Found {downloadLinks.Count} links", torrent);
 
@@ -341,14 +351,14 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         return null;
     }
 
-    public Task<String> GetFileName(String downloadUrl)
+    public Task<String> GetFileName(Download download)
     {
-        if (String.IsNullOrWhiteSpace(downloadUrl))
+        if (String.IsNullOrWhiteSpace(download.Link))
         {
             return Task.FromResult("");
         }
 
-        var uri = new Uri(downloadUrl);
+        var uri = new Uri(download.Link);
 
         return Task.FromResult(HttpUtility.UrlDecode(uri.Segments.Last()));
     }
