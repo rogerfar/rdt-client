@@ -62,9 +62,15 @@
   </div>
 </nav>
 <div
-  class="notification is-warning"
-  *ngIf="profile && !profile.disableUpdateNotification && profile.latestVersion && profile.currentVersion !== profile.latestVersion"
+  class="notification"
+  [ngClass]="profile.isInsecure ? 'is-danger' : 'is-warning'"
+  *ngIf="profile && (!profile.disableUpdateNotification || profile.isInsecure) && profile.latestVersion && profile.currentVersion !== profile.latestVersion"
 >
-  Version {{ profile.latestVersion }} of RealDebrid Client was found. You are currently on version
-  {{ profile.currentVersion }}.
+  <span *ngIf="profile.isInsecure">
+    Your current version is insecure.
+  </span>
+  <span>
+    Version {{ profile.latestVersion }} of RealDebrid Client was found. You are currently on version
+    {{ profile.currentVersion }}.
+  </span>
 </div>

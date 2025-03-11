@@ -414,6 +414,7 @@ public class Torrents(
             Expiration = user.Expiration,
             CurrentVersion = UpdateChecker.CurrentVersion,
             LatestVersion = UpdateChecker.LatestVersion,
+            IsInsecure = UpdateChecker.IsInsecure,
             DisableUpdateNotification = Settings.Get.General.DisableUpdateNotifications
         };
 
