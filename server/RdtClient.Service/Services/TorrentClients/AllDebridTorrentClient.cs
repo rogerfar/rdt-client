@@ -1,10 +1,10 @@
-﻿using AllDebridNET;
+﻿using System.Diagnostics;
+using AllDebridNET;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
-using System.Web;
 using RdtClient.Data.Models.Data;
 using File = AllDebridNET.File;
 using Torrent = RdtClient.Data.Models.Data.Torrent;
@@ -245,48 +245,32 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IAll
         return torrent;
     }
 
-    public async Task<IList<String>?> GetDownloadLinks(Torrent torrent)
+    public async Task<IList<DownloadInfo>?> GetDownloadInfos(Torrent torrent)
     {
         if (torrent.RdId == null)
         {
             return null;
         }
-
+        
+        Log($"Getting download links", torrent);
+        
         var allFiles = await allDebridNetClientFactory.GetClient().Magnet.FilesAsync(Int64.Parse(torrent.RdId));
 
         var files = GetFiles(allFiles);
-
-        files = files.Where(f => fileFilter.IsDownloadable(torrent, f.Path, f.Bytes)).ToList();
-
-        Log($"Getting download links", torrent);
-
-        if (files.Count == 0)
+        
+        return files.Where(f => fileFilter.IsDownloadable(torrent, f.Path, f.Bytes) && f.DownloadLink != null).Select(f => new DownloadInfo
         {
-            Log($"Filtered all files out! Downloading ALL files instead!", torrent);
-
-            files = GetFiles(allFiles);
-        }
-
-        Log($"Selecting links:");
-
-        foreach (var file in files)
-        {
-            Log($"{file.Path} ({file.Bytes}b) {file.DownloadLink}");
-        }
-
-        return files.Where(m => m.DownloadLink != null).Select(m => m.DownloadLink!.ToString()).ToList();
+            FileName = Path.GetFileName(f.Path),
+            RestrictedLink = f.DownloadLink!
+        }).ToList();
     }
 
-    public Task<String> GetFileName(String downloadUrl)
+    public Task<String> GetFileName(Download download)
     {
-        if (String.IsNullOrWhiteSpace(downloadUrl))
-        {
-            return Task.FromResult("");
-        }
-
-        var uri = new Uri(downloadUrl);
-
-        return Task.FromResult(HttpUtility.UrlDecode(uri.Segments.Last()));
+        // FileName is set in GetDownlaadInfos
+        Debug.Assert(download.FileName != null);
+        
+        return Task.FromResult(download.FileName);
     }
 
     private async Task<TorrentClientTorrent> GetInfo(String torrentId)
