@@ -235,14 +235,14 @@ public class Torrents(
             return;
         }
 
-        var downloadLinks = await TorrentClient.GetDownloadLinks(torrent);
+        var downloadInfos = await TorrentClient.GetDownloadInfos(torrent);
 
-        if (downloadLinks == null)
+        if (downloadInfos == null)
         {
             return;
         }
 
-        if (downloadLinks.Count == 0)
+        if (downloadInfos.Count == 0)
         {
             logger.LogInformation("All files excluded by filters (IncludeRegex: {includeRegex}, ExcludeRegex: {excludeRegex}, DownloadMinSize: {downloadMinSize}  {torrentInfo}",
                             torrent.IncludeRegex,
@@ -256,14 +256,14 @@ public class Torrents(
             return;
         }
 
-        foreach (var downloadLink in downloadLinks)
+        foreach (var downloadInfo in downloadInfos)
         {
             // Make sure downloads don't get added multiple times
-            var downloadExists = await downloads.Get(torrent.TorrentId, downloadLink);
+            var downloadExists = await downloads.Get(torrent.TorrentId, downloadInfo.RestrictedLink);
 
-            if (downloadExists == null && !String.IsNullOrWhiteSpace(downloadLink))
+            if (downloadExists == null && !String.IsNullOrWhiteSpace(downloadInfo.RestrictedLink))
             {
-                await downloads.Add(torrent.TorrentId, downloadLink);
+                await downloads.Add(torrent.TorrentId, downloadInfo);
             }
         }
     }
@@ -396,7 +396,7 @@ public class Torrents(
 
         Log($"Retrieving filename for", download, download.Torrent);
 
-        var fileName = await TorrentClient.GetFileName(download.Link!);
+        var fileName = await TorrentClient.GetFileName(download!);
 
         await downloads.UpdateFileName(downloadId, fileName);
 
