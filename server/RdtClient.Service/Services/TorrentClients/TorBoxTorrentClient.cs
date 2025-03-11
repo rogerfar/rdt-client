@@ -1,9 +1,9 @@
+using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using TorBoxNET;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
-using System.Web;
 using RdtClient.Data.Models.Data;
 using RdtClient.Service.Helpers;
 
@@ -284,39 +284,21 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         return torrent;
     }
 
-    public async Task<IList<String>?> GetDownloadLinks(Torrent torrent)
+    public async Task<IList<DownloadInfo>?> GetDownloadInfos(Torrent torrent)
     {
         var torrentId = await GetClient().Torrents.GetHashInfoAsync(torrent.Hash, skipCache: true);
 
         return torrent.Files.Where(file => fileFilter.IsDownloadable(torrent, file.Path, file.Bytes))
-                      .Select(file => $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}")
+                      .Select(file => new DownloadInfo { RestrictedLink = $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}", FileName = Path.GetFileName(file.Path)})
                       .ToList();
     }
 
-    public async Task<String> GetFileName(String downloadUrl)
+    public Task<String> GetFileName(Download download)
     {
-        if (String.IsNullOrWhiteSpace(downloadUrl))
-        {
-            return "";
-        }
-
-        var uri = new Uri(downloadUrl);
-
-        using (HttpClient client = new())
-        {
-            var request = new HttpRequestMessage(HttpMethod.Head, uri);
-            var response = await client.SendAsync(request);
-            if (response.Content.Headers.ContentDisposition != null)
-            {
-                var fileName = response.Content.Headers.ContentDisposition.FileName;
-                if (!String.IsNullOrWhiteSpace(fileName))
-                {
-                    return fileName.Trim('"');
-                }
-            }
-        }
-
-        return HttpUtility.UrlDecode(uri.Segments.Last());
+        // FileName is set in GetDownlaadInfos
+        Debug.Assert(download.FileName != null);
+        
+        return Task.FromResult(download.FileName);
     }
 
     private DateTimeOffset? ChangeTimeZone(DateTimeOffset? dateTimeOffset)
