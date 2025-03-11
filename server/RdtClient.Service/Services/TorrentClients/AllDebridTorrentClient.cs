@@ -265,6 +265,7 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IAll
         }).ToList();
     }
 
+    /// <inheritdoc />
     public Task<String> GetFileName(Download download)
     {
         // FileName is set in GetDownlaadInfos

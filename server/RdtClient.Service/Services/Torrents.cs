@@ -390,6 +390,10 @@ public class Torrents(
         return unrestrictedLink;
     }
 
+    /// <summary>
+    /// To be called only when <see cref="Data.Models.Data.Download" />.<see cref="Data.Models.Data.Download.FileName" /> is not set by
+    /// <see cref="ITorrentClient.GetDownloadInfos" />
+    /// </summary>
     public async Task<String> RetrieveFileName(Guid downloadId)
     {
         var download = await downloads.GetById(downloadId) ?? throw new($"Download with ID {downloadId} not found");

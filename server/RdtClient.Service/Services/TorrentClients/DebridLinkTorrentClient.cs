@@ -276,6 +276,7 @@ public class DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFacto
         logger.LogDebug(message);
     }
 
+    /// <inheritdoc />
     public Task<String> GetFileName(Download download)
     {
         // FileName is set in GetDownlaadInfos

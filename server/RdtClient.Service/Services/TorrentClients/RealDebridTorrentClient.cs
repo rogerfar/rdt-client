@@ -351,6 +351,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         return null;
     }
 
+    /// <inheritdoc />
     public Task<String> GetFileName(Download download)
     {
         if (String.IsNullOrWhiteSpace(download.Link))

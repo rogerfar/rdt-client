@@ -293,6 +293,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                       .ToList();
     }
 
+    /// <inheritdoc />
     public Task<String> GetFileName(Download download)
     {
         // FileName is set in GetDownlaadInfos
