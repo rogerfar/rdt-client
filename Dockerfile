@@ -1,42 +1,61 @@
-# Stage 1 - Build the frontend
-FROM node:18-alpine3.18 AS node-build-env
+# Stage 1 - Install Frontend Dependencies
+FROM node:18-alpine3.18 AS node-deps
 ARG TARGETPLATFORM
 ENV TARGETPLATFORM=${TARGETPLATFORM:-linux/amd64}
 ARG BUILDPLATFORM
 ENV BUILDPLATFORM=${BUILDPLATFORM:-linux/amd64}
 
-RUN mkdir /appclient
-WORKDIR /appclient
+RUN mkdir -p /appclient/client
+WORKDIR /appclient/client
 
-RUN apk add --no-cache git python3 py3-pip make g++
-
-COPY client ./client
-COPY root ./root
+COPY client/package.json client/package-lock.json ./
 RUN \
-   cd client && \
-   echo "**** Building Code  ****" && \
-   npm ci && \
-   npx ng build --output-path=out
+   echo "**** Installing Frontend Dependencies  ****" && \
+   npm ci
 
-RUN ls -FCla /appclient/root
+# Stage 2 - Build Frontend
+FROM node-deps AS node-build-env
 
-# Stage 2 - Build the backend
-FROM mcr.microsoft.com/dotnet/sdk:9.0-bookworm-slim-amd64 AS dotnet-build-env
+WORKDIR /appclient/client
+
+COPY client .
+RUN \
+   echo "**** Building Frontend ****" && \
+   npm run build -- --output-path=out
+
+# Stage 3 - Install Backend Dependencies
+FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS dotnet-deps
 ARG TARGETPLATFORM
 ENV TARGETPLATFORM=${TARGETPLATFORM:-linux/amd64}
 ARG BUILDPLATFORM
 ENV BUILDPLATFORM=${BUILDPLATFORM:-linux/amd64}
 
-RUN mkdir /appserver
-WORKDIR /appserver
+RUN mkdir -p /appserver/server
+WORKDIR /appserver/server
 
-COPY server ./server
+COPY server/RdtClient.sln ./
+COPY server/RdtClient.Data/RdtClient.Data.csproj RdtClient.Data/RdtClient.Data.csproj
+COPY server/RdtClient.Service/RdtClient.Service.csproj RdtClient.Service/RdtClient.Service.csproj
+COPY server/RdtClient.Web/RdtClient.Web.csproj RdtClient.Web/RdtClient.Web.csproj
+
 RUN \
-   echo "**** Building Source Code for $TARGETPLATFORM on $BUILDPLATFORM ****" && \
-   cd server && \
-   dotnet restore --no-cache RdtClient.sln && dotnet publish --no-restore -c Release -o out ; 
+   echo "**** Installing Backend Dependencies for $TARGETPLATFORM on $BUILDPLATFORM ****" && \
+   dotnet restore --no-cache RdtClient.Web/RdtClient.Web.csproj
 
-# Stage 3 - Build runtime image
+# Stage 4 - Build the backend
+FROM dotnet-deps AS dotnet-build-env
+
+WORKDIR /appserver/server
+
+COPY server .
+RUN \
+   echo "**** Building Backend Code for $TARGETPLATFORM on $BUILDPLATFORM ****" && \
+   dotnet publish RdtClient.Web/RdtClient.Web.csproj --no-restore -c Release -o out ;
+
+# Stage 5 - Install dotnet runtime
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS dotnet-runtime
+
+# Stage 6 - Build runtime image
 FROM ghcr.io/linuxserver/baseimage-alpine:3.20
 ARG TARGETPLATFORM
 ENV TARGETPLATFORM=${TARGETPLATFORM:-linux/amd64}
@@ -59,21 +78,10 @@ RUN \
    echo "**** Updating package information ****" && \
    apk update && \
    echo "**** Install pre-reqs ****" && \
-   apk add bash icu-libs krb5-libs libgcc libintl libssl3 libstdc++ zlib && \
-   echo "**** Installing dotnet ****" && \
-   mkdir -p /usr/share/dotnet
+   apk add bash icu-libs krb5-libs libgcc libintl libssl3 libstdc++ zlib
 
-RUN \
-   if [ "$TARGETPLATFORM" = "linux/arm/v7" ] ; then \
-   wget https://download.visualstudio.microsoft.com/download/pr/59a041e1-921e-405e-8092-95333f80f9ca/63e83e3feb70e05ca05ed5db3c579be2/aspnetcore-runtime-9.0.0-linux-musl-arm.tar.gz && \
-   tar zxf aspnetcore-runtime-9.0.0-linux-musl-arm.tar.gz -C /usr/share/dotnet ; \
-   elif [ "$TARGETPLATFORM" = "linux/arm64" ] ; then \
-   wget https://download.visualstudio.microsoft.com/download/pr/e137f557-83cb-4f55-b1c8-e5f59ccd3cba/b8ba6f2ab96d0961757b71b00c201f31/aspnetcore-runtime-9.0.0-linux-musl-arm64.tar.gz && \
-   tar zxf aspnetcore-runtime-9.0.0-linux-musl-arm64.tar.gz -C /usr/share/dotnet ; \
-   else \
-   wget https://download.visualstudio.microsoft.com/download/pr/86d7a513-fe71-4f37-b9ec-fdcf5566cce8/e72574fc82d7496c73a61f411d967d8e/aspnetcore-runtime-9.0.0-linux-musl-x64.tar.gz && \
-   tar zxf aspnetcore-runtime-9.0.0-linux-musl-x64.tar.gz -C /usr/share/dotnet ; \
-   fi
+COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
+ENV PATH="$PATH:/usr/share/dotnet"
 
 RUN \
    echo "**** Setting permissions ****" && \
@@ -83,13 +91,11 @@ RUN \
    /var/cache/apk/* \
    /var/tmp/* || true
 
-ENV PATH "$PATH:/usr/share/dotnet"
-
 # Copy files for app
 WORKDIR /app
 COPY --from=dotnet-build-env /appserver/server/out .
 COPY --from=node-build-env /appclient/client/out/browser ./wwwroot
-COPY --from=node-build-env /appclient/root/ /
+COPY ./root/ /
 
 # ports and volumes
 EXPOSE 6500
