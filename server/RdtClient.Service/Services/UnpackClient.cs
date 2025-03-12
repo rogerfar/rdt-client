@@ -80,6 +80,11 @@ public class UnpackClient(Download download, String destinationPath)
             {
                 Extract(filePath, extractPathTemp, cancellationToken);
 
+                if (Settings.Get.Provider.Provider == Data.Enums.Provider.TorBox)
+                {
+                    MoveHashDirectoryUpTB(extractPathTemp);
+                }
+
                 await FileHelper.Delete(filePath);
 
                 var rarFiles = Directory.GetFiles(extractPathTemp, "*.r00", SearchOption.TopDirectoryOnly);
@@ -91,6 +96,11 @@ public class UnpackClient(Download download, String destinationPath)
                     if (File.Exists(mainRarFile))
                     {
                         Extract(mainRarFile, extractPath, cancellationToken);
+
+                        if (Settings.Get.Provider.Provider == Data.Enums.Provider.TorBox)
+                        {
+                            MoveHashDirectoryUpTB(extractPath);
+                        }
                     }
 
                     await FileHelper.DeleteDirectory(extractPathTemp);
@@ -99,6 +109,11 @@ public class UnpackClient(Download download, String destinationPath)
             else
             {
                 Extract(filePath, extractPath, cancellationToken);
+
+                if (Settings.Get.Provider.Provider == Data.Enums.Provider.TorBox)
+                {
+                    MoveHashDirectoryUpTB(extractPath);
+                }
 
                 await FileHelper.Delete(filePath);
             }
@@ -110,6 +125,28 @@ public class UnpackClient(Download download, String destinationPath)
         finally
         {
             Finished = true;
+        }
+    }
+
+
+    private void MoveHashDirectoryUpTB(string extractPath)
+    {
+        var hashDir = Path.Combine(extractPath, _torrent.Hash);
+        if (Directory.Exists(hashDir))
+        {
+            foreach (var file in Directory.GetFiles(hashDir))
+            {
+                var destFile = Path.Combine(extractPath, Path.GetFileName(file));
+                File.Move(file, destFile);
+            }
+
+            foreach (var dir in Directory.GetDirectories(hashDir))
+            {
+                var destDir = Path.Combine(extractPath, Path.GetFileName(dir));
+                Directory.Move(dir, destDir);
+            }
+
+            Directory.Delete(hashDir, true);
         }
     }
 
