@@ -288,7 +288,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
     {
         var torrentId = await GetClient().Torrents.GetHashInfoAsync(torrent.Hash, skipCache: true);
 
-        bool allFilesDownloadable = torrent.Files.All(file => fileFilter.IsDownloadable(torrent, file.Path, file.Bytes));
+        var allFilesDownloadable = torrent.Files.All(file => fileFilter.IsDownloadable(torrent, file.Path, file.Bytes));
 
         if (allFilesDownloadable && torrent.DownloadClient != Data.Enums.DownloadClient.Symlink)
         {
