@@ -312,7 +312,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
         using (HttpClient client = new())
         {
-            client.Timeout = TimeSpan.FromSeconds(30);
+            client.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
             var request = new HttpRequestMessage(HttpMethod.Head, uri);
             var response = await client.SendAsync(request);
             if (response.Content.Headers.ContentDisposition != null)
