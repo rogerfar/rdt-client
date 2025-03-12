@@ -287,10 +287,9 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
     public async Task<IList<String>?> GetDownloadLinks(Torrent torrent)
     {
         var torrentId = await GetClient().Torrents.GetHashInfoAsync(torrent.Hash, skipCache: true);
+        var downloadableFiles = torrent.Files.Where(file => fileFilter.IsDownloadable(torrent, file.Path, file.Bytes)).ToList();
 
-        var allFilesDownloadable = torrent.Files.All(file => fileFilter.IsDownloadable(torrent, file.Path, file.Bytes));
-
-        if (allFilesDownloadable && torrent.DownloadClient != Data.Enums.DownloadClient.Symlink)
+        if (downloadableFiles.Count == torrent.Files.Count && torrent.DownloadClient != Data.Enums.DownloadClient.Symlink)
         {
             logger.LogDebug("Downloading files from TorBox as a zip.");
             return [$"https://torbox.app/fakedl/{torrentId?.Id}/zip"];
@@ -298,10 +297,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         else
         {
             logger.LogDebug("Downloading files from TorBox individually.");
-            return torrent.Files
-                .Where(file => fileFilter.IsDownloadable(torrent, file.Path, file.Bytes))
-                .Select(file => $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}")
-                .ToList();
+            return downloadableFiles.Select(file => $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}").ToList();
         }
     }
 
@@ -316,6 +312,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
         using (HttpClient client = new())
         {
+            client.Timeout = TimeSpan.FromSeconds(30);
             var request = new HttpRequestMessage(HttpMethod.Head, uri);
             var response = await client.SendAsync(request);
             if (response.Content.Headers.ContentDisposition != null)
