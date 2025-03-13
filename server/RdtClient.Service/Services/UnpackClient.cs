@@ -80,7 +80,7 @@ public class UnpackClient(Download download, String destinationPath)
             {
                 Extract(filePath, extractPathTemp, cancellationToken);
 
-                if (Settings.Get.Provider.Provider == Data.Enums.Provider.TorBox)
+                if (_torrent.ClientKind == Data.Enums.Provider.TorBox)
                 {
                     MoveHashDirectoryUpTB(extractPathTemp);
                 }
