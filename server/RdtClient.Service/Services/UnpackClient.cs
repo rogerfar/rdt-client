@@ -129,7 +129,7 @@ public class UnpackClient(Download download, String destinationPath)
     }
 
 
-    private void MoveHashDirectoryUpTB(string extractPath)
+    private void MoveHashDirectoryUpTB(String extractPath)
     {
         var hashDir = Path.Combine(extractPath, _torrent.Hash);
         if (Directory.Exists(hashDir))
