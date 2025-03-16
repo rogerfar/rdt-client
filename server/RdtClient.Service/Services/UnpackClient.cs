@@ -104,7 +104,7 @@ public class UnpackClient(Download download, String destinationPath)
                 await FileHelper.Delete(filePath);
             }
 
-            if (Settings.Get.Provider.Provider == Data.Enums.Provider.TorBox)
+            if (_torrent.ClientKind == Data.Enums.Provider.TorBox)
             {
                 TorBoxTorrentClient.MoveHashDirContents(extractPath, _torrent);
             }
