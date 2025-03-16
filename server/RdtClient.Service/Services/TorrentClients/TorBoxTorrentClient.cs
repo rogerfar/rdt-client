@@ -344,7 +344,30 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
         return Map(result!);
     }
-    
+
+    public static void MoveHashDirectoryUpTB(String extractPath, Torrent _torrent)
+    {
+        var hashDir = Path.Combine(extractPath, _torrent.Hash);
+        if (Directory.Exists(hashDir))
+        {
+            var innerFolder = Directory.GetDirectories(hashDir)[0];
+
+            foreach (var file in Directory.GetFiles(innerFolder))
+            {
+                var destFile = Path.Combine(extractPath, Path.GetFileName(file));
+                File.Move(file, destFile);
+            }
+
+            foreach (var dir in Directory.GetDirectories(innerFolder))
+            {
+                var destDir = Path.Combine(extractPath, Path.GetFileName(dir));
+                Directory.Move(dir, destDir);
+            }
+
+            Directory.Delete(hashDir, true);
+        }
+    }
+
     private void Log(String message, Torrent? torrent = null)
     {
         if (torrent != null)

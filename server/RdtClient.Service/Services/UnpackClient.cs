@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using RdtClient.Data.Models.Data;
 using RdtClient.Service.Helpers;
+using RdtClient.Service.Services.TorrentClients;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.Zip;
@@ -105,7 +106,7 @@ public class UnpackClient(Download download, String destinationPath)
 
             if (Settings.Get.Provider.Provider == Data.Enums.Provider.TorBox)
             {
-                MoveHashDirectoryUpTB(extractPath);
+                TorBoxTorrentClient.MoveHashDirectoryUpTB(extractPath, _torrent);
             }
         }
         catch (Exception ex)
@@ -118,29 +119,6 @@ public class UnpackClient(Download download, String destinationPath)
         }
     }
 
-
-    private void MoveHashDirectoryUpTB(String extractPath)
-    {
-        var hashDir = Path.Combine(extractPath, _torrent.Hash);
-        if (Directory.Exists(hashDir))
-        {
-            var innerFolder = Directory.GetDirectories(hashDir)[0];
-
-            foreach (var file in Directory.GetFiles(innerFolder))
-            {
-                var destFile = Path.Combine(extractPath, Path.GetFileName(file));
-                File.Move(file, destFile);
-            }
-
-            foreach (var dir in Directory.GetDirectories(innerFolder))
-            {
-                var destDir = Path.Combine(extractPath, Path.GetFileName(dir));
-                Directory.Move(dir, destDir);
-            }
-
-            Directory.Delete(hashDir, true);
-        }
-    }
 
     private static async Task<IList<String>> GetArchiveFiles(String filePath)
     {
