@@ -362,24 +362,32 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         {
             var innerFolder = Directory.GetDirectories(hashDir)[0];
 
-            if (!Path.GetFileName(innerFolder).Equals(_torrent.Hash, StringComparison.CurrentCultureIgnoreCase))
+            var moveDir = extractPath;
+            if (!extractPath.Contains(_torrent.RdName!))
             {
-                innerFolder = hashDir;
+                moveDir = hashDir;
             }
 
             foreach (var file in Directory.GetFiles(innerFolder))
             {
-                var destFile = Path.Combine(extractPath, Path.GetFileName(file));
+                var destFile = Path.Combine(moveDir, Path.GetFileName(file));
                 File.Move(file, destFile);
             }
 
             foreach (var dir in Directory.GetDirectories(innerFolder))
             {
-                var destDir = Path.Combine(extractPath, Path.GetFileName(dir));
+                var destDir = Path.Combine(moveDir, Path.GetFileName(dir));
                 Directory.Move(dir, destDir);
             }
 
-            Directory.Delete(hashDir, true);
+            if (!extractPath.Contains(_torrent.RdName!))
+            {
+                Directory.Delete(innerFolder, true);
+            }
+            else
+            {
+                Directory.Delete(hashDir, true);
+            }
         }
     }
 
