@@ -363,7 +363,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
             var innerFolder = Directory.GetDirectories(hashDir)[0];
 
             var moveDir = extractPath;
-            if (!extractPath.Contains(_torrent.RdName!))
+            if (!extractPath.EndsWith(_torrent.RdName!))
             {
                 moveDir = hashDir;
             }
