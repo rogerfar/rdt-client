@@ -322,6 +322,15 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                 {
                     return fileName.Trim('"');
                 }
+            } else
+            {
+                if (response.Content.Headers.ContentType?.MediaType == "application/zip")
+                {
+                    return $"download-{new Random().Next(1, 10001)}.zip";
+                } else
+                {
+                    logger.LogDebug($"Failed to get filename for URI {downloadUrl}");
+                }
             }
         }
 
