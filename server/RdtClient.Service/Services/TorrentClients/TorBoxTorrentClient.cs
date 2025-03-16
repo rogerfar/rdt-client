@@ -353,13 +353,19 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
         return Map(result!);
     }
-
-    public static void MoveHashDirectoryUpTB(String extractPath, Torrent _torrent)
+        
+    public static void MoveHashDirContents(String extractPath, Torrent _torrent)
     {
         var hashDir = Path.Combine(extractPath, _torrent.Hash);
+
         if (Directory.Exists(hashDir))
         {
             var innerFolder = Directory.GetDirectories(hashDir)[0];
+
+            if (!Path.GetFileName(innerFolder).Equals(_torrent.Hash, StringComparison.CurrentCultureIgnoreCase))
+            {
+                innerFolder = hashDir;
+            }
 
             foreach (var file in Directory.GetFiles(innerFolder))
             {

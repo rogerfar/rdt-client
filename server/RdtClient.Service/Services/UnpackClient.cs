@@ -106,7 +106,7 @@ public class UnpackClient(Download download, String destinationPath)
 
             if (Settings.Get.Provider.Provider == Data.Enums.Provider.TorBox)
             {
-                TorBoxTorrentClient.MoveHashDirectoryUpTB(extractPath, _torrent);
+                TorBoxTorrentClient.MoveHashDirContents(extractPath, _torrent);
             }
         }
         catch (Exception ex)
