@@ -322,12 +322,14 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                 {
                     return fileName.Trim('"');
                 }
-            } else
+            }
+            else
             {
                 if (response.Content.Headers.ContentType?.MediaType == "application/zip")
                 {
                     return $"download-{new Random().Next(1, 10001)}.zip";
-                } else
+                }
+                else
                 {
                     logger.LogDebug($"Failed to get filename for URI {downloadUrl}");
                 }
@@ -353,7 +355,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
         return Map(result!);
     }
-        
+
     public static void MoveHashDirContents(String extractPath, Torrent _torrent)
     {
         var hashDir = Path.Combine(extractPath, _torrent.Hash);
