@@ -4,7 +4,6 @@ using Newtonsoft.Json;
 using TorBoxNET;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
-using System.Web;
 using RdtClient.Data.Models.Data;
 using RdtClient.Service.Helpers;
 
