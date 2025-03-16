@@ -14,6 +14,12 @@ public interface ITorrentClient
     Task Delete(String torrentId);
     Task<String> Unrestrict(String link);
     Task<Torrent> UpdateData(Torrent torrent, TorrentClientTorrent? torrentClientTorrent);
-    Task<IList<String>?> GetDownloadLinks(Torrent torrent);
-    Task<String> GetFileName(String downloadUrl);
+    Task<IList<DownloadInfo>?> GetDownloadInfos(Torrent torrent);
+    /// <summary>
+    /// To be called only when <see cref="Data.Models.Data.Download" />.<see cref="Data.Models.Data.Download.FileName" /> is not set by
+    /// <see cref="GetDownloadInfos" />
+    /// </summary>
+    /// <param name="download">The download to get the filename of</param>
+    /// <returns>The filename of the download</returns>
+    Task<String> GetFileName(Download download);
 }

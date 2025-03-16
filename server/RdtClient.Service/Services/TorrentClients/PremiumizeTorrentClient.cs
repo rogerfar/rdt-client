@@ -1,10 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PremiumizeNET;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
-using System.Web;
+using RdtClient.Data.Models.Data;
 using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services.TorrentClients;
@@ -197,7 +198,7 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
         return torrent;
     }
 
-    public async Task<IList<String>?> GetDownloadLinks(Torrent torrent)
+    public async Task<IList<DownloadInfo>?> GetDownloadInfos(Torrent torrent)
     {
         if (torrent.RdId == null)
         {
@@ -212,7 +213,7 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
 
         Log($"Found transfer {transfer.Name} ({transfer.Id})", torrent);
 
-        var downloadLinks = await GetAllDownloadLinks(torrent, transfer.FolderId);
+        var downloadInfos = await GetAllDownloadInfos(torrent, transfer.FolderId);
         
         if (!String.IsNullOrWhiteSpace(transfer.FileId))
         {
@@ -225,34 +226,31 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
                 Log($"File {file.Name} ({file.Id}) does not contain a link", torrent);
             }
 
-            downloadLinks.Add(file.Link);
+            downloadInfos.Add(new () {RestrictedLink = file.Link, FileName = file.Name });
         }
 
-        if (downloadLinks.Count == 0)
+        if (downloadInfos.Count == 0)
         {
             Log($"No download links found for transfer {transfer.Name} ({transfer.Id})", torrent);
 
             return null;
         }
 
-        foreach (var link in downloadLinks)
+        foreach (var info in downloadInfos)
         {
-            Log($"Found {link}", torrent);
+            Log($"Found {info.RestrictedLink}", torrent);
         }
 
-        return downloadLinks;
+        return downloadInfos;
     }
 
-    public Task<String> GetFileName(String downloadUrl)
+    /// <inheritdoc />
+    public Task<String> GetFileName(Download download)
     {
-        if (String.IsNullOrWhiteSpace(downloadUrl))
-        {
-            return Task.FromResult("");
-        }
-
-        var uri = new Uri(downloadUrl);
-
-        return Task.FromResult(HttpUtility.UrlDecode(uri.Segments.Last()));
+        // FileName is set in GetDownlaadInfos
+        Debug.Assert(download.FileName != null);
+        
+        return Task.FromResult(download.FileName);
     }
 
     private async Task<TorrentClientTorrent> GetInfo(String id)
@@ -263,13 +261,12 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
         return Map(result);
     }
 
-    private async Task<List<String>> GetAllDownloadLinks(Torrent torrent, String folderId)
+    private async Task<List<DownloadInfo>> GetAllDownloadInfos(Torrent torrent, String folderId)
     {
-        var downloadLinks = new List<String>();
 
         if (String.IsNullOrWhiteSpace(folderId))
         {
-            return downloadLinks;
+            return [];
         }
 
         var folder = await GetClient().Folder.ListAsync(folderId);
@@ -277,10 +274,12 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
         if (folder.Content == null)
         {
             Log($"Found no items in folder {folder.Name} ({folderId})", torrent);
-            return downloadLinks;
+            return [];
         }
 
         Log($"Found {folder.Content.Count} items in folder {folder.Name} ({folderId})", torrent);
+
+        var downloadInfos = new List<DownloadInfo>();
 
         foreach (var item in folder.Content)
         {
@@ -300,7 +299,7 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
 
                 Log($"Found item {item.Name} in folder {folder.Name} ({folderId})", torrent);
 
-                downloadLinks.Add(item.Link);
+                downloadInfos.Add(new () { RestrictedLink = item.Link, FileName = item.Name});
             }
             else if (item.Type == "folder")
             {
@@ -311,8 +310,8 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
                 }
 
                 Log($"Found subfolder {item.Name} in {folder.Name} ({folderId}), searching subfolder for files", torrent);
-                var subDownloadLinks = await GetAllDownloadLinks(torrent, item.Id);
-                downloadLinks.AddRange(subDownloadLinks);
+                var subDownloadLinks = await GetAllDownloadInfos(torrent, item.Id);
+                downloadInfos.AddRange(subDownloadLinks);
             }
             else
             {
@@ -320,7 +319,7 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
             }
         }
 
-        return downloadLinks;
+        return downloadInfos;
     }
 
     private void Log(String message, Torrent? torrent = null)
