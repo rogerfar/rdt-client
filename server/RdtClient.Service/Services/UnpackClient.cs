@@ -80,11 +80,6 @@ public class UnpackClient(Download download, String destinationPath)
             {
                 Extract(filePath, extractPathTemp, cancellationToken);
 
-                if (_torrent.ClientKind == Data.Enums.Provider.TorBox)
-                {
-                    MoveHashDirectoryUpTB(extractPathTemp);
-                }
-
                 await FileHelper.Delete(filePath);
 
                 var rarFiles = Directory.GetFiles(extractPathTemp, "*.r00", SearchOption.TopDirectoryOnly);
@@ -96,11 +91,6 @@ public class UnpackClient(Download download, String destinationPath)
                     if (File.Exists(mainRarFile))
                     {
                         Extract(mainRarFile, extractPath, cancellationToken);
-
-                        if (Settings.Get.Provider.Provider == Data.Enums.Provider.TorBox)
-                        {
-                            MoveHashDirectoryUpTB(extractPath);
-                        }
                     }
 
                     await FileHelper.DeleteDirectory(extractPathTemp);
@@ -110,12 +100,12 @@ public class UnpackClient(Download download, String destinationPath)
             {
                 Extract(filePath, extractPath, cancellationToken);
 
-                if (Settings.Get.Provider.Provider == Data.Enums.Provider.TorBox)
-                {
-                    MoveHashDirectoryUpTB(extractPath);
-                }
-
                 await FileHelper.Delete(filePath);
+            }
+
+            if (Settings.Get.Provider.Provider == Data.Enums.Provider.TorBox)
+            {
+                MoveHashDirectoryUpTB(extractPath);
             }
         }
         catch (Exception ex)
