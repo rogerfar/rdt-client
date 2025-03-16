@@ -287,10 +287,18 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
     public async Task<IList<String>?> GetDownloadLinks(Torrent torrent)
     {
         var torrentId = await GetClient().Torrents.GetHashInfoAsync(torrent.Hash, skipCache: true);
+        var downloadableFiles = torrent.Files.Where(file => fileFilter.IsDownloadable(torrent, file.Path, file.Bytes)).ToList();
 
-        return torrent.Files.Where(file => fileFilter.IsDownloadable(torrent, file.Path, file.Bytes))
-                      .Select(file => $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}")
-                      .ToList();
+        if (downloadableFiles.Count == torrent.Files.Count && torrent.DownloadClient != Data.Enums.DownloadClient.Symlink)
+        {
+            logger.LogDebug("Downloading files from TorBox as a zip.");
+            return [$"https://torbox.app/fakedl/{torrentId?.Id}/zip"];
+        }
+        else
+        {
+            logger.LogDebug("Downloading files from TorBox individually.");
+            return downloadableFiles.Select(file => $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}").ToList();
+        }
     }
 
     public async Task<String> GetFileName(String downloadUrl)
@@ -304,6 +312,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
         using (HttpClient client = new())
         {
+            client.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
             var request = new HttpRequestMessage(HttpMethod.Head, uri);
             var response = await client.SendAsync(request);
             if (response.Content.Headers.ContentDisposition != null)
@@ -312,6 +321,17 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                 if (!String.IsNullOrWhiteSpace(fileName))
                 {
                     return fileName.Trim('"');
+                }
+            }
+            else
+            {
+                if (response.Content.Headers.ContentType?.MediaType == "application/zip")
+                {
+                    return $"download-{new Random().Next(1, 10001)}.zip";
+                }
+                else
+                {
+                    logger.LogDebug($"Failed to get filename for URI {downloadUrl}");
                 }
             }
         }
@@ -335,7 +355,44 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
         return Map(result!);
     }
-    
+
+    public static void MoveHashDirContents(String extractPath, Torrent _torrent)
+    {
+        var hashDir = Path.Combine(extractPath, _torrent.Hash);
+
+        if (Directory.Exists(hashDir))
+        {
+            var innerFolder = Directory.GetDirectories(hashDir)[0];
+
+            var moveDir = extractPath;
+            if (!extractPath.EndsWith(_torrent.RdName!))
+            {
+                moveDir = hashDir;
+            }
+
+            foreach (var file in Directory.GetFiles(innerFolder))
+            {
+                var destFile = Path.Combine(moveDir, Path.GetFileName(file));
+                File.Move(file, destFile);
+            }
+
+            foreach (var dir in Directory.GetDirectories(innerFolder))
+            {
+                var destDir = Path.Combine(moveDir, Path.GetFileName(dir));
+                Directory.Move(dir, destDir);
+            }
+
+            if (!extractPath.Contains(_torrent.RdName!))
+            {
+                Directory.Delete(innerFolder, true);
+            }
+            else
+            {
+                Directory.Delete(hashDir, true);
+            }
+        }
+    }
+
     private void Log(String message, Torrent? torrent = null)
     {
         if (torrent != null)
