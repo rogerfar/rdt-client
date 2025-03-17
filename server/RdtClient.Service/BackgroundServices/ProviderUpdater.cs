@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using RdtClient.Data.Enums;
 using RdtClient.Service.Services;
 
 namespace RdtClient.Service.BackgroundServices;
@@ -26,8 +27,8 @@ public class ProviderUpdater(ILogger<TaskRunner> logger, IServiceProvider servic
             try
             {
                 var torrents = await torrentService.Get();
-                
-                if (_nextUpdate < DateTime.UtcNow && ((torrents.Count > 0 && !Settings.Get.Provider.AutoImport) || Settings.Get.Provider.AutoImport))
+
+                if (_nextUpdate < DateTime.UtcNow && (Settings.Get.Provider.AutoImport || torrents.Any(t => t.RdStatus != TorrentStatus.Finished)))
                 {
                     logger.LogDebug($"Updating torrent info from debrid provider");
                     
