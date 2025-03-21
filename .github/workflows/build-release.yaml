@@ -54,7 +54,7 @@ jobs:
           while ($attempt -lt $maxRetries -and -not $success) {
             try {
               git fetch --tags
-              $tags = git tag --sort=-v:refname | Where-Object { $_ -match '^v\d+\.\d+\.\d+\.\d+$' }
+              $tags = git tag --sort=-v:refname | Where-Object { $_ -match '^v\d+\.\d+\.\d+$' }
               $latestTag = $tags -split '\n' | Select-Object -First 1
               $versionNumbers = $latestTag -split '\.'
               $versionNumbers[-1] = [string]([int]$versionNumbers[-1] + 1)
