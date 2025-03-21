@@ -2,6 +2,8 @@
 
 public enum TorrentStatus
 {
+    NotYetAdded = -1,
+
     Processing = 0,
     WaitingForFileSelection = 1,
     Downloading = 2,

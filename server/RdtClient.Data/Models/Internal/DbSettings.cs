@@ -193,6 +193,10 @@ or
     [Description("The interval to check the torrents info on the providers API. Minumum is 3 seconds. When there are no active downloads this limit is increased * 3.")]
     public Int32 CheckInterval { get; set; } = 10;
 
+    [DisplayName("Max parallel downloads")]
+    [Description("Limits the number of torrents that will be sent for downloading on the debrid provider at the same time. If set to 0, all downloads will be sent immediately without queuing.")]
+    public Int32 MaxParallelDownloads { get; set; } = 0;
+
     [DisplayName("Auto Import Defaults")]
     public DbSettingsDefaultsWithCategory Default { get; set; } = new();
 }

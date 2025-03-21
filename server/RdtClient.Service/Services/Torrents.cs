@@ -107,7 +107,7 @@ public class Torrents(
         await torrentData.UpdateCategory(torrent.TorrentId, category);
     }
 
-    public async Task<Torrent> UploadMagnet(String magnetLink, Torrent torrent)
+    public async Task<Torrent> AddMagnetToDebridQueue(String magnetLink, Torrent torrent)
     {
         MagnetLink magnet;
 
@@ -121,42 +121,21 @@ public class Torrents(
             throw new($"{ex.Message}, trying to parse {magnetLink}");
         }
 
-        var id = await TorrentClient.AddMagnet(magnetLink);
+        torrent.RdStatus = TorrentStatus.NotYetAdded;
+        torrent.RdName = magnet.Name;
 
         var hash = magnet.InfoHashes.V1OrV2.ToHex();
 
-        var newTorrent = await Add(id, hash, magnetLink, false, torrent);
+        var newTorrent = await AddQueued(hash, magnetLink, false, torrent);
 
-        Log($"Adding {hash} magnet link {magnetLink}", newTorrent);
+        Log($"Adding {hash} (magnet link) to queue", newTorrent);
 
-        if (!String.IsNullOrWhiteSpace(Settings.Get.General.CopyAddedTorrents))
-        {
-            try
-            {
-                if (!Directory.Exists(Settings.Get.General.CopyAddedTorrents))
-                {
-                    Directory.CreateDirectory(Settings.Get.General.CopyAddedTorrents);
-                }
-
-                var copyFileName = Path.Combine(Settings.Get.General.CopyAddedTorrents, $"{FileHelper.RemoveInvalidFileNameChars(magnet.Name!)}.magnet");
-
-                if (File.Exists(copyFileName))
-                {
-                    File.Delete(copyFileName);
-                }
-
-                await File.WriteAllTextAsync(copyFileName, magnetLink);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, $"Unable to create torrent blackhole directory: {Settings.Get.General.CopyAddedTorrents}: {ex.Message}");
-            }
-        }
+        await CopyAddedTorrent(magnet.Name!, magnetLink);
 
         return newTorrent;
     }
 
-    public async Task<Torrent> UploadFile(Byte[] bytes, Torrent torrent)
+    public async Task<Torrent> AddFileToDebridQueue(Byte[] bytes, Torrent torrent)
     {
         MonoTorrent.Torrent monoTorrent;
 
@@ -172,14 +151,22 @@ public class Torrents(
             throw new($"{ex.Message}, trying to parse {fileAsBase64}");
         }
 
-        var id = await TorrentClient.AddFile(bytes);
+        torrent.RdStatus = TorrentStatus.NotYetAdded;
+        torrent.RdName = monoTorrent.Name;
 
         var hash = monoTorrent.InfoHashes.V1OrV2.ToHex();
 
-        var newTorrent = await Add(id, hash, fileAsBase64, true, torrent);
+        var newTorrent = await AddQueued(hash, fileAsBase64, true, torrent);
 
-        Log($"Adding {hash} torrent file", newTorrent);
+        Log($"Adding {hash} (torrent file) to queue", newTorrent);
 
+        await CopyAddedTorrent(monoTorrent.Name, bytes);
+
+        return newTorrent;
+    }
+
+    private async Task CopyAddedTorrent(String torrentName, Object fileOrMagnet)
+    {
         if (!String.IsNullOrWhiteSpace(Settings.Get.General.CopyAddedTorrents))
         {
             try
@@ -189,22 +176,73 @@ public class Torrents(
                     Directory.CreateDirectory(Settings.Get.General.CopyAddedTorrents);
                 }
 
-                var copyFileName = Path.Combine(Settings.Get.General.CopyAddedTorrents, $"{FileHelper.RemoveInvalidFileNameChars(monoTorrent.Name)}.torrent");
+                var copyFileName = Path.Combine(Settings.Get.General.CopyAddedTorrents, FileHelper.RemoveInvalidFileNameChars(torrentName));
 
+                switch (fileOrMagnet)
+                {
+                    case String:
+                        copyFileName = $"{copyFileName}.magnet";
+                        break;
+                    case Byte[]:
+                        copyFileName = $"{copyFileName}.torrent";
+                        break;
+                    default:
+                        throw new ArgumentException("Unexpected type for fileOrMagnet");
+                }
+                
                 if (File.Exists(copyFileName))
                 {
                     File.Delete(copyFileName);
                 }
 
-                await File.WriteAllBytesAsync(copyFileName, bytes);
+                switch (fileOrMagnet)
+                {
+                    case String magnetLink:
+                        await File.WriteAllTextAsync(copyFileName, magnetLink);
+                        break;
+                    case Byte[] torrentFile:
+                        await File.WriteAllBytesAsync(copyFileName, torrentFile);
+                        break;
+                }
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, $"Unable to create torrent blackhole directory: {Settings.Get.General.CopyAddedTorrents}: {ex.Message}");
             }
         }
+    }
 
-        return newTorrent;
+    /// <summary>
+    /// Adds torrent in database to debrid provider and updates database accordingly.
+    /// </summary>
+    /// <param name="torrent">The torrent from the database to upload to the debrid provider</param>
+    /// <returns>Updated torrent</returns>
+    /// <exception cref="Exception">When RdId is not null or FileOrMagnet is null.</exception>
+    public async Task<Torrent> DequeueFromDebridQueue(Torrent torrent)
+    {
+        if (torrent.RdId != null)
+        {
+            throw new("Torrent already added to debrid provider, cannot dequeue");
+        }
+
+        if (torrent.FileOrMagnet == null)
+        {
+            throw new("Torrent has no torrent file or magnet link");
+        }
+        
+        logger.LogDebug("Adding {hash} to debrid provider {torrentInfo}", torrent.Hash, torrent.ToLog());
+
+        var id = (torrent.IsFile) switch
+        {
+            true => await TorrentClient.AddFile(Convert.FromBase64String(torrent.FileOrMagnet)),
+            false => await TorrentClient.AddMagnet(torrent.FileOrMagnet)
+        };
+
+        await torrentData.UpdateRdId(torrent, id);
+
+        await UpdateTorrentClientData(torrent);
+
+        return torrent;
     }
 
     public async Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
@@ -538,11 +576,11 @@ public class Torrents(
             {
                 var bytes = Convert.FromBase64String(torrent.FileOrMagnet);
 
-                newTorrent = await UploadFile(bytes, torrent);
+                newTorrent = await AddFileToDebridQueue(bytes, torrent);
             }
             else
             {
-                newTorrent = await UploadMagnet(torrent.FileOrMagnet, torrent);
+                newTorrent = await AddMagnetToDebridQueue(torrent.FileOrMagnet, torrent);
             }
 
             await torrentData.UpdateRetry(newTorrent.TorrentId, null, retryCount);
@@ -670,11 +708,10 @@ public class Torrents(
         return settingDownloadPath;
     }
 
-    private async Task<Torrent> Add(String rdTorrentId,
-                                    String infoHash,
-                                    String fileOrMagnetContents,
-                                    Boolean isFile,
-                                    Torrent torrent)
+    private async Task<Torrent> AddQueued(String infoHash,
+                                          String fileOrMagnetContents,
+                                          Boolean isFile,
+                                          Torrent torrent)
     {
         await RealDebridUpdateLock.WaitAsync();
 
@@ -687,14 +724,12 @@ public class Torrents(
                 return existingTorrent;
             }
 
-            var newTorrent = await torrentData.Add(rdTorrentId,
+            var newTorrent = await torrentData.Add(null,
                                                     infoHash,
                                                     fileOrMagnetContents,
                                                     isFile,
                                                     torrent.DownloadClient,
                                                     torrent);
-
-            await UpdateTorrentClientData(newTorrent);
 
             return newTorrent;
         }
