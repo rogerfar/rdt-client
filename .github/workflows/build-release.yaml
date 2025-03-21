@@ -120,7 +120,7 @@ jobs:
           $v = "${{ needs.version.outputs.version }}".TrimStart('v')
           dotnet restore
           dotnet build -c Release --no-restore -p:Version=$v -p:AssemblyVersion=$v
-          dotnet publish -c Release --no-build -p:Version=$v -p:AssemblyVersion=$v -o ../publish
+          dotnet publish RdtClient.Web/RdtClient.Web.csproj -c Release --no-build -p:Version=$v -p:AssemblyVersion=$v -o ../publish
 
       - name: Create ZIP
         run: |
@@ -131,8 +131,8 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ needs.version.outputs.version }}
-          name: Release ${{ needs.version.outputs.version }}
+          tag_name: ${{ needs.version.outputs.version }}
+          name: ${{ needs.version.outputs.version }}
           body: ${{ steps.changelog.outputs.changelog }}
           draft: false
           prerelease: false
