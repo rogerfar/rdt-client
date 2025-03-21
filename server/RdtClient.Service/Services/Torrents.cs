@@ -232,11 +232,9 @@ public class Torrents(
         
         logger.LogDebug("Adding {hash} to debrid provider {torrentInfo}", torrent.Hash, torrent.ToLog());
 
-        var id = (torrent.IsFile) switch
-        {
-            true => await TorrentClient.AddFile(Convert.FromBase64String(torrent.FileOrMagnet)),
-            false => await TorrentClient.AddMagnet(torrent.FileOrMagnet)
-        };
+        var id = torrent.IsFile
+            ? await TorrentClient.AddFile(Convert.FromBase64String(torrent.FileOrMagnet))
+            : await TorrentClient.AddMagnet(torrent.FileOrMagnet);
 
         await torrentData.UpdateRdId(torrent, id);
 
