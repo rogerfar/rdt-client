@@ -111,8 +111,8 @@ public class DbSettingsDownloadClient
     [Description("Timeout in milliseconds before the downloader times out.")]
     public Int32 Timeout { get; set; } = 5000;
 
-    [DisplayName("Proxy Server (only used for the Internal Downloader)")]
-    [Description("Address of a proxy server to download through (only used for the Internal Downloader).")]
+    [DisplayName("Proxy Server (only used for the Bezzad Downloader)")]
+    [Description("Address of a proxy server to download through (only used for the Bezzad Downloader).")]
     public String? ProxyServer { get; set; } = null;
 
     [DisplayName("Aria2c URL (only used for the Aria2c Downloader)")]
