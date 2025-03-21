@@ -115,10 +115,12 @@ jobs:
           
       - name: Build and Publish Backend
         working-directory: server
+        shell: pwsh
         run: |
+          $v = "${{ needs.version.outputs.version }}".TrimStart('v')
           dotnet restore
-          dotnet build -c Release --no-restore -p:Version=${{ needs.version.outputs.version }} -p:AssemblyVersion=${{ needs.version.outputs.version }}
-          dotnet publish -c Release --no-build -p:Version=${{ needs.version.outputs.version }} -p:AssemblyVersion=${{ needs.version.outputs.version }} -o ../publish
+          dotnet build -c Release --no-restore -p:Version=$v -p:AssemblyVersion=$v
+          dotnet publish -c Release --no-build -p:Version=$v -p:AssemblyVersion=$v -o ../publish
 
       - name: Create ZIP
         run: |
