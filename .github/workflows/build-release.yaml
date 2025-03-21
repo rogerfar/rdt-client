@@ -60,7 +60,7 @@ jobs:
               $versionNumbers[-1] = [string]([int]$versionNumbers[-1] + 1)
               $newVersion = $versionNumbers -join '.'
               Write-Output "New incremented version is $newVersion"
-              echo "version=$newVersion" | Out-File -Append -FilePath $Env:GITHUB_ENV
+              echo "version=$newVersion" | Out-File -Append -FilePath $Env:GITHUB_OUTPUT
               git tag $newVersion
               git push origin $newVersion
               $success = $true
