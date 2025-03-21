@@ -15,6 +15,7 @@ export class NavbarComponent implements OnInit {
 
   public profile: Profile;
   public providerLink: string;
+  public version: string;
 
   constructor(
     private settingsService: SettingsService,
@@ -49,6 +50,10 @@ export class NavbarComponent implements OnInit {
           this.providerLink = 'https://debrid-link.com/';
           break;
       }
+    });
+
+    this.settingsService.getVersion().subscribe((result) => {
+      this.version = result.version;
     });
   }
 

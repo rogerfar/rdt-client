@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 using Aria2NET;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -43,6 +44,18 @@ public class SettingsController(Settings settings, Torrents torrents) : Controll
     {
         var profile = await torrents.GetProfile();
         return Ok(profile);
+    }
+
+    [HttpGet]
+    [Route("Version")]
+    public ActionResult<Version> Version()
+    {
+        var version = Assembly.GetExecutingAssembly().GetName().Version!;
+
+        return Ok(new
+        {
+            Version = version
+        });
     }
         
     [HttpPost]
