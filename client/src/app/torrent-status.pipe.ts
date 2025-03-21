@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { FileSizePipe } from 'ngx-filesize';
 import { RealDebridStatus, Torrent } from './models/torrent.model';
+import { FileSizePipe } from './filesize.pipe';
 
 @Pipe({
   name: 'status',
