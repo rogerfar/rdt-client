@@ -252,27 +252,13 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IAll
             return null;
         }
 
+        Log($"Getting download links", torrent);
+
         var allFiles = await allDebridNetClientFactory.GetClient().Magnet.FilesAsync(Int64.Parse(torrent.RdId));
 
         var files = GetFiles(allFiles);
 
         files = files.Where(f => fileFilter.IsDownloadable(torrent, f.Path, f.Bytes)).ToList();
-
-        Log($"Getting download links", torrent);
-
-        if (files.Count == 0)
-        {
-            Log($"Filtered all files out! Downloading ALL files instead!", torrent);
-
-            files = GetFiles(allFiles);
-        }
-
-        Log($"Selecting links:");
-
-        foreach (var file in files)
-        {
-            Log($"{file.Path} ({file.Bytes}b) {file.DownloadLink}");
-        }
 
         return files.Where(m => m.DownloadLink != null).Select(m => m.DownloadLink!.ToString()).ToList();
     }
