@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import {NavigationEnd, Router} from '@angular/router';
 import { AuthService } from '../auth.service';
 import { Profile } from '../models/profile.model';
 import { SettingsService } from '../settings.service';
@@ -20,7 +20,13 @@ export class NavbarComponent implements OnInit {
     private settingsService: SettingsService,
     private authService: AuthService,
     private router: Router,
-  ) {}
+  ) {
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        this.showMobileMenu = false;
+      }
+    })
+  }
 
   ngOnInit(): void {
     this.settingsService.getProfile().subscribe((result) => {
