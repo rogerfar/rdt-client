@@ -33,7 +33,7 @@
             [checked]="selectedTorrents.contains(torrent.torrentId)"
           />
         </td>
-        <td (click)="openTorrent(torrent.torrentId)">
+        <td (click)="openTorrent(torrent.torrentId)" class="break-all">
           {{ torrent.rdName }}
         </td>
         <td>

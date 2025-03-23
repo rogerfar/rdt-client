@@ -7,4 +7,6 @@ public class Profile
     public DateTimeOffset? Expiration { get; set; }
     public String? CurrentVersion { get; set; }
     public String? LatestVersion { get; set; }
+    public Boolean? IsInsecure { get; set; }
+    public Boolean? DisableUpdateNotification { get; set; }
 }

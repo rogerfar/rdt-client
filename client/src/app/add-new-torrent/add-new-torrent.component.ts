@@ -5,10 +5,10 @@ import { Torrent, TorrentFileAvailability } from '../models/torrent.model';
 import { SettingsService } from '../settings.service';
 
 @Component({
-    selector: 'app-add-new-torrent',
-    templateUrl: './add-new-torrent.component.html',
-    styleUrls: ['./add-new-torrent.component.scss'],
-    standalone: false
+  selector: 'app-add-new-torrent',
+  templateUrl: './add-new-torrent.component.html',
+  styleUrls: ['./add-new-torrent.component.scss'],
+  standalone: false,
 })
 export class AddNewTorrentComponent implements OnInit {
   public fileName: string;

@@ -74,6 +74,10 @@ Supports the following parameters:
     [DisplayName("Copy added torrent files")]
     [Description("When a torrent file or magnet is added, create a copy in this directory.")]
     public String? CopyAddedTorrents { get; set; } = null;
+    
+    [DisplayName("Disable update notifications")]
+    [Description("Ignore update notifications. You will still be notified if the version you are running has a security vulnerability.")]
+    public Boolean DisableUpdateNotifications { get; set; } = false;
 }
 
 public class DbSettingsDownloadClient
@@ -111,8 +115,8 @@ public class DbSettingsDownloadClient
     [Description("Timeout in milliseconds before the downloader times out.")]
     public Int32 Timeout { get; set; } = 5000;
 
-    [DisplayName("Proxy Server (only used for the Internal Downloader)")]
-    [Description("Address of a proxy server to download through (only used for the Internal Downloader).")]
+    [DisplayName("Proxy Server (only used for the Bezzad Downloader)")]
+    [Description("Address of a proxy server to download through (only used for the Bezzad Downloader).")]
     public String? ProxyServer { get; set; } = null;
 
     [DisplayName("Aria2c URL (only used for the Aria2c Downloader)")]
