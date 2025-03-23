@@ -71,15 +71,19 @@ public class SettingsController(Settings settings, Torrents torrents) : Controll
         return Ok(profile);
     }
 
+    /// <summary>
+    /// Gets the version of rdt-client the server is running
+    /// </summary>
+    /// <returns>The Version Number</returns>
     [HttpGet]
     [Route("Version")]
     public ActionResult<Version> Version()
     {
         var version = Assembly.GetExecutingAssembly().GetName().Version!;
 
-        return Ok(new
+        return Ok(new SettingsControllerVersionResponse
         {
-            Version = version
+            Version = version.ToString()
         });
     }
 
@@ -318,4 +322,16 @@ public class SettingsControllerTestAria2cConnectionRequest
     /// <example>your-secret-token</example>
     [Required] 
     public String? Secret { get; set; }
+}
+
+/// <summary>
+/// Response model for the version information
+/// </summary>
+public class SettingsControllerVersionResponse
+{
+    /// <summary>
+    /// The version number
+    /// </summary>
+    /// <example>v2.0.102</example>
+    public required String? Version { get; set; }
 }
