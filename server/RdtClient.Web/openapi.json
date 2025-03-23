@@ -12,7 +12,7 @@
       "name": "MIT",
       "url": "https://github.com/rogerfar/rdt-client/blob/master/LICENSE"
     },
-    "version": "2.0.97.0"
+    "version": "2.0.102.0"
   },
   "paths": {
     "/Api/Authentication/IsLoggedIn": {
@@ -302,6 +302,27 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Api/Settings/Version": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Gets the version of rdt-client the server is running",
+        "operationId": "Settings_Version",
+        "responses": {
+          "200": {
+            "description": "The Version Number",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Version"
                 }
               }
             }
@@ -1053,6 +1074,42 @@
           "latestVersion": {
             "type": "string",
             "nullable": true
+          },
+          "isInsecure": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "disableUpdateNotification": {
+            "type": "boolean",
+            "nullable": true
+          }
+        }
+      },
+      "Version": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "major": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "minor": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "build": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "revision": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "majorRevision": {
+            "type": "integer"
+          },
+          "minorRevision": {
+            "type": "integer"
           }
         }
       },

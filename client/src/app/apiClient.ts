@@ -444,6 +444,44 @@ export class SettingsClient {
     }
 
     /**
+     * Gets the version of rdt-client the server is running
+     * @return The Version Number
+     */
+    version(): Promise<Version> {
+        let url_ = this.baseUrl + "/Api/Settings/Version";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processVersion(_response);
+        });
+    }
+
+    protected processVersion(response: Response): Promise<Version> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = Version.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Version>(null as any);
+    }
+
+    /**
      * Tests if a specified path is writable by attempting to create and delete a test file
      * @param request (optional) The path testing request containing the directory to test
      * @return The path is valid and writable
@@ -1515,6 +1553,8 @@ export class Profile implements IProfile {
     expiration?: Date | undefined;
     currentVersion?: string | undefined;
     latestVersion?: string | undefined;
+    isInsecure?: boolean | undefined;
+    disableUpdateNotification?: boolean | undefined;
 
     constructor(data?: IProfile) {
         if (data) {
@@ -1532,6 +1572,8 @@ export class Profile implements IProfile {
             this.expiration = _data["expiration"] ? new Date(_data["expiration"].toString()) : <any>undefined;
             this.currentVersion = _data["currentVersion"];
             this.latestVersion = _data["latestVersion"];
+            this.isInsecure = _data["isInsecure"];
+            this.disableUpdateNotification = _data["disableUpdateNotification"];
         }
     }
 
@@ -1549,6 +1591,8 @@ export class Profile implements IProfile {
         data["expiration"] = this.expiration ? this.expiration.toISOString() : <any>undefined;
         data["currentVersion"] = this.currentVersion;
         data["latestVersion"] = this.latestVersion;
+        data["isInsecure"] = this.isInsecure;
+        data["disableUpdateNotification"] = this.disableUpdateNotification;
         return data;
     }
 }
@@ -1559,6 +1603,64 @@ export interface IProfile {
     expiration?: Date | undefined;
     currentVersion?: string | undefined;
     latestVersion?: string | undefined;
+    isInsecure?: boolean | undefined;
+    disableUpdateNotification?: boolean | undefined;
+}
+
+export class Version implements IVersion {
+    major?: number;
+    minor?: number;
+    build?: number;
+    revision?: number;
+    majorRevision?: number;
+    minorRevision?: number;
+
+    constructor(data?: IVersion) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.major = _data["major"];
+            this.minor = _data["minor"];
+            this.build = _data["build"];
+            this.revision = _data["revision"];
+            this.majorRevision = _data["majorRevision"];
+            this.minorRevision = _data["minorRevision"];
+        }
+    }
+
+    static fromJS(data: any): Version {
+        data = typeof data === 'object' ? data : {};
+        let result = new Version();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["major"] = this.major;
+        data["minor"] = this.minor;
+        data["build"] = this.build;
+        data["revision"] = this.revision;
+        data["majorRevision"] = this.majorRevision;
+        data["minorRevision"] = this.minorRevision;
+        return data;
+    }
+}
+
+export interface IVersion {
+    major?: number;
+    minor?: number;
+    build?: number;
+    revision?: number;
+    majorRevision?: number;
+    minorRevision?: number;
 }
 
 /** Request model for testing path accessibility */
