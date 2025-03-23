@@ -88,7 +88,7 @@ ENV PATH "$PATH:/usr/share/dotnet"
 # Copy files for app
 WORKDIR /app
 COPY --from=dotnet-build-env /appserver/server/out .
-COPY --from=node-build-env /appclient/client/out ./wwwroot
+COPY --from=node-build-env /appclient/client/out/browser ./wwwroot
 COPY --from=node-build-env /appclient/root/ /
 
 # ports and volumes

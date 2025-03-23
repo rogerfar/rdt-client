@@ -1,0 +1,140 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: write
+  packages: write
+
+jobs:
+  test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9'
+
+      - name: Test Backend
+        working-directory: server
+        run: dotnet test
+
+  version:
+    name: Increment version
+    needs: test
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.increment-version.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Increment latest version tag
+        id: increment-version
+        run: |
+          # Retry mechanism
+          $maxRetries = 5
+          $retryDelay = 5
+          $attempt = 0
+          $success = $false      
+          while ($attempt -lt $maxRetries -and -not $success) {
+            try {
+              git fetch --tags
+              $tags = git tag --sort=-v:refname | Where-Object { $_ -match '^v\d+\.\d+\.\d+$' }
+              $latestTag = $tags -split '\n' | Select-Object -First 1
+              $versionNumbers = $latestTag -split '\.'
+              $versionNumbers[-1] = [string]([int]$versionNumbers[-1] + 1)
+              $newVersion = $versionNumbers -join '.'
+              Write-Output "New incremented version is $newVersion"
+              echo "version=$newVersion" | Out-File -Append -FilePath $Env:GITHUB_OUTPUT
+              git tag $newVersion
+              git push origin $newVersion
+              $success = $true
+              Write-Output "Tag $newVersion pushed successfully!"
+            } catch {
+              Write-Output "Failed to push tag $newVersion. Attempt $($attempt + 1) of $maxRetries."
+              Write-Output "Error details: $($_.Exception.Message)"
+              $attempt++
+              if ($attempt -lt $maxRetries) {
+                Write-Output "Retrying in $retryDelay seconds..."
+                Start-Sleep -Seconds $retryDelay
+              } else {
+                Write-Error "Failed to push tag $newVersion after $maxRetries attempts. Exiting."
+                exit 1
+              }
+            }
+          }
+        shell: pwsh
+     
+  release:
+    name: Create GitHub release
+    needs: [test, version]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Generate changelog
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9'
+          
+      - name: Build Frontend
+        working-directory: client
+        run: |
+          npm ci
+          npm run build
+          
+      - name: Build and Publish Backend
+        working-directory: server
+        shell: pwsh
+        run: |
+          $v = "${{ needs.version.outputs.version }}".TrimStart('v')
+          dotnet restore
+          dotnet build -c Release --no-restore -p:Version=$v -p:AssemblyVersion=$v
+          dotnet publish RdtClient.Web/RdtClient.Web.csproj -c Release --no-build -p:Version=$v -p:AssemblyVersion=$v -o ../publish
+
+      - name: Create ZIP
+        run: |
+          cd publish
+          zip -r ../RealDebridClient.zip .
+          cd ..
+          
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.version.outputs.version }}
+          name: ${{ needs.version.outputs.version }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          draft: false
+          prerelease: false
+          files: RealDebridClient.zip
+          token: ${{ secrets.GITHUB_TOKEN }}

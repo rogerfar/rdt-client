@@ -1,10 +1,10 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { FileSizePipe } from 'ngx-filesize';
 import { Download } from './models/download.model';
+import { FileSizePipe } from './filesize.pipe';
 
 @Pipe({
-    name: 'downloadStatus',
-    standalone: false
+  name: 'downloadStatus',
+  standalone: false,
 })
 export class DownloadStatusPipe implements PipeTransform {
   constructor(private pipe: FileSizePipe) {}

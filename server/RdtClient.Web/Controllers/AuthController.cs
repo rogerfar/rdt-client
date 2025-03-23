@@ -106,7 +106,7 @@ public class AuthController(Authentication authentication, Settings settings) : 
     /// <response code="200">Provider configured successfully</response>
     /// <response code="400">Invalid request - missing required fields</response>
     /// <response code="401">Provider already configured</response>
-    [AllowAnonymous]
+    [Authorize(Policy = "AuthSetting")]
     [Route("SetupProvider")]
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -120,13 +120,6 @@ public class AuthController(Authentication authentication, Settings settings) : 
         }
 
         if (!String.IsNullOrEmpty(Settings.Get.Provider.ApiKey))
-        {
-            return StatusCode(401);
-        }
-
-        var user = await authentication.GetUser();
-
-        if (user != null)
         {
             return StatusCode(401);
         }

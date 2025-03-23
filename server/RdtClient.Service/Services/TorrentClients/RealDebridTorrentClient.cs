@@ -144,7 +144,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
 
     public async Task SelectFiles(Data.Models.Data.Torrent torrent)
     {
-        IList<TorrentClientFile> files;
+        List<TorrentClientFile> files;
 
         Log("Seleting files", torrent);
 
@@ -155,31 +155,16 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         }
         else
         {
-            Log("Selecting all files", torrent);
+            Log("Selecting files", torrent);
             files = [.. torrent.Files];
         }
 
-        Log($"Selecting {files.Count}/{torrent.Files.Count} files", torrent);
 
         files = files.Where(f => fileFilter.IsDownloadable(torrent, f.Path, f.Bytes)).ToList();
 
-        if (files.Count == 0)
-        {
-            Log($"Filtered all files out! Downloading ALL files instead!", torrent);
-
-            files = torrent.Files;
-        }
+        Log($"Selecting {files.Count}/{torrent.Files.Count} files", torrent);
 
         var fileIds = files.Select(m => m.Id.ToString()).ToArray();
-
-        Log($"Selecting files:");
-
-        foreach (var file in files)
-        {
-            Log($"{file.Id}: {file.Path} ({file.Bytes}b)");
-        }
-
-        Log("", torrent);
 
         await GetClient().Torrents.SelectFilesAsync(torrent.RdId!, [.. fileIds]);
     }

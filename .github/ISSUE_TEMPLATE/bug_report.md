@@ -9,7 +9,7 @@ assignees: ''
 
 **What version are you using?**
 
-**Wat OS are you running?**
+**What OS are you running?**
 
 **Are you using Docker or as a service?**
 

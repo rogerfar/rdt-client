@@ -1,26 +1,33 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { Profile } from '../models/profile.model';
 import { SettingsService } from '../settings.service';
 
 @Component({
-    selector: 'app-navbar',
-    templateUrl: './navbar.component.html',
-    styleUrls: ['./navbar.component.scss'],
-    standalone: false
+  selector: 'app-navbar',
+  templateUrl: './navbar.component.html',
+  styleUrls: ['./navbar.component.scss'],
+  standalone: false,
 })
 export class NavbarComponent implements OnInit {
   public showMobileMenu = false;
 
   public profile: Profile;
   public providerLink: string;
+  public version: string;
 
   constructor(
     private settingsService: SettingsService,
     private authService: AuthService,
     private router: Router,
-  ) {}
+  ) {
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationEnd) {
+        this.showMobileMenu = false;
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.settingsService.getProfile().subscribe((result) => {
@@ -43,6 +50,10 @@ export class NavbarComponent implements OnInit {
           this.providerLink = 'https://debrid-link.com/';
           break;
       }
+    });
+
+    this.settingsService.getVersion().subscribe((result) => {
+      this.version = result.version;
     });
   }
 
