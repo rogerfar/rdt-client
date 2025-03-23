@@ -181,6 +181,13 @@ or
 <a href=""https://debrid-link.com/webapp/apikey"" target=""_blank"" rel=""noopener"">https://debrid-link.com/webapp/apikey</a>")]
     public String ApiKey { get; set; } = "";
 
+    /// <summary>
+    /// API hostname to use <b>for Real Debrid only</b> 
+    /// </summary>
+    [DisplayName("API Hostname (RD only)")]
+    [Description("Use this instead of the normal hostname for Real Debrid API requests. Only used by Real Debrid. Leave blank to use default.")]
+    public String? ApiHostname { get; set; }
+
     [DisplayName("Automatically import and process torrents added to provider")]
     [Description("When selected, import downloads that are not added through RealDebridClient but have been directly added to your debrid provider.")]
     public Boolean AutoImport { get; set; } = false;
