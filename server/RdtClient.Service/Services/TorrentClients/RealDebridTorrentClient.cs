@@ -26,7 +26,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
             var httpClient = httpClientFactory.CreateClient(DiConfig.RD_CLIENT);
             httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
 
-            var rdtNetClient = new RdNetClient(null, httpClient, 5);
+            var rdtNetClient = new RdNetClient(null, httpClient, 5, Settings.Get.Provider.ApiHostname);
             rdtNetClient.UseApiAuthentication(apiKey);
 
             // Get the server time to fix up the timezones on results
