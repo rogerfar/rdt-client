@@ -157,7 +157,7 @@ Required configuration:
 Suggested configuration:
 - Automatic retry downloads > 3
 
-### Synology Download Station
+#### Synology Download Station
 
 The Synology Download Station downloader uses an external Download Station server. You will need to set this up yourself.
 
