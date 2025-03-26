@@ -62,6 +62,7 @@ export class TorrentFileAvailability {
 }
 
 export enum RealDebridStatus {
+  NotYetAdded = -1,
   Processing = 0,
   WaitingForFileSelection = 1,
   Downloading = 2,
