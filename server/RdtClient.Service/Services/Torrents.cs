@@ -223,7 +223,12 @@ public class Torrents(
             return;
         }
 
-        await TorrentClient.SelectFiles(torrent);
+        var selected = await TorrentClient.SelectFiles(torrent);
+
+        if (selected == 0)
+        {
+            await MarkAllFilesExcluded(torrent);
+        }
     }
 
     public async Task CreateDownloads(Guid torrentId)
@@ -244,14 +249,7 @@ public class Torrents(
 
         if (downloadLinks.Count == 0)
         {
-            logger.LogInformation("All files excluded by filters (IncludeRegex: {includeRegex}, ExcludeRegex: {excludeRegex}, DownloadMinSize: {downloadMinSize}  {torrentInfo}",
-                            torrent.IncludeRegex,
-                            torrent.ExcludeRegex,
-                            torrent.DownloadMinSize,
-                            torrent.ToLog());
-
-            await torrentData.UpdateRetry(torrentId, null, torrent.TorrentRetryAttempts);
-            await torrentData.UpdateComplete(torrentId, "All files excluded", DateTimeOffset.Now, false);
+            await MarkAllFilesExcluded(torrent);
 
             return;
         }
@@ -266,6 +264,22 @@ public class Torrents(
                 await downloads.Add(torrent.TorrentId, downloadLink);
             }
         }
+    }
+
+    /// <summary>
+    /// Logs a message to the console, sets the error on the torrent and ensures it is not retried.
+    /// </summary>
+    /// <param name="torrent">The torrent to mark as "All files excluded"</param>
+    private async Task MarkAllFilesExcluded(Torrent torrent)
+    {
+        logger.LogInformation("All files excluded by filters (IncludeRegex: {includeRegex}, ExcludeRegex: {excludeRegex}, DownloadMinSize: {downloadMinSize}) {torrentInfo}",
+                              torrent.IncludeRegex,
+                              torrent.ExcludeRegex,
+                              torrent.DownloadMinSize,
+                              torrent.ToLog());
+
+        await torrentData.UpdateRetry(torrent.TorrentId, null, torrent.TorrentRetryAttempts);
+        await torrentData.UpdateComplete(torrent.TorrentId, "All files excluded", DateTimeOffset.Now, false);
     }
 
     public async Task Delete(Guid torrentId, Boolean deleteData, Boolean deleteRdTorrent, Boolean deleteLocalFiles)

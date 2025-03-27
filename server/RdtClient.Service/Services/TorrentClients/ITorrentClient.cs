@@ -10,7 +10,15 @@ public interface ITorrentClient
     Task<String> AddMagnet(String magnetLink);
     Task<String> AddFile(Byte[] bytes);
     Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash);
-    Task SelectFiles(Torrent torrent);
+    /// <summary>
+    /// Tell the debrid provider which files to download.
+    /// </summary>
+    /// <remark>
+    /// Not all providers support this feature.
+    /// </remark>
+    /// <param name="torrent">The torrent to select files for</param>
+    /// <returns>Number of files selected</returns>
+    Task<Int32?> SelectFiles(Torrent torrent);
     Task Delete(String torrentId);
     Task<String> Unrestrict(String link);
     Task<Torrent> UpdateData(Torrent torrent, TorrentClientTorrent? torrentClientTorrent);
