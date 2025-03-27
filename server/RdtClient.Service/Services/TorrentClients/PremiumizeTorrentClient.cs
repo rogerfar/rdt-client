@@ -121,9 +121,12 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
         return Task.FromResult<IList<TorrentClientAvailableFile>>([]);
     }
 
-    public Task SelectFiles(Torrent torrent)
+    /// <inheritdoc />
+    public Task<Int32?> SelectFiles(Torrent torrent)
     {
-        return Task.CompletedTask;
+        // torrent.Files is not populated when this function is called
+        // by returning 1, we ensure no logic for "all files excluded" is followed
+        return Task.FromResult<Int32?>(1);
     }
 
     public async Task Delete(String id)
