@@ -1,10 +1,10 @@
 {
   "/Api": {
-    "target": "http://localhost:6500/",
+    "target": "http://192.168.1.100:6502/",
     "secure": false
   },
   "/hub": {
-    "target": "http://localhost:6500/",
+    "target": "http://192.168.1.100:6502/",
     "secure": false,
     "ws": true
   }

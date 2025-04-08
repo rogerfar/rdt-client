@@ -9,7 +9,7 @@
         <th>
           <input
             type="checkbox"
-            (click)="toggleSelectAll($event)"
+            (click)="toggleDeleteSelectAll($event)"
             [checked]="selectedTorrents.length > 0 && selectedTorrents.length === torrents.length"
           />
         </th>
@@ -107,24 +107,24 @@
         <label class="label"></label>
         <div class="control">
           <label class="checkbox">
-            <input type="checkbox" [(ngModel)]="deleteData" (change)="updateSelectAll()" />
+            <input type="checkbox" [(ngModel)]="deleteData" (change)="updateDeleteSelectAll()" />
             Delete Torrents from client
           </label>
           <br />
           <label class="checkbox">
-            <input type="checkbox" [(ngModel)]="deleteRdTorrent" (change)="updateSelectAll()" />
+            <input type="checkbox" [(ngModel)]="deleteRdTorrent" (change)="updateDeleteSelectAll()" />
             Delete Torrents from provider
           </label>
           <br />
           <label class="checkbox">
-            <input type="checkbox" [(ngModel)]="deleteLocalFiles" (change)="updateSelectAll()" />
+            <input type="checkbox" [(ngModel)]="deleteLocalFiles" (change)="updateDeleteSelectAll()" />
             Delete local files
           </label>
           <br />
           <br />
           <!-- Select All Checkbox -->
           <label class="checkbox">
-            <input type="checkbox" [(ngModel)]="selectAll" (change)="toggleAllOptions()" />
+            <input type="checkbox" [(ngModel)]="deleteSelectAll" (change)="toggleDeleteSelectAllOptions()" />
             Select All
           </label>
         </div>
