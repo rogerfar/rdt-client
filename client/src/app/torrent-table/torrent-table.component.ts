@@ -248,7 +248,8 @@ export class TorrentTableComponent implements OnInit {
       },
     });
   }
-    // Called when "Select All" is toggled
+
+  // Called when "Select All" is toggled
   toggleAllOptions() {
     this.deleteData = this.selectAll;
     this.deleteRdTorrent = this.selectAll;
