@@ -106,19 +106,26 @@
       <div class="field">
         <label class="label"></label>
         <div class="control">
-          <label class="checkbox">
-            <input type="checkbox" [(ngModel)]="deleteData" />
+         <label class="checkbox">
+            <input type="checkbox" [(ngModel)]="deleteData" (change)="updateSelectAll()" />
             Delete Torrents from client
           </label>
           <br />
           <label class="checkbox">
-            <input type="checkbox" [(ngModel)]="deleteRdTorrent" />
+            <input type="checkbox" [(ngModel)]="deleteRdTorrent" (change)="updateSelectAll()" />
             Delete Torrents from provider
           </label>
           <br />
           <label class="checkbox">
-            <input type="checkbox" [(ngModel)]="deleteLocalFiles" />
+            <input type="checkbox" [(ngModel)]="deleteLocalFiles" (change)="updateSelectAll()" />
             Delete local files
+          </label>
+          <br />
+          <br />
+          <!-- Select All Checkbox -->
+          <label class="checkbox">
+            <input type="checkbox" [(ngModel)]="selectAll" (change)="toggleAllOptions()" />
+            Select All
           </label>
         </div>
       </div>

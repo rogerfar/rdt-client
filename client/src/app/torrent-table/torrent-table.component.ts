@@ -20,6 +20,7 @@ export class TorrentTableComponent implements OnInit {
   public isDeleteModalActive: boolean;
   public deleteError: string;
   public deleting: boolean;
+  public selectAll: boolean;
   public deleteData: boolean;
   public deleteRdTorrent: boolean;
   public deleteLocalFiles: boolean;
@@ -246,5 +247,16 @@ export class TorrentTableComponent implements OnInit {
         this.changingSettings = false;
       },
     });
+  }
+    // Called when "Select All" is toggled
+  toggleAllOptions() {
+    this.deleteData = this.selectAll;
+    this.deleteRdTorrent = this.selectAll;
+    this.deleteLocalFiles = this.selectAll;
+  }
+
+  // Called when any individual checkbox is toggled
+  updateSelectAll() {
+    this.selectAll = this.deleteData && this.deleteRdTorrent && this.deleteLocalFiles;
   }
 }
