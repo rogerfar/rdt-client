@@ -136,9 +136,10 @@ public class DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFacto
         return Task.FromResult<IList<TorrentClientAvailableFile>>([]);
     }
 
-    public Task SelectFiles(Data.Models.Data.Torrent torrent)
+    /// <inheritdoc />
+    public Task<Int32?> SelectFiles(Data.Models.Data.Torrent torrent)
     {
-        return Task.CompletedTask;
+        return Task.FromResult<Int32?>(torrent.Files.Count);
     }
 
     public async Task Delete(String torrentId)

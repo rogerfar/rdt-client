@@ -142,7 +142,8 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         return Task.FromResult<IList<TorrentClientAvailableFile>>([]);
     }
 
-    public async Task SelectFiles(Data.Models.Data.Torrent torrent)
+    /// <inheritdoc />
+    public async Task<Int32?> SelectFiles(Data.Models.Data.Torrent torrent)
     {
         List<TorrentClientFile> files;
 
@@ -166,7 +167,14 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
 
         var fileIds = files.Select(m => m.Id.ToString()).ToArray();
 
+        if (fileIds.Length == 0)
+        {
+            return 0;
+        }
+
         await GetClient().Torrents.SelectFilesAsync(torrent.RdId!, [.. fileIds]);
+
+        return fileIds.Length;
     }
 
     public async Task Delete(String torrentId)

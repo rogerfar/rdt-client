@@ -155,9 +155,10 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IAll
         return Task.FromResult<IList<TorrentClientAvailableFile>>([]);
     }
 
-    public Task SelectFiles(Torrent torrent)
+    /// <inheritdoc />
+    public Task<Int32?> SelectFiles(Torrent torrent)
     {
-        return Task.CompletedTask;
+        return Task.FromResult<Int32?>(torrent.Files.Count);
     }
 
     public async Task Delete(String torrentId)
