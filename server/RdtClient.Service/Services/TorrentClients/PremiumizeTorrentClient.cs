@@ -228,13 +228,6 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
             downloadLinks.Add(file.Link);
         }
 
-        if (downloadLinks.Count == 0)
-        {
-            Log($"No download links found for transfer {transfer.Name} ({transfer.Id})", torrent);
-
-            return null;
-        }
-
         foreach (var link in downloadLinks)
         {
             Log($"Found {link}", torrent);
