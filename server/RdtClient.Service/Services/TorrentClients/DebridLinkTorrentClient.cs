@@ -1,12 +1,13 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using DebridLinkFrNET; 
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
-using DebridLinkFrNET.Models;
-using System.Web;
+using RdtClient.Data.Models.Data;
 using Download = RdtClient.Data.Models.Data.Download;
+using Torrent = DebridLinkFrNET.Models.Torrent;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
@@ -234,7 +235,7 @@ public class DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFacto
         return torrent;
     }
 
-    public async Task<IList<String>?> GetDownloadLinks(Data.Models.Data.Torrent torrent)
+    public async Task<IList<DownloadInfo>?> GetDownloadInfos(Data.Models.Data.Torrent torrent)
     {
         if (torrent.RdId == null)
         {
@@ -248,19 +249,14 @@ public class DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFacto
             return null;
         }
 
-        var downloadLinks = rdTorrent.Files?
-                                     .Where(m => fileFilter.IsDownloadable(torrent, m.Path, m.Bytes) && m.DownloadLink != null)
-                                     .Select(m => m.DownloadLink!)
-                                     .ToList() ?? [];
-
-        Log($"Found {downloadLinks.Count} links", torrent);
-
-        foreach (var link in downloadLinks)
-        {
-            Log($"{link}", torrent);
-        }
-
-        return downloadLinks;
+        return rdTorrent.Files?
+                        .Where(m => fileFilter.IsDownloadable(torrent, m.Path, m.Bytes) && m.DownloadLink != null)
+                        .Select(m => new DownloadInfo
+                        {
+                            RestrictedLink = m.DownloadLink!,
+                            FileName = Path.GetFileName(m.Path)
+                        })
+                        .ToList();
     }
 
     private async Task<TorrentClientTorrent> GetInfo(String torrentId)
@@ -280,16 +276,13 @@ public class DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFacto
         logger.LogDebug(message);
     }
 
-    public Task<String> GetFileName(String downloadUrl)
+    /// <inheritdoc />
+    public Task<String> GetFileName(Download download)
     {
-        if (String.IsNullOrWhiteSpace(downloadUrl))
-        {
-            return Task.FromResult("");
-        }
-
-        var uri = new Uri(downloadUrl);
-
-        return Task.FromResult(HttpUtility.UrlDecode(uri.Segments.Last()));
+        // FileName is set in GetDownlaadInfos
+        Debug.Assert(download.FileName != null);
+        
+        return Task.FromResult(download.FileName);
     }
 
     public static String? GetSymlinkPath(Data.Models.Data.Torrent torrent, Download download)
