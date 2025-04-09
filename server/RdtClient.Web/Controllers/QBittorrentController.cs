@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NSwag.Annotations;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.QBittorrent;
 using RdtClient.Service.Services;
@@ -12,6 +13,7 @@ namespace RdtClient.Web.Controllers;
 /// Documentation is found here: https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)
 /// </summary>
 [ApiController]
+[OpenApiIgnore]
 [Route("api/v2")]
 public class QBittorrentController(ILogger<QBittorrentController> logger, QBittorrent qBittorrent) : Controller
 {
