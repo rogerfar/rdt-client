@@ -474,7 +474,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             Priority = priority ?? (Settings.Get.Integrations.Default.Priority > 0 ? Settings.Get.Integrations.Default.Priority : null)
         };
 
-        await torrents.UploadMagnet(magnetLink, torrent);
+        await torrents.AddMagnetToDebridQueue(magnetLink, torrent);
     }
 
     public async Task TorrentsAddFile(Byte[] fileBytes, String? category, Int32? priority)
@@ -498,7 +498,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             Priority = priority ?? (Settings.Get.Integrations.Default.Priority > 0 ? Settings.Get.Integrations.Default.Priority : null)
         };
 
-        await torrents.UploadFile(fileBytes, torrent);
+        await torrents.AddFileToDebridQueue(fileBytes, torrent);
     }
 
     public async Task TorrentsSetCategory(String hash, String? category)

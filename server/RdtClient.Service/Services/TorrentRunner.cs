@@ -314,6 +314,29 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
             await torrents.UpdateComplete(torrent.TorrentId, $"Torrent lifetime of {torrent.Lifetime} minutes reached", DateTimeOffset.UtcNow, false);
         }
 
+        // Process torrents in DebridQueue
+        var torrentsToAddToProvider = allTorrents.Where(m => m.RdId == null && m.RdAdded == null && m.FileOrMagnet != null && m.RdStatus == TorrentStatus.NotYetAdded)
+                                                 .ToList();
+
+        if (torrentsToAddToProvider.Count != 0)
+        {
+            var downloadingTorrentsCount = allTorrents.Count(m => m.RdStatus is not (TorrentStatus.NotYetAdded or TorrentStatus.Finished or TorrentStatus.Error));
+
+            var maxParallelDownloads = Settings.Get.Provider.MaxParallelDownloads;
+
+            logger.LogDebug("Currently downloading {downloadingTorrentCount}/{maxParallelDownloads} torrents, {queuedCount} queued.",
+                            downloadingTorrentsCount,
+                            maxParallelDownloads,
+                            torrentsToAddToProvider.Count);
+
+            var dequeueCount = maxParallelDownloads == 0 ? torrentsToAddToProvider.Count : maxParallelDownloads - downloadingTorrentsCount;
+
+            foreach (var torrent in torrentsToAddToProvider.Take(dequeueCount))
+            {
+                await torrents.DequeueFromDebridQueue(torrent);
+            }
+        }
+
         allTorrents = await torrents.Get();
 
         allTorrents = allTorrents.Where(m => m.Completed == null).ToList();

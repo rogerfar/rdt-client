@@ -99,12 +99,12 @@ public class WatchFolderChecker(ILogger<WatchFolderChecker> logger, IServiceProv
                         if (fileInfo.Extension == ".torrent")
                         {
                             var torrentFileContents = await File.ReadAllBytesAsync(torrentFile, stoppingToken);
-                            await torrentService.UploadFile(torrentFileContents, torrent);
+                            await torrentService.AddFileToDebridQueue(torrentFileContents, torrent);
                         }
                         else if (fileInfo.Extension == ".magnet")
                         {
                             var magnetLink = await File.ReadAllTextAsync(torrentFile, stoppingToken);
-                            await torrentService.UploadMagnet(magnetLink, torrent);
+                            await torrentService.AddMagnetToDebridQueue(magnetLink, torrent);
                         }
 
                         if (!Directory.Exists(processedStorePath))
