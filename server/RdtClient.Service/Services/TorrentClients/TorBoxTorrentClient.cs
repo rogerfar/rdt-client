@@ -171,9 +171,10 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         return [];
     }
 
-    public Task SelectFiles(Torrent torrent)
+    /// <inheritdoc />
+    public Task<Int32?> SelectFiles(Torrent torrent)
     {
-        return Task.CompletedTask;
+        return Task.FromResult<Int32?>(torrent.Files.Count);
     }
 
     public async Task Delete(String torrentId)
