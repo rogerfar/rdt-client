@@ -40,7 +40,7 @@ public class TorrentsTest
 {
     public static TheoryData<Torrent, List<Download>> TorrentAndDownload()
     {
-        var torrent = new Torrent()
+        var torrent = new Torrent
         {
             RdName = "TestTorrent",
             Hash = "123ABC",
@@ -125,7 +125,10 @@ public class TorrentsTest
         expectedArgumentsSb.Append($" {downloads.Count.ToString()}");
         expectedArgumentsSb.Append($" {torrent.RdSize.ToString()}");
         expectedArgumentsSb.Append($" {torrent.Hash}");
-        Assert.Equal(expectedArgumentsSb.ToString(), mocks.ProcessMock.Object.StartInfo.Arguments);
+
+        var expectedArguments = expectedArgumentsSb.ToString();
+
+        Assert.Equal(expectedArguments, mocks.ProcessMock.Object.StartInfo.Arguments);
 
         mocks.ProcessMock.Verify(p => p.Start(), Times.Once);
     }
@@ -135,7 +138,7 @@ public class TorrentsTest
     public async Task RunTorrentComplete_WhenCommandNotSet_ShouldNotRunCommand(Torrent torrent, List<Download> downloads)
     {
         // Arrange
-        var settings = new DbSettings()
+        var settings = new DbSettings
         {
             General = new()
             {
@@ -182,7 +185,7 @@ public class TorrentsTest
     public async Task RunTorrentComplete_WhenStdOut_Logs(Torrent torrent, List<Download> downloads)
     {
         // Arrange
-        var settings = new DbSettings()
+        var settings = new DbSettings
         {
             General = new()
             {
@@ -248,7 +251,7 @@ public class TorrentsTest
     public async Task RunTorrentComplete_WhenStdErr_Logs(Torrent torrent, List<Download> downloads)
     {
         // Arrange
-        var settings = new DbSettings()
+        var settings = new DbSettings
         {
             General = new()
             {
