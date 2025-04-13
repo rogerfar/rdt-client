@@ -46,6 +46,7 @@ public static class DiConfig
         services.AddHostedService<TaskRunner>();
         services.AddHostedService<UpdateChecker>();
         services.AddHostedService<WatchFolderChecker>();
+        services.AddHostedService<WebsocketsUpdater>();
     }
 
     public static void RegisterHttpClients(this IServiceCollection services)
