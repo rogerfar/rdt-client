@@ -6,10 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.0.106] - 2025-04-13
+### Fixed
+- Changed how the GitHub release is created and how the changelog is generated.
+
 ## [v2.0.105] - 2025-04-13
 ### Added
 - Add feature to limit the amount of torrents that get sent to the provider at the same time.
-
 ### Fixed
 - Moved the websocket update process to its own background thread to improve UI update consistency.
 

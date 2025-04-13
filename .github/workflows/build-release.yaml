@@ -20,11 +20,12 @@ jobs:
         with:
           fetch-depth: 0
           
-      - name: Generate changelog
-        id: changelog
-        uses: mikepenz/release-changelog-builder-action@v5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+     - name: Get latest release info
+       id: query-release-info
+       uses: release-flow/keep-a-changelog-action@v2
+       with:
+         command: query
+         version: ${{ github.ref_name }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -63,7 +64,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
-          body: ${{ steps.changelog.outputs.changelog }}
+          body: ${{ steps.query-release-info.outputs.release-notes }}
           draft: false
           prerelease: false
           files: RealDebridClient.zip

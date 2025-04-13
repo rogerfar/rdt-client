@@ -25,6 +25,13 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
       
+    - name: Extract version and patch .csproj
+      run: |
+        VERSION="${GITHUB_REF_NAME#v}"
+        echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+        sed -i "s|<Version>.*</Version>|<Version>$VERSION</Version>|" server/RdtClient.Web/RdtClient.Web.csproj
+        sed -i "s|<AssemblyVersion>.*</AssemblyVersion>|<AssemblyVersion>$VERSION</AssemblyVersion>|" server/RdtClient.Web/RdtClient.Web.csproj
+
     - name: Docker Metadata action
       id: meta
       uses: docker/metadata-action@v4.3.0
