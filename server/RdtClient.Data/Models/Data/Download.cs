@@ -26,7 +26,7 @@ public class Download
     public DateTimeOffset? Completed { get; set; }
 
     public Int32 RetryCount { get; set; }
-        
+
     public String? Error { get; set; }
 
     public String? RemoteId { get; set; }
@@ -41,4 +41,20 @@ public class Download
 
     [NotMapped]
     public Int64 Speed { get; set; }
+}
+
+/// <summary>
+/// Used to create <see cref="Download"/>s
+/// </summary>
+public class DownloadInfo
+{
+    /// <summary>
+    /// The name of the file. Should not include directory.
+    /// If the filename is not known, set tn null and `GetFileName` will be called with the unrestricted link.
+    /// </summary>
+    public required String? FileName;
+    /// <summary>
+    /// The restricted link to download this download. If the debrid serice in question does not have restricted links, use either a fake or the unrestricted link
+    /// </summary>
+    public required String RestrictedLink;
 }

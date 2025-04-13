@@ -1,10 +1,10 @@
 using System.Reflection;
+using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using TorBoxNET;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
-using System.Web;
 using RdtClient.Data.Models.Data;
 using RdtClient.Service.Helpers;
 
@@ -171,9 +171,10 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         return [];
     }
 
-    public Task SelectFiles(Torrent torrent)
+    /// <inheritdoc />
+    public Task<Int32?> SelectFiles(Torrent torrent)
     {
-        return Task.CompletedTask;
+        return Task.FromResult<Int32?>(torrent.Files.Count);
     }
 
     public async Task Delete(String torrentId)
@@ -207,7 +208,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                 return torrent;
             }
 
-            var rdTorrent = await GetInfo(torrent.Hash) ?? throw new($"Resource not found");
+            var rdTorrent = torrentClientTorrent ?? await GetInfo(torrent.Hash) ?? throw new($"Resource not found");
 
             if (!String.IsNullOrWhiteSpace(rdTorrent.Filename))
             {
@@ -285,7 +286,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         return torrent;
     }
 
-    public async Task<IList<String>?> GetDownloadLinks(Torrent torrent)
+    public async Task<IList<DownloadInfo>?> GetDownloadInfos(Torrent torrent)
     {
         var torrentId = await GetClient().Torrents.GetHashInfoAsync(torrent.Hash, skipCache: true);
         var downloadableFiles = torrent.Files.Where(file => fileFilter.IsDownloadable(torrent, file.Path, file.Bytes)).ToList();
@@ -293,51 +294,36 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         if (downloadableFiles.Count == torrent.Files.Count && torrent.DownloadClient != Data.Enums.DownloadClient.Symlink)
         {
             logger.LogDebug("Downloading files from TorBox as a zip.");
-            return [$"https://torbox.app/fakedl/{torrentId?.Id}/zip"];
+
+            return
+            [
+                new DownloadInfo
+                {
+                    RestrictedLink = $"https://torbox.app/fakedl/{torrentId?.Id}/zip",
+                    FileName = $"{torrent.RdName}.zip"
+                }
+            ];
         }
         else
         {
             logger.LogDebug("Downloading files from TorBox individually.");
-            return downloadableFiles.Select(file => $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}").ToList();
+
+            return downloadableFiles.Select(file => new DownloadInfo
+                                    {
+                                        RestrictedLink = $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}",
+                                        FileName = Path.GetFileName(file.Path)
+                                    })
+                                    .ToList();
         }
     }
 
-    public async Task<String> GetFileName(String downloadUrl)
+    /// <inheritdoc />
+    public Task<String> GetFileName(Download download)
     {
-        if (String.IsNullOrWhiteSpace(downloadUrl))
-        {
-            return "";
-        }
-
-        var uri = new Uri(downloadUrl);
-
-        using (HttpClient client = new())
-        {
-            client.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
-            var request = new HttpRequestMessage(HttpMethod.Head, uri);
-            var response = await client.SendAsync(request);
-            if (response.Content.Headers.ContentDisposition != null)
-            {
-                var fileName = response.Content.Headers.ContentDisposition.FileName;
-                if (!String.IsNullOrWhiteSpace(fileName))
-                {
-                    return fileName.Trim('"');
-                }
-            }
-            else
-            {
-                if (response.Content.Headers.ContentType?.MediaType == "application/zip")
-                {
-                    return $"download-{new Random().Next(1, 10001)}.zip";
-                }
-                else
-                {
-                    logger.LogDebug($"Failed to get filename for URI {downloadUrl}");
-                }
-            }
-        }
-
-        return HttpUtility.UrlDecode(uri.Segments.Last());
+        // FileName is set in GetDownlaadInfos
+        Debug.Assert(download.FileName != null);
+        
+        return Task.FromResult(download.FileName);
     }
 
     private DateTimeOffset? ChangeTimeZone(DateTimeOffset? dateTimeOffset)

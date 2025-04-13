@@ -7,7 +7,7 @@ public interface IDownloads
     Task<List<Download>> GetForTorrent(Guid torrentId);
     Task<Download?> GetById(Guid downloadId);
     Task<Download?> Get(Guid torrentId, String path);
-    Task<Download> Add(Guid torrentId, String path);
+    Task<Download> Add(Guid torrentId, DownloadInfo downloadInfo);
     Task UpdateUnrestrictedLink(Guid downloadId, String unrestrictedLink);
     Task UpdateFileName(Guid downloadId, String fileName);
     Task UpdateDownloadStarted(Guid downloadId, DateTimeOffset? dateTime);

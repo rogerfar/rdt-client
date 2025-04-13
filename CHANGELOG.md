@@ -5,8 +5,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v2.0.104] - 2025-04-12
+### Fixed
+- Update the version number
+
+## [v2.0.103] - 2025-04-12
+### Added
+- Button to select all options when deleting a torrent, thanks @EugeneKallis
+- Add setting to ignore update notifications. A notification will appear regardless of this setting if any GitHub Security Advisories are published in this repo.
 ### Changed
-- Download .zip of torrent files from TorBox when possible, thanks @asylumexp!
+- Download .zip of torrent files from TorBox when possible, thanks @asylumexp
+- Users of AllDebrid and RealDebrid will now have no files downloaded when all files are excluded by filters. Before, if all files were excluded, rdt-client would download all the files in the torrent.
+- Reduce number of calls to debrid provider API when no torrents need updating
+### Fixed
+- The dropdown navigation menu on mobile will now close when you navigate to another page
+- Long torrent names without spaces will now wrap across lines
+### Security
+- Require auth to change debrid api key
 
 ## [2.0.102] - 2025-03-07
 ### Changed
