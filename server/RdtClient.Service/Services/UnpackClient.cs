@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using RdtClient.Data.Models.Data;
 using RdtClient.Service.Helpers;
+using RdtClient.Service.Services.TorrentClients;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.Zip;
@@ -10,13 +11,13 @@ namespace RdtClient.Service.Services;
 public class UnpackClient(Download download, String destinationPath)
 {
     public Boolean Finished { get; private set; }
-        
+
     public String? Error { get; private set; }
-        
+
     public Int32 Progess { get; private set; }
 
     private readonly Torrent _torrent = download.Torrent ?? throw new($"Torrent is null");
-    
+
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
     public void Start()
@@ -69,13 +70,13 @@ public class UnpackClient(Download download, String destinationPath)
             if (archiveEntries.Any(m => m.Contains(".r00")))
             {
                 extractPathTemp = Path.Combine(extractPath, Guid.NewGuid().ToString());
-                
+
                 if (!Directory.Exists(extractPathTemp))
                 {
                     Directory.CreateDirectory(extractPathTemp);
                 }
             }
-            
+
             if (extractPathTemp != null)
             {
                 Extract(filePath, extractPathTemp, cancellationToken);
@@ -102,6 +103,11 @@ public class UnpackClient(Download download, String destinationPath)
 
                 await FileHelper.Delete(filePath);
             }
+
+            if (_torrent.ClientKind == Data.Enums.Provider.TorBox)
+            {
+                TorBoxTorrentClient.MoveHashDirContents(extractPath, _torrent);
+            }
         }
         catch (Exception ex)
         {
@@ -112,6 +118,7 @@ public class UnpackClient(Download download, String destinationPath)
             Finished = true;
         }
     }
+
 
     private static async Task<IList<String>> GetArchiveFiles(String filePath)
     {
@@ -161,10 +168,10 @@ public class UnpackClient(Download download, String destinationPath)
                                    d =>
                                    {
                                        Debug.WriteLine(d);
-                                       Progess = (Int32) Math.Round(d);
+                                       Progess = (Int32)Math.Round(d);
                                    },
                                    cancellationToken: cancellationToken);
-        
+
         archive.Dispose();
 
         GC.Collect();

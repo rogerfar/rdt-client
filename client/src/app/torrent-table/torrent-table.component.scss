@@ -1,6 +1,9 @@
 table {
   tr {
     cursor: pointer;
+    td.break-all {
+      word-break: break-all;
+    }
   }
 }
 

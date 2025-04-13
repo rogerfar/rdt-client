@@ -5,10 +5,10 @@ import { TorrentService } from '../torrent.service';
 import { forkJoin, Observable } from 'rxjs';
 
 @Component({
-    selector: 'app-torrent-table',
-    templateUrl: './torrent-table.component.html',
-    styleUrls: ['./torrent-table.component.scss'],
-    standalone: false
+  selector: 'app-torrent-table',
+  templateUrl: './torrent-table.component.html',
+  styleUrls: ['./torrent-table.component.scss'],
+  standalone: false,
 })
 export class TorrentTableComponent implements OnInit {
   public torrents: Torrent[] = [];
@@ -20,6 +20,7 @@ export class TorrentTableComponent implements OnInit {
   public isDeleteModalActive: boolean;
   public deleteError: string;
   public deleting: boolean;
+  public deleteSelectAll: boolean;
   public deleteData: boolean;
   public deleteRdTorrent: boolean;
   public deleteLocalFiles: boolean;
@@ -74,7 +75,7 @@ export class TorrentTableComponent implements OnInit {
     return el.torrentId;
   }
 
-  public toggleSelectAll(event: any) {
+  public toggleDeleteSelectAll(event: any) {
     this.selectedTorrents = [];
 
     if (event.target.checked) {
@@ -246,5 +247,14 @@ export class TorrentTableComponent implements OnInit {
         this.changingSettings = false;
       },
     });
+  }
+  toggleDeleteSelectAllOptions() {
+    this.deleteData = this.deleteSelectAll;
+    this.deleteRdTorrent = this.deleteSelectAll;
+    this.deleteLocalFiles = this.deleteSelectAll;
+  }
+
+  updateDeleteSelectAll() {
+    this.deleteSelectAll = this.deleteData && this.deleteRdTorrent && this.deleteLocalFiles;
   }
 }

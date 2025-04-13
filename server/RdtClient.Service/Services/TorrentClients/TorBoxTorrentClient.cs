@@ -1,9 +1,10 @@
+using System.Reflection;
+using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using TorBoxNET;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
-using System.Web;
 using RdtClient.Data.Models.Data;
 using RdtClient.Service.Helpers;
 
@@ -24,7 +25,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
             }
 
             var httpClient = httpClientFactory.CreateClient();
-            httpClient.DefaultRequestHeaders.Add("User-Agent", "rdt-client");
+            httpClient.DefaultRequestHeaders.Add("User-Agent", $"rdt-client {Assembly.GetEntryAssembly()?.GetName().Version}");
             httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
 
             var torBoxNetClient = new TorBoxNetClient(null, httpClient, 5);
@@ -132,10 +133,8 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
             var magnetLinkInfo = MonoTorrent.MagnetLink.Parse(magnetLink);
             return magnetLinkInfo.InfoHashes.V1!.ToHex().ToLowerInvariant();
         }
-        else
-        {
-            return result.Data!.Hash!;
-        }
+
+        return result.Data!.Hash!;
     }
 
     public async Task<String> AddFile(Byte[] bytes)
@@ -170,9 +169,10 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         return [];
     }
 
-    public Task SelectFiles(Torrent torrent)
+    /// <inheritdoc />
+    public Task<Int32?> SelectFiles(Torrent torrent)
     {
-        return Task.CompletedTask;
+        return Task.FromResult<Int32?>(torrent.Files.Count);
     }
 
     public async Task Delete(String torrentId)
@@ -206,7 +206,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                 return torrent;
             }
 
-            var rdTorrent = await GetInfo(torrent.Hash) ?? throw new($"Resource not found");
+            var rdTorrent = torrentClientTorrent ?? await GetInfo(torrent.Hash) ?? throw new($"Resource not found");
 
             if (!String.IsNullOrWhiteSpace(rdTorrent.Filename))
             {
@@ -284,39 +284,42 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         return torrent;
     }
 
-    public async Task<IList<String>?> GetDownloadLinks(Torrent torrent)
+    public async Task<IList<DownloadInfo>?> GetDownloadInfos(Torrent torrent)
     {
         var torrentId = await GetClient().Torrents.GetHashInfoAsync(torrent.Hash, skipCache: true);
+        var downloadableFiles = torrent.Files.Where(file => fileFilter.IsDownloadable(torrent, file.Path, file.Bytes)).ToList();
 
-        return torrent.Files.Where(file => fileFilter.IsDownloadable(torrent, file.Path, file.Bytes))
-                      .Select(file => $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}")
-                      .ToList();
+        if (downloadableFiles.Count == torrent.Files.Count && torrent.DownloadClient != Data.Enums.DownloadClient.Symlink && Settings.Get.Provider.PreferZippedDownloads)
+        {
+            logger.LogDebug("Downloading files from TorBox as a zip.");
+
+            return
+            [
+                new()
+                {
+                    RestrictedLink = $"https://torbox.app/fakedl/{torrentId?.Id}/zip",
+                    FileName = $"{torrent.RdName}.zip"
+                }
+            ];
+        }
+
+        logger.LogDebug("Downloading files from TorBox individually.");
+
+        return downloadableFiles.Select(file => new DownloadInfo
+                                {
+                                    RestrictedLink = $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}",
+                                    FileName = Path.GetFileName(file.Path)
+                                })
+                                .ToList();
     }
 
-    public async Task<String> GetFileName(String downloadUrl)
+    /// <inheritdoc />
+    public Task<String> GetFileName(Download download)
     {
-        if (String.IsNullOrWhiteSpace(downloadUrl))
-        {
-            return "";
-        }
-
-        var uri = new Uri(downloadUrl);
-
-        using (HttpClient client = new())
-        {
-            var request = new HttpRequestMessage(HttpMethod.Head, uri);
-            var response = await client.SendAsync(request);
-            if (response.Content.Headers.ContentDisposition != null)
-            {
-                var fileName = response.Content.Headers.ContentDisposition.FileName;
-                if (!String.IsNullOrWhiteSpace(fileName))
-                {
-                    return fileName.Trim('"');
-                }
-            }
-        }
-
-        return HttpUtility.UrlDecode(uri.Segments.Last());
+        // FileName is set in GetDownlaadInfos
+        Debug.Assert(download.FileName != null);
+        
+        return Task.FromResult(download.FileName);
     }
 
     private DateTimeOffset? ChangeTimeZone(DateTimeOffset? dateTimeOffset)
@@ -335,7 +338,44 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
         return Map(result!);
     }
-    
+
+    public static void MoveHashDirContents(String extractPath, Torrent _torrent)
+    {
+        var hashDir = Path.Combine(extractPath, _torrent.Hash);
+
+        if (Directory.Exists(hashDir))
+        {
+            var innerFolder = Directory.GetDirectories(hashDir)[0];
+
+            var moveDir = extractPath;
+            if (!extractPath.EndsWith(_torrent.RdName!))
+            {
+                moveDir = hashDir;
+            }
+
+            foreach (var file in Directory.GetFiles(innerFolder))
+            {
+                var destFile = Path.Combine(moveDir, Path.GetFileName(file));
+                File.Move(file, destFile);
+            }
+
+            foreach (var dir in Directory.GetDirectories(innerFolder))
+            {
+                var destDir = Path.Combine(moveDir, Path.GetFileName(dir));
+                Directory.Move(dir, destDir);
+            }
+
+            if (!extractPath.Contains(_torrent.RdName!))
+            {
+                Directory.Delete(innerFolder, true);
+            }
+            else
+            {
+                Directory.Delete(hashDir, true);
+            }
+        }
+    }
+
     private void Log(String message, Torrent? torrent = null)
     {
         if (torrent != null)

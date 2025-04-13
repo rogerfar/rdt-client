@@ -3,8 +3,11 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RDNET;
 using RdtClient.Data.Enums;
+using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
+using Download = RdtClient.Data.Models.Data.Download;
+using Torrent = RDNET.Torrent;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
@@ -26,7 +29,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
             var httpClient = httpClientFactory.CreateClient(DiConfig.RD_CLIENT);
             httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
 
-            var rdtNetClient = new RdNetClient(null, httpClient, 5);
+            var rdtNetClient = new RdNetClient(null, httpClient, 5, Settings.Get.Provider.ApiHostname);
             rdtNetClient.UseApiAuthentication(apiKey);
 
             // Get the server time to fix up the timezones on results
@@ -142,9 +145,10 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         return Task.FromResult<IList<TorrentClientAvailableFile>>([]);
     }
 
-    public async Task SelectFiles(Data.Models.Data.Torrent torrent)
+    /// <inheritdoc />
+    public async Task<Int32?> SelectFiles(Data.Models.Data.Torrent torrent)
     {
-        IList<TorrentClientFile> files;
+        List<TorrentClientFile> files;
 
         Log("Seleting files", torrent);
 
@@ -155,33 +159,25 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         }
         else
         {
-            Log("Selecting all files", torrent);
+            Log("Selecting files", torrent);
             files = [.. torrent.Files];
         }
 
-        Log($"Selecting {files.Count}/{torrent.Files.Count} files", torrent);
 
         files = files.Where(f => fileFilter.IsDownloadable(torrent, f.Path, f.Bytes)).ToList();
 
-        if (files.Count == 0)
-        {
-            Log($"Filtered all files out! Downloading ALL files instead!", torrent);
-
-            files = torrent.Files;
-        }
+        Log($"Selecting {files.Count}/{torrent.Files.Count} files", torrent);
 
         var fileIds = files.Select(m => m.Id.ToString()).ToArray();
 
-        Log($"Selecting files:");
-
-        foreach (var file in files)
+        if (fileIds.Length == 0)
         {
-            Log($"{file.Id}: {file.Path} ({file.Bytes}b)");
+            return 0;
         }
 
-        Log("", torrent);
-
         await GetClient().Torrents.SelectFilesAsync(torrent.RdId!, [.. fileIds]);
+
+        return fileIds.Length;
     }
 
     public async Task Delete(String torrentId)
@@ -280,7 +276,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         return torrent;
     }
 
-    public async Task<IList<String>?> GetDownloadLinks(Data.Models.Data.Torrent torrent)
+    public async Task<IList<DownloadInfo>?> GetDownloadInfos(Data.Models.Data.Torrent torrent)
     {
         if (torrent.RdId == null)
         {
@@ -294,7 +290,14 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
             return null;
         }
 
-        var downloadLinks = rdTorrent.Links.Where(m => !String.IsNullOrWhiteSpace(m)).ToList();
+        var downloadLinks = rdTorrent.Links
+                                     .Where(m => !String.IsNullOrWhiteSpace(m))
+                                     .Select(l => new DownloadInfo
+                                     {
+                                         RestrictedLink = l,
+                                         FileName = null
+                                     })
+                                     .ToList();
 
         Log($"Found {downloadLinks.Count} links", torrent);
 
@@ -341,14 +344,15 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         return null;
     }
 
-    public Task<String> GetFileName(String downloadUrl)
+    /// <inheritdoc />
+    public Task<String> GetFileName(Download download)
     {
-        if (String.IsNullOrWhiteSpace(downloadUrl))
+        if (String.IsNullOrWhiteSpace(download.Link))
         {
             return Task.FromResult("");
         }
 
-        var uri = new Uri(downloadUrl);
+        var uri = new Uri(download.Link);
 
         return Task.FromResult(HttpUtility.UrlDecode(uri.Segments.Last()));
     }

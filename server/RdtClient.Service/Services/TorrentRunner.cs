@@ -8,7 +8,6 @@ using RdtClient.Service.Services.Downloaders;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text.Json;
-using System.Web;
 
 namespace RdtClient.Service.Services;
 
@@ -363,8 +362,11 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                             var downloadLink = await torrents.UnrestrictLink(download.DownloadId);
                             download.Link = downloadLink;
 
-                            var fileName = await torrents.RetrieveFileName(download.DownloadId);
-                            download.FileName = fileName;
+                            if (download.FileName == null)
+                            {
+                                var fileName = await torrents.RetrieveFileName(download.DownloadId);
+                                download.FileName = fileName;
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -447,13 +449,8 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
 
                     // Check if the unpacking process is even needed
                     var uri = new Uri(download.Link);
-                    var fileName = uri.Segments.Last();
 
-                    fileName = HttpUtility.UrlDecode(fileName);
-
-                    Log($"Found file name {fileName}", download, torrent);
-
-                    var extension = Path.GetExtension(fileName);
+                    var extension = Path.GetExtension(download.FileName);
 
                     if ((extension != ".rar" && extension != ".zip") ||
                         torrent.DownloadClient == Data.Enums.DownloadClient.Symlink)

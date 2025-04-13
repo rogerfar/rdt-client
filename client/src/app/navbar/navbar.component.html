@@ -55,16 +55,25 @@
           <a class="navbar-item" routerLink="profile"> Profile </a>
           <a class="navbar-item" (click)="logout()"> Logout </a>
           <hr class="navbar-divider" />
-          <a href="https://github.com/rogerfar/rdt-client" target="_blank" class="navbar-item">Version 2.0.102</a>
+          <a href="https://github.com/rogerfar/rdt-client" target="_blank" class="navbar-item">Version {{ version }}</a>
         </div>
       </div>
     </div>
   </div>
 </nav>
 <div
-  class="notification is-warning"
-  *ngIf="profile && profile.latestVersion && profile.currentVersion !== profile.latestVersion"
+  class="notification"
+  [ngClass]="profile.isInsecure ? 'is-danger' : 'is-warning'"
+  *ngIf="
+    profile &&
+    (!profile.disableUpdateNotification || profile.isInsecure) &&
+    profile.latestVersion &&
+    profile.currentVersion !== profile.latestVersion
+  "
 >
-  Version {{ profile.latestVersion }} of RealDebrid Client was found. You are currently on version
-  {{ profile.currentVersion }}.
+  <span *ngIf="profile.isInsecure"> Your current version is insecure. </span>
+  <span>
+    Version {{ profile.latestVersion }} of RealDebrid Client was found. You are currently on version
+    {{ profile.currentVersion }}.
+  </span>
 </div>
