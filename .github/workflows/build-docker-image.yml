@@ -40,8 +40,6 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=sha
-        # List of custom labels
-        # labels: # optional
 
     - name: Docker Setup QEMU
       uses: docker/setup-qemu-action@v2.1.0
@@ -84,15 +82,15 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
         repository: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}
         short-description: |
-          a web interface to manage your torrents on Real-Debrid, AllDebrid or Premiumize.
+          A web interface to manage your torrents on debrid providers.
         readme-filepath: ./README-DOCKER.md
     
-    # - name: Github Registry Description
-    #   if: ${{ env.ENABLE_GHCR == 1 }}
-    #   uses: peter-evans/dockerhub-description@v3.3.0
-    #   with:
-    #     username: ${{ github.repository_owner }}
-    #     password: ${{ secrets.GITHUB_TOKEN }}
-    #     short-description: |
-    #       A web interface to manage your torrents on Real-Debrid, AllDebrid or Premiumize.
-    #     readme-filepath: ./README-DOCKER.md
+    - name: Github Registry Description
+      if: ${{ env.ENABLE_GHCR == 1 }}
+      uses: peter-evans/dockerhub-description@v3.3.0
+      with:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        short-description: |
+          A web interface to manage your torrents on Real-Debrid, AllDebrid or Premiumize.
+        readme-filepath: ./README-DOCKER.md

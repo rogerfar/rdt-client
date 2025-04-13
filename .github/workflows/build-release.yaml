@@ -6,8 +6,6 @@ on:
       - v*
 
 permissions:
-  id-token: write
-  contents: write
   packages: write
 
 jobs:
@@ -29,57 +27,6 @@ jobs:
       - name: Test Backend
         working-directory: server
         run: dotnet test
-
-  version:
-    name: Increment version
-    needs: test
-    runs-on: ubuntu-latest
-
-    outputs:
-      version: ${{ steps.increment-version.outputs.version }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Increment latest version tag
-        id: increment-version
-        run: |
-          # Retry mechanism
-          $maxRetries = 5
-          $retryDelay = 5
-          $attempt = 0
-          $success = $false      
-          while ($attempt -lt $maxRetries -and -not $success) {
-            try {
-              git fetch --tags
-              $tags = git tag --sort=-v:refname | Where-Object { $_ -match '^v\d+\.\d+\.\d+$' }
-              $latestTag = $tags -split '\n' | Select-Object -First 1
-              $versionNumbers = $latestTag -split '\.'
-              $versionNumbers[-1] = [string]([int]$versionNumbers[-1] + 1)
-              $newVersion = $versionNumbers -join '.'
-              Write-Output "New incremented version is $newVersion"
-              echo "version=$newVersion" | Out-File -Append -FilePath $Env:GITHUB_OUTPUT
-              git tag $newVersion
-              git push origin $newVersion
-              $success = $true
-              Write-Output "Tag $newVersion pushed successfully!"
-            } catch {
-              Write-Output "Failed to push tag $newVersion. Attempt $($attempt + 1) of $maxRetries."
-              Write-Output "Error details: $($_.Exception.Message)"
-              $attempt++
-              if ($attempt -lt $maxRetries) {
-                Write-Output "Retrying in $retryDelay seconds..."
-                Start-Sleep -Seconds $retryDelay
-              } else {
-                Write-Error "Failed to push tag $newVersion after $maxRetries attempts. Exiting."
-                exit 1
-              }
-            }
-          }
-        shell: pwsh
      
   release:
     name: Create GitHub release
