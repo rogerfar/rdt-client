@@ -9,7 +9,7 @@ public interface ITorrentData
     Task<Torrent?> GetById(Guid torrentId);
     Task<Torrent?> GetByHash(String hash);
 
-    Task<Torrent> Add(String rdId,
+    Task<Torrent> Add(String? rdId,
                       String hash,
                       String? fileOrMagnetContents,
                       Boolean isFile,
@@ -17,6 +17,7 @@ public interface ITorrentData
                       Torrent torrent);
 
     Task UpdateRdData(Torrent torrent);
+    Task UpdateRdId(Torrent torrent, String rdId);
     Task Update(Torrent torrent);
     Task UpdateCategory(Guid torrentId, String? category);
     Task UpdateComplete(Guid torrentId, String? error, DateTimeOffset? datetime, Boolean retry);

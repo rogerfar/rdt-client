@@ -71,7 +71,7 @@ public class TorrentData(DataContext dataContext) : ITorrentData
         return dbTorrent;
     }
 
-    public async Task<Torrent> Add(String rdId,
+    public async Task<Torrent> Add(String? rdId,
                                    String hash,
                                    String? fileOrMagnetContents,
                                    Boolean isFile,
@@ -99,7 +99,9 @@ public class TorrentData(DataContext dataContext) : ITorrentData
             TorrentRetryAttempts = torrent.TorrentRetryAttempts,
             DownloadRetryAttempts = torrent.DownloadRetryAttempts,
             DeleteOnError = torrent.DeleteOnError,
-            Lifetime = torrent.Lifetime
+            Lifetime = torrent.Lifetime,
+            RdStatus = torrent.RdStatus,
+            RdName = torrent.RdName
         };
 
         await dataContext.Torrents.AddAsync(newTorrent);
@@ -133,6 +135,22 @@ public class TorrentData(DataContext dataContext) : ITorrentData
         dbTorrent.RdSeeders = torrent.RdSeeders;
         dbTorrent.RdFiles = torrent.RdFiles;
         
+        await dataContext.SaveChangesAsync();
+
+        await VoidCache();
+    }
+
+    public async Task UpdateRdId(Torrent torrent, String rdId)
+    {
+        var dbTorrent = await dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrent.TorrentId);
+
+        if (dbTorrent == null)
+        {
+            return;
+        }
+        
+        dbTorrent.RdId = rdId;
+
         await dataContext.SaveChangesAsync();
 
         await VoidCache();
