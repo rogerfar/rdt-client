@@ -6,31 +6,12 @@ on:
       - v*
 
 permissions:
+  contents: write
   packages: write
 
-jobs:
-  test:
-    name: Build and Test
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '9'
-
-      - name: Test Backend
-        working-directory: server
-        run: dotnet test
-     
+jobs:    
   release:
     name: Create GitHub release
-    needs: [test]
     runs-on: ubuntu-latest
     
     steps:
@@ -54,19 +35,20 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '9'
-          
+                    
       - name: Build Frontend
         working-directory: client
         run: |
           npm ci
           npm run build
           
-      - name: Build and Publish Backend
+      - name: Build, Test and Publish Backend
         working-directory: server
         shell: pwsh
         run: |
           $v = "${{ github.ref_name }}".TrimStart('v')
           dotnet restore
+          dotnet test
           dotnet build -c Release --no-restore -p:Version=$v -p:AssemblyVersion=$v
           dotnet publish RdtClient.Web/RdtClient.Web.csproj -c Release --no-build -p:Version=$v -p:AssemblyVersion=$v -o ../publish
 
