@@ -20,12 +20,16 @@ jobs:
         with:
           fetch-depth: 0
           
+      - name: Strip 'v' from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+          
       - name: Get latest release info
         id: query-release-info
         uses: release-flow/keep-a-changelog-action@v2
         with:
           command: query
-          version: ${{ github.ref_name }}
+          version: ${{ steps.version.outputs.version }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
