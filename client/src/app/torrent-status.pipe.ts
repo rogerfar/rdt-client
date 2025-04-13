@@ -1,10 +1,10 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { FileSizePipe } from 'ngx-filesize';
 import { RealDebridStatus, Torrent } from './models/torrent.model';
+import { FileSizePipe } from './filesize.pipe';
 
 @Pipe({
-    name: 'status',
-    standalone: false
+  name: 'status',
+  standalone: false,
 })
 export class TorrentStatusPipe implements PipeTransform {
   constructor(private pipe: FileSizePipe) {}

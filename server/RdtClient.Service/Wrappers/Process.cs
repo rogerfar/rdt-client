@@ -18,6 +18,7 @@ public class Process : IProcess
     public void Dispose()
     {
         _process.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     public void BeginOutputReadLine()

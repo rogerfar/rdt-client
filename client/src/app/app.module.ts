@@ -1,11 +1,10 @@
+import 'curray';
 import { ClipboardModule } from '@angular/cdk/clipboard';
 import { APP_BASE_HREF } from '@angular/common';
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
-import { curray } from 'curray';
-import { FileSizePipe, NgxFilesizeModule } from 'ngx-filesize';
 import { AddNewTorrentComponent } from './add-new-torrent/add-new-torrent.component';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -23,8 +22,7 @@ import { TorrentStatusPipe } from './torrent-status.pipe';
 import { TorrentTableComponent } from './torrent-table/torrent-table.component';
 import { TorrentComponent } from './torrent/torrent.component';
 import { SortPipe } from './sort.pipe';
-
-curray();
+import { FileSizePipe } from './filesize.pipe';
 
 @NgModule({
   declarations: [
@@ -43,9 +41,10 @@ curray();
     ProfileComponent,
     Nl2BrPipe,
     SortPipe,
+    FileSizePipe,
   ],
   bootstrap: [AppComponent],
-  imports: [BrowserModule, AppRoutingModule, FormsModule, NgxFilesizeModule, ClipboardModule],
+  imports: [BrowserModule, AppRoutingModule, FormsModule, ClipboardModule],
   providers: [
     FileSizePipe,
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },

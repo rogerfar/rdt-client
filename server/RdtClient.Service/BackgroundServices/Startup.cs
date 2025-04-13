@@ -20,7 +20,7 @@ public class Startup(IServiceProvider serviceProvider) : IHostedService
         using var scope = serviceProvider.CreateScope();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Startup>>();
 
-        logger.LogWarning($"Starting host on version {version}");
+        logger.LogWarning("Starting host on version {version}", version);
 
         var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
         await dbContext.Database.MigrateAsync(cancellationToken);

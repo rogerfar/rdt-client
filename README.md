@@ -157,7 +157,7 @@ Required configuration:
 Suggested configuration:
 - Automatic retry downloads > 3
 
-### Synology Download Station
+#### Synology Download Station
 
 The Synology Download Station downloader uses an external Download Station server. You will need to set this up yourself.
 
@@ -220,3 +220,14 @@ By default the application runs in the root of your hosted address (i.e. https:/
 1. To stop: `docker stop rdtclient`
 1. To remove: `docker rm rdtclient`
 1. Or use `docker-build.bat`
+
+## Misc Install Notes
+
+### Rootless Podman, Linux Host, and CIFS Connections
+
+RDT Client read and write permission tests fail if the CIFS connection is not setup properly, despite permissions working inspection.  In the Web GUI, it will report access denied, and in the log file you will see exceptions like this ([dotnet issue](https://github.com/dotnet/runtime/issues/42790)): 
+```
+System.IO.IOException: Permission denied
+```
+The **nobrl** has to be specified in your CIFS connection - [man page](https://linux.die.net/man/8/mount.cifs). 
+Example: ```Options=_netdev,credentials=/etc/samba/credentials/600file,rw,uid=SUBUID,gid=SBUGID,nobrl,file_mode=0770,dir_mode=0770,noperm```

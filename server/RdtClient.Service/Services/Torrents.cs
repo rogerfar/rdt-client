@@ -259,7 +259,12 @@ public class Torrents(
             return;
         }
 
-        await TorrentClient.SelectFiles(torrent);
+        var selected = await TorrentClient.SelectFiles(torrent);
+
+        if (selected == 0)
+        {
+            await MarkAllFilesExcluded(torrent);
+        }
     }
 
     public async Task CreateDownloads(Guid torrentId)
@@ -271,37 +276,46 @@ public class Torrents(
             return;
         }
 
-        var downloadLinks = await TorrentClient.GetDownloadLinks(torrent);
+        var downloadInfos = await TorrentClient.GetDownloadInfos(torrent);
 
-        if (downloadLinks == null)
+        if (downloadInfos == null)
         {
             return;
         }
 
-        if (downloadLinks.Count == 0)
+        if (downloadInfos.Count == 0)
         {
-            logger.LogInformation("All files excluded by filters (IncludeRegex: {includeRegex}, ExcludeRegex: {excludeRegex}, DownloadMinSize: {downloadMinSize}  {torrentInfo}",
-                            torrent.IncludeRegex,
-                            torrent.ExcludeRegex,
-                            torrent.DownloadMinSize,
-                            torrent.ToLog());
-
-            await torrentData.UpdateRetry(torrentId, null, torrent.TorrentRetryAttempts);
-            await torrentData.UpdateComplete(torrentId, "All files excluded", DateTimeOffset.Now, false);
+            await MarkAllFilesExcluded(torrent);
 
             return;
         }
 
-        foreach (var downloadLink in downloadLinks)
+        foreach (var downloadInfo in downloadInfos)
         {
             // Make sure downloads don't get added multiple times
-            var downloadExists = await downloads.Get(torrent.TorrentId, downloadLink);
+            var downloadExists = await downloads.Get(torrent.TorrentId, downloadInfo.RestrictedLink);
 
-            if (downloadExists == null && !String.IsNullOrWhiteSpace(downloadLink))
+            if (downloadExists == null && !String.IsNullOrWhiteSpace(downloadInfo.RestrictedLink))
             {
-                await downloads.Add(torrent.TorrentId, downloadLink);
+                await downloads.Add(torrent.TorrentId, downloadInfo);
             }
         }
+    }
+
+    /// <summary>
+    /// Logs a message to the console, sets the error on the torrent and ensures it is not retried.
+    /// </summary>
+    /// <param name="torrent">The torrent to mark as "All files excluded"</param>
+    private async Task MarkAllFilesExcluded(Torrent torrent)
+    {
+        logger.LogInformation("All files excluded by filters (IncludeRegex: {includeRegex}, ExcludeRegex: {excludeRegex}, DownloadMinSize: {downloadMinSize}) {torrentInfo}",
+                              torrent.IncludeRegex,
+                              torrent.ExcludeRegex,
+                              torrent.DownloadMinSize,
+                              torrent.ToLog());
+
+        await torrentData.UpdateRetry(torrent.TorrentId, null, torrent.TorrentRetryAttempts);
+        await torrentData.UpdateComplete(torrent.TorrentId, "All files excluded", DateTimeOffset.Now, false);
     }
 
     public async Task Delete(Guid torrentId, Boolean deleteData, Boolean deleteRdTorrent, Boolean deleteLocalFiles)
@@ -426,13 +440,17 @@ public class Torrents(
         return unrestrictedLink;
     }
 
+    /// <summary>
+    /// To be called only when <see cref="Data.Models.Data.Download" />.<see cref="Data.Models.Data.Download.FileName" /> is not set by
+    /// <see cref="ITorrentClient.GetDownloadInfos" />
+    /// </summary>
     public async Task<String> RetrieveFileName(Guid downloadId)
     {
         var download = await downloads.GetById(downloadId) ?? throw new($"Download with ID {downloadId} not found");
 
         Log($"Retrieving filename for", download, download.Torrent);
 
-        var fileName = await TorrentClient.GetFileName(download.Link!);
+        var fileName = await TorrentClient.GetFileName(download!);
 
         await downloads.UpdateFileName(downloadId, fileName);
 
@@ -449,7 +467,9 @@ public class Torrents(
             UserName = user.Username,
             Expiration = user.Expiration,
             CurrentVersion = UpdateChecker.CurrentVersion,
-            LatestVersion = UpdateChecker.LatestVersion
+            LatestVersion = UpdateChecker.LatestVersion,
+            IsInsecure = UpdateChecker.IsInsecure,
+            DisableUpdateNotification = Settings.Get.General.DisableUpdateNotifications
         };
 
         return profile;
