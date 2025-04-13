@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.107] - 2025-04-13
+### Fixed
+- Fixed Docker release versioning.
+
 ## [2.0.106] - 2025-04-13
 ### Fixed
 - Changed how the GitHub release is created and how the changelog is generated.

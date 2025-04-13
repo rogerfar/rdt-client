@@ -35,7 +35,7 @@ RUN \
    echo "**** Building Source Code for $TARGETPLATFORM on $BUILDPLATFORM ****" && \
    cd server && \
    dotnet restore --no-cache RdtClient.sln && \
-   dotnet test \
+   dotnet test && \
    dotnet publish --no-restore -c Release -o out ; 
 
 # Stage 3 - Build runtime image
