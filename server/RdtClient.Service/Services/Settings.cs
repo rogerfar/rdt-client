@@ -27,7 +27,7 @@ public class Settings(SettingData settingData)
         }
     }
 
-    public async Task Update(IList<SettingProperty> settings)
+    public async Task Update(IList<SettingKeyValuePair> settings)
     {
         await settingData.Update(settings);
     }
