@@ -65,7 +65,7 @@ jobs:
         working-directory: server
         shell: pwsh
         run: |
-          $v = "${{ needs.version.outputs.version }}".TrimStart('v')
+          $v = "${{ github.ref_name }}".TrimStart('v')
           dotnet restore
           dotnet build -c Release --no-restore -p:Version=$v -p:AssemblyVersion=$v
           dotnet publish RdtClient.Web/RdtClient.Web.csproj -c Release --no-build -p:Version=$v -p:AssemblyVersion=$v -o ../publish
@@ -79,8 +79,8 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.version.outputs.version }}
-          name: ${{ needs.version.outputs.version }}
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
           body: ${{ steps.changelog.outputs.changelog }}
           draft: false
           prerelease: false
