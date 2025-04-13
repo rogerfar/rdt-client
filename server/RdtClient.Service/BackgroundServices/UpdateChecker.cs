@@ -79,7 +79,7 @@ public class UpdateChecker(ILogger<UpdateChecker> logger) : BackgroundService
         logger.LogInformation("UpdateChecker stopped.");
     }
 
-    private async Task<T?> GitHubRequest<T>(String endpoint, CancellationToken cancellationToken)
+    private static async Task<T?> GitHubRequest<T>(String endpoint, CancellationToken cancellationToken)
     {
             var httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.UserAgent.Add(new("RdtClient", CurrentVersion));

@@ -405,7 +405,7 @@ public class AllDebridTorrentClientTest
     }
 
     [Fact]
-    public async Task GetDownloadLinks_WhenTorrentRdIdNull_ReturnsNull()
+    public async Task GetDownloadInfos_WhenTorrentRdIdNull_ReturnsNull()
     {
         // Arrange
         var mocks = new Mocks();
@@ -418,7 +418,7 @@ public class AllDebridTorrentClientTest
         var allDebridTorrentClient = new AllDebridTorrentClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
 
         // Act
-        var result = await allDebridTorrentClient.GetDownloadLinks(torrent);
+        var result = await allDebridTorrentClient.GetDownloadInfos(torrent);
 
         // Assert
         Assert.Null(result);
@@ -426,7 +426,7 @@ public class AllDebridTorrentClientTest
     }
 
     [Fact]
-    public async Task GetDownloadLinks_UsesFileFilter()
+    public async Task GetDownloadInfos_UsesFileFilter()
     {
         // Arrange
         var mocks = new Mocks();
@@ -467,16 +467,16 @@ public class AllDebridTorrentClientTest
         var allDebridTorrentClient = new AllDebridTorrentClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
 
         // Act
-        var result = await allDebridTorrentClient.GetDownloadLinks(torrent);
+        var result = await allDebridTorrentClient.GetDownloadInfos(torrent);
 
         // Assert
         Assert.NotNull(result);
         Assert.Single(result);
-        Assert.Contains("https://fake.url/file1.txt", result);
+        Assert.Single(result, info => info.RestrictedLink == "https://fake.url/file1.txt");
     }
 
     [Fact]
-    public async Task GetDownloadLinks_WhenAllFilesExcluded_ReturnsEmptyList()
+    public async Task GetDownloadInfos_WhenAllFilesExcluded_ReturnsEmptyList()
     {
         // Arrange
         var mocks = new Mocks();
@@ -501,14 +501,14 @@ public class AllDebridTorrentClientTest
                 DownloadLink = "https://fake.url/file-2.txt"
             }
         ];
-        
+
         mocks.AllDebridClientMock.Setup(c => c.Magnet.FilesAsync(Int64.Parse(torrent.RdId), It.IsAny<CancellationToken>())).ReturnsAsync(files);
         mocks.FileFilterMock.Setup(f => f.IsDownloadable(torrent, It.IsAny<String>(), It.IsAny<Int64>())).Returns(false);
 
         var allDebridTorrentClient = new AllDebridTorrentClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
 
         // Act
-        var result = await allDebridTorrentClient.GetDownloadLinks(torrent);
+        var result = await allDebridTorrentClient.GetDownloadInfos(torrent);
 
         // Assert
         Assert.NotNull(result);

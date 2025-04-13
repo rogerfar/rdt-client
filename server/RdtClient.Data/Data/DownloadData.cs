@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using RdtClient.Data.Models.Data;
 using Download = RdtClient.Data.Models.Data.Download;
 
 namespace RdtClient.Data.Data;
@@ -29,13 +30,14 @@ public class DownloadData(DataContext dataContext)
                                  .FirstOrDefaultAsync(m => m.TorrentId == torrentId && m.Path == path);
     }
 
-    public async Task<Download> Add(Guid torrentId, String path)
+    public async Task<Download> Add(Guid torrentId, DownloadInfo downloadInfo)
     {
         var download = new Download
         {
             DownloadId = Guid.NewGuid(),
             TorrentId = torrentId,
-            Path = path,
+            FileName = downloadInfo.FileName,
+            Path = downloadInfo.RestrictedLink,
             Added = DateTimeOffset.UtcNow,
             DownloadQueued = DateTimeOffset.UtcNow,
             RetryCount = 0

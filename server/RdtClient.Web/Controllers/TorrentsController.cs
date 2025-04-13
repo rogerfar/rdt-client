@@ -117,7 +117,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
 
         var bytes = memoryStream.ToArray();
 
-        await torrents.UploadFile(bytes, formData.Torrent);
+        await torrents.AddFileToDebridQueue(bytes, formData.Torrent);
 
         return Ok();
     }
@@ -152,7 +152,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
 
         logger.LogDebug($"Add magnet");
 
-        await torrents.UploadMagnet(request.MagnetLink, request.Torrent);
+        await torrents.AddMagnetToDebridQueue(request.MagnetLink, request.Torrent);
 
         return Ok();
     }

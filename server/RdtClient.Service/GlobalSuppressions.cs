@@ -6,3 +6,4 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Usage", "CA2254:Template should be a static expression", Justification = "Bug in Serilog", Scope = "NamespaceAndDescendants", Target = "N:RdtClient.Service")]
+[assembly: SuppressMessage("Style", "IDE0305:Simplify collection initialization", Justification = "Code style", Scope = "NamespaceAndDescendants", Target = "N:RdtClient.Service")]
