@@ -391,10 +391,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Fixed the BaseURL content-length setting.
 
-## [2.0.32] - 2023-06-27
-### Changed
-- Fixed the BaseURL content-length setting.
-
 ## [2.0.31] - 2023-06-11
 ### Added
 - Added setting to set the BaseURL.
@@ -808,16 +804,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - First release
 - Add unraring progress and default auto download / auto remove options.
-
-[Unreleased]: https://github.com/rogerfar/rdt-client/compare/1.5.5...HEAD
-[1.5.5]: https://github.com/rogerfar/rdt-client/releases/tag/1.5.5
-[1.5.4]: https://github.com/rogerfar/rdt-client/releases/tag/1.5.4
-[1.5.3]: https://github.com/rogerfar/rdt-client/releases/tag/1.5.3
-[1.5.2]: https://github.com/rogerfar/rdt-client/releases/tag/1.5.2
-[1.5.1]: https://github.com/rogerfar/rdt-client/releases/tag/1.5.1
-[1.5.0]: https://github.com/rogerfar/rdt-client/releases/tag/1.5
-[1.4.0]: https://github.com/rogerfar/rdt-client/releases/tag/1.4
-[1.3.0]: https://github.com/rogerfar/rdt-client/releases/tag/1.3
-[1.2.0]: https://github.com/rogerfar/rdt-client/releases/tag/1.2
-[1.1.0]: https://github.com/rogerfar/rdt-client/releases/tag/1.1
-[1.0.0]: https://github.com/rogerfar/rdt-client/releases/tag/v1.0
