@@ -232,13 +232,6 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
             downloadInfos.Add(new () {RestrictedLink = file.Link, FileName = file.Name });
         }
 
-        if (downloadInfos.Count == 0)
-        {
-            Log($"No download links found for transfer {transfer.Name} ({transfer.Id})", torrent);
-
-            return null;
-        }
-
         foreach (var info in downloadInfos)
         {
             Log($"Found {info.RestrictedLink}", torrent);
