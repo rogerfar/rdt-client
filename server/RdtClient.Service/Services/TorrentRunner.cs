@@ -362,8 +362,11 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                             var downloadLink = await torrents.UnrestrictLink(download.DownloadId);
                             download.Link = downloadLink;
 
-                            var fileName = await torrents.RetrieveFileName(download.DownloadId);
-                            download.FileName = fileName;
+                            if (download.FileName == null)
+                            {
+                                var fileName = await torrents.RetrieveFileName(download.DownloadId);
+                                download.FileName = fileName;
+                            }
                         }
                     }
                     catch (Exception ex)
