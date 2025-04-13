@@ -152,7 +152,7 @@ public class WatchFolderChecker(ILogger<WatchFolderChecker> logger, IServiceProv
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Unexpected error occurred in ProviderUpdater: {ex.Message}");
+                logger.LogError(ex, $"Unexpected error occurred in WatchFolderChecker: {ex.Message}");
             }
         }
     }

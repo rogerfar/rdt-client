@@ -11,7 +11,7 @@ using System.Text.Json;
 
 namespace RdtClient.Service.Services;
 
-public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Downloads downloads, RemoteService remoteService)
+public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Downloads downloads)
 {
     public static readonly ConcurrentDictionary<Guid, DownloadClient> ActiveDownloadClients = new();
     public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new();
@@ -315,12 +315,12 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
         }
 
         // Process torrents in DebridQueue
-        var torrentsToAddToProvider = allTorrents.Where(m => m.RdId == null && m.RdAdded == null && m.FileOrMagnet != null && m.RdStatus == TorrentStatus.NotYetAdded)
+        var torrentsToAddToProvider = allTorrents.Where(m => m.RdId == null && m.RdAdded == null && m.FileOrMagnet != null && m.RdStatus == TorrentStatus.Queued)
                                                  .ToList();
 
         if (torrentsToAddToProvider.Count != 0)
         {
-            var downloadingTorrentsCount = allTorrents.Count(m => m.RdStatus is not (TorrentStatus.NotYetAdded or TorrentStatus.Finished or TorrentStatus.Error));
+            var downloadingTorrentsCount = allTorrents.Count(m => m.RdStatus is not (TorrentStatus.Queued or TorrentStatus.Finished or TorrentStatus.Error));
 
             var maxParallelDownloads = Settings.Get.Provider.MaxParallelDownloads;
 
@@ -658,8 +658,6 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                 await torrents.UpdateComplete(torrent.TorrentId, ex.Message, DateTimeOffset.UtcNow, true);
             }
         }
-
-        await remoteService.Update();
 
         sw.Stop();
 

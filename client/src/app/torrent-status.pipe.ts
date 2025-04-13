@@ -87,8 +87,8 @@ export class TorrentStatusPipe implements PipeTransform {
     }
 
     switch (torrent.rdStatus) {
-      case RealDebridStatus.NotYetAdded:
-        return "Not Yet Added to Provider"
+      case RealDebridStatus.Queued:
+        return 'Not Yet Added to Provider';
       case RealDebridStatus.Downloading:
         if (torrent.rdSeeders < 1) {
           return `Torrent stalled`;

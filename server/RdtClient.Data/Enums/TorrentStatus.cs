@@ -2,13 +2,13 @@
 
 public enum TorrentStatus
 {
-    NotYetAdded = -1,
+    Queued = 0,
 
-    Processing = 0,
-    WaitingForFileSelection = 1,
-    Downloading = 2,
-    Finished = 3,
-    Uploading = 4,
+    Processing = 1,
+    WaitingForFileSelection = 2,
+    Downloading = 3,
+    Finished = 4,
+    Uploading = 5,
 
     Error = 99
 }

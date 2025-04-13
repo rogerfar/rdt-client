@@ -52,7 +52,7 @@ public class TaskRunner(ILogger<TaskRunner> logger, IServiceProvider serviceProv
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Unexpected error occurred in TorrentDownloadManager.Tick: {ex.Message}");
+                logger.LogError(ex, $"Unexpected error occurred in TaskRunner: {ex.Message}");
             }
 
             await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);

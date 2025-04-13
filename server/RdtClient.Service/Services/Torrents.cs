@@ -121,7 +121,7 @@ public class Torrents(
             throw new($"{ex.Message}, trying to parse {magnetLink}");
         }
 
-        torrent.RdStatus = TorrentStatus.NotYetAdded;
+        torrent.RdStatus = TorrentStatus.Queued;
         torrent.RdName = magnet.Name;
 
         var hash = magnet.InfoHashes.V1OrV2.ToHex();
@@ -151,7 +151,7 @@ public class Torrents(
             throw new($"{ex.Message}, trying to parse {fileAsBase64}");
         }
 
-        torrent.RdStatus = TorrentStatus.NotYetAdded;
+        torrent.RdStatus = TorrentStatus.Queued;
         torrent.RdName = monoTorrent.Name;
 
         var hash = monoTorrent.InfoHashes.V1OrV2.ToHex();
@@ -178,18 +178,13 @@ public class Torrents(
 
                 var copyFileName = Path.Combine(Settings.Get.General.CopyAddedTorrents, FileHelper.RemoveInvalidFileNameChars(torrentName));
 
-                switch (fileOrMagnet)
+                copyFileName = fileOrMagnet switch
                 {
-                    case String:
-                        copyFileName = $"{copyFileName}.magnet";
-                        break;
-                    case Byte[]:
-                        copyFileName = $"{copyFileName}.torrent";
-                        break;
-                    default:
-                        throw new ArgumentException("Unexpected type for fileOrMagnet");
-                }
-                
+                    String => $"{copyFileName}.magnet",
+                    Byte[] => $"{copyFileName}.torrent",
+                    _ => throw new ArgumentException("Unexpected type for fileOrMagnet")
+                };
+
                 if (File.Exists(copyFileName))
                 {
                     File.Delete(copyFileName);
@@ -743,11 +738,11 @@ public class Torrents(
             }
 
             var newTorrent = await torrentData.Add(null,
-                                                    infoHash,
-                                                    fileOrMagnetContents,
-                                                    isFile,
-                                                    torrent.DownloadClient,
-                                                    torrent);
+                                                   infoHash,
+                                                   fileOrMagnetContents,
+                                                   isFile,
+                                                   torrent.DownloadClient,
+                                                   torrent);
 
             return newTorrent;
         }

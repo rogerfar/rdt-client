@@ -12,8 +12,7 @@ public class UpdateChecker(ILogger<UpdateChecker> logger) : BackgroundService
     
     public static Boolean? IsInsecure { get; private set; }
 
-    private static readonly List<String> KnownGhsaIds = [
-    ];
+    private static readonly List<String> KnownGhsaIds = [];
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
