@@ -411,11 +411,11 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
     {
         if (deleteFiles)
         {
-            logger.LogDebug($"Delete {hash}, with files");
+            logger.LogDebug("Delete {hash}, with files", hash);
         }
         else
         {
-            logger.LogDebug($"Delete {hash}, no files");
+            logger.LogDebug("Delete {hash}, no files", hash);
         }
 
         var torrent = await torrents.GetByHash(hash);

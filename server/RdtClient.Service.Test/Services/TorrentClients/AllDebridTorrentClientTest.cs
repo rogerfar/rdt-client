@@ -472,7 +472,7 @@ public class AllDebridTorrentClientTest
         // Assert
         Assert.NotNull(result);
         Assert.Single(result);
-        Assert.Single(result.Where(info => info.RestrictedLink == "https://fake.url/file1.txt"));
+        Assert.Single(result, info => info.RestrictedLink == "https://fake.url/file1.txt");
     }
 
     [Fact]

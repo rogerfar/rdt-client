@@ -133,10 +133,8 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
             var magnetLinkInfo = MonoTorrent.MagnetLink.Parse(magnetLink);
             return magnetLinkInfo.InfoHashes.V1!.ToHex().ToLowerInvariant();
         }
-        else
-        {
-            return result.Data!.Hash!;
-        }
+
+        return result.Data!.Hash!;
     }
 
     public async Task<String> AddFile(Byte[] bytes)
@@ -297,24 +295,22 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
             return
             [
-                new DownloadInfo
+                new()
                 {
                     RestrictedLink = $"https://torbox.app/fakedl/{torrentId?.Id}/zip",
                     FileName = $"{torrent.RdName}.zip"
                 }
             ];
         }
-        else
-        {
-            logger.LogDebug("Downloading files from TorBox individually.");
 
-            return downloadableFiles.Select(file => new DownloadInfo
-                                    {
-                                        RestrictedLink = $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}",
-                                        FileName = Path.GetFileName(file.Path)
-                                    })
-                                    .ToList();
-        }
+        logger.LogDebug("Downloading files from TorBox individually.");
+
+        return downloadableFiles.Select(file => new DownloadInfo
+                                {
+                                    RestrictedLink = $"https://torbox.app/fakedl/{torrentId?.Id}/{file.Id}",
+                                    FileName = Path.GetFileName(file.Path)
+                                })
+                                .ToList();
     }
 
     /// <inheritdoc />

@@ -53,12 +53,12 @@ public class ProviderUpdater(ILogger<TaskRunner> logger, IServiceProvider servic
 
                     await torrentService.UpdateRdData();
 
-                    logger.LogDebug($"Finished updating torrent info from debrid provider, next update in {updateTime} seconds");
+                    logger.LogDebug("Finished updating torrent info from debrid provider, next update in {updateTime} seconds", updateTime);
                 }
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Unexpected error occurred in ProviderUpdater: {ex.Message}");
+                logger.LogError(ex, "Unexpected error occurred in ProviderUpdater: {ex.Message}", ex.Message);
             }
 
             await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
