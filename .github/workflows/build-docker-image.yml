@@ -5,41 +5,124 @@ on:
     tags:
       - v*
 
-permissions: 
+permissions:
   packages: write
-  
+
 env:
   APP_NAME: rdtclient
   DOCKER_FILE: ./Dockerfile
-  DOCKER_PLATFORMS: "linux/arm64/v8,linux/amd64"
   ENABLE_DOCKERHUB: 1
   ENABLE_GHCR: 1
-  
+
+concurrency: ${{ github.sha }}
+
 jobs:
-
   build:
-
-    runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        config:
+          - arch: amd64
+            runs-on: ubuntu-latest
+            platform: linux/amd64
+          - arch: arm64
+            runs-on: ubuntu-24.04-arm
+            platform: linux/arm64/v8
+    runs-on: ${{ matrix.config.runs-on }}
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
-      
-    - name: Extract version and patch .csproj
-      run: |
-        VERSION="${GITHUB_REF_NAME#v}"
-        echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-        sed -i "s|<Version>.*</Version>|<Version>$VERSION</Version>|" server/RdtClient.Web/RdtClient.Web.csproj
-        sed -i "s|<AssemblyVersion>.*</AssemblyVersion>|<AssemblyVersion>$VERSION</AssemblyVersion>|" server/RdtClient.Web/RdtClient.Web.csproj
+      - name: Prepare
+        run: |
+          platform=${{ matrix.config.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
 
-    - name: Docker Metadata action
-      id: meta
-      uses: docker/metadata-action@v4.3.0
-      with:
-        images: |
-          ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}
-          ghcr.io/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}
-        tags: |
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Login to DockerHub
+        if: ${{ env.ENABLE_DOCKERHUB == 1 }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+  
+      - name: Login to GHCR
+        if: ${{ env.ENABLE_GHCR == 1 }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker Metadata action
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}
+            ghcr.io/${{ github.repository_owner }}/${{ env.APP_NAME }}
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          platforms: ${{ matrix.config.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}
+          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export digest
+        run: |
+          mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ env.PLATFORM_PAIR }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  push-images:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Login to DockerHub
+        if: ${{ env.ENABLE_DOCKERHUB == 1 }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GHCR
+        if: ${{ env.ENABLE_GHCR == 1 }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Docker Metadata action
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}
+            ghcr.io/${{ github.repository_owner }}/${{ env.APP_NAME }}
+          tags: |
             type=schedule
             type=ref,event=branch
             type=ref,event=pr
@@ -47,47 +130,23 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=sha
+      
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        run: |         
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< '${{ steps.meta.outputs.json }}') \
+            $(printf '${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}@sha256:%s ' *)
+      
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Docker Setup QEMU
-      uses: docker/setup-qemu-action@v2.1.0
-    
-    - name: Docker Setup Buildx
-      uses: docker/setup-buildx-action@v2.5.0
-      with:
-        buildkitd-flags: --debug
-    
-    - name: Docker Login
-      if: ${{ github.event_name != 'pull_request' && env.ENABLE_DOCKERHUB == 1 }}
-      uses: docker/login-action@v2.1.0
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-        
-    - name: Login to GHCR
-      if: ${{ github.event_name != 'pull_request' && env.ENABLE_GHCR == 1 }}
-      uses: docker/login-action@v2.1.0
-      with:
-        registry: ghcr.io
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-          
-    - name: Build and push Docker images
-      uses: docker/build-push-action@v4.0.0
-      with:
-        context: .
-        file: ${{ env.DOCKER_FILE }}
-        platforms: ${{ env.DOCKER_PLATFORMS }}
-        push: ${{ github.event_name != 'pull_request' }}
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-
-    - name: Docker Hub Registry Description
-      if: ${{ env.ENABLE_DOCKERHUB == 1 }}
-      uses: peter-evans/dockerhub-description@v3.3.0
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-        repository: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}
-        short-description: |
-          A web interface to manage your torrents on debrid providers.
-        readme-filepath: ./README-DOCKER.md
+      - name: Docker Hub Registry Description
+        if: ${{ env.ENABLE_DOCKERHUB == 1 }}
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}
+          short-description: |
+            A web interface to manage your torrents on debrid providers.
+          readme-filepath: ./README-DOCKER.md
