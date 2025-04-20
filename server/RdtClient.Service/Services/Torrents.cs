@@ -523,7 +523,7 @@ public class Torrents(
             {
                 var rdTorrent = rdTorrents.FirstOrDefault(m => m.Id == torrent.RdId);
 
-                if (rdTorrent == null && Settings.Get.Provider.AutoDelete)
+                if (rdTorrent == null && Settings.Get.Provider.AutoDelete && torrent.RdStatus != TorrentStatus.Queued)
                 {
                     await Delete(torrent.TorrentId, true, false, true);
                 }
