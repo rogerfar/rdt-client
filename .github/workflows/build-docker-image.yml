@@ -18,6 +18,9 @@ concurrency: ${{ github.sha }}
 
 jobs:
   build:
+    outputs:
+      digest-amd64: ${{ steps.digest.outputs.digest-amd64 }}
+      digest-arm64: ${{ steps.digest.outputs.digest-arm64 }}
     strategy:
       matrix:
         config:
@@ -26,14 +29,9 @@ jobs:
             platform: linux/amd64
           - arch: arm64
             runs-on: ubuntu-24.04-arm
-            platform: linux/arm64/v8
+            platform: linux/arm64
     runs-on: ${{ matrix.config.runs-on }}
     steps:
-      - name: Prepare
-        run: |
-          platform=${{ matrix.config.platform }}
-          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
-
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -67,36 +65,19 @@ jobs:
         id: build
         uses: docker/build-push-action@v6
         with:
-          platforms: ${{ matrix.config.platform }}
           labels: ${{ steps.meta.outputs.labels }}
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
+        id: digest
         run: |
-          mkdir -p ${{ runner.temp }}/digests
-          digest="${{ steps.build.outputs.digest }}"
-          touch "${{ runner.temp }}/digests/${digest#sha256:}"
-
-      - name: Upload digest
-        uses: actions/upload-artifact@v4
-        with:
-          name: digests-${{ env.PLATFORM_PAIR }}
-          path: ${{ runner.temp }}/digests/*
-          if-no-files-found: error
-          retention-days: 1
+          echo "digest-${{ matrix.config.arch }}=${{ steps.build.outputs.digest }}" >> "$GITHUB_OUTPUT"
 
   push-images:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Download digests
-        uses: actions/download-artifact@v4
-        with:
-          path: ${{ runner.temp }}/digests
-          pattern: digests-*
-          merge-multiple: true
-
       - name: Login to DockerHub
         if: ${{ env.ENABLE_DOCKERHUB == 1 }}
         uses: docker/login-action@v3
@@ -132,10 +113,11 @@ jobs:
             type=sha
       
       - name: Create manifest list and push
-        working-directory: ${{ runner.temp }}/digests
         run: |         
-          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< '${{ steps.meta.outputs.json }}') \
-            $(printf '${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}@sha256:%s ' *)
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< '${{ steps.meta.outputs.json }}') \
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}@${{ needs.build.outputs.digest-amd64 }} \
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}@${{ needs.build.outputs.digest-arm64 }}
       
       - name: Checkout code
         uses: actions/checkout@v4
