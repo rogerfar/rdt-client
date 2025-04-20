@@ -31,6 +31,7 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
         {
             settingsCopy.Provider.ApiKey = "*****";
             settingsCopy.DownloadClient.Aria2cSecret = "*****";
+            settingsCopy.DownloadClient.DownloadStationPassword = "*****";
 
             Log(JsonSerializer.Serialize(settingsCopy));
         }
