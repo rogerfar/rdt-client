@@ -35,6 +35,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Extract version and patch .csproj
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          sed -i "s|<Version>.*</Version>|<Version>$VERSION</Version>|" server/RdtClient.Web/RdtClient.Web.csproj
+          sed -i "s|<AssemblyVersion>.*</AssemblyVersion>|<AssemblyVersion>$VERSION</AssemblyVersion>|" server/RdtClient.Web/RdtClient.Web.csproj
+
       - name: Login to DockerHub
         if: ${{ env.ENABLE_DOCKERHUB == 1 }}
         uses: docker/login-action@v3
@@ -65,6 +71,7 @@ jobs:
         id: build
         uses: docker/build-push-action@v6
         with:
+          context: .
           labels: ${{ steps.meta.outputs.labels }}
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true
