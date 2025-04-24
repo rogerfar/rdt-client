@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.109] - 2025-04-23
+### Fixed
+- Debrid Queue fixes (don't auto delete queued torrents, handle errors when dequeueing).
+- Censor download station password when logging settings at startup.
+- Set `HostDownloadAction` when auto-importing torrents.
+- Build GitHub release .zip on windows not linux.
+- Use arm GitHub Actions runner to build arm docker image.
+
 ## [2.0.108] - 2025-04-13
 ### Fixed
 - Fixed websocket UI updating.
