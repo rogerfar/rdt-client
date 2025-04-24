@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.110] - 2025-04-24
+### Fixed
+- Fixed build number in the app.
+
 ## [2.0.109] - 2025-04-23
 ### Fixed
 - Debrid Queue fixes (don't auto delete queued torrents, handle errors when dequeueing).
