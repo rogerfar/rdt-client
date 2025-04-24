@@ -333,7 +333,15 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
 
             foreach (var torrent in torrentsToAddToProvider.Take(dequeueCount))
             {
-                await torrents.DequeueFromDebridQueue(torrent);
+                try
+                {
+                    await torrents.DequeueFromDebridQueue(torrent);
+                }
+                catch (Exception ex)
+                {
+                    await torrents.UpdateComplete(torrent.TorrentId, $"Could not add to provider: {ex.Message}", DateTimeOffset.Now, true);
+                    logger.LogWarning(ex, "Could not dequeue torrent {torrentId}", torrent.TorrentId);
+                }
             }
         }
 
