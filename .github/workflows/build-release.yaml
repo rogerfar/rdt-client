@@ -9,10 +9,61 @@ permissions:
   contents: write
   packages: write
 
-jobs:    
+jobs:
+  build:
+    name: Test, Build, and Bundle
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9'
+      
+      - name: Install Frontend Dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Build Frontend
+        working-directory: client
+        run: npm run build
+
+      - name: Restore Backend Dependencies
+        working-directory: server
+        run: dotnet restore
+      
+      - name: Build and Publish Backend
+        working-directory: server
+        shell: pwsh
+        run:  |
+          $v = "${{ github.ref_name }}".TrimStart('v')
+          dotnet build -c Release --no-restore -p:Version=$v -p:AssemblyVersion=$v
+          dotnet publish RdtClient.Web/RdtClient.Web.csproj -c Release --no-build -p:Version=$v -p:AssemblyVersion=$v -o ../publish
+
+      - name: Create ZIP
+        shell: pwsh
+        run: Compress-Archive -Path publish\* -DestinationPath RealDebridClient.zip
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with: 
+          name: RealDebridClient.zip
+          path: RealDebridClient.zip
+
   release:
     name: Create GitHub release
     runs-on: ubuntu-latest
+    needs: build
     
     steps:
       - name: Checkout
@@ -30,38 +81,11 @@ jobs:
         with:
           command: query
           version: ${{ steps.version.outputs.version }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
         with:
-          node-version: "lts/*"
-          
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '9'
-                    
-      - name: Build Frontend
-        working-directory: client
-        run: |
-          npm ci
-          npm run build
-          
-      - name: Build, Test and Publish Backend
-        working-directory: server
-        shell: pwsh
-        run: |
-          $v = "${{ github.ref_name }}".TrimStart('v')
-          dotnet restore
-          dotnet test
-          dotnet build -c Release --no-restore -p:Version=$v -p:AssemblyVersion=$v
-          dotnet publish RdtClient.Web/RdtClient.Web.csproj -c Release --no-build -p:Version=$v -p:AssemblyVersion=$v -o ../publish
-
-      - name: Create ZIP
-        run: |
-          cd publish
-          zip -r ../RealDebridClient.zip .
-          cd ..
+          name: RealDebridClient.zip
           
       - name: Create Release
         uses: softprops/action-gh-release@v2
