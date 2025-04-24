@@ -492,6 +492,7 @@ public class Torrents(
                         Category = Settings.Get.Provider.Default.Category,
                         DownloadClient = Settings.Get.DownloadClient.Client,
                         DownloadAction = Settings.Get.Provider.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
+                        HostDownloadAction = Settings.Get.Provider.Default.HostDownloadAction,
                         FinishedAction = Settings.Get.Provider.Default.FinishedAction,
                         DownloadMinSize = Settings.Get.Provider.Default.MinFileSize,
                         IncludeRegex = Settings.Get.Provider.Default.IncludeRegex,
