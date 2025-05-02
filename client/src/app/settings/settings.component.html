@@ -141,6 +141,16 @@
   </div>
 </div>
 
+<div class="field" *ngIf="activeTab === 0">
+  <label class="label">Allow client to handle magnet links</label>
+    <div class="control">
+      <button class="button is-info" type="button" (click)="registerMagnetHandler()">
+        <span>Register Handler</span>
+      </button>
+    </div>
+    <p class="help">This will register the client as your browser's default handler for magnet links. Clicking a magnet link will automatically open it in the new torrent screen for downloading.</p>
+</div>
+
 <div class="field" *ngIf="activeTab < 99">
   <div class="control">
     <button class="button is-success" (click)="ok()" [disabled]="saving" [ngClass]="{ 'is-loading': saving }">
