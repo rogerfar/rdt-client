@@ -28,10 +28,13 @@ export class SettingsComponent implements OnInit {
   public testAria2cConnectionError: string = null;
   public testAria2cConnectionSuccess: string = null;
 
+  public canRegisterMagnetHandler = false;
+
   constructor(private settingsService: SettingsService) {}
 
   ngOnInit(): void {
     this.reset();
+    this.canRegisterMagnetHandler = !!(window.isSecureContext && 'registerProtocolHandler' in navigator);
   }
 
   public reset(): void {
@@ -139,20 +142,13 @@ export class SettingsComponent implements OnInit {
       },
     );
   }
-  
+
   public registerMagnetHandler(): void {
-    if (window.location.protocol !== "https:") {
-      alert("Magnet link handler registration requires a secure connection. Please ensure the client is being served over HTTPS to enable this feature.");
-      return;
-    }
-
-    const handlerUrl = `${window.location.origin}/add?magnet=%s`;
-
-    if (navigator.registerProtocolHandler) {
-      navigator.registerProtocolHandler("magnet", handlerUrl);
-      alert("Your browser will display a prompt asking if you'd like to add the client as the default application for magnet links. Please confirm to complete the setup.");
-    } else {
-      alert("Magnet link registration failed. Your browser does not support registering custom protocol handlers.");
+    try {
+      navigator.registerProtocolHandler("magnet", `${window.location.origin}/add?magnet=%s`);
+      alert("Success! Your browser will now prompt you to confirm and add the client as the default handler for magnet links.");
+    } catch (error) {
+      alert("Magnet link registration failed.");
     }
   }
 }
