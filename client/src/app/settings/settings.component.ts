@@ -28,10 +28,13 @@ export class SettingsComponent implements OnInit {
   public testAria2cConnectionError: string = null;
   public testAria2cConnectionSuccess: string = null;
 
+  public canRegisterMagnetHandler = false;
+
   constructor(private settingsService: SettingsService) {}
 
   ngOnInit(): void {
     this.reset();
+    this.canRegisterMagnetHandler = !!(window.isSecureContext && 'registerProtocolHandler' in navigator);
   }
 
   public reset(): void {
@@ -138,5 +141,14 @@ export class SettingsComponent implements OnInit {
         this.saving = false;
       },
     );
+  }
+
+  public registerMagnetHandler(): void {
+    try {
+      navigator.registerProtocolHandler("magnet", `${window.location.origin}/add?magnet=%s`);
+      alert("Success! Your browser will now prompt you to confirm and add the client as the default handler for magnet links.");
+    } catch (error) {
+      alert("Magnet link registration failed.");
+    }
   }
 }
