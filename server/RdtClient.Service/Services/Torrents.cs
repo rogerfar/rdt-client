@@ -3,6 +3,7 @@ using System.IO.Abstractions;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Web;
 using Microsoft.Extensions.Logging;
 using MonoTorrent;
 using RdtClient.Data.Data;
@@ -31,7 +32,6 @@ public class Torrents(
     TorBoxTorrentClient torBoxTorrentClient)
 {
     private static readonly SemaphoreSlim RealDebridUpdateLock = new(1, 1);
-
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         ReferenceHandler = ReferenceHandler.IgnoreCycles
@@ -107,13 +107,51 @@ public class Torrents(
         await torrentData.UpdateCategory(torrent.TorrentId, category);
     }
 
-    public async Task<Torrent> AddMagnetToDebridQueue(String magnetLink, Torrent torrent)
+    public static async Task<string> EnrichMagnetLink(string magnetLink)
     {
-        MagnetLink magnet;
+        var enrichment = Settings.Get.General.MagnetTrackerEnrichment;
+        if (enrichment == MagnetTrackerEnrichment.None) { return magnetLink; }
 
+        var url = $"https://github.com/ngosang/trackerslist/raw/refs/heads/master/{enrichment}.txt";
+        var newTrackers = (await new HttpClient().GetStringAsync(url)).Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+
+        var originalUri = new Uri(magnetLink);
+        var decodedParams = HttpUtility.ParseQueryString(originalUri.Query);
+        var rawXt = decodedParams["xt"]!;
+        decodedParams.Remove("xt");
+
+        var existingTrackers = decodedParams.GetValues("tr") ?? Array.Empty<string>();
+        decodedParams.Remove("tr");
+        var allTrackers = existingTrackers.Concat(newTrackers).Distinct(StringComparer.OrdinalIgnoreCase);
+
+        var pieces = new List<string> { $"xt={rawXt}" };
+        var allKeys = decodedParams.AllKeys;
+        if (allKeys != null)
+        {
+            foreach (string? key in allKeys)
+            {
+                if (key == null) continue;
+                foreach (var val in decodedParams.GetValues(key)!)
+                {
+                    pieces.Add($"{key}={HttpUtility.UrlEncode(val)}");
+                }
+            }
+        }
+        foreach (var tr in allTrackers) { pieces.Add($"tr={HttpUtility.UrlEncode(tr)}"); }
+
+        var basePart = originalUri.GetLeftPart(UriPartial.Path);
+        var enriched = $"{basePart}?{string.Join("&", pieces)}";
+
+        return enriched;
+    }
+
+    public async Task<Torrent> AddMagnetToDebridQueue(string magnetLink, Torrent torrent)
+    {
+        var enriched = await EnrichMagnetLink(magnetLink);
+        MagnetLink magnet;
         try
         {
-            magnet = MagnetLink.Parse(magnetLink);
+            magnet = MagnetLink.Parse(enriched);
         }
         catch (Exception ex)
         {
@@ -125,12 +163,10 @@ public class Torrents(
         torrent.RdName = magnet.Name;
 
         var hash = magnet.InfoHashes.V1OrV2.ToHex();
-
-        var newTorrent = await AddQueued(hash, magnetLink, false, torrent);
+        var newTorrent = await AddQueued(hash, enriched, false, torrent);
 
         Log($"Adding {hash} (magnet link) to queue", newTorrent);
-
-        await CopyAddedTorrent(magnet.Name!, magnetLink);
+        await CopyAddedTorrent(magnet.Name!, enriched);
 
         return newTorrent;
     }
@@ -224,7 +260,7 @@ public class Torrents(
         {
             throw new("Torrent has no torrent file or magnet link");
         }
-        
+
         logger.LogDebug("Adding {hash} to debrid provider {torrentInfo}", torrent.Hash, torrent.ToLog());
 
         var id = torrent.IsFile
@@ -426,7 +462,7 @@ public class Torrents(
     {
         var download = await downloads.GetById(downloadId) ?? throw new($"Download with ID {downloadId} not found");
 
-        Log($"Unrestricting link", download, download.Torrent);
+        Log("Unrestricting link", download, download.Torrent);
 
         var unrestrictedLink = await TorrentClient.Unrestrict(download.Path);
 
