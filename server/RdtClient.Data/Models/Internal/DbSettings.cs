@@ -75,9 +75,9 @@ Supports the following parameters:
     [Description("When a torrent file or magnet is added, create a copy in this directory.")]
     public String? CopyAddedTorrents { get; set; } = null;
 
-    [DisplayName("Magnet tracker enrichment")]
-    [Description(@"Choose which tracker list to append to magnet links, see this <a href=""https://github.com/ngosang/trackerslist/blob/master/README.md"" target=""_blank"">README</a> for more info.")]
-    public MagnetTrackerEnrichment MagnetTrackerEnrichment { get; set; } = MagnetTrackerEnrichment.None;
+    [DisplayName("Magnet enrichment list")]
+    [Description("Optional. Specify the URL of a tracker list file to be appended to magnet links.")]
+    public String? MagnetTrackerEnrichment { get; set; } = null;
 
     [DisplayName("Disable update notifications")]
     [Description("Ignore update notifications. You will still be notified if the version you are running has a security vulnerability.")]
