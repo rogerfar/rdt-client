@@ -111,7 +111,10 @@ public class Torrents(
 
     private async Task<String> EnrichMagnetLink(String magnetLink)
     {
-        if (string.IsNullOrWhiteSpace(Settings.Get.General.MagnetTrackerEnrichment)) return magnetLink;
+        if (String.IsNullOrWhiteSpace(Settings.Get.General.MagnetTrackerEnrichment))
+        {
+            return magnetLink;
+        }
 
         try
         {
@@ -122,19 +125,22 @@ public class Torrents(
             var existingTrackers = query.GetValues("tr") ?? [];
             var allTrackers = existingTrackers.Concat(newTrackers).Distinct(StringComparer.OrdinalIgnoreCase);
 
-            var trackerQuery = string.Join("&tr=", allTrackers.Select(Uri.EscapeDataString));
-            if (!string.IsNullOrEmpty(trackerQuery))
+            var trackerQuery = String.Join("&tr=", allTrackers.Select(Uri.EscapeDataString));
+
+            if (!String.IsNullOrEmpty(trackerQuery))
             {
                 trackerQuery = "&tr=" + trackerQuery;
             }
 
             var baseWithoutTrackers = magnetLink.Split(["&tr="], StringSplitOptions.None)[0];
             var separator = baseWithoutTrackers.Contains('?') ? "&" : "?";
+
             return baseWithoutTrackers + separator + trackerQuery.TrimStart('&');
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "{Message}, trying to enrich {Magnet}", ex.Message, magnetLink);
+
             return magnetLink;
         }
     }
