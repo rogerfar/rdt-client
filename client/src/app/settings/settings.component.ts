@@ -145,10 +145,10 @@ export class SettingsComponent implements OnInit {
 
   public registerMagnetHandler(): void {
     try {
-      navigator.registerProtocolHandler("magnet", `${window.location.origin}/add?magnet=%s`);
-      alert("Success! Your browser will now prompt you to confirm and add the client as the default handler for magnet links.");
+      navigator.registerProtocolHandler('magnet', `${window.location.origin}/add?magnet=%s`);
+      alert('Success! Your browser will now prompt you to confirm and add the client as the default handler for magnet links.');
     } catch (error) {
-      alert("Magnet link registration failed.");
+      alert('Magnet link registration failed.');
     }
   }
 }
