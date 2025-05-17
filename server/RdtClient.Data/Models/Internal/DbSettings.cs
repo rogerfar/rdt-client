@@ -43,7 +43,7 @@ public class DbSettingsGeneral
     public Int32 DownloadLimit { get; set; } = 2;
 
     [DisplayName("Maximum unpack processes")]
-    [Description("Maximum amount of downloads that get unpacked on your host at the same time.")]
+    [Description("Maximum amount of downloads that get unpacked on your host at the same time. Set to 0 to disable unpacking.")]
     public Int32 UnpackLimit { get; set; } = 1;
 
     [DisplayName("Categories")]
