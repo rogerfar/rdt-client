@@ -81,6 +81,10 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
         }
 
         var settingUnpackLimit = Settings.Get.General.UnpackLimit;
+        if (settingUnpackLimit < 0)
+        {
+            settingUnpackLimit = 0;
+        }
 
         var settingDownloadPath = Settings.Get.DownloadClient.DownloadPath;
         if (String.IsNullOrWhiteSpace(settingDownloadPath))
