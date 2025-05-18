@@ -144,22 +144,36 @@
 <div class="field" *ngIf="activeTab === 0">
   <label class="label">Register client as magnet link handler</label>
   <div class="control">
-    <button 
-      class="button is-info" 
-      type="button" 
-      (click)="registerMagnetHandler()" 
-      [disabled]="!canRegisterMagnetHandler">
+    <button
+      class="button is-info"
+      type="button"
+      (click)="registerMagnetHandler()"
+      [disabled]="!canRegisterMagnetHandler"
+    >
       <span>
-        {{ canRegisterMagnetHandler ? 'Register Handler' : 'Unavailable in This Browser' }}
+        {{ canRegisterMagnetHandler ? "Register Handler" : "Unavailable in This Browser" }}
       </span>
     </button>
   </div>
   <p class="help">
-    {{
-      canRegisterMagnetHandler
-        ? "This will attempt to register the client as your browser's default handler for magnet links and automatically open them in the new torrent screen for downloading."
-        : "Magnet link registration is unavailable because either your browser does not support it or the client is not being served to you in a secure context."
-    }}
+    @if (canRegisterMagnetHandler) {
+      This will attempt to register the client as your browser's default handler for magnet links and automatically open
+      them in the new torrent screen for downloading.
+    } @else {
+      Magnet link registration is unavailable. Your
+      <a href="https://caniuse.com/mdn-api_navigator_registerprotocolhandler" target="_blank" rel="noopener noreferrer">
+        browser may not support this feature
+      </a>
+      , or the client is not being served in a
+      <a
+        href="https://developer.mozilla.org/en-US/docs/Glossary/Secure_Context/"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        secure context
+      </a>
+      .
+    }
   </p>
 </div>
 
