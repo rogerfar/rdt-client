@@ -81,9 +81,9 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
         }
 
         var settingUnpackLimit = Settings.Get.General.UnpackLimit;
-        if (settingUnpackLimit < 1)
+        if (settingUnpackLimit < 0)
         {
-            settingUnpackLimit = 1;
+            settingUnpackLimit = 0;
         }
 
         var settingDownloadPath = Settings.Get.DownloadClient.DownloadPath;
@@ -485,7 +485,8 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                     var extension = Path.GetExtension(download.FileName);
 
                     if ((extension != ".rar" && extension != ".zip") ||
-                        torrent.DownloadClient == Data.Enums.DownloadClient.Symlink)
+                        torrent.DownloadClient == Data.Enums.DownloadClient.Symlink ||
+                        settingUnpackLimit == 0)
                     {
                         Log($"No need to unpack, setting it as unpacked", download, torrent);
 
