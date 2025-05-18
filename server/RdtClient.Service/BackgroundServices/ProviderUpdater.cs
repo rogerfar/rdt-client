@@ -6,7 +6,7 @@ using RdtClient.Service.Services;
 
 namespace RdtClient.Service.BackgroundServices;
 
-public class ProviderUpdater(ILogger<TaskRunner> logger, IServiceProvider serviceProvider) : BackgroundService
+public class ProviderUpdater(ILogger<ProviderUpdater> logger, IServiceProvider serviceProvider) : BackgroundService
 {
     private static DateTime _nextUpdate = DateTime.UtcNow;
 
