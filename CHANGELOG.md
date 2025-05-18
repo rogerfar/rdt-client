@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.112] - 2025-05-18
+### Added
+- Add ability to disable the built in unpacking process by setting the "Maximum unpack processes" to 0.
+
+### Changed
+- Upgraded Angular to use control flow.
+
+## Fixed
+- Fixed dequeing issue.
+- Fixed logging handler for ProviderUpdater.
+
 ## [2.0.111] - 2025-05-03
 ### Added
 - Added button to register rdt-client as a handler for magnet links on [supported browsers](https://caniuse.com/mdn-api_navigator_registerprotocolhandler_scheme_parameter_magnet).
