@@ -1,7 +1,9 @@
-<div class="notification is-danger is-light" *ngIf="error && error.length > 0">
-  An error has occured: {{ error }}<br />
-  Please refresh the screen after fixing this error.
-</div>
+@if (error && error.length > 0) {
+  <div class="notification is-danger is-light">
+    An error has occurred: {{ error }}<br />
+    Please refresh the screen after fixing this error.
+  </div>
+}
 <div class="table-container">
   <table class="table is-fullwidth is-hoverable">
     <thead>
@@ -25,72 +27,59 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let torrent of torrents | sort: sortProperty : sortDirection; trackBy: trackByMethod">
-        <td>
-          <input
-            type="checkbox"
-            (click)="toggleSelect(torrent.torrentId)"
-            [checked]="selectedTorrents.contains(torrent.torrentId)"
-          />
-        </td>
-        <td (click)="openTorrent(torrent.torrentId)" class="break-all">
-          {{ torrent.rdName }}
-        </td>
-        <td>
-          {{ torrent.category }}
-        </td>
-        <td>
-          {{ torrent.priority }}
-        </td>
-        <td>
-          {{ torrent.rdSeeders }}
-        </td>
-        <td>
-          {{ torrent.files.length | number }}
-        </td>
-        <td>
-          {{ torrent.downloads.length | number }}
-        </td>
-        <td>
-          {{ torrent.rdSize | filesize }}
-        </td>
-        <td>
-          {{ torrent.added | date: "medium" }}
-        </td>
-        <td>
-          {{ torrent | status }}
-        </td>
-      </tr>
+      @for (torrent of torrents | sort: sortProperty : sortDirection; track torrent.torrentId) {
+        <tr>
+          <td>
+            <input
+              type="checkbox"
+              (click)="toggleSelect(torrent.torrentId)"
+              [checked]="selectedTorrents.contains(torrent.torrentId)"
+            />
+          </td>
+          <td (click)="openTorrent(torrent.torrentId)" class="break-all">
+            {{ torrent.rdName }}
+          </td>
+          <td>
+            {{ torrent.category }}
+          </td>
+          <td>
+            {{ torrent.priority }}
+          </td>
+          <td>
+            {{ torrent.rdSeeders }}
+          </td>
+          <td>
+            {{ torrent.files.length | number }}
+          </td>
+          <td>
+            {{ torrent.downloads.length | number }}
+          </td>
+          <td>
+            {{ torrent.rdSize | filesize }}
+          </td>
+          <td>
+            {{ torrent.added | date: "medium" }}
+          </td>
+          <td>
+            {{ torrent | status }}
+          </td>
+        </tr>
+      }
     </tbody>
   </table>
 
   <div class="flex-container">
-    <button
-      class="button is-danger"
-      (click)="showDeleteModal()"
-      [disabled]="selectedTorrents.length === 0"
-      *ngIf="torrents.length > 0"
-    >
-      Delete Selected
-    </button>
-
-    <button
-      class="button is-primary"
-      (click)="showRetryModal()"
-      [disabled]="selectedTorrents.length === 0"
-      *ngIf="torrents.length > 0"
-    >
-      Retry Selected
-    </button>
-
-    <button
-      class="button is-primary"
-      (click)="changeSettingsModal()"
-      [disabled]="selectedTorrents.length === 0"
-      *ngIf="torrents.length > 0"
-    >
-      Change Settings
-    </button>
+    @if (torrents.length > 0) {
+      <button class="button is-danger" (click)="showDeleteModal()" [disabled]="selectedTorrents.length === 0">
+        Delete Selected
+      </button>
+      <button class="button is-primary" (click)="showRetryModal()" [disabled]="selectedTorrents.length === 0">
+        Retry Selected
+      </button>
+      <button class="button is-primary" (click)="changeSettingsModal()" [disabled]="selectedTorrents.length === 0">
+        Change Settings
+      </button>
+    }
   </div>
 </div>
 
@@ -131,9 +120,9 @@
       <div class="notification is-primary">
         Deleting a torrent from Real-Debrid will automatically delete it here too.
       </div>
-      <div class="notification is-danger is-light" *ngIf="deleteError?.length > 0">
-        Error deleting torrent: {{ deleteError }}
-      </div>
+      @if (deleteError?.length > 0) {
+        <div class="notification is-danger is-light">Error deleting torrent: {{ deleteError }}</div>
+      }
     </section>
     <footer class="modal-card-foot">
       <button
@@ -164,9 +153,9 @@
         This action will delete all the torrent data + all local downloads. Then it will re-add the original magnet link
         or torrent file to the debrid provider.
       </p>
-      <div class="notification is-danger is-light" *ngIf="retryError?.length > 0">
-        Error retrying torrent: {{ retryError }}
-      </div>
+      @if (retryError?.length > 0) {
+        <div class="notification is-danger is-light">Error retrying torrent: {{ retryError }}</div>
+      }
     </section>
     <footer class="modal-card-foot">
       <button
@@ -296,9 +285,9 @@
         </p>
       </div>
 
-      <div class="notification is-danger is-light" *ngIf="changeSettingsError?.length > 0">
-        Error changing settings: {{ changeSettingsError }}
-      </div>
+      @if (changeSettingsError?.length > 0) {
+        <div class="notification is-danger is-light">Error changing settings: {{ changeSettingsError }}</div>
+      }
     </section>
     <footer class="modal-card-foot">
       <button

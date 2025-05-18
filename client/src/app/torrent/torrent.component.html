@@ -12,353 +12,426 @@
   </ul>
 </div>
 
-<div *ngIf="torrent === null || torrent === undefined">
-  <div class="fa-3x">
-    <i class="fas fa-spinner fa-spin"></i>
-  </div>
-</div>
-<div *ngIf="torrent !== null && torrent !== undefined">
-  <div class="flex-container" *ngIf="activeTab === 0">
-    <div style="flex: 1 1 0">
-      <div class="field is-grouped">
-        <div class="control">
-          <button class="button is-danger" (click)="showDeleteModal()">Delete Torrent</button>
-        </div>
-        <div class="control">
-          <button class="button is-primary" (click)="showRetryModal()">Retry Torrent</button>
-        </div>
-        <div class="control">
-          <button class="button is-light" (click)="showUpdateSettingsModal()">Change Settings</button>
-        </div>
-      </div>
-      <div class="field">
-        <label class="label">Status</label>
-        {{ torrent | status }}
-      </div>
-      <div class="field">
-        <label class="label">Retry count</label>
-        {{ torrent.retryCount }} / {{ torrent.torrentRetryAttempts }}
-      </div>
-      <div class="field">
-        <label class="label">Hash</label>
-        {{ torrent.hash }}
-      </div>
-      <div class="field">
-        <label class="label">Priority</label>
-        {{ torrent.priority || "" }}
-      </div>
-      <div class="field">
-        <label class="label">Category</label>
-        {{ torrent.category || "(no category set)" }}
-      </div>
-      <div class="field">
-        <label class="label">Downloader</label>
-        <ng-container [ngSwitch]="torrent.downloadClient">
-          <ng-container *ngSwitchCase="0">Internal Downloader</ng-container>
-          <ng-container *ngSwitchCase="1">Bezadd</ng-container>
-          <ng-container *ngSwitchCase="2">Aria2c</ng-container>
-          <ng-container *ngSwitchCase="3">Symlink Downloader</ng-container>
-          <ng-component *ngSwitchCase="4">Synology DownloadStation</ng-component>
-        </ng-container>
-      </div>
-      <div class="field">
-        <label class="label">Post Download Action</label>
-        <ng-container [ngSwitch]="torrent.hostDownloadAction">
-          <ng-container *ngSwitchCase="0">Download all files to host</ng-container>
-          <ng-container *ngSwitchCase="1">Don't download files to host</ng-container>
-        </ng-container>
-      </div>
-      <div class="field">
-        <label class="label">Post Torrent Download Action</label>
-        <ng-container [ngSwitch]="torrent.downloadAction">
-          <ng-container *ngSwitchCase="0">Download all files above a certain size</ng-container>
-          <ng-container *ngSwitchCase="1"
-            >Download all available files on Real-Debrid above a certain size</ng-container
-          >
-          <ng-container *ngSwitchCase="2">Pick files I want to download</ng-container>
-        </ng-container>
-      </div>
-      <div class="field">
-        <label class="label">Finished action</label>
-        <ng-container [ngSwitch]="torrent.finishedAction">
-          <ng-container *ngSwitchCase="0">Do nothing</ng-container>
-          <ng-container *ngSwitchCase="1">Remove torrent from Real-Debrid and Real-Debrid Client</ng-container>
-          <ng-container *ngSwitchCase="2">Remove torrent from Real-Debrid</ng-container>
-          <ng-container *ngSwitchCase="3">Remove torrent from client</ng-container>
-        </ng-container>
-      </div>
-      <div class="field">
-        <label class="label">Minimum file size to download</label>
-        {{ torrent.downloadMinSize }}MB
-      </div>
-      <div class="field">
-        <label class="label">Include files</label>
-        {{ torrent.includeRegex }}
-      </div>
-      <div class="field">
-        <label class="label">Exclude files</label>
-        {{ torrent.excludeRegex }}
-      </div>
-      <div class="field" *ngIf="!torrent.isFile">
-        <label class="label">Magnet</label>
-        <span [cdkCopyToClipboard]="torrent.fileOrMagnet" (click)="copied = true" *ngIf="!copied"
-          >Click to copy magnet link to clipboard</span
-        >
-        <span *ngIf="copied">Link copied to clipboard!</span>
-      </div>
-      <div class="field" *ngIf="torrent.isFile">
-        <label class="label">Torrent file</label>
-        <span (click)="download()">Click to download torrent file</span>
-      </div>
-      <div class="field">
-        <label class="label">Added on</label>
-        {{ torrent.added | date: "fullDate" }} {{ torrent.added | date: "mediumTime" }}
-      </div>
-      <div class="field">
-        <label class="label">Files selected on</label>
-        <ng-container *ngIf="torrent.filesSelected === null">(no files selected yet) </ng-container>
-        <ng-container *ngIf="torrent.filesSelected !== null">
-          {{ torrent.filesSelected | date: "fullDate" }} {{ torrent.filesSelected | date: "mediumTime" }}
-        </ng-container>
-      </div>
-      <div class="field">
-        <label class="label">Completed on</label>
-        <ng-container *ngIf="torrent.completed === null">(not completed yet) </ng-container>
-        <ng-container *ngIf="torrent.completed !== null">
-          {{ torrent.completed | date: "fullDate" }} {{ torrent.completed | date: "mediumTime" }}
-        </ng-container>
-      </div>
-    </div>
-    <div style="flex: 1 1 0">
-      <div class="field">
-        <label class="label">Real-Debrid ID</label>
-        {{ torrent.rdId }}
-      </div>
-      <div class="field">
-        <label class="label">Real-Debrid Name</label>
-        {{ torrent.rdName }}
-      </div>
-      <div class="field">
-        <label class="label">Real-Debrid Size</label>
-        {{ torrent.rdSize | filesize }}
-      </div>
-      <div class="field">
-        <label class="label">Real-Debrid Host</label>
-        {{ torrent.rdHost }}
-      </div>
-      <div class="field">
-        <label class="label">Real-Debrid Split</label>
-        {{ torrent.rdSplit }}
-      </div>
-      <div class="field">
-        <label class="label">Real-Debrid Progress</label>
-        {{ torrent.rdProgress || 0 }}%
-      </div>
-      <div class="field">
-        <label class="label">Real-Debrid Status</label>
-        <ng-container [ngSwitch]="torrent.rdStatus">
-          <ng-container *ngSwitchCase="0">Processing</ng-container>
-          <ng-container *ngSwitchCase="1">Waiting For File Selection</ng-container>
-          <ng-container *ngSwitchCase="2">Downloading</ng-container>
-          <ng-container *ngSwitchCase="3">Finished</ng-container>
-          <ng-container *ngSwitchCase="99">Error</ng-container>
-        </ng-container>
-        ({{ torrent.rdStatusRaw }})
-      </div>
-      <div class="field">
-        <label class="label">Real-Debrid Added</label>
-        {{ torrent.rdAdded | date: "fullDate" }} {{ torrent.rdAdded | date: "mediumTime" }}
-      </div>
-      <div class="field">
-        <label class="label">Real-Debrid Ended</label>
-        {{ torrent.rdEnded | date: "fullDate" }} {{ torrent.rdEnded | date: "mediumTime" }}
-      </div>
-      <div class="field">
-        <label class="label">Real-Debrid Speed</label>
-        {{ torrent.rdSpeed || 0 }}
-      </div>
-      <div class="field">
-        <label class="label">Real-Debrid Seeders</label>
-        {{ torrent.rdSeeders || "0" }}
-      </div>
+@if (torrent === null || torrent === undefined) {
+  <div>
+    <div class="fa-3x">
+      <i class="fas fa-spinner fa-spin"></i>
     </div>
   </div>
-  <div *ngIf="activeTab === 1">
-    <div class="field">
-      <table class="table is-fullwidth">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Path</th>
-            <th>Size</th>
-            <th>Selected</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let file of torrent.files">
-            <td>
-              {{ file.id }}
-            </td>
-            <td>
-              {{ file.path }}
-            </td>
-            <td>
-              {{ file.bytes | filesize }}
-            </td>
-            <td>
-              <i class="fas fa-check" *ngIf="file.selected" style="color: green"></i>
-              <i class="fas fa-times" *ngIf="!file.selected" style="color: red"></i>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div *ngIf="activeTab === 2">
-    <div class="field">
-      <table class="table is-fullwidth is-hoverable">
-        <thead>
-          <tr>
-            <th style="width: 35px"></th>
-            <th>Link</th>
-            <th>Size</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <ng-container *ngFor="let download of torrent.downloads">
-            <tr (click)="downloadExpanded[download.downloadId] = !downloadExpanded[download.downloadId]">
-              <td style="width: 35px">
-                <i class="fas fa-caret-right" *ngIf="!downloadExpanded[download.downloadId]"></i>
-                <i class="fas fa-caret-down" *ngIf="downloadExpanded[download.downloadId]"></i>
-              </td>
-              <td>
-                <ng-container *ngIf="download.link">
-                  {{ download.link | decodeURI }}
-                </ng-container>
-
-                <ng-container *ngIf="!download.link">
-                  {{ download.path }}
-                </ng-container>
-              </td>
-              <td>
-                {{ download.bytesTotal | filesize }}
-              </td>
-              <td>
-                {{ download | downloadStatus }}
-              </td>
-            </tr>
-            <tr *ngIf="downloadExpanded[download.downloadId]" class="separator">
-              <td style="width: 35px"></td>
-              <td colspan="5">
-                <div class="flex-container">
-                  <div style="flex: 1 1 0">
-                    <div class="field is-grouped">
-                      <div class="control">
-                        <button class="button is-primary" (click)="showDownloadRetryModal(download.downloadId)">
-                          Retry Download
-                        </button>
-                      </div>
-                    </div>
-                    <div class="field" *ngIf="download.error">
-                      <label class="label">Error</label>
-                      {{ download.error }}
-                    </div>
-                    <div class="field">
-                      <label class="label">Real-Debrid Unrestricted Link</label>
-                      <a href="{{ download.link }}" target="_blank" *ngIf="download.link">
-                        {{ download.link | decodeURI }}</a
-                      >
-                    </div>
-                    <div class="field">
-                      <label class="label">Real-Debrid Link</label>
+} @else {
+  <div>
+    @if (activeTab === 0) {
+      <div class="flex-container">
+        <div style="flex: 1 1 0">
+          <div class="field is-grouped">
+            <div class="control">
+              <button class="button is-danger" (click)="showDeleteModal()">Delete Torrent</button>
+            </div>
+            <div class="control">
+              <button class="button is-primary" (click)="showRetryModal()">Retry Torrent</button>
+            </div>
+            <div class="control">
+              <button class="button is-light" (click)="showUpdateSettingsModal()">Change Settings</button>
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Status</label>
+            {{ torrent | status }}
+          </div>
+          <div class="field">
+            <label class="label">Retry count</label>
+            {{ torrent.retryCount }} / {{ torrent.torrentRetryAttempts }}
+          </div>
+          <div class="field">
+            <label class="label">Hash</label>
+            {{ torrent.hash }}
+          </div>
+          <div class="field">
+            <label class="label">Priority</label>
+            {{ torrent.priority || "" }}
+          </div>
+          <div class="field">
+            <label class="label">Category</label>
+            {{ torrent.category || "(no category set)" }}
+          </div>
+          <div class="field">
+            <label class="label">Downloader</label>
+            @switch (torrent.downloadClient) {
+              @case (0) {
+                Internal Downloader
+              }
+              @case (1) {
+                Bezadd
+              }
+              @case (2) {
+                Aria2c
+              }
+              @case (3) {
+                Symlink Downloader
+              }
+              @case (4) {
+                Synology DownloadStation
+              }
+            }
+          </div>
+          <div class="field">
+            <label class="label">Post Download Action</label>
+            @switch (torrent.hostDownloadAction) {
+              @case (0) {
+                Download all files to host
+              }
+              @case (1) {
+                Don't download files to host
+              }
+            }
+          </div>
+          <div class="field">
+            <label class="label">Post Torrent Download Action</label>
+            @switch (torrent.downloadAction) {
+              @case (0) {
+                Download all files above a certain size
+              }
+              @case (1) {
+                Download all available files on Real-Debrid above a certain size
+              }
+              @case (2) {
+                Pick files I want to download
+              }
+            }
+          </div>
+          <div class="field">
+            <label class="label">Finished action</label>
+            @switch (torrent.finishedAction) {
+              @case (0) {
+                Do nothing
+              }
+              @case (1) {
+                Remove torrent from Real-Debrid and Real-Debrid Client
+              }
+              @case (2) {
+                Remove torrent from Real-Debrid
+              }
+              @case (3) {
+                Remove torrent from client
+              }
+            }
+          </div>
+          <div class="field">
+            <label class="label">Minimum file size to download</label>
+            {{ torrent.downloadMinSize }}MB
+          </div>
+          <div class="field">
+            <label class="label">Include files</label>
+            {{ torrent.includeRegex }}
+          </div>
+          <div class="field">
+            <label class="label">Exclude files</label>
+            {{ torrent.excludeRegex }}
+          </div>
+          @if (!torrent.isFile) {
+            <div class="field">
+              <label class="label">Magnet</label>
+              @if (!copied) {
+                <span [cdkCopyToClipboard]="torrent.fileOrMagnet" (click)="copied = true">
+                  Click to copy magnet link to clipboard
+                </span>
+              } @else {
+                <span>Link copied to clipboard!</span>
+              }
+            </div>
+          } @else {
+            <div class="field">
+              <label class="label">Torrent file</label>
+              <span (click)="download()">Click to download torrent file</span>
+            </div>
+          }
+          <div class="field">
+            <label class="label">Added on</label>
+            {{ torrent.added | date: "fullDate" }} {{ torrent.added | date: "mediumTime" }}
+          </div>
+          <div class="field">
+            <label class="label">Files selected on</label>
+            @if (torrent.filesSelected === null) {
+              (no files selected yet)
+            } @else {
+              {{ torrent.filesSelected | date: "fullDate" }} {{ torrent.filesSelected | date: "mediumTime" }}
+            }
+          </div>
+          <div class="field">
+            <label class="label">Completed on</label>
+            @if (torrent.completed === null) {
+              (not completed yet)
+            } @else {
+              {{ torrent.completed | date: "fullDate" }} {{ torrent.completed | date: "mediumTime" }}
+            }
+          </div>
+        </div>
+        <div style="flex: 1 1 0">
+          <div class="field">
+            <label class="label">Real-Debrid ID</label>
+            {{ torrent.rdId }}
+          </div>
+          <div class="field">
+            <label class="label">Real-Debrid Name</label>
+            {{ torrent.rdName }}
+          </div>
+          <div class="field">
+            <label class="label">Real-Debrid Size</label>
+            {{ torrent.rdSize | filesize }}
+          </div>
+          <div class="field">
+            <label class="label">Real-Debrid Host</label>
+            {{ torrent.rdHost }}
+          </div>
+          <div class="field">
+            <label class="label">Real-Debrid Split</label>
+            {{ torrent.rdSplit }}
+          </div>
+          <div class="field">
+            <label class="label">Real-Debrid Progress</label>
+            {{ torrent.rdProgress || 0 }}%
+          </div>
+          <div class="field">
+            <label class="label">Real-Debrid Status</label>
+            @switch (torrent.rdStatus) {
+              @case (0) {
+                Processing
+              }
+              @case (1) {
+                Waiting For File Selection
+              }
+              @case (2) {
+                Downloading
+              }
+              @case (3) {
+                Finished
+              }
+              @case (99) {
+                Error
+              }
+            }
+            ({{ torrent.rdStatusRaw }})
+          </div>
+          <div class="field">
+            <label class="label">Real-Debrid Added</label>
+            {{ torrent.rdAdded | date: "fullDate" }} {{ torrent.rdAdded | date: "mediumTime" }}
+          </div>
+          <div class="field">
+            <label class="label">Real-Debrid Ended</label>
+            {{ torrent.rdEnded | date: "fullDate" }} {{ torrent.rdEnded | date: "mediumTime" }}
+          </div>
+          <div class="field">
+            <label class="label">Real-Debrid Speed</label>
+            {{ torrent.rdSpeed || 0 }}
+          </div>
+          <div class="field">
+            <label class="label">Real-Debrid Seeders</label>
+            {{ torrent.rdSeeders || "0" }}
+          </div>
+        </div>
+      </div>
+    }
+    @if (activeTab === 1) {
+      <div>
+        <div class="field">
+          <table class="table is-fullwidth">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Path</th>
+                <th>Size</th>
+                <th>Selected</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (file of torrent.files; track file.id) {
+                <tr>
+                  <td>
+                    {{ file.id }}
+                  </td>
+                  <td>
+                    {{ file.path }}
+                  </td>
+                  <td>
+                    {{ file.bytes | filesize }}
+                  </td>
+                  <td>
+                    @if (file.selected) {
+                      <i class="fas fa-check" style="color: green"></i>
+                    } @else {
+                      <i class="fas fa-times" style="color: red"></i>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+    @if (activeTab === 2) {
+      <div>
+        <div class="field">
+          <table class="table is-fullwidth is-hoverable">
+            <thead>
+              <tr>
+                <th style="width: 35px"></th>
+                <th>Link</th>
+                <th>Size</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (download of torrent.downloads; track download.downloadId) {
+                @let expanded = downloadExpanded[download.downloadId];
+                <tr (click)="downloadExpanded[download.downloadId] = !expanded">
+                  <td style="width: 35px">
+                    @if (!expanded) {
+                      <i class="fas fa-caret-right"></i>
+                    } @else {
+                      <i class="fas fa-caret-down"></i>
+                    }
+                  </td>
+                  <td>
+                    @if (download.link) {
+                      {{ download.link | decodeURI }}
+                    }
+                    @if (!download.link) {
                       {{ download.path }}
-                    </div>
-                    <div class="field">
-                      <label class="label">Download</label>
-                      {{ download.bytesDone | filesize }} / {{ download.bytesTotal | filesize }} ({{
-                        download.speed | filesize
-                      }}/s)
-                    </div>
-                    <div class="field">
-                      <label class="label">Retry Count</label>
-                      {{ download.retryCount }} / {{ torrent.downloadRetryAttempts }}
-                    </div>
-                  </div>
-                  <div style="flex: 1 1 0">
-                    <div class="field">
-                      <label class="label">Added</label>
-                      <ng-container *ngIf="download.added">
-                        {{ download.added | date: "fullDate" }} {{ download.added | date: "mediumTime" }}
-                      </ng-container>
-                      <ng-container *ngIf="!download.added">(not added yet) </ng-container>
-                    </div>
-                    <div class="field">
-                      <label class="label">Download Queued</label>
-                      <ng-container *ngIf="download.downloadQueued">
-                        {{ download.downloadQueued | date: "fullDate" }}
-                        {{ download.downloadQueued | date: "mediumTime" }}
-                      </ng-container>
-                      <ng-container *ngIf="!download.downloadQueued">(not queued for downloading yet) </ng-container>
-                    </div>
-                    <div class="field">
-                      <label class="label">Download Started</label>
-                      <ng-container *ngIf="download.downloadStarted">
-                        {{ download.downloadStarted | date: "fullDate" }}
-                        {{ download.downloadStarted | date: "mediumTime" }}
-                      </ng-container>
-                      <ng-container *ngIf="!download.downloadStarted">(not started downloading yet) </ng-container>
-                    </div>
-                    <div class="field">
-                      <label class="label">Download Finished</label>
-                      <ng-container *ngIf="download.downloadFinished">
-                        {{ download.downloadFinished | date: "fullDate" }}
-                        {{ download.downloadFinished | date: "mediumTime" }}
-                      </ng-container>
-                      <ng-container *ngIf="!download.downloadFinished">(not finished yet) </ng-container>
-                    </div>
-                    <div class="field">
-                      <label class="label">Unpacking Queued</label>
-                      <ng-container *ngIf="download.unpackingQueued">
-                        {{ download.unpackingQueued | date: "fullDate" }}
-                        {{ download.unpackingQueued | date: "mediumTime" }}
-                      </ng-container>
-                      <ng-container *ngIf="!download.unpackingQueued">(not queued for unpacking yet) </ng-container>
-                    </div>
-                    <div class="field">
-                      <label class="label">Unpacking Started</label>
-                      <ng-container *ngIf="download.unpackingStarted">
-                        {{ download.unpackingStarted | date: "fullDate" }}
-                        {{ download.unpackingStarted | date: "mediumTime" }}
-                      </ng-container>
-                      <ng-container *ngIf="!download.unpackingStarted">(not started unpacking yet) </ng-container>
-                    </div>
-                    <div class="field">
-                      <label class="label">Unpacking Finished</label>
-                      <ng-container *ngIf="download.unpackingFinished">
-                        {{ download.unpackingFinished | date: "fullDate" }}
-                        {{ download.unpackingFinished | date: "mediumTime" }}
-                      </ng-container>
-                      <ng-container *ngIf="!download.unpackingFinished">(not finished unpacking yet) </ng-container>
-                    </div>
-                    <div class="field">
-                      <label class="label">Completed</label>
-                      <ng-container *ngIf="download.completed">
-                        {{ download.completed | date: "fullDate" }}
-                        {{ download.completed | date: "mediumTime" }}
-                      </ng-container>
-                      <ng-container *ngIf="!download.completed">(not completed yet) </ng-container>
-                    </div>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </ng-container>
-        </tbody>
-      </table>
-    </div>
+                    }
+                  </td>
+                  <td>
+                    {{ download.bytesTotal | filesize }}
+                  </td>
+                  <td>
+                    {{ download | downloadStatus }}
+                  </td>
+                </tr>
+                @if (expanded) {
+                  <tr class="separator">
+                    <td style="width: 35px"></td>
+                    <td colspan="5">
+                      <div class="flex-container">
+                        <div style="flex: 1 1 0">
+                          <div class="field is-grouped">
+                            <div class="control">
+                              <button class="button is-primary" (click)="showDownloadRetryModal(download.downloadId)">
+                                Retry Download
+                              </button>
+                            </div>
+                          </div>
+                          @if (download.error) {
+                            <div class="field">
+                              <label class="label">Error</label>
+                              {{ download.error }}
+                            </div>
+                          }
+                          <div class="field">
+                            <label class="label">Real-Debrid Unrestricted Link</label>
+                            @if (download.link) {
+                              <a href="{{ download.link }}" target="_blank"> {{ download.link | decodeURI }}</a>
+                            }
+                          </div>
+                          <div class="field">
+                            <label class="label">Real-Debrid Link</label>
+                            {{ download.path }}
+                          </div>
+                          <div class="field">
+                            <label class="label">Download</label>
+                            {{ download.bytesDone | filesize }} / {{ download.bytesTotal | filesize }} ({{
+                              download.speed | filesize
+                            }}/s)
+                          </div>
+                          <div class="field">
+                            <label class="label">Retry Count</label>
+                            {{ download.retryCount }} / {{ torrent.downloadRetryAttempts }}
+                          </div>
+                        </div>
+                        <div style="flex: 1 1 0">
+                          <div class="field">
+                            <label class="label">Added</label>
+                            @if (download.added) {
+                              {{ download.added | date: "fullDate" }} {{ download.added | date: "mediumTime" }}
+                            } @else {
+                              (not added yet)
+                            }
+                          </div>
+                          <div class="field">
+                            <label class="label">Download Queued</label>
+                            @if (download.downloadQueued) {
+                              {{ download.downloadQueued | date: "fullDate" }}
+                              {{ download.downloadQueued | date: "mediumTime" }}
+                            } @else {
+                              (not queued for downloading yet)
+                            }
+                          </div>
+                          <div class="field">
+                            <label class="label">Download Started</label>
+                            @if (download.downloadStarted) {
+                              {{ download.downloadStarted | date: "fullDate" }}
+                              {{ download.downloadStarted | date: "mediumTime" }}
+                            } @else {
+                              (not started downloading yet)
+                            }
+                          </div>
+                          <div class="field">
+                            <label class="label">Download Finished</label>
+                            @if (download.downloadFinished) {
+                              {{ download.downloadFinished | date: "fullDate" }}
+                              {{ download.downloadFinished | date: "mediumTime" }}
+                            } @else {
+                              (not finished yet)
+                            }
+                          </div>
+                          <div class="field">
+                            <label class="label">Unpacking Queued</label>
+                            @if (download.unpackingQueued) {
+                              {{ download.unpackingQueued | date: "fullDate" }}
+                              {{ download.unpackingQueued | date: "mediumTime" }}
+                            } @else {
+                              (not queued for unpacking yet)
+                            }
+                          </div>
+                          <div class="field">
+                            <label class="label">Unpacking Started</label>
+                            @if (download.unpackingStarted) {
+                              {{ download.unpackingStarted | date: "fullDate" }}
+                              {{ download.unpackingStarted | date: "mediumTime" }}
+                            } @else {
+                              (not started unpacking yet)
+                            }
+                          </div>
+                          <div class="field">
+                            <label class="label">Unpacking Finished</label>
+                            @if (download.unpackingFinished) {
+                              {{ download.unpackingFinished | date: "fullDate" }}
+                              {{ download.unpackingFinished | date: "mediumTime" }}
+                            } @else {
+                              (not finished unpacking yet)
+                            }
+                          </div>
+                          <div class="field">
+                            <label class="label">Completed</label>
+                            @if (download.completed) {
+                              {{ download.completed | date: "fullDate" }}
+                              {{ download.completed | date: "mediumTime" }}
+                            } @else {
+                              (not completed yet)
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
   </div>
-</div>
+}
 
 <div class="modal" [class.is-active]="isDeleteModalActive">
   <div class="modal-background"></div>
@@ -391,9 +464,9 @@
       <div class="notification is-primary">
         Deleting a torrent from Real-Debrid will automatically delete it here too.
       </div>
-      <div class="notification is-danger is-light" *ngIf="deleteError?.length > 0">
-        Error deleting torrent: {{ deleteError }}
-      </div>
+      @if (deleteError?.length > 0) {
+        <div class="notification is-danger is-light">Error deleting torrent: {{ deleteError }}</div>
+      }
     </section>
     <footer class="modal-card-foot">
       <button
@@ -424,9 +497,9 @@
         This action will delete all the torrent data + all local downloads. Then it will re-add the original magnet link
         or torrent file to Real-Debrid.
       </p>
-      <div class="notification is-danger is-light" *ngIf="retryError?.length > 0">
-        Error retrying torrent: {{ retryError }}
-      </div>
+      @if (retryError?.length > 0) {
+        <div class="notification is-danger is-light">Error retrying torrent: {{ retryError }}</div>
+      }
     </section>
     <footer class="modal-card-foot">
       <button
@@ -454,9 +527,9 @@
     <section class="modal-card-body">
       <p>Are you sure you want to retry this download?</p>
       <p>This action will remove the local download and re-download the file from Real-Debrid.</p>
-      <div class="notification is-danger is-light" *ngIf="downloadRetryError?.length > 0">
-        Error retrying download: {{ downloadRetryError }}
-      </div>
+      @if (downloadRetryError?.length > 0) {
+        <div class="notification is-danger is-light">Error retrying download: {{ downloadRetryError }}</div>
+      }
     </section>
     <footer class="modal-card-foot">
       <button

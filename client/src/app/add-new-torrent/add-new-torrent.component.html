@@ -84,11 +84,15 @@
           </div>
         </div>
       </div>
-      <p class="help" *ngIf="provider === 'AllDebrid'">
-        When downloading with AllDebrid it cannot be guaranteed that only files above this limit will be download as
-        some files are grouped together in 1 large archive.
-      </p>
-      <p class="help" *ngIf="downloadAction === 2">This setting does not apply to manually selected files.</p>
+      @if (provider === "AllDebrid") {
+        <p class="help">
+          When downloading with AllDebrid it cannot be guaranteed that only files above this limit will be download as
+          some files are grouped together in 1 large archive.
+        </p>
+      }
+      @if (downloadAction === 2) {
+        <p class="help">This setting does not apply to manually selected files.</p>
+      }
     </div>
 
     <div class="field">
@@ -104,8 +108,12 @@
         Select only the files that are matching this regular expression. Only use this setting OR the Exclude files
         setting, not both.
       </p>
-      <p class="help" *ngIf="downloadAction === 2">This setting does not apply to manually selected files.</p>
-      <p class="help is-danger" *ngIf="includeRegexError">{{ includeRegexError }}</p>
+      @if (downloadAction === 2) {
+        <p class="help">This setting does not apply to manually selected files.</p>
+      }
+      @if (includeRegexError) {
+        <p class="help is-danger">{{ includeRegexError }}</p>
+      }
     </div>
 
     <div class="field">
@@ -121,8 +129,12 @@
         Ignore files that are matching this regular expression. Only use this setting OR the Include files setting, not
         both.
       </p>
-      <p class="help" *ngIf="downloadAction === 2">This setting does not apply to manually selected files.</p>
-      <p class="help is-danger" *ngIf="excludeRegexError">{{ excludeRegexError }}</p>
+      @if (downloadAction === 2) {
+        <p class="help">This setting does not apply to manually selected files.</p>
+      }
+      @if (excludeRegexError) {
+        <p class="help is-danger">{{ excludeRegexError }}</p>
+      }
     </div>
 
     <div class="field">
@@ -130,8 +142,10 @@
       <div class="control select is-fullwidth">
         <select [(ngModel)]="finishedAction">
           <option [ngValue]="0">Do nothing</option>
-          <option [ngValue]="1" *ngIf="downloadClient !== 2">Remove torrent from provider and client</option>
-          <option [ngValue]="2" *ngIf="downloadClient !== 2">Remove torrent from provider</option>
+          @if (downloadClient !== 2) {
+            <option [ngValue]="1">Remove torrent from provider and client</option>
+            <option [ngValue]="2">Remove torrent from provider</option>
+          }
           <option [ngValue]="3">Remove torrent from client</option>
         </select>
       </div>
@@ -196,7 +210,9 @@
 
 <div class="field">
   <div class="control">
-    <div class="notification is-danger is-light" *ngIf="error">{{ error }}</div>
+    @if (error) {
+      <div class="notification is-danger is-light">{{ error }}</div>
+    }
   </div>
 </div>
 

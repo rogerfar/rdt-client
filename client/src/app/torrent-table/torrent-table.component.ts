@@ -71,10 +71,6 @@ export class TorrentTableComponent implements OnInit {
     this.router.navigate([`/torrent/${torrentId}`]);
   }
 
-  public trackByMethod(index: number, el: Torrent): string {
-    return el.torrentId;
-  }
-
   public toggleDeleteSelectAll(event: any) {
     this.selectedTorrents = [];
 

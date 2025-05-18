@@ -38,13 +38,18 @@
         </span>
         <span>Settings</span>
       </a>
-      <a class="navbar-item" *ngIf="profile" href="{{ providerLink }}" target="_blank" rel="noopener">
-        <span class="icon">
-          <i class="fas fa-euro-sign" aria-hidden="true"></i>
-        </span>
-        <span *ngIf="profile.expiration">Premium Status: {{ profile.expiration | date }}</span>
-        <span *ngIf="!profile.expiration" class="no-premium">Not premium</span>
-      </a>
+      @if (profile) {
+        <a class="navbar-item" href="{{ providerLink }}" target="_blank" rel="noopener">
+          <span class="icon">
+            <i class="fas fa-euro-sign" aria-hidden="true"></i>
+          </span>
+          @if (profile.expiration) {
+            <span>Premium Status: {{ profile.expiration | date }}</span>
+          } @else {
+            <span class="no-premium">Not premium</span>
+          }
+        </a>
+      }
     </div>
 
     <div class="navbar-end">
@@ -61,19 +66,20 @@
     </div>
   </div>
 </nav>
-<div
-  class="notification"
-  [ngClass]="profile.isInsecure ? 'is-danger' : 'is-warning'"
-  *ngIf="
-    profile &&
-    (!profile.disableUpdateNotification || profile.isInsecure) &&
-    profile.latestVersion &&
-    profile.currentVersion !== profile.latestVersion
-  "
->
-  <span *ngIf="profile.isInsecure"> Your current version is insecure. </span>
-  <span>
-    Version {{ profile.latestVersion }} of RealDebrid Client was found. You are currently on version
-    {{ profile.currentVersion }}.
-  </span>
-</div>
+
+@if (
+  profile &&
+  (!profile.disableUpdateNotification || profile.isInsecure) &&
+  profile.latestVersion &&
+  profile.currentVersion !== profile.latestVersion
+) {
+  <div class="notification" [ngClass]="profile.isInsecure ? 'is-danger' : 'is-warning'">
+    @if (profile.isInsecure) {
+      <span> Your current version is insecure. </span>
+    }
+    <span>
+      Version {{ profile.latestVersion }} of RealDebrid Client was found. You are currently on version
+      {{ profile.currentVersion }}.
+    </span>
+  </div>
+}

@@ -19,13 +19,17 @@
 
 <div class="field">
   <div class="control">
-    <div class="notification is-danger is-light" *ngIf="error !== null">Error saving: {{ error }}</div>
+    @if (error !== null) {
+      <div class="notification is-danger is-light">Error saving: {{ error }}</div>
+    }
   </div>
 </div>
 
 <div class="field">
   <div class="control">
-    <div class="notification is-success is-light" *ngIf="success">Your profile has been updated</div>
+    @if (success) {
+      <div class="notification is-success is-light">Your profile has been updated</div>
+    }
   </div>
 </div>
 
