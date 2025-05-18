@@ -227,15 +227,24 @@ public class Torrents(
         
         logger.LogDebug("Adding {hash} to debrid provider {torrentInfo}", torrent.Hash, torrent.ToLog());
 
-        var id = torrent.IsFile
-            ? await TorrentClient.AddFile(Convert.FromBase64String(torrent.FileOrMagnet))
-            : await TorrentClient.AddMagnet(torrent.FileOrMagnet);
+        await RealDebridUpdateLock.WaitAsync();
 
-        await torrentData.UpdateRdId(torrent, id);
+        try
+        {
+            var id = torrent.IsFile
+                ? await TorrentClient.AddFile(Convert.FromBase64String(torrent.FileOrMagnet))
+                : await TorrentClient.AddMagnet(torrent.FileOrMagnet);
 
-        await UpdateTorrentClientData(torrent);
+            await torrentData.UpdateRdId(torrent, id);
 
-        return torrent;
+            await UpdateTorrentClientData(torrent);
+
+            return torrent;
+        }
+        finally
+        {
+            RealDebridUpdateLock.Release();
+        }
     }
 
     public async Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
@@ -727,30 +736,21 @@ public class Torrents(
                                           Boolean isFile,
                                           Torrent torrent)
     {
-        await RealDebridUpdateLock.WaitAsync();
+        var existingTorrent = await torrentData.GetByHash(infoHash);
 
-        try
+        if (existingTorrent != null)
         {
-            var existingTorrent = await torrentData.GetByHash(infoHash);
-
-            if (existingTorrent != null)
-            {
-                return existingTorrent;
-            }
-
-            var newTorrent = await torrentData.Add(null,
-                                                   infoHash,
-                                                   fileOrMagnetContents,
-                                                   isFile,
-                                                   torrent.DownloadClient,
-                                                   torrent);
-
-            return newTorrent;
+            return existingTorrent;
         }
-        finally
-        {
-            RealDebridUpdateLock.Release();
-        }
+
+        var newTorrent = await torrentData.Add(null,
+                                               infoHash,
+                                               fileOrMagnetContents,
+                                               isFile,
+                                               torrent.DownloadClient,
+                                               torrent);
+
+        return newTorrent;
     }
 
     public async Task Update(Torrent torrent)
