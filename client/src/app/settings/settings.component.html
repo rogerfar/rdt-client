@@ -80,7 +80,7 @@
   </div>
 }
 
-@if (activeTab === 99) {`
+@if (activeTab === 99) {
   <div>
     <div class="field">
       <label class="label">Test download path permissions</label>
@@ -110,7 +110,14 @@
     <div class="field">
       <label class="label">Test Real-Debrid download speed</label>
       <div class="control">
-        @if (!testDownloadSpeedError && !testDownloadSpeedSuccess) {
+        @if (testDownloadSpeedError) {
+          <div class="notification is-danger is-light">
+            Could not test your download speed<br />
+            {{ testDownloadSpeedError }}
+          </div>
+        } @else if (testDownloadSpeedSuccess) {
+          <div class="notification is-success is-light">Download speed {{ testDownloadSpeedSuccess | filesize }}/s</div>
+        } @else {
           <button
             class="button is-warning"
             (click)="testDownloadSpeed()"
@@ -120,15 +127,6 @@
             Test download speed
           </button>
         }
-        @if (testDownloadSpeedError) {
-          <div class="notification is-danger is-light">
-            Could not test your download speed<br />
-            {{ testDownloadSpeedError }}
-          </div>
-        }
-        @if (testDownloadSpeedSuccess) {
-          <div class="notification is-success is-light">Download speed {{ testDownloadSpeedSuccess | filesize }}/s</div>
-        }
       </div>
       <div class="help">
         This will attempt to download a 10GB file from Real-Debrid. When 50MB has been downloaded the test will stop.
@@ -137,7 +135,14 @@
     <div class="field">
       <label class="label">Test download folder write speed</label>
       <div class="control">
-        @if (!testWriteSpeedError && !testWriteSpeedSuccess) {
+        @if (testWriteSpeedError) {
+          <div class="notification is-danger is-light">
+            Could not test your download speed<br />
+            {{ testWriteSpeedError }}
+          </div>
+        } @else if (testWriteSpeedSuccess) {
+          <div class="notification is-success is-light">Write speed {{ testWriteSpeedSuccess | filesize }}/s</div>
+        } @else {
           <button
             class="button is-warning"
             (click)="testWriteSpeed()"
@@ -146,15 +151,6 @@
           >
             Test write speed
           </button>
-        }
-        @if (testWriteSpeedError) {
-          <div class="notification is-danger is-light">
-            Could not test your download speed<br />
-            {{ testWriteSpeedError }}
-          </div>
-        }
-        @if (testWriteSpeedSuccess) {
-          <div class="notification is-success is-light">Write speed {{ testWriteSpeedSuccess | filesize }}/s</div>
         }
       </div>
       <div class="help">This will write a small file to your download folder to see how fast it can write to it.</div>
