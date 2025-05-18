@@ -16,7 +16,7 @@ public class SettingData(DataContext dataContext, ILogger<SettingData> logger)
         return GetSettings(Get, null);
     }
 
-    public async Task Update(IList<SettingProperty> settings)
+    public async Task Update(IList<SettingKeyValuePair> settings)
     {
         var dbSettings = await dataContext.Settings.ToListAsync();
 
