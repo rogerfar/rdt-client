@@ -22,6 +22,7 @@ export class TorrentComponent implements OnInit {
   public isDeleteModalActive: boolean;
   public deleteError: string;
   public deleting: boolean;
+  public deleteSelectAll: boolean;
   public deleteData: boolean;
   public deleteRdTorrent: boolean;
   public deleteLocalFiles: boolean;
@@ -221,5 +222,14 @@ export class TorrentComponent implements OnInit {
         this.updating = false;
       },
     );
+  }
+  toggleDeleteSelectAllOptions() {
+    this.deleteData = this.deleteSelectAll;
+    this.deleteRdTorrent = this.deleteSelectAll;
+    this.deleteLocalFiles = this.deleteSelectAll;
+  }
+
+  updateDeleteSelectAll() {
+    this.deleteSelectAll = this.deleteData && this.deleteRdTorrent && this.deleteLocalFiles;
   }
 }
