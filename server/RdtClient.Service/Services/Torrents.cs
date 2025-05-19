@@ -25,7 +25,7 @@ public class Torrents(
     IDownloads downloads,
     IProcessFactory processFactory,
     IFileSystem fileSystem,
-    ITrackerListGrabber trackerListGrabber,
+    IEnricher enricher,
     AllDebridTorrentClient allDebridTorrentClient,
     PremiumizeTorrentClient premiumizeTorrentClient,
     RealDebridTorrentClient realDebridTorrentClient,
@@ -33,7 +33,7 @@ public class Torrents(
     TorBoxTorrentClient torBoxTorrentClient)
 {
     private static readonly SemaphoreSlim RealDebridUpdateLock = new(1, 1);
-    private readonly ITrackerListGrabber _trackerListGrabber = trackerListGrabber;
+
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         ReferenceHandler = ReferenceHandler.IgnoreCycles
@@ -109,45 +109,9 @@ public class Torrents(
         await torrentData.UpdateCategory(torrent.TorrentId, category);
     }
 
-    private async Task<String> EnrichMagnetLink(String magnetLink)
-    {
-        if (String.IsNullOrWhiteSpace(Settings.Get.General.MagnetTrackerEnrichment))
-        {
-            return magnetLink;
-        }
-
-        try
-        {
-            var newTrackers = await _trackerListGrabber.GetTrackers();
-
-            var uri = new Uri(magnetLink);
-            var query = HttpUtility.ParseQueryString(uri.Query);
-            var existingTrackers = query.GetValues("tr") ?? [];
-            var allTrackers = existingTrackers.Concat(newTrackers).Distinct(StringComparer.OrdinalIgnoreCase);
-
-            var trackerQuery = String.Join("&tr=", allTrackers.Select(Uri.EscapeDataString));
-
-            if (!String.IsNullOrEmpty(trackerQuery))
-            {
-                trackerQuery = "&tr=" + trackerQuery;
-            }
-
-            var baseWithoutTrackers = magnetLink.Split(["&tr="], StringSplitOptions.None)[0];
-            var separator = baseWithoutTrackers.Contains('?') ? "&" : "?";
-
-            return baseWithoutTrackers + separator + trackerQuery.TrimStart('&');
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "{Message}, trying to enrich {Magnet}", ex.Message, magnetLink);
-
-            return magnetLink;
-        }
-    }
-
     public async Task<Torrent> AddMagnetToDebridQueue(String magnetLink, Torrent torrent)
     {
-        var enriched = await EnrichMagnetLink(magnetLink);
+        var enriched = await enricher.EnrichMagnetLink(magnetLink);
         MagnetLink magnet;
         try
         {
@@ -166,7 +130,7 @@ public class Torrents(
         var newTorrent = await AddQueued(hash, enriched, false, torrent);
 
         Log($"Adding {hash} (magnet link) to queue", newTorrent);
-        await CopyAddedTorrent(magnet.Name!, enriched);
+        await CopyAddedTorrent(magnet.Name!, magnetLink);
 
         return newTorrent;
     }
@@ -178,9 +142,12 @@ public class Torrents(
         var fileAsBase64 = Convert.ToBase64String(bytes);
         logger.LogDebug($"bytes {bytes}");
 
+        var enriched = await enricher.EnrichTorrentBytes(bytes);
+        logger.LogDebug($"enriched bytes {enriched}");
+
         try
         {
-            monoTorrent = await MonoTorrent.Torrent.LoadAsync(bytes);
+            monoTorrent = await MonoTorrent.Torrent.LoadAsync(enriched);
         }
         catch (Exception ex)
         {

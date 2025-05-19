@@ -75,8 +75,8 @@ Supports the following parameters:
     [Description("When a torrent file or magnet is added, create a copy in this directory.")]
     public String? CopyAddedTorrents { get; set; } = null;
 
-    [DisplayName("Magnet enrichment list")]
-    [Description("Optional. Specify the URL of a tracker list file to be appended to magnet links.")]
+    [DisplayName("Tracker enrichment list")]
+    [Description("Optional. Specify the URL of a tracker list file to be appended to magnet links and torrent files.")]
     public String? MagnetTrackerEnrichment { get; set; } = null;
 
     [DisplayName("Disable update notifications")]

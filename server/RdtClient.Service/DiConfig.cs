@@ -39,6 +39,7 @@ public static class DiConfig
 
         services.AddSingleton<IDownloadableFileFilter, DownloadableFileFilter>();
         services.AddSingleton<ITrackerListGrabber, TrackerListGrabber>();
+        services.AddSingleton<IEnricher, Enricher>();
 
         services.AddSingleton<IAuthorizationHandler, AuthSettingHandler>();
 

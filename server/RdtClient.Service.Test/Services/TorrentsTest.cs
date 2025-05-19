@@ -20,13 +20,13 @@ class Mocks
     public readonly Mock<ILogger<TorrentsService>> TorrentsLoggerMock;
     public readonly Mock<IDownloads> DownloadsMock;
     public readonly Mock<ITorrentData> TorrentDataMock;
-    public readonly Mock<ITrackerListGrabber> TrackerListGrabberMock;
+    public readonly Mock<IEnricher> EnricherMock;
 
     public Mocks()
     {
         TorrentDataMock = new();
         DownloadsMock = new();
-        TrackerListGrabberMock = new();
+        EnricherMock = new();
 
         TorrentsLoggerMock = new();
 
@@ -104,7 +104,7 @@ public class TorrentsTest
                                            mocks.DownloadsMock.Object,
                                            mocks.ProcessFactoryMock.Object,
                                            fileSystemMock,
-                                           mocks.TrackerListGrabberMock.Object,
+                                           mocks.EnricherMock.Object,
                                            null!, // Torrent Clients are not used by `RunTorrentComplete`, this is fine
                                            null!,
                                            null!,
@@ -170,7 +170,7 @@ public class TorrentsTest
                                            mocks.DownloadsMock.Object,
                                            mocks.ProcessFactoryMock.Object,
                                            fileSystemMock,
-                                           mocks.TrackerListGrabberMock.Object,
+                                           mocks.EnricherMock.Object,
                                            null!, // Torrent Clients are not used by `RunTorrentComplete`, this is fine
                                            null!,
                                            null!,
@@ -218,7 +218,7 @@ public class TorrentsTest
                                            mocks.DownloadsMock.Object,
                                            mocks.ProcessFactoryMock.Object,
                                            fileSystemMock,
-                                           mocks.TrackerListGrabberMock.Object,
+                                           mocks.EnricherMock.Object,
                                            null!, // Torrent Clients are not used by `RunTorrentComplete`, this is fine
                                            null!,
                                            null!,
@@ -285,7 +285,7 @@ public class TorrentsTest
                                            mocks.DownloadsMock.Object,
                                            mocks.ProcessFactoryMock.Object,
                                            fileSystemMock,
-                                           mocks.TrackerListGrabberMock.Object,
+                                           mocks.EnricherMock.Object,
                                            null!, // Torrent Clients are not used by `RunTorrentComplete`, this is fine
                                            null!,
                                            null!,

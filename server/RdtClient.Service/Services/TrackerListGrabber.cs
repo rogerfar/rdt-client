@@ -12,9 +12,9 @@ public class TrackerListGrabber : ITrackerListGrabber
     public async Task<String[]> GetTrackers()
     {
         var trackerUrlList = Settings.Get.General.MagnetTrackerEnrichment;
-        if (string.IsNullOrWhiteSpace(trackerUrlList))
+        if (String.IsNullOrWhiteSpace(trackerUrlList))
         {
-            return Array.Empty<String>();
+            return [];
         }
 
         try
@@ -26,9 +26,9 @@ public class TrackerListGrabber : ITrackerListGrabber
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToArray();
         }
-        catch
+        catch (Exception ex)
         {
-            return Array.Empty<String>();
+            throw new InvalidOperationException("Unable to fetch tracker list for enrichment.", ex);
         }
     }
 }
