@@ -18,6 +18,8 @@ public static class DiConfig
 
     public static void RegisterRdtServices(this IServiceCollection services)
     {
+        services.AddMemoryCache();
+
         services.AddSingleton<IAllDebridNetClientFactory, AllDebridNetClientFactory>();
         services.AddScoped<AllDebridTorrentClient>();
 

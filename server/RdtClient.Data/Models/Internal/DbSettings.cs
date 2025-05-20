@@ -77,7 +77,11 @@ Supports the following parameters:
 
     [DisplayName("Tracker enrichment list")]
     [Description("Optional. Specify the URL of a tracker list file to be appended to magnet links and torrent files.")]
-    public String? MagnetTrackerEnrichment { get; set; } = null;
+    public String? TrackerEnrichmentList { get; set; } = null;
+
+    [DisplayName("Tracker enrichment cache expiration")]
+    [Description("The time in minutes to cache the tracker list. Set to 0 to disable caching.")]
+    public Int32 TrackerEnrichmentCacheExpiration { get; set; } = 60;
 
     [DisplayName("Disable update notifications")]
     [Description("Ignore update notifications. You will still be notified if the version you are running has a security vulnerability.")]
