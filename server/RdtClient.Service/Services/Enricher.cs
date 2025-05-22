@@ -11,14 +11,14 @@ public interface IEnricher
 }
 
 /// <summary>
-/// Enriches magnet links and torrents by adding trackers from the tracker list grabber. 
+/// Enriches magnet links and torrents by adding trackers from the tracker list grabber.
 /// </summary>
 public class Enricher(ILogger<Enricher> logger, ITrackerListGrabber trackerListGrabber) : IEnricher
 {
     /// <summary>
     /// Add trackers from the tracker list grabber to the magnet link.
     /// </summary>
-    /// <param name="magnetLink">Magnet link to add trackres to. Is not modified</param>
+    /// <param name="magnetLink">Magnet link to add trackers to. Is not modified</param>
     /// <returns>Magnet link with additional trackers</returns>
     public async Task<String> EnrichMagnetLink(String magnetLink)
     {
@@ -63,7 +63,11 @@ public class Enricher(ILogger<Enricher> logger, ITrackerListGrabber trackerListG
     {
         var newTrackers = await trackerListGrabber.GetTrackers();
 
-        if (torrentBytes == null) throw new ArgumentNullException(nameof(torrentBytes));
+        if (torrentBytes == null)
+        {
+            throw new ArgumentNullException(nameof(torrentBytes));
+        }
+
         var torrentDict = BEncodedValue.Decode<BEncodedDictionary>(torrentBytes);
 
 

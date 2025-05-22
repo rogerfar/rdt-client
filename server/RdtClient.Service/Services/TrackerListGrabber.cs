@@ -13,6 +13,21 @@ public class TrackerListGrabber(IHttpClientFactory httpClientFactory, IMemoryCac
 
     public async Task<String[]> GetTrackers()
     {
+        var trackerUrlList = Settings.Get.General.TrackerEnrichmentList;
+
+        if (String.IsNullOrWhiteSpace(trackerUrlList))
+        {
+            return [];
+        }
+
+        if (!Uri.TryCreate(trackerUrlList, UriKind.Absolute, out var trackerUri) ||
+            (trackerUri.Scheme != Uri.UriSchemeHttp && trackerUri.Scheme != Uri.UriSchemeHttps))
+        {
+            logger.LogError("Invalid tracker list URL: {Url}", trackerUrlList);
+
+            throw new InvalidOperationException("Invalid tracker list URL.");
+        }
+
         var currentExpiration = Settings.Get.General.TrackerEnrichmentCacheExpiration;
         var useCache = currentExpiration > 0;
 
@@ -39,29 +54,23 @@ public class TrackerListGrabber(IHttpClientFactory httpClientFactory, IMemoryCac
             }
         }
 
-        await Semaphore.WaitAsync();
+        await Semaphore.WaitAsync().ConfigureAwait(false);
 
         try
         {
-            logger.LogDebug("Tracker cache miss or cache disabled. Fetching tracker list.");
-            var trackerUrlList = Settings.Get.General.TrackerEnrichmentList;
-
-            if (String.IsNullOrWhiteSpace(trackerUrlList))
+            if (useCache)
             {
-                return [];
+                if (memoryCache.TryGetValue(CacheKey, out String[]? cachedTrackers) && cachedTrackers is { Length: > 0 })
+                {
+                    logger.LogDebug("Using cached tracker list (after lock).");
+
+                    return cachedTrackers;
+                }
             }
 
-            var httpClient = httpClientFactory.CreateClient();
-            var response = await httpClient.GetAsync(trackerUrlList);
+            logger.LogDebug("Tracker cache miss or cache disabled. Fetching tracker list.");
 
-            response.EnsureSuccessStatusCode();
-
-            var result = await response.Content.ReadAsStringAsync();
-
-            var trackers = result
-                           .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                           .Distinct(StringComparer.OrdinalIgnoreCase)
-                           .ToArray();
+            var trackers = await FetchAndParseTrackersAsync(trackerUri).ConfigureAwait(false);
 
             if (useCache)
             {
@@ -75,6 +84,12 @@ public class TrackerListGrabber(IHttpClientFactory httpClientFactory, IMemoryCac
 
             return trackers;
         }
+        catch (TaskCanceledException ex)
+        {
+            logger.LogError(ex, "Fetching tracker list was canceled (timeout or cancellation).");
+
+            throw new InvalidOperationException("Fetching tracker list was canceled due to timeout or cancellation.", ex);
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Unable to fetch tracker list.");
@@ -85,5 +100,43 @@ public class TrackerListGrabber(IHttpClientFactory httpClientFactory, IMemoryCac
         {
             Semaphore.Release();
         }
+    }
+
+    private async Task<String[]> FetchAndParseTrackersAsync(Uri trackerUri)
+    {
+        logger.LogDebug("Fetching tracker list from URL: {TrackerUrl}", trackerUri);
+
+        var httpClient = httpClientFactory.CreateClient();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        var token = cts.Token;
+        using var response = await httpClient.GetAsync(trackerUri, token).ConfigureAwait(false);
+
+        response.EnsureSuccessStatusCode();
+
+        await using var contentStream = await response.Content.ReadAsStreamAsync(token).ConfigureAwait(false);
+        using var reader = new StreamReader(contentStream);
+        var result = await reader.ReadToEndAsync(token).ConfigureAwait(false);
+
+        String[] trackers;
+
+        try
+        {
+            trackers = result
+                       .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                       .Where(line => !String.IsNullOrWhiteSpace(line))
+                       .Select(t => t.EndsWith("/") ? t.TrimEnd('/') : t)
+                       .Where(t => Uri.TryCreate(t, UriKind.Absolute, out var uri) &&
+                                   (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+                       .Distinct(StringComparer.OrdinalIgnoreCase)
+                       .ToArray();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error parsing tracker list response.");
+
+            throw new InvalidOperationException("Failed to parse tracker list response.", ex);
+        }
+
+        return trackers;
     }
 }

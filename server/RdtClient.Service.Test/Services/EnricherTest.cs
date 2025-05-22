@@ -23,7 +23,8 @@ public class EnricherTest : IDisposable
         _mockRepository.VerifyAll();
     }
 
-    private const String TestMagnetLink = "magnet:?xt=urn:btih:1234567890123456789012345678901234567890&dn=TestFile&tr=http%3A%2F%2Ftracker1.com%2Fannounce&tr=http%3A%2F%2Ftracker2.com%2Fannounce";
+    private const String TestMagnetLink =
+        "magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567&dn=TestFile&tr=http%3A%2F%2Ftracker1.com%2Fannounce&tr=http%3A%2F%2Ftracker2.com%2Fannounce";
 
     [Fact]
     public async Task EnrichMagnetLink_AddsNoTrackers_WhenNoTrackersFromTrackerGrabber()
@@ -46,10 +47,10 @@ public class EnricherTest : IDisposable
         // Arrange
         SetupTrackerListGrabber(["http://new-tracker.com/announce"]);
 
-        var Enricher = new Enricher(_loggerMock.Object, _trackerListGrabberMock.Object);
+        var enricher = new Enricher(_loggerMock.Object, _trackerListGrabberMock.Object);
 
         // Act
-        var enriched = await Enricher.EnrichMagnetLink(TestMagnetLink);
+        var enriched = await enricher.EnrichMagnetLink(TestMagnetLink);
 
         // Assert
         Assert.Equal(TestMagnetLink + $"&tr={Uri.EscapeDataString("http://new-tracker.com/announce")}", enriched);
@@ -84,7 +85,6 @@ public class EnricherTest : IDisposable
         await Assert.ThrowsAsync<InvalidOperationException>(() => enricher.EnrichMagnetLink(TestMagnetLink));
     }
 
-
     [Fact]
     public async Task EnrichTorrentBytes_AddsTrackers_WhenTrackersFromTrackerGrabber()
     {
@@ -96,14 +96,17 @@ public class EnricherTest : IDisposable
         {
             ["announce"] = new BEncodedString(originalTracker),
             ["announce-list"] = new BEncodedList
+            {
+                new BEncodedList
                 {
-                    new BEncodedList { new BEncodedString(originalTracker) }
+                    new BEncodedString(originalTracker)
                 }
+            }
         };
 
         var originalTorrentBytes = torrentDict.Encode();
 
-        SetupTrackerListGrabber(new[] { newTracker });
+        SetupTrackerListGrabber([newTracker]);
         var enricher = new Enricher(_loggerMock.Object, _trackerListGrabberMock.Object);
 
         // Act
@@ -130,5 +133,139 @@ public class EnricherTest : IDisposable
             .Setup(t => t.GetTrackers())
             .ReturnsAsync(trackerList)
             .Verifiable();
+    }
+
+    [Fact]
+    public async Task EnrichTorrentBytes_DoesNotAddTrackers_WhenNoTrackersFromTrackerGrabber()
+    {
+        // Arrange
+        var originalTracker = "http://tracker1.com/announce";
+
+        var torrentDict = new BEncodedDictionary
+        {
+            ["announce"] = new BEncodedString(originalTracker),
+            ["announce-list"] = new BEncodedList
+            {
+                new BEncodedList
+                {
+                    new BEncodedString(originalTracker)
+                }
+            }
+        };
+
+        var originalTorrentBytes = torrentDict.Encode();
+
+        SetupTrackerListGrabber([]);
+        var enricher = new Enricher(_loggerMock.Object, _trackerListGrabberMock.Object);
+
+        // Act
+        var enrichedBytes = await enricher.EnrichTorrentBytes(originalTorrentBytes);
+        var enrichedDict = BEncodedValue.Decode<BEncodedDictionary>(enrichedBytes);
+
+        // Assert
+        Assert.True(enrichedDict.ContainsKey("announce"));
+        Assert.True(enrichedDict.ContainsKey("announce-list"));
+
+        var announceList = (BEncodedList)enrichedDict["announce-list"];
+        var flattened = announceList.Cast<BEncodedList>().SelectMany(l => l.Cast<BEncodedString>().Select(s => s.Text)).ToList();
+
+        Assert.Single(flattened);
+        Assert.Contains(originalTracker, flattened);
+    }
+
+    [Fact]
+    public async Task EnrichTorrentBytes_DoesNotAddDuplicateTrackers()
+    {
+        // Arrange
+        var originalTracker = "http://tracker1.com/announce";
+        var duplicateTracker = "http://tracker1.com/announce";
+
+        var torrentDict = new BEncodedDictionary
+        {
+            ["announce"] = new BEncodedString(originalTracker),
+            ["announce-list"] = new BEncodedList
+            {
+                new BEncodedList
+                {
+                    new BEncodedString(originalTracker)
+                }
+            }
+        };
+
+        var originalTorrentBytes = torrentDict.Encode();
+
+        SetupTrackerListGrabber([duplicateTracker]);
+        var enricher = new Enricher(_loggerMock.Object, _trackerListGrabberMock.Object);
+
+        // Act
+        var enrichedBytes = await enricher.EnrichTorrentBytes(originalTorrentBytes);
+        var enrichedDict = BEncodedValue.Decode<BEncodedDictionary>(enrichedBytes);
+
+        // Assert
+        var announceList = (BEncodedList)enrichedDict["announce-list"];
+        var flattened = announceList.Cast<BEncodedList>().SelectMany(l => l.Cast<BEncodedString>().Select(s => s.Text)).ToList();
+
+        Assert.Single(flattened);
+        Assert.Contains(originalTracker, flattened);
+    }
+
+    [Fact]
+    public async Task EnrichTorrentBytes_AddsTrackers_WhenNoAnnounceListPresent()
+    {
+        // Arrange
+        var originalTracker = "http://tracker1.com/announce";
+        var newTracker = "http://new-tracker.com/announce";
+
+        var torrentDict = new BEncodedDictionary
+        {
+            ["announce"] = new BEncodedString(originalTracker)
+
+            // No "announce-list"
+        };
+
+        var originalTorrentBytes = torrentDict.Encode();
+
+        SetupTrackerListGrabber([newTracker]);
+        var enricher = new Enricher(_loggerMock.Object, _trackerListGrabberMock.Object);
+
+        // Act
+        var enrichedBytes = await enricher.EnrichTorrentBytes(originalTorrentBytes);
+        var enrichedDict = BEncodedValue.Decode<BEncodedDictionary>(enrichedBytes);
+
+        // Assert
+        Assert.True(enrichedDict.ContainsKey("announce-list"));
+        var announceList = (BEncodedList)enrichedDict["announce-list"];
+        var flattened = announceList.Cast<BEncodedList>().SelectMany(l => l.Cast<BEncodedString>().Select(s => s.Text)).ToList();
+
+        Assert.Contains(originalTracker, flattened);
+        Assert.Contains(newTracker, flattened);
+    }
+
+    [Fact]
+    public async Task EnrichTorrentBytes_Throws_WhenTrackerGrabberThrows()
+    {
+        // Arrange
+        _trackerListGrabberMock
+            .Setup(t => t.GetTrackers())
+            .ThrowsAsync(new InvalidOperationException("Unable to fetch tracker list for enrichment."));
+
+        var torrentDict = new BEncodedDictionary
+        {
+            ["announce"] = new BEncodedString("http://tracker1.com/announce"),
+            ["announce-list"] = new BEncodedList
+            {
+                new BEncodedList
+                {
+                    new BEncodedString("http://tracker1.com/announce")
+                }
+            }
+        };
+
+        var originalTorrentBytes = torrentDict.Encode();
+
+        var enricher = new Enricher(_loggerMock.Object, _trackerListGrabberMock.Object);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(() => enricher.EnrichTorrentBytes(originalTorrentBytes));
     }
 }
