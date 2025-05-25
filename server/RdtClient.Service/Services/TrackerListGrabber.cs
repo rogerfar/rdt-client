@@ -1,5 +1,7 @@
+using System.Net.Http.Headers;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
 
 namespace RdtClient.Service.Services;
 
@@ -107,9 +109,17 @@ public class TrackerListGrabber(IHttpClientFactory httpClientFactory, IMemoryCac
         logger.LogDebug("Fetching tracker list from URL: {TrackerUrl}", trackerUri);
 
         var httpClient = httpClientFactory.CreateClient();
+
+        var version = Assembly.GetEntryAssembly()?.GetName().Version?.ToString();
+
+        var currentVersion = version != null && version.LastIndexOf('.') > 0
+            ? $"v{version[..version.LastIndexOf('.')]}"
+            : "";
+
+        httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("RdtClient", currentVersion));
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         var token = cts.Token;
-        var response = await httpClient.GetAsync(trackerUri, token).ConfigureAwait(false);
+        var response = await httpClient.GetAsync(trackerUri, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
 
         using (response)
         {
@@ -123,6 +133,8 @@ public class TrackerListGrabber(IHttpClientFactory httpClientFactory, IMemoryCac
 
             try
             {
+                var trackerRejectionCount = 0;
+
                 trackers = result
                            .Split([
                                       "\r\n", "\n"
@@ -135,21 +147,36 @@ public class TrackerListGrabber(IHttpClientFactory httpClientFactory, IMemoryCac
                            {
                                if (!Uri.TryCreate(t, UriKind.Absolute, out var uri))
                                {
+                                   logger.LogDebug("Rejected tracker: {TrackerUrl} - Reason: Invalid format or unsupported scheme.", t);
+                                   trackerRejectionCount++;
                                    return false;
                                }
 
-                               return (uri.Scheme == Uri.UriSchemeHttp ||
-                                       uri.Scheme == Uri.UriSchemeHttps ||
-                                       uri.Scheme.Equals("udp", StringComparison.OrdinalIgnoreCase) ||
-                                       uri.Scheme.Equals("wss", StringComparison.OrdinalIgnoreCase)) &&
-                                      !t.Contains("..") &&
-                                      !t.Contains("\\") &&
-                                      !t.Any(Char.IsControl) &&
-                                      uri.Host.All(c => Char.IsLetterOrDigit(c) || c == '.' || c == '-' || c == '_' || c == ':') &&
-                                      uri.Host.Length > 0;
+                               var isIpv6 = uri.Host.StartsWith('[') && uri.Host.Contains(']');
+
+                               var valid = ((isIpv6 && uri.Host.All(c => Char.IsLetterOrDigit(c) || c == '.' || c == ':' || c == '[' || c == ']')) ||
+                                            (!isIpv6 && uri.Host.All(c => Char.IsLetterOrDigit(c) || c == '.' || c == '-' || c == '_'))) &&
+                                           (uri.Scheme == Uri.UriSchemeHttp ||
+                                            uri.Scheme == Uri.UriSchemeHttps ||
+                                            uri.Scheme.Equals("udp", StringComparison.OrdinalIgnoreCase) ||
+                                            uri.Scheme.Equals("wss", StringComparison.OrdinalIgnoreCase)) &&
+                                           !t.Contains("..") &&
+                                           !t.Contains("\\") &&
+                                           !t.Any(Char.IsControl) &&
+                                           uri.Host.Length > 0;
+
+                               if (!valid)
+                               {
+                                   logger.LogDebug("Enrichment tracker rejected: {TrackerUrl} - Reason: Invalid format or unsupported scheme.", t);
+                                   trackerRejectionCount++;
+                               }
+
+                               return valid;
                            })
                            .Distinct(StringComparer.OrdinalIgnoreCase)
                            .ToArray();
+
+                logger.LogInformation("{TrackerRejectionCount} trackers were rejected during enrichment.", trackerRejectionCount);
             }
             catch (Exception ex)
 

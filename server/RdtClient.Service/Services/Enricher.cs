@@ -1,4 +1,3 @@
-
 using System.Text;
 using System.Web;
 using Microsoft.Extensions.Logging;
@@ -108,7 +107,7 @@ public sealed class Enricher(ILogger<Enricher> logger, ITrackerListGrabber track
                 }
                 else
                 {
-                    outParams.Add($"{kv.Key}={HttpUtility.UrlEncode(v)}");
+                    outParams.Add($"{kv.Key}={Uri.EscapeDataString(v)}");
                 }
             }
         }

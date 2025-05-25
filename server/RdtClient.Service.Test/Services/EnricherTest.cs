@@ -41,19 +41,30 @@ public class EnricherTest : IDisposable
         Assert.Equal(TestMagnetLink, enriched);
     }
 
-    [Fact]
-    public async Task EnrichMagnetLink_AddsTrackers_WhenTrackersFromTrackerGrabber()
+    [Theory]
+    [InlineData("magnet:?xt=urn:btih:HASH",
+                   new[]
+                   {
+                       "http://new-tracker.com/announce"
+                   },
+                   "magnet:?xt=urn:btih:HASH&tr=http%3A%2F%2Fnew-tracker.com%2Fannounce")]
+    [InlineData("magnet:?xt=urn:btih:HASH",
+                   new[]
+                   {
+                       "http://tracker1.com/announce", "http://tracker2.com/announce"
+                   },
+                   "magnet:?xt=urn:btih:HASH&tr=http%3A%2F%2Ftracker1.com%2Fannounce&tr=http%3A%2F%2Ftracker2.com%2Fannounce")]
+    public async Task EnrichMagnetLink_AddsTrackers_WhenTrackersFromTrackerGrabber_Theory(String magnetLink, String[] newTrackers, String expectedResult)
     {
         // Arrange
-        SetupTrackerListGrabber(["http://new-tracker.com/announce"]);
-
+        SetupTrackerListGrabber(newTrackers);
         var enricher = new Enricher(_loggerMock.Object, _trackerListGrabberMock.Object);
 
         // Act
-        var enriched = await enricher.EnrichMagnetLink(TestMagnetLink);
+        var enriched = await enricher.EnrichMagnetLink(magnetLink);
 
         // Assert
-        Assert.Equal(TestMagnetLink + $"&tr={Uri.EscapeDataString("http://new-tracker.com/announce")}", enriched);
+        Assert.Equal(expectedResult, enriched);
     }
 
     [Fact]
@@ -281,17 +292,27 @@ public class EnricherTest : IDisposable
         Assert.Equal(2, trValues.Count);
     }
 
-    [Fact]
-    public async Task EnrichMagnetLink_BasicMagnetWithHashOnly()
+    [Theory]
+    [InlineData("magnet:?xt=urn:btih:HASH",
+                   new[]
+                   {
+                       "udp://tracker1"
+                   },
+                   "magnet:?xt=urn:btih:HASH&tr=udp%3A%2F%2Ftracker1")]
+    [InlineData("magnet:?xt=urn:btih:HASH",
+                   new[]
+                   {
+                       "udp://tracker1", "udp://tracker2"
+                   },
+                   "magnet:?xt=urn:btih:HASH&tr=udp%3A%2F%2Ftracker1&tr=udp%3A%2F%2Ftracker2")]
+    [InlineData("magnet:?xt=urn:btih:HASH",
+                   new String[]
+                   {
+                   },
+                   "magnet:?xt=urn:btih:HASH")]
+    public async Task EnrichMagnetLink_BasicMagnetWithHashOnly_Theory(String magnetLink, String[] newTrackers, String expectedResult)
     {
         // Arrange
-        var magnetLink = "magnet:?xt=urn:btih:HASH";
-
-        var newTrackers = new[]
-        {
-            "udp://tracker1"
-        };
-
         SetupTrackerListGrabber(newTrackers);
         var enricher = new Enricher(_loggerMock.Object, _trackerListGrabberMock.Object);
 
@@ -299,20 +320,30 @@ public class EnricherTest : IDisposable
         var result = await enricher.EnrichMagnetLink(magnetLink);
 
         // Assert
-        Assert.Equal($"{magnetLink}&tr={Uri.EscapeDataString("udp://tracker1")}", result);
+        Assert.Equal(expectedResult, result);
     }
 
-    [Fact]
-    public async Task EnrichMagnetLink_MagnetEndsWithQuestionMarkOnly()
+    [Theory]
+    [InlineData("magnet:?",
+                   new[]
+                   {
+                       "udp://tracker1"
+                   },
+                   "magnet:?tr=udp%3A%2F%2Ftracker1")]
+    [InlineData("magnet:?",
+                   new[]
+                   {
+                       "udp://tracker1", "udp://tracker2"
+                   },
+                   "magnet:?tr=udp%3A%2F%2Ftracker1&tr=udp%3A%2F%2Ftracker2")]
+    [InlineData("magnet:?",
+                   new String[]
+                   {
+                   },
+                   "magnet:?")]
+    public async Task EnrichMagnetLink_MagnetEndsWithQuestionMarkOnly_Theory(String magnetLink, String[] newTrackers, String expectedResult)
     {
         // Arrange
-        var magnetLink = "magnet:?";
-
-        var newTrackers = new[]
-        {
-            "udp://tracker1"
-        };
-
         SetupTrackerListGrabber(newTrackers);
         var enricher = new Enricher(_loggerMock.Object, _trackerListGrabberMock.Object);
 
@@ -320,7 +351,7 @@ public class EnricherTest : IDisposable
         var result = await enricher.EnrichMagnetLink(magnetLink);
 
         // Assert
-        Assert.Equal($"{magnetLink}tr={Uri.EscapeDataString("udp://tracker1")}", result);
+        Assert.Equal(expectedResult, result);
     }
 
     [Fact]
@@ -365,8 +396,10 @@ public class EnricherTest : IDisposable
         Assert.Equal(newTrackers[0], ((BEncodedString)enrichedDict["announce"]).Text);
         var announceList = (BEncodedList)enrichedDict["announce-list"];
         Assert.Equal(2, announceList.Count);
-        Assert.Equal(newTrackers[0], ((BEncodedString)((BEncodedList)announceList[0])[0]).Text);
-        Assert.Equal(newTrackers[1], ((BEncodedString)((BEncodedList)announceList[1])[0]).Text);
+
+        Assert.Collection(announceList,
+                          tier => Assert.Equal(newTrackers[0], ((BEncodedString)((BEncodedList)tier)[0]).Text),
+                          tier => Assert.Equal(newTrackers[1], ((BEncodedString)((BEncodedList)tier)[0]).Text));
     }
 
     [Fact]

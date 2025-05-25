@@ -115,7 +115,7 @@ public class Torrents(
         MagnetLink magnet;
         try
         {
-            magnet = MagnetLink.Parse(enriched);
+            magnet = MagnetLink.Parse(magnetLink);
         }
         catch (Exception ex)
         {
@@ -139,15 +139,24 @@ public class Torrents(
     {
         MonoTorrent.Torrent monoTorrent;
 
-        var fileAsBase64 = Convert.ToBase64String(bytes);
-        logger.LogDebug($"bytes {bytes}");
-
         var enriched = await enricher.EnrichTorrentBytes(bytes);
-        logger.LogDebug($"enriched bytes {enriched}");
+
+        String fileAsBase64;
+
+        if (enriched.SequenceEqual(bytes))
+        {
+            fileAsBase64 = Convert.ToBase64String(bytes);
+            logger.LogDebug($"bytes {bytes}");
+        }
+        else
+        {
+            fileAsBase64 = Convert.ToBase64String(enriched);
+            logger.LogDebug($"enriched bytes {enriched}");
+        }
 
         try
         {
-            monoTorrent = await MonoTorrent.Torrent.LoadAsync(enriched);
+            monoTorrent = await MonoTorrent.Torrent.LoadAsync(bytes);
         }
         catch (Exception ex)
         {
