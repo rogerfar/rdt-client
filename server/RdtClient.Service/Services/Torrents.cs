@@ -3,6 +3,7 @@ using System.IO.Abstractions;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Web;
 using Microsoft.Extensions.Logging;
 using MonoTorrent;
 using RdtClient.Data.Data;
@@ -24,6 +25,7 @@ public class Torrents(
     IDownloads downloads,
     IProcessFactory processFactory,
     IFileSystem fileSystem,
+    IEnricher enricher,
     AllDebridTorrentClient allDebridTorrentClient,
     PremiumizeTorrentClient premiumizeTorrentClient,
     RealDebridTorrentClient realDebridTorrentClient,
@@ -109,8 +111,8 @@ public class Torrents(
 
     public async Task<Torrent> AddMagnetToDebridQueue(String magnetLink, Torrent torrent)
     {
+        var enriched = await enricher.EnrichMagnetLink(magnetLink);
         MagnetLink magnet;
-
         try
         {
             magnet = MagnetLink.Parse(magnetLink);
@@ -125,11 +127,9 @@ public class Torrents(
         torrent.RdName = magnet.Name;
 
         var hash = magnet.InfoHashes.V1OrV2.ToHex();
-
-        var newTorrent = await AddQueued(hash, magnetLink, false, torrent);
+        var newTorrent = await AddQueued(hash, enriched, false, torrent);
 
         Log($"Adding {hash} (magnet link) to queue", newTorrent);
-
         await CopyAddedTorrent(magnet.Name!, magnetLink);
 
         return newTorrent;
@@ -139,8 +139,20 @@ public class Torrents(
     {
         MonoTorrent.Torrent monoTorrent;
 
-        var fileAsBase64 = Convert.ToBase64String(bytes);
-        logger.LogDebug($"bytes {bytes}");
+        var enriched = await enricher.EnrichTorrentBytes(bytes);
+
+        String fileAsBase64;
+
+        if (enriched.SequenceEqual(bytes))
+        {
+            fileAsBase64 = Convert.ToBase64String(bytes);
+            logger.LogDebug($"bytes {bytes}");
+        }
+        else
+        {
+            fileAsBase64 = Convert.ToBase64String(enriched);
+            logger.LogDebug($"enriched bytes {enriched}");
+        }
 
         try
         {
@@ -224,7 +236,7 @@ public class Torrents(
         {
             throw new("Torrent has no torrent file or magnet link");
         }
-        
+
         logger.LogDebug("Adding {hash} to debrid provider {torrentInfo}", torrent.Hash, torrent.ToLog());
 
         await RealDebridUpdateLock.WaitAsync();
@@ -435,7 +447,7 @@ public class Torrents(
     {
         var download = await downloads.GetById(downloadId) ?? throw new($"Download with ID {downloadId} not found");
 
-        Log($"Unrestricting link", download, download.Torrent);
+        Log("Unrestricting link", download, download.Torrent);
 
         var unrestrictedLink = await TorrentClient.Unrestrict(download.Path);
 
