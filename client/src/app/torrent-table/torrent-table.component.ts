@@ -3,12 +3,25 @@ import { Router } from '@angular/router';
 import { Torrent } from '../models/torrent.model';
 import { TorrentService } from '../torrent.service';
 import { forkJoin, Observable } from 'rxjs';
+import { FormsModule } from '@angular/forms';
+import { NgClass, DecimalPipe, DatePipe } from '@angular/common';
+import { TorrentStatusPipe } from '../torrent-status.pipe';
+import { SortPipe } from '../sort.pipe';
+import { FileSizePipe } from '../filesize.pipe';
 
 @Component({
-  selector: 'app-torrent-table',
-  templateUrl: './torrent-table.component.html',
-  styleUrls: ['./torrent-table.component.scss'],
-  standalone: false,
+    selector: 'app-torrent-table',
+    templateUrl: './torrent-table.component.html',
+    styleUrls: ['./torrent-table.component.scss'],
+    imports: [
+        FormsModule,
+        NgClass,
+        DecimalPipe,
+        DatePipe,
+        TorrentStatusPipe,
+        SortPipe,
+        FileSizePipe,
+    ],
 })
 export class TorrentTableComponent implements OnInit {
   public torrents: Torrent[] = [];

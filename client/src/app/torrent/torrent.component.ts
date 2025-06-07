@@ -3,12 +3,28 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { saveAs } from 'file-saver-es';
 import { Torrent } from '../models/torrent.model';
 import { TorrentService } from '../torrent.service';
+import { NgClass, DatePipe } from '@angular/common';
+import { CdkCopyToClipboard } from '@angular/cdk/clipboard';
+import { FormsModule } from '@angular/forms';
+import { TorrentStatusPipe } from '../torrent-status.pipe';
+import { DownloadStatusPipe } from '../download-status.pipe';
+import { DecodeURIPipe } from '../decode-uri.pipe';
+import { FileSizePipe } from '../filesize.pipe';
 
 @Component({
-  selector: 'app-torrent',
-  templateUrl: './torrent.component.html',
-  styleUrls: ['./torrent.component.scss'],
-  standalone: false,
+    selector: 'app-torrent',
+    templateUrl: './torrent.component.html',
+    styleUrls: ['./torrent.component.scss'],
+    imports: [
+        NgClass,
+        CdkCopyToClipboard,
+        FormsModule,
+        DatePipe,
+        TorrentStatusPipe,
+        DownloadStatusPipe,
+        DecodeURIPipe,
+        FileSizePipe,
+    ],
 })
 export class TorrentComponent implements OnInit {
   public torrent: Torrent;

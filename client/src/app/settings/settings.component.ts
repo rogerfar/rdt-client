@@ -1,12 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { SettingsService } from 'src/app/settings.service';
 import { Setting } from '../models/setting.model';
+import { NgClass, KeyValuePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Nl2BrPipe } from '../nl2br.pipe';
+import { FileSizePipe } from '../filesize.pipe';
 
 @Component({
-  selector: 'app-settings',
-  templateUrl: './settings.component.html',
-  styleUrls: ['./settings.component.scss'],
-  standalone: false,
+    selector: 'app-settings',
+    templateUrl: './settings.component.html',
+    styleUrls: ['./settings.component.scss'],
+    imports: [
+        NgClass,
+        FormsModule,
+        KeyValuePipe,
+        Nl2BrPipe,
+        FileSizePipe,
+    ],
 })
 export class SettingsComponent implements OnInit {
   public activeTab = 0;
