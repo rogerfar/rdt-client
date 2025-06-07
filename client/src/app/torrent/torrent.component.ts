@@ -108,7 +108,7 @@ export class TorrentComponent implements OnInit {
         }),
     );
 
-    var blob = new Blob([byteArray], { type: 'application/x-bittorrent' });
+    const blob = new Blob([byteArray], { type: 'application/x-bittorrent' });
     saveAs(blob, `${this.torrent.rdName}.torrent`);
   }
 
