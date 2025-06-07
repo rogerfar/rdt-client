@@ -8,10 +8,10 @@ import { FormsModule } from '@angular/forms';
 import { NgClass } from '@angular/common';
 
 @Component({
-    selector: 'app-add-new-torrent',
-    templateUrl: './add-new-torrent.component.html',
-    styleUrls: ['./add-new-torrent.component.scss'],
-    imports: [FormsModule, NgClass],
+  selector: 'app-add-new-torrent',
+  templateUrl: './add-new-torrent.component.html',
+  styleUrls: ['./add-new-torrent.component.scss'],
+  imports: [FormsModule, NgClass],
 })
 export class AddNewTorrentComponent implements OnInit {
   public fileName: string;
@@ -51,11 +51,11 @@ export class AddNewTorrentComponent implements OnInit {
     private router: Router,
     private torrentService: TorrentService,
     private settingsService: SettingsService,
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
-    this.activatedRoute.queryParams.subscribe(params => {
+    this.activatedRoute.queryParams.subscribe((params) => {
       if (params['magnet']) {
         this.magnetLink = decodeURIComponent(params['magnet']);
       }
@@ -118,7 +118,7 @@ export class AddNewTorrentComponent implements OnInit {
 
     if (this.downloadAction === 2) {
       const selectedFiles = [];
-      for (let filePath in this.downloadFiles) {
+      for (const filePath in this.downloadFiles) {
         if (this.downloadFiles[filePath] === true) {
           selectedFiles.push(filePath);
         }

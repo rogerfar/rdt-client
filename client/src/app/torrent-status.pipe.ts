@@ -26,7 +26,7 @@ export class TorrentStatusPipe implements PipeTransform {
         const bytesTotal = downloading.reduce((sum, m) => sum + m.bytesTotal, 0);
         const progress = (bytesDone / bytesTotal || 0) * 100;
 
-        let allSpeeds = downloading.reduce((sum, m) => sum + m.speed, 0);
+        const allSpeeds = downloading.reduce((sum, m) => sum + m.speed, 0);
 
         const speed: string | string[] = this.pipe.transform(allSpeeds, 'filesize');
 

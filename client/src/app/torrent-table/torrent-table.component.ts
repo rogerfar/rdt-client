@@ -10,18 +10,10 @@ import { SortPipe } from '../sort.pipe';
 import { FileSizePipe } from '../filesize.pipe';
 
 @Component({
-    selector: 'app-torrent-table',
-    templateUrl: './torrent-table.component.html',
-    styleUrls: ['./torrent-table.component.scss'],
-    imports: [
-        FormsModule,
-        NgClass,
-        DecimalPipe,
-        DatePipe,
-        TorrentStatusPipe,
-        SortPipe,
-        FileSizePipe,
-    ],
+  selector: 'app-torrent-table',
+  templateUrl: './torrent-table.component.html',
+  styleUrls: ['./torrent-table.component.scss'],
+  imports: [FormsModule, NgClass, DecimalPipe, DatePipe, TorrentStatusPipe, SortPipe, FileSizePipe],
 })
 export class TorrentTableComponent implements OnInit {
   public torrents: Torrent[] = [];
@@ -120,7 +112,7 @@ export class TorrentTableComponent implements OnInit {
   public deleteOk(): void {
     this.deleting = true;
 
-    let calls: Observable<void>[] = [];
+    const calls: Observable<void>[] = [];
 
     this.selectedTorrents.forEach((torrentId) => {
       calls.push(this.torrentService.delete(torrentId, this.deleteData, this.deleteRdTorrent, this.deleteLocalFiles));
@@ -153,7 +145,7 @@ export class TorrentTableComponent implements OnInit {
   public retryOk(): void {
     this.retrying = true;
 
-    let calls: Observable<void>[] = [];
+    const calls: Observable<void>[] = [];
 
     this.selectedTorrents.forEach((torrentId) => {
       calls.push(this.torrentService.retry(torrentId));
@@ -221,7 +213,7 @@ export class TorrentTableComponent implements OnInit {
   public changeSettingsOk(): void {
     this.changingSettings = true;
 
-    let calls: Observable<void>[] = [];
+    const calls: Observable<void>[] = [];
 
     const selectedTorrents = this.torrents.filter((m) => this.selectedTorrents.indexOf(m.torrentId) > -1);
 
