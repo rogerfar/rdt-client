@@ -2,7 +2,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { RealDebridStatus, Torrent } from './models/torrent.model';
 import { FileSizePipe } from './filesize.pipe';
 
-@Pipe({ name: 'status', })
+@Pipe({ name: 'status' })
 export class TorrentStatusPipe implements PipeTransform {
   constructor(private pipe: FileSizePipe) {}
 
@@ -32,9 +32,7 @@ export class TorrentStatusPipe implements PipeTransform {
 
         let allSpeeds = downloading.reduce((sum, m) => sum + m.speed, 0);
 
-        let speed: string | string[] = '0';
-
-        speed = this.pipe.transform(allSpeeds, 'filesize');
+        const speed: string | string[] = this.pipe.transform(allSpeeds, 'filesize');
 
         return `Downloading file ${downloading.length + downloaded.length}/${
           torrent.downloads.length
