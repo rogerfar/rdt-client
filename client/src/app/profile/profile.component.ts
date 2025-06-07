@@ -4,10 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { NgClass } from '@angular/common';
 
 @Component({
-    selector: 'app-profile',
-    templateUrl: './profile.component.html',
-    styleUrls: ['./profile.component.scss'],
-    imports: [FormsModule, NgClass],
+  selector: 'app-profile',
+  templateUrl: './profile.component.html',
+  styleUrls: ['./profile.component.scss'],
+  imports: [FormsModule, NgClass],
 })
 export class ProfileComponent {
   constructor(private authService: AuthService) {}
@@ -24,16 +24,16 @@ export class ProfileComponent {
     this.error = null;
     this.saving = true;
 
-    this.authService.update(this.username, this.password).subscribe(
-      () => {
+    this.authService.update(this.username, this.password).subscribe({
+      next: () => {
         this.success = true;
         this.saving = false;
       },
-      (err) => {
+      error: (err) => {
         this.error = err.error;
         this.success = false;
         this.saving = false;
       },
-    );
+    });
   }
 }

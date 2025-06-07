@@ -7,16 +7,10 @@ import { Nl2BrPipe } from '../nl2br.pipe';
 import { FileSizePipe } from '../filesize.pipe';
 
 @Component({
-    selector: 'app-settings',
-    templateUrl: './settings.component.html',
-    styleUrls: ['./settings.component.scss'],
-    imports: [
-        NgClass,
-        FormsModule,
-        KeyValuePipe,
-        Nl2BrPipe,
-        FileSizePipe,
-    ],
+  selector: 'app-settings',
+  templateUrl: './settings.component.html',
+  styleUrls: ['./settings.component.scss'],
+  imports: [NgClass, FormsModule, KeyValuePipe, Nl2BrPipe, FileSizePipe],
 })
 export class SettingsComponent implements OnInit {
   public activeTab = 0;
@@ -62,17 +56,16 @@ export class SettingsComponent implements OnInit {
 
     const settingsToSave = this.tabs.flatMap((m) => m.settings).filter((m) => m.type !== 'Object');
 
-    this.settingsService.update(settingsToSave).subscribe(
-      () => {
+    this.settingsService.update(settingsToSave).subscribe({
+      next: () =>
         setTimeout(() => {
           this.saving = false;
-        }, 1000);
-      },
-      (err) => {
+        }, 1000),
+      error: (err) => {
         this.saving = false;
         this.error = err;
       },
-    );
+    });
   }
 
   public testDownloadPath(): void {
@@ -84,16 +77,16 @@ export class SettingsComponent implements OnInit {
     this.testPathError = null;
     this.testPathSuccess = false;
 
-    this.settingsService.testPath(settingDownloadPath).subscribe(
-      () => {
+    this.settingsService.testPath(settingDownloadPath).subscribe({
+      next: () => {
         this.saving = false;
         this.testPathSuccess = true;
       },
-      (err) => {
+      error: (err) => {
         this.testPathError = err.error;
         this.saving = false;
       },
-    );
+    });
   }
 
   public testDownloadSpeed(): void {
@@ -101,32 +94,32 @@ export class SettingsComponent implements OnInit {
     this.testDownloadSpeedError = null;
     this.testDownloadSpeedSuccess = 0;
 
-    this.settingsService.testDownloadSpeed().subscribe(
-      (result) => {
+    this.settingsService.testDownloadSpeed().subscribe({
+      next: (result) => {
         this.saving = false;
         this.testDownloadSpeedSuccess = result;
       },
-      (err) => {
+      error: (err) => {
         this.testDownloadSpeedError = err.error;
         this.saving = false;
       },
-    );
+    });
   }
   public testWriteSpeed(): void {
     this.saving = true;
     this.testWriteSpeedError = null;
     this.testWriteSpeedSuccess = 0;
 
-    this.settingsService.testWriteSpeed().subscribe(
-      (result) => {
+    this.settingsService.testWriteSpeed().subscribe({
+      next: (result) => {
         this.saving = false;
         this.testWriteSpeedSuccess = result;
       },
-      (err) => {
+      error: (err) => {
         this.testWriteSpeedError = err.error;
         this.saving = false;
       },
-    );
+    });
   }
 
   public testAria2cConnection(): void {
@@ -141,22 +134,24 @@ export class SettingsComponent implements OnInit {
     this.testAria2cConnectionError = null;
     this.testAria2cConnectionSuccess = null;
 
-    this.settingsService.testAria2cConnection(settingAria2cUrl, settingAria2cSecret).subscribe(
-      (result) => {
+    this.settingsService.testAria2cConnection(settingAria2cUrl, settingAria2cSecret).subscribe({
+      next: (result) => {
         this.saving = false;
         this.testAria2cConnectionSuccess = result.version;
       },
-      (err) => {
+      error: (err) => {
         this.testAria2cConnectionError = err.error;
         this.saving = false;
       },
-    );
+    });
   }
 
   public registerMagnetHandler(): void {
     try {
       navigator.registerProtocolHandler('magnet', `${window.location.origin}/add?magnet=%s`);
-      alert('Success! Your browser will now prompt you to confirm and add the client as the default handler for magnet links.');
+      alert(
+        'Success! Your browser will now prompt you to confirm and add the client as the default handler for magnet links.',
+      );
     } catch (error) {
       alert('Magnet link registration failed.');
     }

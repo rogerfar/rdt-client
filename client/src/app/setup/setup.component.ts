@@ -1,14 +1,14 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
-import { FormsModule } from '@angular/forms';
 import { NgClass } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
-    selector: 'app-setup',
-    templateUrl: './setup.component.html',
-    styleUrls: ['./setup.component.scss'],
-    imports: [FormsModule, NgClass],
+  selector: 'app-setup',
+  templateUrl: './setup.component.html',
+  styleUrls: ['./setup.component.scss'],
+  imports: [FormsModule, NgClass],
 })
 export class SetupComponent {
   public userName: string;
@@ -30,29 +30,29 @@ export class SetupComponent {
     this.error = null;
     this.working = true;
 
-    this.authService.create(this.userName, this.password).subscribe(
-      () => {
+    this.authService.create(this.userName, this.password).subscribe({
+      next: () => {
         this.step = 2;
         this.working = false;
       },
-      (err) => {
+      error: (err) => {
         this.working = false;
         this.error = err.error;
       },
-    );
+    });
   }
 
   public setToken(): void {
-    this.authService.setupProvider(this.provider, this.token).subscribe(
-      () => {
+    this.authService.setupProvider(this.provider, this.token).subscribe({
+      next: () => {
         this.step = 3;
         this.working = false;
       },
-      (err: any) => {
+      error: (err: any) => {
         this.working = false;
         this.error = err.error;
       },
-    );
+    });
   }
 
   public close(): void {

@@ -149,25 +149,21 @@ export class AddNewTorrentComponent implements OnInit {
     torrent.downloadClient = this.downloadClient;
 
     if (this.magnetLink) {
-      this.torrentService.uploadMagnet(this.magnetLink, torrent).subscribe(
-        () => {
-          this.router.navigate(['/']);
-        },
-        (err) => {
+      this.torrentService.uploadMagnet(this.magnetLink, torrent).subscribe({
+        next: () => this.router.navigate(['/']),
+        error: (err) => {
           this.error = err.error;
           this.saving = false;
         },
-      );
+      });
     } else if (this.selectedFile) {
-      this.torrentService.uploadFile(this.selectedFile, torrent).subscribe(
-        () => {
-          this.router.navigate(['/']);
-        },
-        (err) => {
+      this.torrentService.uploadFile(this.selectedFile, torrent).subscribe({
+        next: () => this.router.navigate(['/']),
+        error: (err) => {
           this.error = err.error;
           this.saving = false;
         },
-      );
+      });
     } else {
       this.error = 'No magnet or file uploaded';
       this.saving = false;
@@ -192,8 +188,8 @@ export class AddNewTorrentComponent implements OnInit {
     this.allSelected = true;
 
     if (this.magnetLink) {
-      this.torrentService.checkFilesMagnet(this.magnetLink).subscribe(
-        (result) => {
+      this.torrentService.checkFilesMagnet(this.magnetLink).subscribe({
+        next: (result) => {
           this.saving = false;
           this.availableFiles = result;
           this.currentTorrentFile = this.magnetLink;
@@ -201,25 +197,25 @@ export class AddNewTorrentComponent implements OnInit {
             this.downloadFiles[file.filename] = true;
           });
         },
-        (err) => {
+        error: (err) => {
           this.error = err.error;
           this.saving = false;
         },
-      );
+      });
     } else if (this.selectedFile) {
-      this.torrentService.checkFiles(this.selectedFile).subscribe(
-        (result) => {
+      this.torrentService.checkFiles(this.selectedFile).subscribe({
+        next: (result) => {
           this.saving = false;
           this.availableFiles = result;
           result.forEach((file) => {
             this.downloadFiles[file.filename] = true;
           });
         },
-        (err) => {
+        error: (err) => {
           this.error = err.error;
           this.saving = false;
         },
-      );
+      });
     } else {
       this.saving = false;
     }

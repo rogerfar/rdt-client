@@ -61,18 +61,18 @@ export class TorrentTableComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.torrentService.getList().subscribe(
-      (result) => {
+    this.torrentService.getList().subscribe({
+      next: (result) => {
         this.torrents = result;
 
         this.torrentService.update$.subscribe((result2) => {
           this.torrents = result2;
         });
       },
-      (err) => {
+      error: (err) => {
         this.error = err.error;
       },
-    );
+    });
   }
 
   public sort(property: string): void {

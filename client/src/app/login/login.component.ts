@@ -5,10 +5,10 @@ import { FormsModule } from '@angular/forms';
 import { NgClass } from '@angular/common';
 
 @Component({
-    selector: 'app-login',
-    templateUrl: './login.component.html',
-    styleUrls: ['./login.component.scss'],
-    imports: [FormsModule, NgClass],
+  selector: 'app-login',
+  templateUrl: './login.component.html',
+  styleUrls: ['./login.component.scss'],
+  imports: [FormsModule, NgClass],
 })
 export class LoginComponent {
   public userName: string;
@@ -32,14 +32,12 @@ export class LoginComponent {
   public login(): void {
     this.error = null;
     this.loggingIn = true;
-    this.authService.login(this.userName, this.password).subscribe(
-      () => {
-        this.router.navigate(['/']);
-      },
-      (err) => {
+    this.authService.login(this.userName, this.password).subscribe({
+      next: () => this.router.navigate(['/']),
+      error: (err) => {
         this.loggingIn = false;
         this.error = err.error;
       },
-    );
+    });
   }
 }
