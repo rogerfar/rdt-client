@@ -25,6 +25,7 @@ import { FileSizePipe } from '../filesize.pipe';
     DecodeURIPipe,
     FileSizePipe,
   ],
+  standalone: true,
 })
 export class TorrentComponent implements OnInit {
   public torrent: Torrent;

@@ -11,6 +11,7 @@ import { FileSizePipe } from '../filesize.pipe';
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss'],
   imports: [NgClass, FormsModule, KeyValuePipe, Nl2BrPipe, FileSizePipe],
+  standalone: true,
 })
 export class SettingsComponent implements OnInit {
   public activeTab = 0;

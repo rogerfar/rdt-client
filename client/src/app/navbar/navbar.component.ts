@@ -10,6 +10,7 @@ import { NgClass, DatePipe } from '@angular/common';
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss'],
   imports: [RouterLink, NgClass, DatePipe],
+  standalone: true,
 })
 export class NavbarComponent implements OnInit {
   public showMobileMenu = false;

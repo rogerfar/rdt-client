@@ -14,6 +14,7 @@ import { FileSizePipe } from '../filesize.pipe';
   templateUrl: './torrent-table.component.html',
   styleUrls: ['./torrent-table.component.scss'],
   imports: [FormsModule, NgClass, DecimalPipe, DatePipe, TorrentStatusPipe, SortPipe, FileSizePipe],
+  standalone: true,
 })
 export class TorrentTableComponent implements OnInit {
   public torrents: Torrent[] = [];

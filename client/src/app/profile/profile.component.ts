@@ -8,6 +8,7 @@ import { NgClass } from '@angular/common';
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
   imports: [FormsModule, NgClass],
+  standalone: true,
 })
 export class ProfileComponent {
   constructor(private authService: AuthService) {}

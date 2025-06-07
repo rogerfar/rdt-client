@@ -12,6 +12,7 @@ import { NgClass } from '@angular/common';
   templateUrl: './add-new-torrent.component.html',
   styleUrls: ['./add-new-torrent.component.scss'],
   imports: [FormsModule, NgClass],
+  standalone: true,
 })
 export class AddNewTorrentComponent implements OnInit {
   public fileName: string;

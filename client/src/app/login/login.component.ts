@@ -9,6 +9,7 @@ import { NgClass } from '@angular/common';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
   imports: [FormsModule, NgClass],
+  standalone: true,
 })
 export class LoginComponent {
   public userName: string;

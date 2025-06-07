@@ -9,6 +9,7 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './setup.component.html',
   styleUrls: ['./setup.component.scss'],
   imports: [FormsModule, NgClass],
+  standalone: true,
 })
 export class SetupComponent {
   public userName: string;
