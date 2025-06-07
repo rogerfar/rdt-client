@@ -110,25 +110,6 @@ export class AddNewTorrentComponent implements OnInit {
     this.checkFiles();
   }
 
-  public downloadFileChecked(file: string): void {
-    this.downloadFiles[file] = !this.downloadFiles[file];
-
-    this.allSelected = true;
-    this.availableFiles.forEach((file) => {
-      if (!this.downloadFiles[file.filename]) {
-        this.allSelected = false;
-      }
-    });
-  }
-
-  public downloadFileCheckedAll(): void {
-    this.allSelected = !this.allSelected;
-
-    this.availableFiles.forEach((file) => {
-      this.downloadFiles[file.filename] = this.allSelected;
-    });
-  }
-
   public ok(): void {
     this.saving = true;
     this.error = null;
@@ -242,18 +223,6 @@ export class AddNewTorrentComponent implements OnInit {
     } else {
       this.saving = false;
     }
-  }
-
-  public isRegexExcluded(file: TorrentFileAvailability): boolean {
-    if (this.regexSelected == null) {
-      return false;
-    }
-
-    if (this.regexSelected.find((m) => m.filename === file.filename) == null) {
-      return true;
-    }
-
-    return false;
   }
 
   public verifyRegex(): void {
