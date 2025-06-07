@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AddNewTorrentComponent } from './add-new-torrent/add-new-torrent.component';
-import { AuthResolverService } from './auth-resolver.service';
+import { authResolver } from './auth-resolver.service';
 import { LoginComponent } from './login/login.component';
 import { MainLayoutComponent } from './main-layout/main-layout.component';
 import { ProfileComponent } from './profile/profile.component';
@@ -23,7 +23,7 @@ const routes: Routes = [
     path: '',
     component: MainLayoutComponent,
     resolve: {
-      isLoggedIn: AuthResolverService,
+      isLoggedIn: authResolver,
     },
     children: [
       {
