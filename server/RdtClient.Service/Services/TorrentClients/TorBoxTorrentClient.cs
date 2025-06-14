@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -24,8 +23,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                 throw new("TorBox API Key not set in the settings");
             }
 
-            var httpClient = httpClientFactory.CreateClient();
-            httpClient.DefaultRequestHeaders.Add("User-Agent", $"rdt-client {Assembly.GetEntryAssembly()?.GetName().Version}");
+            var httpClient = httpClientFactory.CreateClient(); 
             httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
 
             var torBoxNetClient = new TorBoxNetClient(null, httpClient, 5);
