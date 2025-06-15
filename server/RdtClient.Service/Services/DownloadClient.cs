@@ -1,4 +1,5 @@
-﻿using RdtClient.Data.Enums;
+﻿using System.IO.Abstractions;
+using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Service.Helpers;
 using RdtClient.Service.Services.Downloaders;
@@ -6,7 +7,7 @@ using RdtClient.Service.Services.TorrentClients;
 
 namespace RdtClient.Service.Services;
 
-public class DownloadClient(Download download, Torrent torrent, String destinationPath, String? category)
+public class DownloadClient(Download download, Torrent torrent, String destinationPath, String? category, IFileSystem fileSystem)
 {
     private static Int64 _totalBytesDownloadedThisSession;
     private static readonly Lock TotalBytesDownloadedLock = new();
@@ -70,6 +71,7 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
                 Data.Enums.DownloadClient.Aria2c => new Aria2cDownloader(download.RemoteId, download.Link, filePath, downloadPath, category),
                 Data.Enums.DownloadClient.Symlink => new SymlinkDownloader(download.Link, filePath, downloadPath, torrent.ClientKind),
                 Data.Enums.DownloadClient.DownloadStation => await DownloadStationDownloader.Init(download.RemoteId, download.Link, filePath, downloadPath, category),
+                Data.Enums.DownloadClient.Strm => new StrmDownloader(download.Link, filePath, fileSystem),
                 _ => throw new($"Unknown download client {Type}")
             };
 

@@ -7,11 +7,12 @@ using RdtClient.Service.Helpers;
 using RdtClient.Service.Services.Downloaders;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.IO.Abstractions;
 using System.Text.Json;
 
 namespace RdtClient.Service.Services;
 
-public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Downloads downloads)
+public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Downloads downloads, IFileSystem fileSystem)
 {
     public static readonly ConcurrentDictionary<Guid, DownloadClient> ActiveDownloadClients = new();
     public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new();
@@ -428,7 +429,7 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                     Log($"Setting download path to {downloadPath}", download, torrent);
 
                     // Start the download process
-                    var downloadClient = new DownloadClient(download, torrent, downloadPath, torrent.Category);
+                    var downloadClient = new DownloadClient(download, torrent, downloadPath, torrent.Category, fileSystem);
 
                     if (ActiveDownloadClients.TryAdd(download.DownloadId, downloadClient))
                     {
