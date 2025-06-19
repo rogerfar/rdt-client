@@ -1,5 +1,6 @@
 ﻿using System.IO.Abstractions;
 using System.Net;
+using System.Reflection;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
@@ -15,6 +16,7 @@ namespace RdtClient.Service;
 public static class DiConfig
 {
     public const String RD_CLIENT = "RdClient";
+    public static readonly String UserAgent = $"rdt-client {Assembly.GetEntryAssembly()?.GetName().Version}";
 
     public static void RegisterRdtServices(this IServiceCollection services)
     {
@@ -55,12 +57,19 @@ public static class DiConfig
 
     public static void RegisterHttpClients(this IServiceCollection services)
     {
-        services.AddHttpClient();
-
         var retryPolicy = HttpPolicyExtensions
                           .HandleTransientHttpError()
                           .OrResult(r => r.StatusCode == HttpStatusCode.TooManyRequests)
                           .WaitAndRetryAsync(retryCount: 5, sleepDurationProvider: attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)));
+
+        services.AddHttpClient();
+        services.ConfigureHttpClientDefaults(builder =>
+        {
+            builder.ConfigureHttpClient(httpClient =>
+            {
+                httpClient.DefaultRequestHeaders.Add("User-Agent", UserAgent);
+            });
+        });
 
         services.AddHttpClient(RD_CLIENT)
                 .AddPolicyHandler(retryPolicy);
