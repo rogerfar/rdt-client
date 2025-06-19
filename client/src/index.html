@@ -6,11 +6,10 @@
     <base href="/" />
     <script>
       (function () {
-        var baseElement = document.querySelector("base");
+        const baseElement = document.querySelector("base");
 
         if (baseElement) {
-          var hrefValue = baseElement.getAttribute("href");
-          window["_app_base"] = hrefValue;
+          window["_app_base"] = baseElement.getAttribute("href");
           console.log("setting base href to " + window["_app_base"]);
         }
       })();
