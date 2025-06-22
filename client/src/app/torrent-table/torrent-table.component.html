@@ -33,7 +33,7 @@
             <input
               type="checkbox"
               (click)="toggleSelect(torrent.torrentId)"
-              [checked]="selectedTorrents.contains(torrent.torrentId)"
+              [checked]="selectedTorrents.includes(torrent.torrentId)"
             />
           </td>
           <td (click)="openTorrent(torrent.torrentId)" class="break-all">
