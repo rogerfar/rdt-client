@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.IO.Abstractions;
 using System.Reflection;
 using Aria2NET;
 using Microsoft.AspNetCore.Authorization;
@@ -14,7 +15,7 @@ namespace RdtClient.Web.Controllers;
 
 [Authorize(Policy = "AuthSetting")]
 [Route("Api/Settings")]
-public class SettingsController(Settings settings, Torrents torrents) : Controller
+public class SettingsController(Settings settings, Torrents torrents, IFileSystem fileSystem) : Controller
 {
     [HttpGet]
     [Route("")]
@@ -108,7 +109,7 @@ public class SettingsController(Settings settings, Torrents torrents) : Controll
             }
         };
 
-        var downloadClient = new DownloadClient(download, download.Torrent, downloadPath, null);
+        var downloadClient = new DownloadClient(download, download.Torrent, downloadPath, null, fileSystem);
 
         await downloadClient.Start();
 
