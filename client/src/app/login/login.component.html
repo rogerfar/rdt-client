@@ -7,13 +7,14 @@
           <div class="box">
             <form (ngSubmit)="login()">
               <div class="field">
-                <label for="" class="label">Username</label>
+                <label for="userName" class="label">Username</label>
                 <div class="control has-icons-left">
                   <input
                     type="text"
                     placeholder=""
                     class="input"
                     name="userName"
+                    id="userName"
                     (change)="setUserName($event)"
                     required
                   />
@@ -23,9 +24,16 @@
                 </div>
               </div>
               <div class="field">
-                <label for="" class="label" name="password">Password</label>
+                <label for="password" class="label">Password</label>
                 <div class="control has-icons-left">
-                  <input type="password" class="input" required name="password" (change)="setPassword($event)" />
+                  <input
+                    type="password"
+                    class="input"
+                    required
+                    name="password"
+                    id="password"
+                    (change)="setPassword($event)"
+                  />
                   <span class="icon is-small is-left">
                     <i class="fa fa-lock"></i>
                   </span>

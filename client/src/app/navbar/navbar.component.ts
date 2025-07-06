@@ -1,14 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { NavigationEnd, Router } from '@angular/router';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { Profile } from '../models/profile.model';
 import { SettingsService } from '../settings.service';
+import { NgClass, DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-navbar',
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss'],
-  standalone: false,
+  imports: [RouterLink, NgClass, DatePipe],
+  standalone: true,
 })
 export class NavbarComponent implements OnInit {
   public showMobileMenu = false;
@@ -58,11 +60,6 @@ export class NavbarComponent implements OnInit {
   }
 
   public logout(): void {
-    this.authService.logout().subscribe(
-      () => {
-        this.router.navigate(['/login']);
-      },
-      (err) => {},
-    );
+    this.authService.logout().subscribe({ next: () => this.router.navigate(['/login']), error: console.error });
   }
 }
