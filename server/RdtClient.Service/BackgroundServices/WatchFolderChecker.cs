@@ -82,6 +82,7 @@ public class WatchFolderChecker(ILogger<WatchFolderChecker> logger, IServiceProv
                             DownloadClient = Settings.Get.DownloadClient.Client,
                             Category = Settings.Get.Watch.Default.Category,
                             HostDownloadAction = Settings.Get.Watch.Default.HostDownloadAction,
+                            FinishedActionDelay = Settings.Get.Watch.Default.FinishedActionDelay,
                             DownloadAction = Settings.Get.Watch.Default.OnlyDownloadAvailableFiles
                                 ? TorrentDownloadAction.DownloadAvailableFiles
                                 : TorrentDownloadAction.DownloadAll,
