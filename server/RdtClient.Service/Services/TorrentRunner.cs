@@ -349,7 +349,7 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
         allTorrents = await torrents.Get();
 
         var completeTorrents = allTorrents.Where(m => m.Completed != null);
-        var torrentsToDelete = completeTorrents.Where(m => DateTime.UtcNow >= m.Completed?.AddMinutes(m.FinishedActionDelay) && m.Error == null);
+        var torrentsToDelete = completeTorrents.Where(m => DateTimeOffset.UtcNow >= m.Completed?.AddMinutes(m.FinishedActionDelay) && m.Error == null);
 
         foreach (var torrent in torrentsToDelete)
         {
