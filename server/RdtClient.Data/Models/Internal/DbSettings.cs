@@ -269,6 +269,10 @@ public class DbSettingsDefaultsWithCategory : DbSettingsDefaults
     [DisplayName("Post Download Action")]
     [Description("When all files are downloaded from the provider to the host, perform this action. Does not apply when using the symlink downloader.")]
     public TorrentFinishedAction FinishedAction { get; set; } = TorrentFinishedAction.RemoveAllTorrents;
+    
+    [DisplayName("Finished Action Delay")]
+    [Description("When all files are downloaded from the provider to the host, wait this many minutes before performing the action above.")]
+    public Int32 FinishedActionDelay { get; set; } = 0;
 }
 
 public class DbSettingsDefaults

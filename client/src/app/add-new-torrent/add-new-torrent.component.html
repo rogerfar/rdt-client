@@ -152,6 +152,17 @@
     </div>
 
     <div class="field">
+      <label class="label">Finished Action Delay (minutes)</label>
+      <div class="control is-fullwidth">
+        <input class="input" type="number" [(ngModel)]="finishedActionDelay" />
+      </div>
+      <p class="help">
+        When a torrent is finished downloading on the provider, perform this action. Use this setting if you only want
+        to add files to your debrid provider but not download them to the host.
+      </p>
+    </div>
+
+    <div class="field">
       <label class="label">Category</label>
       <div class="control">
         <input class="input" type="text" [(ngModel)]="category" />
