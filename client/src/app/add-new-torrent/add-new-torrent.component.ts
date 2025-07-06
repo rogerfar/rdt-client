@@ -50,11 +50,11 @@ export class AddNewTorrentComponent implements OnInit {
     private router: Router,
     private torrentService: TorrentService,
     private settingsService: SettingsService,
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
-    this.activatedRoute.queryParams.subscribe(params => {
+    this.activatedRoute.queryParams.subscribe((params) => {
       if (params['magnet']) {
         this.magnetLink = decodeURIComponent(params['magnet']);
       }
@@ -70,7 +70,7 @@ export class AddNewTorrentComponent implements OnInit {
       this.downloadAction =
         settings.first((m) => m.key === 'Gui:Default:OnlyDownloadAvailableFiles')?.value === true ? 1 : 0;
       this.finishedAction = settings.first((m) => m.key === 'Gui:Default:FinishedAction')?.value as number;
-      this.finishedActionDelay = settings.first(m => m.key =="Gui:Default:FinishedActionDelay")?.value as number;
+      this.finishedActionDelay = settings.first((m) => m.key == 'Gui:Default:FinishedActionDelay')?.value as number;
       this.downloadMinSize = settings.first((m) => m.key === 'Gui:Default:MinFileSize')?.value as number;
       this.includeRegex = settings.first((m) => m.key === 'Gui:Default:IncludeRegex')?.value as string;
       this.excludeRegex = settings.first((m) => m.key === 'Gui:Default:ExcludeRegex')?.value as string;
