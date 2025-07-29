@@ -1,9 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-@Pipe({
-  name: 'sort',
-  standalone: false,
-})
+@Pipe({ name: 'sort', })
 export class SortPipe implements PipeTransform {
   transform(array: any[], field: string, order: 'asc' | 'desc' = 'asc'): any[] {
     if (!Array.isArray(array)) {

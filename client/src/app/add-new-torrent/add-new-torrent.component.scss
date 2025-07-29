@@ -3,21 +3,6 @@
   width: 24em;
 }
 
-.scroll-container {
-  width: 100%;
-  overflow-x: auto;
-  overflow-y: auto;
-  max-height: 603px;
-}
-
-.is-fullwidth-label {
-  width: 100%;
-}
-
-.is-block {
-  display: block;
-}
-
 .separator {
   display: flex;
   align-items: center;
@@ -41,8 +26,4 @@
 
 .separator:not(:empty)::after {
   margin-left: 0.25em;
-}
-
-.strike-through {
-  text-decoration: line-through;
 }

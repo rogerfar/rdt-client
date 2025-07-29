@@ -1,13 +1,7 @@
-import { Injectable } from '@angular/core';
+import { inject } from '@angular/core';
 import { AuthService } from './auth.service';
+import { ResolveFn } from '@angular/router';
 
-@Injectable({
-  providedIn: 'root',
-})
-export class AuthResolverService {
-  constructor(private authService: AuthService) {}
-
-  resolve() {
-    return this.authService.isLoggedIn();
-  }
-}
+export const authResolver: ResolveFn<boolean> = () => {
+  return inject(AuthService).isLoggedIn();
+};
