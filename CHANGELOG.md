@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased
 
+## [2.0.115] - 2025-07-28
+### Added
+- Added setting to delay the finish action.
+
+## Changed
+- Make sure the Real-Debrid provider times out when trying to add a new torrent.
+
 ## [2.0.114] - 2025-06-21
 ### Added
 - Add Select All functionality to the delete dialog in individual torrent screen, thanks @mentalblank
