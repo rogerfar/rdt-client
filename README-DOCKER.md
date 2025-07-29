@@ -13,7 +13,7 @@ rdt-client is a web a web interface to manage your torrents on Real-Debrid. It s
 
 Our images support multiple architectures such as `x86-64`, `arm64` and `armhf`. We utilise the docker manifest for multi-platform awareness. More information is available from docker [here](https://github.com/docker/distribution/blob/master/docs/spec/manifest-v2-2.md#manifest-list) and our announcement [here](https://blog.linuxserver.io/2019/02/21/the-lsio-pipeline-project/).
 
-Simply pulling `rogerfar/rdt-client` should retrieve the correct image for your arch, but you can also pull specific arch images via tags.
+Simply pulling `rogerfar/rdtclient` should retrieve the correct image for your arch, but you can also pull specific arch images via tags.
 
 The architectures supported by this image are:
 

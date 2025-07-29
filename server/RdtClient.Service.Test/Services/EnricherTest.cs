@@ -13,7 +13,7 @@ public class EnricherTest : IDisposable
 
     public EnricherTest()
     {
-        _mockRepository = new MockRepository(MockBehavior.Strict);
+        _mockRepository = new(MockBehavior.Strict);
         _loggerMock = _mockRepository.Create<ILogger<Enricher>>(MockBehavior.Loose);
         _trackerListGrabberMock = _mockRepository.Create<ITrackerListGrabber>();
     }
@@ -67,7 +67,7 @@ public class EnricherTest : IDisposable
 
     private static BEncodedDictionary CreateTorrentDictWithOnlyAnnounce(String announceUrl)
     {
-        return new BEncodedDictionary
+        return new()
         {
             ["announce"] = new BEncodedString(announceUrl),
             ["info"] = new BEncodedDictionary()
@@ -76,7 +76,7 @@ public class EnricherTest : IDisposable
 
     private static BEncodedDictionary CreateTorrentDictWithNoTrackers()
     {
-        return new BEncodedDictionary
+        return new()
         {
             ["info"] = new BEncodedDictionary()
         };

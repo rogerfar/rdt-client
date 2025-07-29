@@ -86,6 +86,7 @@ public class TorrentData(DataContext dataContext) : ITorrentData
             Hash = hash.ToLower(),
             Category = torrent.Category,
             HostDownloadAction = torrent.HostDownloadAction,
+            FinishedActionDelay = torrent.FinishedActionDelay,
             DownloadAction = torrent.DownloadAction,
             FinishedAction = torrent.FinishedAction,
             DownloadMinSize = torrent.DownloadMinSize,

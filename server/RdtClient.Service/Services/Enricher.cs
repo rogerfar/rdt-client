@@ -76,14 +76,14 @@ public sealed class Enricher(ILogger<Enricher> logger, ITrackerListGrabber track
 
             if (!paramDict.ContainsKey(key))
             {
-                paramDict[key] = new List<String>();
+                paramDict[key] = [];
             }
 
             paramDict[key].AddRange(queryKVs.GetValues(key) ?? []);
         }
 
         var existingTrackers = paramDict.TryGetValue("tr", out var value)
-            ? new HashSet<String>(value, StringComparer.OrdinalIgnoreCase)
+            ? new(value, StringComparer.OrdinalIgnoreCase)
             : new HashSet<String>(StringComparer.OrdinalIgnoreCase);
 
         paramDict.Remove("tr");

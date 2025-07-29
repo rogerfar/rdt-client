@@ -1,4 +1,3 @@
-using System.Net.Http.Headers;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
@@ -96,7 +95,7 @@ public class TrackerListGrabber(IHttpClientFactory httpClientFactory, IMemoryCac
         {
             logger.LogError(ex, "Unable to fetch tracker list.");
 
-            throw new Exception("Unable to fetch tracker list for enrichment.", ex);
+            throw new("Unable to fetch tracker list for enrichment.", ex);
         }
         finally
         {
@@ -116,7 +115,7 @@ public class TrackerListGrabber(IHttpClientFactory httpClientFactory, IMemoryCac
             ? $"v{version[..version.LastIndexOf('.')]}"
             : "";
 
-        httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("RdtClient", currentVersion));
+        httpClient.DefaultRequestHeaders.UserAgent.Add(new("RdtClient", currentVersion));
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         var token = cts.Token;
         var response = await httpClient.GetAsync(trackerUri, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);

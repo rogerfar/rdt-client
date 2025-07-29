@@ -4,7 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased
+
+## [2.0.115] - 2025-07-28
+### Added
+- Added setting to delay the finish action.
+
+### Fixed
+- Make sure the Real-Debrid provider times out when trying to add a new torrent.
+
+## [2.0.114] - 2025-06-21
+### Added
+- Add Select All functionality to the delete dialog in individual torrent screen, thanks @mentalblank
+- Add setting to add a list of trackers (from a URL) to every torrent and magnet that's added to rdt-client, thanks @mentalblank
+
+### Changed
+- The `User-Agent` header is now set on all requests to debrid providers' APIs. 
 
 ## [2.0.113] - 2025-05-22
 ### Fixed

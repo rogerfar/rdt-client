@@ -12,20 +12,20 @@
     <PackageReference Include="AllDebrid.NET" Version="1.0.18" />
     <PackageReference Include="Aria2.NET" Version="1.0.6" />
     <PackageReference Include="DebridLinkFr.NET" Version="1.0.4" />
-    <PackageReference Include="Downloader" Version="3.3.4" />
-    <PackageReference Include="Downloader.NET" Version="1.0.16" />
-    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.5" />
-    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.5.0" />
+    <PackageReference Include="Downloader" Version="4.0.2" />
+    <PackageReference Include="Downloader.NET" Version="1.0.18" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.7.0" />
     <PackageReference Include="MonoTorrent" Version="3.0.2" />
-    <PackageReference Include="Polly" Version="8.5.2" />
+    <PackageReference Include="Polly" Version="8.6.2" />
     <PackageReference Include="Premiumize.NET" Version="1.0.10" />
     <PackageReference Include="RD.NET" Version="2.1.11" />
-    <PackageReference Include="Serilog" Version="4.2.0" />
+    <PackageReference Include="Serilog" Version="4.3.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="SharpCompress" Version="0.39.0" />
+    <PackageReference Include="SharpCompress" Version="0.40.0" />
     <PackageReference Include="Synology.Api.Client" Version="0.3.93" />
-    <PackageReference Include="TestableIO.System.IO.Abstractions" Version="22.0.14" />
-    <PackageReference Include="TestableIO.System.IO.Abstractions.Wrappers" Version="22.0.14" />
+    <PackageReference Include="TestableIO.System.IO.Abstractions" Version="22.0.15" />
+    <PackageReference Include="TestableIO.System.IO.Abstractions.Wrappers" Version="22.0.15" />
     <PackageReference Include="TorBox.NET" Version="1.5.0" />
   </ItemGroup>
 

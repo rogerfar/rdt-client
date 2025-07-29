@@ -128,14 +128,18 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
 
     public async Task<String> AddMagnet(String magnetLink)
     {
-        var result = await GetClient().Torrents.AddMagnetAsync(magnetLink);
+        var timeoutCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(Settings.Get.Provider.Timeout));
+
+        var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, timeoutCancellationToken.Token);
 
         return result.Id;
     }
 
     public async Task<String> AddFile(Byte[] bytes)
     {
-        var result = await GetClient().Torrents.AddFileAsync(bytes);
+        var timeoutCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(Settings.Get.Provider.Timeout));
+
+        var result = await GetClient().Torrents.AddFileAsync(bytes, timeoutCancellationToken.Token);
 
         return result.Id;
     }

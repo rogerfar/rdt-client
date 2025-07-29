@@ -217,15 +217,15 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                     Log($"Unpack reported an error: {unpackClient.Error}", download, download.Torrent);
 
                     await downloads.UpdateError(downloadId, unpackClient.Error);
-                    await downloads.UpdateCompleted(downloadId, DateTimeOffset.UtcNow);
                 }
                 else
                 {
                     Log($"Unpack finished successfully", download, download.Torrent);
 
                     await downloads.UpdateUnpackingFinished(downloadId, DateTimeOffset.UtcNow);
-                    await downloads.UpdateCompleted(downloadId, DateTimeOffset.UtcNow);
                 }
+
+                await downloads.UpdateCompleted(downloadId, DateTimeOffset.UtcNow);
 
                 ActiveUnpackClients.TryRemove(downloadId, out _);
 
@@ -348,14 +348,64 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
 
         allTorrents = await torrents.Get();
 
-        allTorrents = allTorrents.Where(m => m.Completed == null).ToList();
+        var completeTorrents = allTorrents.Where(m => m.Completed != null);
+        var torrentsToDelete = completeTorrents.Where(m => DateTimeOffset.UtcNow >= m.Completed?.AddMinutes(m.FinishedActionDelay) && m.Error == null);
 
-        if (allTorrents.Count > 0)
+        foreach (var torrent in torrentsToDelete)
+        {
+            if (torrent.DownloadClient == Data.Enums.DownloadClient.Symlink)
+            {
+                switch (torrent.FinishedAction)
+                {
+                    case TorrentFinishedAction.RemoveAllTorrents:
+                        Log($"Force setting FinishedAction to RemoveClient as download client is Symlink and FinishedAction is RemoveAllTorrents", torrent);
+                        torrent.FinishedAction = TorrentFinishedAction.RemoveClient;
+
+                        break;
+                    case TorrentFinishedAction.RemoveRealDebrid:
+                        Log($"Force setting FinishedAction to TorrentFinishedAction.None as download client is Symlink and FinishedAction is RemoveRealDebrid", torrent);
+                        torrent.FinishedAction = TorrentFinishedAction.None;
+
+                        break;
+                }
+            }
+
+            switch (torrent.FinishedAction)
+            {
+                case TorrentFinishedAction.RemoveAllTorrents:
+                    Log($"Removing torrents from debrid provider and RDT-Client, no files", torrent);
+                    await torrents.Delete(torrent.TorrentId, true, true, false);
+
+                    break;
+                case TorrentFinishedAction.RemoveRealDebrid:
+                    Log($"Removing torrents from debrid provider, no files", torrent);
+                    await torrents.Delete(torrent.TorrentId, false, true, false);
+
+                    break;
+                case TorrentFinishedAction.RemoveClient:
+                    Log($"Removing torrents from client, no files", torrent);
+                    await torrents.Delete(torrent.TorrentId, true, false, false);
+
+                    break;
+                case TorrentFinishedAction.None:
+                    Log($"Not removing torrents or files", torrent);
+
+                    break;
+                default:
+                    Log($"Invalid torrent FinishedAction {torrent.FinishedAction}", torrent);
+
+                    break;
+            }
+        }
+
+        var incompleteTorrents = allTorrents.Where(m => m.Completed == null).ToList();
+
+        if (incompleteTorrents.Count > 0)
         {
             Log($"Processing {allTorrents.Count} torrents");
         }
 
-        foreach (var torrent in allTorrents)
+        foreach (var torrent in incompleteTorrents)
         {
             try
             {
@@ -610,50 +660,6 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                         catch (Exception ex)
                         {
                             logger.LogError(ex.Message, "Unable to run post process: {Message}", ex.Message);
-                        }
-
-                        if (torrent.DownloadClient == Data.Enums.DownloadClient.Symlink)
-                        {
-                            switch (torrent.FinishedAction)
-                            {
-                                case TorrentFinishedAction.RemoveAllTorrents:
-                                    Log($"Force setting FinishedAction to RemoveClient as download client is Symlink and FinishedAction is RemoveAllTorrents", torrent);
-                                    torrent.FinishedAction = TorrentFinishedAction.RemoveClient;
-
-                                    break;
-                                case TorrentFinishedAction.RemoveRealDebrid:
-                                    Log($"Force setting FinishedAction to TorrentFinishedAction.None as download client is Symlink and FinishedAction is RemoveRealDebrid", torrent);
-                                    torrent.FinishedAction = TorrentFinishedAction.None;
-
-                                    break;
-                            }
-                        }
-
-                        switch (torrent.FinishedAction)
-                        {
-                            case TorrentFinishedAction.RemoveAllTorrents:
-                                Log($"Removing torrents from debrid provider and RDT-Client, no files", torrent);
-                                await torrents.Delete(torrent.TorrentId, true, true, false);
-
-                                break;
-                            case TorrentFinishedAction.RemoveRealDebrid:
-                                Log($"Removing torrents from debrid provider, no files", torrent);
-                                await torrents.Delete(torrent.TorrentId, false, true, false);
-
-                                break;
-                            case TorrentFinishedAction.RemoveClient:
-                                Log($"Removing torrents from client, no files", torrent);
-                                await torrents.Delete(torrent.TorrentId, true, false, false);
-
-                                break;
-                            case TorrentFinishedAction.None:
-                                Log($"Not removing torrents or files", torrent);
-
-                                break;
-                            default:
-                                Log($"Invalid torrent FinishedAction {torrent.FinishedAction}", torrent);
-
-                                break;
                         }
                     }
                     else

@@ -14,7 +14,9 @@ public class WebsocketsUpdater(ILogger<WebsocketsUpdater> logger, IServiceProvid
             await Task.Delay(1000, stoppingToken);
         }
 
-        var remoteService = serviceProvider.GetRequiredService<RemoteService>();
+        var scope = serviceProvider.CreateScope();
+
+        var remoteService = scope.ServiceProvider.GetRequiredService<RemoteService>();
 
         while (!stoppingToken.IsCancellationRequested)
         {
