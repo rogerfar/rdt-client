@@ -217,15 +217,15 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                     Log($"Unpack reported an error: {unpackClient.Error}", download, download.Torrent);
 
                     await downloads.UpdateError(downloadId, unpackClient.Error);
-                    await downloads.UpdateCompleted(downloadId, DateTimeOffset.UtcNow);
                 }
                 else
                 {
                     Log($"Unpack finished successfully", download, download.Torrent);
 
                     await downloads.UpdateUnpackingFinished(downloadId, DateTimeOffset.UtcNow);
-                    await downloads.UpdateCompleted(downloadId, DateTimeOffset.UtcNow);
                 }
+
+                await downloads.UpdateCompleted(downloadId, DateTimeOffset.UtcNow);
 
                 ActiveUnpackClients.TryRemove(downloadId, out _);
 

@@ -32,7 +32,7 @@ public class BezzadDownloader : IDownloader
         // For all options, see https://github.com/bezzad/Downloader
         _downloadConfiguration = new()
         {
-            MaxTryAgainOnFailover = 5,
+            MaxTryAgainOnFailure = 5,
             RangeDownload = false,
             ClearPackageOnCompletionWithFailure = true,
             ReserveStorageSpaceBeforeStartingDownload = false,
