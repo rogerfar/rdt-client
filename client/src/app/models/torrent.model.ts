@@ -8,6 +8,7 @@ export class Torrent {
   public hostDownloadAction: number;
   public downloadAction: number;
   public finishedAction: number;
+  public finishedActionDelay: number;
   public downloadMinSize: number;
   public includeRegex: string;
   public excludeRegex: string;

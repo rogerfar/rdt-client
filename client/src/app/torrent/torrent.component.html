@@ -117,6 +117,15 @@
             }
           </div>
           <div class="field">
+            <label class="label">Finished action delay</label>
+            {{ torrent.finishedActionDelay || 0 }}
+            @if (torrent.finishedActionDelay === 1) {
+              minute
+            } @else {
+              minutes
+            }
+          </div>
+          <div class="field">
             <label class="label">Minimum file size to download</label>
             {{ torrent.downloadMinSize }}MB
           </div>
