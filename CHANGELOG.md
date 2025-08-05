@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added setting to ban certain trackers from being added. Will filter by the torrent source or announcement urls.
 
+### Changed
+- Upgraded to Angular 20.
+
 ## [2.0.115] - 2025-07-28
 ### Added
 - Added setting to delay the finish action.
