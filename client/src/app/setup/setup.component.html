@@ -11,18 +11,33 @@
               </div>
               <form (ngSubmit)="setup()">
                 <div class="field">
-                  <label for="" class="label">Username</label>
+                  <label for="userName" class="label">Username</label>
                   <div class="control has-icons-left">
-                    <input type="text" placeholder="" class="input" name="userName" [(ngModel)]="userName" required />
+                    <input
+                      type="text"
+                      placeholder=""
+                      class="input"
+                      name="userName"
+                      id="userName"
+                      [(ngModel)]="userName"
+                      required
+                    />
                     <span class="icon is-small is-left">
                       <i class="fa fa-envelope"></i>
                     </span>
                   </div>
                 </div>
                 <div class="field">
-                  <label for="" class="label" name="password">Password</label>
+                  <label for="password" class="label">Password</label>
                   <div class="control has-icons-left">
-                    <input type="password" class="input" required name="password" [(ngModel)]="password" />
+                    <input
+                      type="password"
+                      class="input"
+                      required
+                      name="password"
+                      id="password"
+                      [(ngModel)]="password"
+                    />
                     <span class="icon is-small is-left">
                       <i class="fa fa-lock"></i>
                     </span>
@@ -81,9 +96,17 @@
                 </div>
               </div>
               <div class="field">
-                <label for="" class="label">API Private Token</label>
+                <label for="debrid-api-token" class="label">API Private Token</label>
                 <div class="control">
-                  <input type="text" placeholder="" class="input" name="token" [(ngModel)]="token" required />
+                  <input
+                    type="text"
+                    placeholder=""
+                    class="input"
+                    name="token"
+                    id="debrid-api-token"
+                    [(ngModel)]="token"
+                    required
+                  />
                 </div>
                 @if (provider === 0) {
                   <p class="help">
