@@ -83,6 +83,10 @@ Supports the following parameters:
     [Description("The time in minutes to cache the tracker list. Set to 0 to disable caching.")]
     public Int32 TrackerEnrichmentCacheExpiration { get; set; } = 60;
 
+    [DisplayName("Banned Trackers")]
+    [Description("Torrents that come from these trackers will not be allowed, this is a failsafe if you are accidentally downloading from private trackers. Will compare by keyword. Define multiple trackers by separating them with a comma.")]
+    public String? BannedTrackers { get; set; } = null;
+
     [DisplayName("Disable update notifications")]
     [Description("Ignore update notifications. You will still be notified if the version you are running has a security vulnerability.")]
     public Boolean DisableUpdateNotifications { get; set; } = false;

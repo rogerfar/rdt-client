@@ -122,6 +122,32 @@ public class Torrents(
             throw new($"{ex.Message}, trying to parse {magnetLink}");
         }
 
+        if (!String.IsNullOrWhiteSpace(Settings.Get.General.BannedTrackers))
+        {
+            var bannedTrackers = Settings.Get.General.BannedTrackers.Split(',');
+
+            foreach (var bannedTracker in bannedTrackers)
+            {
+                var bannedTrackerCompare = bannedTracker.Trim().ToLower();
+
+                if (String.IsNullOrWhiteSpace(bannedTrackerCompare))
+                {
+                    continue;
+                }
+
+                if (magnet.AnnounceUrls != null)
+                {
+                    var bannedUrls = magnet.AnnounceUrls.Where(m => m.Trim().ToLower().Contains(bannedTrackerCompare)).ToList();
+
+                    if (bannedUrls.Count > 0)
+                    {
+                        var bannedUrlsString = String.Join(", ", bannedUrls);
+                        throw new($"Cannot add torrent, the torrent contains banned trackers: {bannedUrlsString}.");
+                    }
+                }
+            }
+        }
+
         torrent.RdStatus = TorrentStatus.Queued;
         torrent.RdName = magnet.Name;
 
@@ -162,6 +188,37 @@ public class Torrents(
             throw new($"{ex.Message}, trying to parse {fileAsBase64}");
         }
 
+        if (!String.IsNullOrWhiteSpace(Settings.Get.General.BannedTrackers))
+        {
+            var bannedTrackers = Settings.Get.General.BannedTrackers.Split(',');
+
+            foreach (var bannedTracker in bannedTrackers)
+            {
+                var bannedTrackerCompare = bannedTracker.Trim().ToLower();
+
+                if (String.IsNullOrWhiteSpace(bannedTrackerCompare))
+                {
+                    continue;
+                }
+
+                if (!String.IsNullOrWhiteSpace(monoTorrent.Source) && monoTorrent.Source.Contains(bannedTracker))
+                {
+                    throw new($"Cannot add torrent, the torrent source '{monoTorrent.Source}' is a banned tracker.");
+                }
+
+                if (monoTorrent.AnnounceUrls != null)
+                {
+                    var bannedUrls = monoTorrent.AnnounceUrls.SelectMany(m => m).Where(m => m.Trim().ToLower().Contains(bannedTrackerCompare)).ToList();
+
+                    if (bannedUrls.Count > 0)
+                    {
+                        var bannedUrlsString = String.Join(", ", bannedUrls);
+                        throw new($"Cannot add torrent, the torrent contains banned trackers: {bannedUrlsString}.");
+                    }
+                }
+            }
+        }
+        
         torrent.RdStatus = TorrentStatus.Queued;
         torrent.RdName = monoTorrent.Name;
 
@@ -224,7 +281,7 @@ public class Torrents(
     /// <param name="torrent">The torrent from the database to upload to the debrid provider</param>
     /// <returns>Updated torrent</returns>
     /// <exception cref="Exception">When RdId is not null or FileOrMagnet is null.</exception>
-    public async Task<Torrent> DequeueFromDebridQueue(Torrent torrent)
+    public async Task DequeueFromDebridQueue(Torrent torrent)
     {
         if (torrent.RdId != null)
         {
@@ -249,8 +306,6 @@ public class Torrents(
             await torrentData.UpdateRdId(torrent, id);
 
             await UpdateTorrentClientData(torrent);
-
-            return torrent;
         }
         finally
         {
@@ -465,7 +520,7 @@ public class Torrents(
 
         Log($"Retrieving filename for", download, download.Torrent);
 
-        var fileName = await TorrentClient.GetFileName(download!);
+        var fileName = await TorrentClient.GetFileName(download);
 
         await downloads.UpdateFileName(downloadId, fileName);
 

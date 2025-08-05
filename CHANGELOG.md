@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased
 
+## [2.0.116] - 2025-08-04
+### Added
+- Added setting to ban certain trackers from being added. Will filter by the torrent source or announcement urls.
+
 ## [2.0.115] - 2025-07-28
 ### Added
 - Added setting to delay the finish action.
