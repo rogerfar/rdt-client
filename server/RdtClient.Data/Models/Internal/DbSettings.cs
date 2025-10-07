@@ -97,7 +97,7 @@ public class DbSettingsDownloadClient
     [DisplayName("Download client")]
     [Description(@"Select which download client to use, see the
 <a href=""https://github.com/rogerfar/rdt-client/"" target=""_blank"">README</a> for the various options.")]
-    public DownloadClient Client { get; set; } = DownloadClient.Internal;
+    public DownloadClient Client { get; set; } = DownloadClient.Bezzad;
 
     [DisplayName("Download path")]
     [Description("Path in the docker container to download files to (i.e. /data/downloads), or a local path when using as a service.")]

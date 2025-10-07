@@ -4,9 +4,6 @@ namespace RdtClient.Data.Enums;
 
 public enum DownloadClient
 {
-    [Description("Internal Downloader")]
-    Internal,
-
     [Description("Bezzad Downloader")]
     Bezzad,
 
