@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased
 
+## [2.0.117] - 2025-10-06
+### Removed
+- Removed internal downloader and migrated to the Bezzad downloader.
+
 ## [2.0.116] - 2025-08-04
 ### Added
 - Added setting to ban certain trackers from being added. Will filter by the torrent source or announcement urls.

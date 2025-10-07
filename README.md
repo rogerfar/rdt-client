@@ -109,17 +109,7 @@ If you use Proxmox for your homelab, you can run rdt-client in a linux container
 
 ### Download Clients
 
-Currently there 5 available download clients:
-
-#### Internal Downloader
-
-This experimental [downloader](https://github.com/rogerfar/Downloader.NET) can be used to download files with multiple sections in parallel.
-
-It has the following options:
-
-- Download speed (in MB/s): This number indicates the speed in MB/s per download over all parallel downloads and chunks.
-- Parallel connections per download: When a file is downloaded it is split in sections, this setting indicates how many sections you will download in parallel.
-- Connection Timeout: This number indicates the timeout in milliseconds before a download chunk times out. It will retry each chunk 5 times before completely failing.
+Currently there 4 available download clients:
 
 #### Bezzad Downloader
 
