@@ -377,6 +377,15 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
 
         return Ok();
     }
+
+    [Authorize(Policy = "AuthSetting")]
+    [Route("torrents/filePrio")]
+    [HttpGet]
+    [HttpPost]
+    public async Task<ActionResult> TorrentsFilePrio()
+    {
+        return Ok();
+    }
         
     [Authorize(Policy = "AuthSetting")]
     [Route("torrents/setCategory")]
@@ -432,6 +441,15 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
 
         return Ok();
     }
+
+    [Authorize(Policy = "AuthSetting")]
+    [Route("torrents/createTags")]
+    [HttpGet]
+    [HttpPost]
+    public ActionResult TorrentsCreateTags()
+    {
+        return Ok();
+    }
         
     [Authorize(Policy = "AuthSetting")]
     [Route("torrents/removeCategories")]
@@ -461,6 +479,15 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     public ActionResult TorrentsSetForceStart()
     {
         return Ok();
+    }
+    
+    [Authorize(Policy = "AuthSetting")]
+    [Route("torrents/tags")]
+    [HttpGet]
+    [HttpPost]
+    public ActionResult TorrentsTags()
+    {
+        return Ok(new List<String>());
     }
 
     [Authorize(Policy = "AuthSetting")]
