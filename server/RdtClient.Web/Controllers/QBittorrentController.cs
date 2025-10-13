@@ -382,7 +382,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     [Route("torrents/filePrio")]
     [HttpGet]
     [HttpPost]
-    public async Task<ActionResult> TorrentsFilePrio()
+    public ActionResult TorrentsFilePrio()
     {
         return Ok();
     }

@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased
 
+## [2.0.119] - 2025-10-13
+### Removed
+- Removed internal downloader from the GUI.
+
 ## [2.0.118] - 2025-10-06
 ### Added
 - Added some fake qBittorrent API calls for decluttarr.

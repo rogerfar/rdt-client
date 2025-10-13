@@ -58,18 +58,15 @@
             <label class="label">Downloader</label>
             @switch (torrent.downloadClient) {
               @case (0) {
-                Internal Downloader
-              }
-              @case (1) {
                 Bezadd
               }
-              @case (2) {
+              @case (1) {
                 Aria2c
               }
-              @case (3) {
+              @case (2) {
                 Symlink Downloader
               }
-              @case (4) {
+              @case (3) {
                 Synology DownloadStation
               }
             }
@@ -583,11 +580,10 @@
         <label class="label">Downloader</label>
         <div class="control select is-fullwidth">
           <select [(ngModel)]="updateSettingsDownloadClient">
-            <option [ngValue]="0">Internal Downloader</option>
-            <option [ngValue]="1">Bezzad</option>
-            <option [ngValue]="2">Aria2c</option>
-            <option [ngValue]="3">Symlink Downloader</option>
-            <option [ngValue]="4">Synology DownloadStation</option>
+            <option [ngValue]="0">Bezzad</option>
+            <option [ngValue]="1">Aria2c</option>
+            <option [ngValue]="2">Symlink Downloader</option>
+            <option [ngValue]="3">Synology DownloadStation</option>
           </select>
         </div>
         <p class="help">
