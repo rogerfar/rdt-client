@@ -12,7 +12,7 @@ namespace RdtClient.Service.Services.TorrentClients;
 public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter) : ITorrentClient
 {
     private TimeSpan? _offset;
-    private TorBoxNetClient GetClient()
+    private TorBoxNetClient GetClient(String? client = null)
     {
         try
         {
@@ -23,7 +23,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                 throw new("TorBox API Key not set in the settings");
             }
 
-            var httpClient = httpClientFactory.CreateClient(); 
+            var httpClient = httpClientFactory.CreateClient(client ?? DiConfig.TORBOX_CLIENT); 
             httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
 
             var torBoxNetClient = new TorBoxNetClient(null, httpClient, 5);
@@ -124,7 +124,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
     {
         var user = await GetClient().User.GetAsync(true);
 
-        var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, user.Data?.Settings?.SeedTorrents ?? 3, false);
+        var result = await GetClient(DiConfig.TORBOX_CLIENT_CREATETORRENT).Torrents.AddMagnetAsync(magnetLink, user.Data?.Settings?.SeedTorrents ?? 3, false);
 
         if (result.Error == "ACTIVE_LIMIT")
         {
@@ -139,7 +139,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
     {
         var user = await GetClient().User.GetAsync(true);
 
-        var result = await GetClient().Torrents.AddFileAsync(bytes, user.Data?.Settings?.SeedTorrents ?? 3);
+        var result = await GetClient(DiConfig.TORBOX_CLIENT_CREATETORRENT).Torrents.AddFileAsync(bytes, user.Data?.Settings?.SeedTorrents ?? 3);
         if (result.Error == "ACTIVE_LIMIT")
         {
             using var stream = new MemoryStream(bytes);
