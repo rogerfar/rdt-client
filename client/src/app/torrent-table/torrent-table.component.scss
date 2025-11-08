@@ -5,6 +5,12 @@ table {
       word-break: break-all;
     }
   }
+    // Make table horizontally scrollable on small screens
+    @media screen and (max-width: 768px) {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
 }
 
 .flex-container {
