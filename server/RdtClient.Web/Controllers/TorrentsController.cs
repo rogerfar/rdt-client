@@ -45,6 +45,14 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
         return Ok(torrent);
     }
 
+    [HttpGet]
+    [Route("DiskSpaceStatus")]
+    public ActionResult<RdtClient.Data.Models.Internal.DiskSpaceStatus?> GetDiskSpaceStatus()
+    {
+        var status = RdtClient.Service.BackgroundServices.DiskSpaceMonitor.GetCurrentStatus();
+        return Ok(status);
+    }
+
     /// <summary>
     ///     Used for debugging only. Force a tick.
     /// </summary>

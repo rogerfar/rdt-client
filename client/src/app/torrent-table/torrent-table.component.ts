@@ -48,18 +48,31 @@ export class TorrentTableComponent implements OnInit {
   public updateSettingsDeleteOnError: number;
   public updateSettingsTorrentLifetime: number;
 
+  public diskSpaceStatus: any = null;
+
   constructor(
     private router: Router,
     private torrentService: TorrentService,
   ) {}
 
   ngOnInit(): void {
+    // Load initial disk space status
+    this.torrentService.getDiskSpaceStatus().subscribe({
+      next: (status) => {
+        this.diskSpaceStatus = status;
+      },
+    });
+
     this.torrentService.getList().subscribe({
       next: (result) => {
         this.torrents = result;
 
         this.torrentService.update$.subscribe((result2) => {
           this.torrents = result2;
+        });
+
+        this.torrentService.diskSpaceStatus$.subscribe((status) => {
+          this.diskSpaceStatus = status;
         });
       },
       error: (err) => {

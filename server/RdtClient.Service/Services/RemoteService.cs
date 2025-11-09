@@ -19,4 +19,9 @@ public class RemoteService(IHubContext<RdtHub> hub, Torrents torrents)
             allTorrents
         ]);
     }
+
+    public async Task UpdateDiskSpaceStatus(Object status)
+    {
+        await hub.Clients.All.SendCoreAsync("diskSpaceStatus", [status]);
+    }
 }

@@ -10,6 +10,7 @@ import { APP_BASE_HREF } from '@angular/common';
 })
 export class TorrentService {
   public update$: Subject<Torrent[]> = new Subject();
+  public diskSpaceStatus$: Subject<any> = new Subject();
 
   private connection: signalR.HubConnection;
 
@@ -34,6 +35,10 @@ export class TorrentService {
     this.connection.on('update', (torrents: Torrent[]) => {
       this.update$.next(torrents);
     });
+
+    this.connection.on('diskSpaceStatus', (status: any) => {
+      this.diskSpaceStatus$.next(status);
+    });
   }
 
   public getList(): Observable<Torrent[]> {
@@ -42,6 +47,10 @@ export class TorrentService {
 
   public get(torrentId: string): Observable<Torrent> {
     return this.http.get<Torrent>(`${this.baseHref}Api/Torrents/Get/${torrentId}`);
+  }
+
+  public getDiskSpaceStatus(): Observable<any> {
+    return this.http.get<any>(`${this.baseHref}Api/Torrents/DiskSpaceStatus`);
   }
 
   public uploadMagnet(magnetLink: string, torrent: Torrent): Observable<void> {

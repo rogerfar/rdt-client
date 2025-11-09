@@ -105,4 +105,25 @@ public static class FileHelper
             stringBuilder.AppendLine($"{indent}{file.Name}");
         }
     }
+
+    public static Int64 GetAvailableFreeSpaceGB(String path)
+    {
+        if (String.IsNullOrWhiteSpace(path))
+        {
+            return 0;
+        }
+        try
+        {
+            if (!Directory.Exists(path))
+            {
+                return 0;
+            }
+            var driveInfo = new DriveInfo(path);
+            return driveInfo.AvailableFreeSpace / (1024 * 1024 * 1024);
+        }
+        catch
+        {
+            return 0;
+        }
+    }
 }
