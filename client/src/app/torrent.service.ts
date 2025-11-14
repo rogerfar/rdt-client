@@ -31,7 +31,6 @@ export class TorrentService {
       .withUrl(`${this.baseHref}hub`)
       .withAutomaticReconnect()
       .build();
-    this.connection.start().catch((err) => console.error(err));
 
     this.connection.on('update', (torrents: Torrent[]) => {
       this.update$.next(torrents);
@@ -40,6 +39,18 @@ export class TorrentService {
     this.connection.on('diskSpaceStatus', (status: any) => {
       this.diskSpaceStatus$.next(status);
     });
+
+    this.connection.onreconnected(() => {
+      this.getDiskSpaceStatus().subscribe({
+        next: (status) => {
+          if (status) {
+            this.diskSpaceStatus$.next(status);
+          }
+        },
+      });
+    });
+
+    this.connection.start().catch((err) => console.error(err));
   }
 
   public getList(): Observable<Torrent[]> {
