@@ -48,8 +48,6 @@ public class DiskSpaceMonitor(ILogger<DiskSpaceMonitor> logger, IServiceProvider
                     intervalMinutes = 1;
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(intervalMinutes), stoppingToken);
-
                 var downloadPath = Settings.Get.DownloadClient.DownloadPath;
                 logger.LogDebug($"Checking disk space for path: {downloadPath}");
                 
@@ -145,6 +143,8 @@ public class DiskSpaceMonitor(ILogger<DiskSpaceMonitor> logger, IServiceProvider
                     _lastStatus = status;
                     await remoteService.UpdateDiskSpaceStatus(status);
                 }
+                
+                await Task.Delay(TimeSpan.FromMinutes(intervalMinutes), stoppingToken);
             }
             catch (Exception ex)
             {
