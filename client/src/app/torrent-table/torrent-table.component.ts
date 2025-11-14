@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Torrent } from '../models/torrent.model';
+import { DiskSpaceStatus } from '../models/disk-space-status.model';
 import { TorrentService } from '../torrent.service';
 import { forkJoin, Observable } from 'rxjs';
 import { FormsModule } from '@angular/forms';
@@ -48,7 +49,7 @@ export class TorrentTableComponent implements OnInit {
   public updateSettingsDeleteOnError: number;
   public updateSettingsTorrentLifetime: number;
 
-  public diskSpaceStatus: any = null;
+  public diskSpaceStatus: DiskSpaceStatus | null = null;
 
   constructor(
     private router: Router,
