@@ -101,6 +101,20 @@ public class DiskSpaceMonitor(ILogger<DiskSpaceMonitor> logger, IServiceProvider
                     _lastStatus = status;
                     await remoteService.UpdateDiskSpaceStatus(status);
                 }
+                else if (shouldPause && _isPausedForLowDiskSpace)
+                {
+                    logger.LogDebug($"Still paused: {availableSpaceGB} GB available (need {minimumFreeSpaceGB * 2} GB to resume)");
+                    
+                    var status = new DiskSpaceStatus
+                    {
+                        IsPaused = true,
+                        AvailableSpaceGB = availableSpaceGB,
+                        ThresholdGB = minimumFreeSpaceGB,
+                        LastCheckTime = DateTimeOffset.UtcNow
+                    };
+                    _lastStatus = status;
+                    await remoteService.UpdateDiskSpaceStatus(status);
+                }
                 else if (shouldResume && _isPausedForLowDiskSpace)
                 {
                     logger.LogInformation($"Resuming Bezzad downloads: {availableSpaceGB} GB available, resume threshold is {minimumFreeSpaceGB * 2} GB");
