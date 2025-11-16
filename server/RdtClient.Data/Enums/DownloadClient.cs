@@ -15,4 +15,7 @@ public enum DownloadClient
 
     [Description("Synology DownloadStation")]
     DownloadStation,
+    
+    [Description("Strm Downloader")]
+    Strm
 }
