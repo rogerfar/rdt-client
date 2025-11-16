@@ -4,6 +4,15 @@
     Please refresh the screen after fixing this error.
   </div>
 }
+@if (diskSpaceStatus?.isPaused) {
+  <div class="notification is-warning">
+    <strong>Bezzad downloads paused due to low disk space</strong>
+    <br />
+    Available: {{ diskSpaceStatus.availableSpaceGB }} GB | Resume at: {{ diskSpaceStatus.thresholdGB * 2 }} GB
+    <br />
+    <small>Last check: {{ diskSpaceStatus.lastCheckTime | date: 'short' }}</small>
+  </div>
+}
 <div class="table-container">
   <table class="table is-fullwidth is-hoverable">
     <thead>

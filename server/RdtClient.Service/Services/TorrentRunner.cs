@@ -16,6 +16,8 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
     public static readonly ConcurrentDictionary<Guid, DownloadClient> ActiveDownloadClients = new();
     public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new();
 
+    public static Boolean IsPausedForLowDiskSpace { get; set; }
+
     private readonly HttpClient _httpClient = new()
     {
         Timeout = TimeSpan.FromSeconds(10)
@@ -428,6 +430,13 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                         return;
                     }
 
+                    if (IsPausedForLowDiskSpace && torrent.DownloadClient == Data.Enums.DownloadClient.Bezzad)
+                    {
+                        logger.LogInformation($"Not starting Bezzad download because of low disk space {download.ToLog()} {torrent.ToLog()}");
+
+                        return;
+                    }
+
                     if (ActiveDownloadClients.ContainsKey(download.DownloadId))
                     {
                         Log($"Not starting download because this download is already active", download, torrent);
@@ -498,6 +507,12 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                             if (download.RemoteId != remoteId)
                             {
                                 await downloads.UpdateRemoteId(download.DownloadId, remoteId);
+                            }
+
+                            if (IsPausedForLowDiskSpace && downloadClient.Type == Data.Enums.DownloadClient.Bezzad)
+                            {
+                                logger.LogInformation($"Pausing new Bezzad download due to low disk space {download.ToLog()} {torrent.ToLog()}");
+                                await downloadClient.Pause();
                             }
                         }
                         catch (Exception ex)

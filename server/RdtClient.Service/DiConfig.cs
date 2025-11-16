@@ -47,6 +47,7 @@ public static class DiConfig
 
         services.AddSingleton<IAuthorizationHandler, AuthSettingHandler>();
 
+        services.AddHostedService<DiskSpaceMonitor>();
         services.AddHostedService<ProviderUpdater>();
         services.AddHostedService<Startup>();
         services.AddHostedService<TaskRunner>();

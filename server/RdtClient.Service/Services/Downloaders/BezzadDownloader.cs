@@ -122,11 +122,15 @@ public class BezzadDownloader : IDownloader
 
     public Task Pause()
     {
+        _logger.Debug($"Pausing download {_uri}");
+        _downloadService.Pause();
         return Task.CompletedTask;
     }
 
     public Task Resume()
     {
+        _logger.Debug($"Resuming download {_uri}");
+        _downloadService.Resume();
         return Task.CompletedTask;
     }
 

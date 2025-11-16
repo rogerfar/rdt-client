@@ -163,6 +163,14 @@ http://127.0.0.1:6800/jsonrpc.")]
     [Description("The root path to doawnload the file on the Synology DownloadStation host, if empty use the default DownloadStation path.")]
     public String? DownloadStationDownloadPath { get; set; } = null;
 
+    [DisplayName("Minimum free disk space (GB) (Bezzad only)")]
+    [Description("Minimum free disk space in GB. Bezzad downloads will pause when space falls below this value and will resume only when double this space is available. Set to 0 to disable.")]
+    public Int32 MinimumFreeSpaceGB { get; set; } = 0;
+
+    [DisplayName("Disk space check interval (minutes)")]
+    [Description("How often to check available disk space, in minutes.")]
+    public Int32 DiskSpaceCheckIntervalMinutes { get; set; } = 5;
+
     [DisplayName("Log level")]
     [Description("Only set when trying to debug a download client, can generate a lot of logs.")]
     public DownloadClientLogLevel LogLevel { get; set; } = DownloadClientLogLevel.None;

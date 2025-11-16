@@ -3,6 +3,7 @@ import { Inject, Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { Observable, Subject } from 'rxjs';
 import { Torrent, TorrentFileAvailability } from './models/torrent.model';
+import { DiskSpaceStatus } from './models/disk-space-status.model';
 import { APP_BASE_HREF } from '@angular/common';
 
 @Injectable({
@@ -10,6 +11,7 @@ import { APP_BASE_HREF } from '@angular/common';
 })
 export class TorrentService {
   public update$: Subject<Torrent[]> = new Subject();
+  public diskSpaceStatus$: Subject<DiskSpaceStatus> = new Subject();
 
   private connection: signalR.HubConnection;
 
@@ -29,11 +31,26 @@ export class TorrentService {
       .withUrl(`${this.baseHref}hub`)
       .withAutomaticReconnect()
       .build();
-    this.connection.start().catch((err) => console.error(err));
 
     this.connection.on('update', (torrents: Torrent[]) => {
       this.update$.next(torrents);
     });
+
+    this.connection.on('diskSpaceStatus', (status: any) => {
+      this.diskSpaceStatus$.next(status);
+    });
+
+    this.connection.onreconnected(() => {
+      this.getDiskSpaceStatus().subscribe({
+        next: (status) => {
+          if (status) {
+            this.diskSpaceStatus$.next(status);
+          }
+        },
+      });
+    });
+
+    this.connection.start().catch((err) => console.error(err));
   }
 
   public getList(): Observable<Torrent[]> {
@@ -42,6 +59,10 @@ export class TorrentService {
 
   public get(torrentId: string): Observable<Torrent> {
     return this.http.get<Torrent>(`${this.baseHref}Api/Torrents/Get/${torrentId}`);
+  }
+
+  public getDiskSpaceStatus(): Observable<DiskSpaceStatus | null> {
+    return this.http.get<DiskSpaceStatus | null>(`${this.baseHref}Api/Torrents/DiskSpaceStatus`);
   }
 
   public uploadMagnet(magnetLink: string, torrent: Torrent): Observable<void> {

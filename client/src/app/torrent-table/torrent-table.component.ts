@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Torrent } from '../models/torrent.model';
+import { DiskSpaceStatus } from '../models/disk-space-status.model';
 import { TorrentService } from '../torrent.service';
 import { forkJoin, Observable } from 'rxjs';
 import { FormsModule } from '@angular/forms';
@@ -48,19 +49,31 @@ export class TorrentTableComponent implements OnInit {
   public updateSettingsDeleteOnError: number;
   public updateSettingsTorrentLifetime: number;
 
+  public diskSpaceStatus: DiskSpaceStatus | null = null;
+
   constructor(
     private router: Router,
     private torrentService: TorrentService,
   ) {}
 
   ngOnInit(): void {
+    this.torrentService.getDiskSpaceStatus().subscribe({
+      next: (status) => {
+        this.diskSpaceStatus = status;
+      },
+    });
+
+    this.torrentService.diskSpaceStatus$.subscribe((status) => {
+      this.diskSpaceStatus = status;
+    });
+
+    this.torrentService.update$.subscribe((result) => {
+      this.torrents = result;
+    });
+
     this.torrentService.getList().subscribe({
       next: (result) => {
         this.torrents = result;
-
-        this.torrentService.update$.subscribe((result2) => {
-          this.torrents = result2;
-        });
       },
       error: (err) => {
         this.error = err.error;
