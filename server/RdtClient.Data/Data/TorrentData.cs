@@ -18,6 +18,7 @@ public class TorrentData(DataContext dataContext) : ITorrentData
         {
             _torrentCache ??= await dataContext.Torrents
                                                 .AsNoTracking()
+                                                .AsSplitQuery()
                                                 .Include(m => m.Downloads)
                                                 .ToListAsync();
 

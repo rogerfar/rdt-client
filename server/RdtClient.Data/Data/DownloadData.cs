@@ -47,8 +47,6 @@ public class DownloadData(DataContext dataContext)
 
         await dataContext.SaveChangesAsync();
 
-        await TorrentData.VoidCache();
-
         return download;
     }
 
@@ -65,8 +63,6 @@ public class DownloadData(DataContext dataContext)
         dbDownload.Link = unrestrictedLink;
 
         await dataContext.SaveChangesAsync();
-
-        await TorrentData.VoidCache();
     }
 
     public async Task UpdateFileName(Guid downloadId, String fileName)
@@ -82,8 +78,6 @@ public class DownloadData(DataContext dataContext)
         dbDownload.FileName = fileName;
 
         await dataContext.SaveChangesAsync();
-
-        await TorrentData.VoidCache();
     }
 
     public async Task UpdateDownloadStarted(Guid downloadId, DateTimeOffset? dateTime)
@@ -99,8 +93,6 @@ public class DownloadData(DataContext dataContext)
         dbDownload.DownloadStarted = dateTime;
 
         await dataContext.SaveChangesAsync();
-
-        await TorrentData.VoidCache();
     }
 
     public async Task UpdateDownloadFinished(Guid downloadId, DateTimeOffset? dateTime)
@@ -116,8 +108,6 @@ public class DownloadData(DataContext dataContext)
         dbDownload.DownloadFinished = dateTime;
 
         await dataContext.SaveChangesAsync();
-
-        await TorrentData.VoidCache();
     }
 
     public async Task UpdateUnpackingQueued(Guid downloadId, DateTimeOffset? dateTime)
@@ -133,8 +123,6 @@ public class DownloadData(DataContext dataContext)
         dbDownload.UnpackingQueued = dateTime;
 
         await dataContext.SaveChangesAsync();
-
-        await TorrentData.VoidCache();
     }
 
     public async Task UpdateUnpackingStarted(Guid downloadId, DateTimeOffset? dateTime)
@@ -150,8 +138,6 @@ public class DownloadData(DataContext dataContext)
         dbDownload.UnpackingStarted = dateTime;
 
         await dataContext.SaveChangesAsync();
-
-        await TorrentData.VoidCache();
     }
 
     public async Task UpdateUnpackingFinished(Guid downloadId, DateTimeOffset? dateTime)
@@ -167,8 +153,6 @@ public class DownloadData(DataContext dataContext)
         dbDownload.UnpackingFinished = dateTime;
 
         await dataContext.SaveChangesAsync();
-
-        await TorrentData.VoidCache();
     }
         
     public async Task UpdateCompleted(Guid downloadId, DateTimeOffset? dateTime)
@@ -184,8 +168,6 @@ public class DownloadData(DataContext dataContext)
         dbDownload.Completed = dateTime;
 
         await dataContext.SaveChangesAsync();
-
-        await TorrentData.VoidCache();
     }
 
     public async Task UpdateError(Guid downloadId, String? error)
@@ -201,8 +183,6 @@ public class DownloadData(DataContext dataContext)
         dbDownload.Error = error;
 
         await dataContext.SaveChangesAsync();
-
-        await TorrentData.VoidCache();
     }
     
     public async Task UpdateRetryCount(Guid downloadId, Int32 retryCount)
@@ -218,8 +198,6 @@ public class DownloadData(DataContext dataContext)
         dbDownload.RetryCount = retryCount;
 
         await dataContext.SaveChangesAsync();
-
-        await TorrentData.VoidCache();
     }
 
     public async Task UpdateRemoteId(Guid downloadId, String remoteId)
@@ -246,8 +224,6 @@ public class DownloadData(DataContext dataContext)
         dataContext.Downloads.RemoveRange(downloads);
 
         await dataContext.SaveChangesAsync();
-
-        await TorrentData.VoidCache();
     }
 
     public async Task Reset(Guid downloadId)
@@ -269,7 +245,5 @@ public class DownloadData(DataContext dataContext)
         dbDownload.Error = null;
 
         await dataContext.SaveChangesAsync();
-
-        await TorrentData.VoidCache();
     }
 }
