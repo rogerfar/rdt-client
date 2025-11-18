@@ -14,7 +14,7 @@ public static class DiConfig
             throw new("Invalid database path found in appSettings");
         }
 
-        var connectionString = $"Data Source={appSettings.Database.Path}";
+        var connectionString = $"Data Source={appSettings.Database.Path};Cache=Shared;Pooling=True;Command Timeout=30";
         services.AddDbContext<DataContext>(options => options.UseSqlite(connectionString));
 
         services.AddScoped<DownloadData>();

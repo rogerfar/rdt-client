@@ -25,6 +25,12 @@ public class Startup(IServiceProvider serviceProvider) : IHostedService
         var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
         await dbContext.Database.MigrateAsync(cancellationToken);
 
+        // Configure SQLite for better concurrency and performance
+        await dbContext.Database.ExecuteSqlRawAsync("PRAGMA journal_mode=WAL;", cancellationToken);
+        await dbContext.Database.ExecuteSqlRawAsync("PRAGMA synchronous=NORMAL;", cancellationToken);
+        await dbContext.Database.ExecuteSqlRawAsync("PRAGMA busy_timeout=5000;", cancellationToken);
+        await dbContext.Database.ExecuteSqlRawAsync("PRAGMA cache_size=-64000;", cancellationToken);
+
         var settings = scope.ServiceProvider.GetRequiredService<Settings>();
         await settings.Seed();
         await settings.ResetCache();
