@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MonoTorrent;
+using RdtClient.Data.Models.Internal;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
 using RdtClient.Service.Services;
@@ -51,6 +52,28 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
     {
         var status = RdtClient.Service.BackgroundServices.DiskSpaceMonitor.GetCurrentStatus();
         return Ok(status);
+    }
+
+    [HttpGet]
+    [Route("RateLimitStatus")]
+    public ActionResult<RateLimitStatus> GetRateLimitStatus()
+    {
+        var nextDequeueTime = TorrentRunner.NextDequeueTime;
+
+        if (nextDequeueTime < DateTimeOffset.Now)
+        {
+            return Ok(new RateLimitStatus
+            {
+                NextDequeueTime = null,
+                SecondsRemaining = 0
+            });
+        }
+
+        return Ok(new RateLimitStatus
+        {
+            NextDequeueTime = nextDequeueTime,
+            SecondsRemaining = (nextDequeueTime - DateTimeOffset.Now).TotalSeconds
+        });
     }
 
     /// <summary>

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
+using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Helpers;
 using RdtClient.Data.Models.Data;
 using File = AllDebridNET.File;
@@ -124,30 +125,46 @@ public class AllDebridTorrentClient(ILogger<AllDebridTorrentClient> logger, IAll
 
     public async Task<String> AddMagnet(String magnetLink)
     {
-        var result = await allDebridNetClientFactory.GetClient().Magnet.UploadMagnetAsync(magnetLink);
-
-        if (result?.Id == null)
+        try
         {
-            throw new("Unable to add magnet link");
+            var result = await allDebridNetClientFactory.GetClient().Magnet.UploadMagnetAsync(magnetLink);
+
+            if (result?.Id == null)
+            {
+                throw new("Unable to add magnet link");
+            }
+
+            var resultId = result.Id.ToString() ?? throw new($"Invalid responseID {result.Id}");
+
+            return resultId;
         }
-
-        var resultId = result.Id.ToString() ?? throw new($"Invalid responseID {result.Id}");
-
-        return resultId;
+        catch (Exception ex) when (ex.Message.Contains("slow_down", StringComparison.OrdinalIgnoreCase) ||
+                           ex.Message.Contains("rate limit exceeded", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new RateLimitException(ex.Message, TimeSpan.FromMinutes(2));
+        }
     }
 
     public async Task<String> AddFile(Byte[] bytes)
     {
-        var result = await allDebridNetClientFactory.GetClient().Magnet.UploadFileAsync(bytes);
-
-        if (result?.Id == null)
+        try
         {
-            throw new("Unable to add torrent file");
+            var result = await allDebridNetClientFactory.GetClient().Magnet.UploadFileAsync(bytes);
+
+            if (result?.Id == null)
+            {
+                throw new("Unable to add torrent file");
+            }
+
+            var resultId = result.Id.ToString() ?? throw new($"Invalid responseID {result.Id}");
+
+            return resultId;
         }
-
-        var resultId = result.Id.ToString() ?? throw new($"Invalid responseID {result.Id}");
-
-        return resultId;
+        catch (Exception ex) when (ex.Message.Contains("slow_down", StringComparison.OrdinalIgnoreCase) ||
+                           ex.Message.Contains("rate limit exceeded", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new RateLimitException(ex.Message, TimeSpan.FromMinutes(2));
+        }
     }
 
     public Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
