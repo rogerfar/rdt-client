@@ -232,14 +232,10 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
 
             var progress = (rdProgress + downloadProgress) / 2.0;
             var remaining = TimeSpan.Zero;
-            if (progress > 0.001 && progress < 1.0)
+            var bytesRemaining = bytesTotal - bytesDone;
+            if (speed > 0 && bytesRemaining > 0)
             {
-                var startTime = torrent.Retry > torrent.Added ? torrent.Retry.Value : torrent.Added;
-                var elapsed = DateTimeOffset.UtcNow - startTime;
-                var elapsedTicks = Math.Max(0, elapsed.Ticks);
-                var totalEstimatedTime = TimeSpan.FromTicks((Int64)(elapsedTicks / progress));
-                remaining = totalEstimatedTime - TimeSpan.FromTicks(elapsedTicks);
-
+                remaining = TimeSpan.FromSeconds(bytesRemaining / (Double)speed);
                 // In case there is clock skew
                 if (remaining < TimeSpan.Zero)
                 {
