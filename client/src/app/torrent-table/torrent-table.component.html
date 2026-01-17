@@ -13,6 +13,13 @@
     <small>Last check: {{ diskSpaceStatus.lastCheckTime | date: 'short' }}</small>
   </div>
 }
+@if (rateLimitStatus?.nextDequeueTime) {
+  <div class="notification is-warning">
+    <strong>Debrid provider rate limit reached</strong>
+    <br />
+    New torrents will not be added until {{ rateLimitStatus.nextDequeueTime | date: 'medium' }}
+  </div>
+}
 <div class="table-container">
   <table class="table is-fullwidth is-hoverable">
     <thead>

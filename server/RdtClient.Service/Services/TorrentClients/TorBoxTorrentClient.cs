@@ -5,6 +5,7 @@ using TorBoxNET;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Data.Models.Data;
+using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Helpers;
 
 namespace RdtClient.Service.Services.TorrentClients;
@@ -23,10 +24,10 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                 throw new("TorBox API Key not set in the settings");
             }
 
-            var httpClient = httpClientFactory.CreateClient(); 
+            var httpClient = httpClientFactory.CreateClient(DiConfig.TORBOX_CLIENT); 
             httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
 
-            var torBoxNetClient = new TorBoxNetClient(null, httpClient, 5);
+            var torBoxNetClient = new TorBoxNetClient(null, httpClient, 1);
             torBoxNetClient.UseApiAuthentication(apiKey);
 
             // Get the server time to fix up the timezones on results
@@ -120,35 +121,48 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         };
     }
 
+    private async Task<String> AddTorrentRetry(Func<Boolean, Task<String>> action)
+    {
+        try
+        {
+            return await action(false);
+        }
+        catch (RateLimitException)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex.InnerException is RateLimitException rateLimitException)
+        {
+            throw rateLimitException;
+        }
+        catch (TorBoxException ex) when (ex.Error.Equals("active_limit", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new RateLimitException(ex.Message, TimeSpan.FromMinutes(2));
+        }
+        catch (Exception ex) when (ex.Message.Contains("slow_down", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new RateLimitException(ex.Message, TimeSpan.FromMinutes(2));
+        }
+    }
+    
     public async Task<String> AddMagnet(String magnetLink)
     {
-        var user = await GetClient().User.GetAsync(true);
-
-        var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, user.Data?.Settings?.SeedTorrents ?? 3, false);
-
-        if (result.Error == "ACTIVE_LIMIT")
+        return await AddTorrentRetry(async asQueued =>
         {
-            var magnetLinkInfo = MonoTorrent.MagnetLink.Parse(magnetLink);
-            return magnetLinkInfo.InfoHashes.V1!.ToHex().ToLowerInvariant();
-        }
-
-        return result.Data!.Hash!;
+            var user = await GetClient().User.GetAsync(true);
+            var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, user.Data?.Settings?.SeedTorrents ?? 3, as_queued: asQueued);
+            return result.Data!.Hash!;
+        });
     }
 
     public async Task<String> AddFile(Byte[] bytes)
     {
-        var user = await GetClient().User.GetAsync(true);
-
-        var result = await GetClient().Torrents.AddFileAsync(bytes, user.Data?.Settings?.SeedTorrents ?? 3);
-        if (result.Error == "ACTIVE_LIMIT")
+        return await AddTorrentRetry(async asQueued =>
         {
-            using var stream = new MemoryStream(bytes);
-
-            var torrent = await MonoTorrent.Torrent.LoadAsync(stream);
-            return torrent.InfoHashes.V1!.ToHex().ToLowerInvariant();
-        }
-
-        return result.Data!.Hash!;
+            var user = await GetClient().User.GetAsync(true);
+            var result = await GetClient().Torrents.AddFileAsync(bytes, user.Data?.Settings?.SeedTorrents ?? 3, as_queued: asQueued);
+            return result.Data!.Hash!;
+        });
     }
 
     public async Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)

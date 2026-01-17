@@ -4,6 +4,7 @@ import * as signalR from '@microsoft/signalr';
 import { Observable, Subject } from 'rxjs';
 import { Torrent, TorrentFileAvailability } from './models/torrent.model';
 import { DiskSpaceStatus } from './models/disk-space-status.model';
+import { RateLimitStatus } from './models/rate-limit-status.model';
 import { APP_BASE_HREF } from '@angular/common';
 
 @Injectable({
@@ -12,6 +13,7 @@ import { APP_BASE_HREF } from '@angular/common';
 export class TorrentService {
   public update$: Subject<Torrent[]> = new Subject();
   public diskSpaceStatus$: Subject<DiskSpaceStatus> = new Subject();
+  public rateLimitStatus$: Subject<RateLimitStatus> = new Subject();
 
   private connection: signalR.HubConnection;
 
@@ -40,6 +42,10 @@ export class TorrentService {
       this.diskSpaceStatus$.next(status);
     });
 
+    this.connection.on('rateLimitStatus', (status: any) => {
+      this.rateLimitStatus$.next(status);
+    });
+
     this.connection.onreconnected(() => {
       this.getDiskSpaceStatus().subscribe({
         next: (status) => {
@@ -63,6 +69,10 @@ export class TorrentService {
 
   public getDiskSpaceStatus(): Observable<DiskSpaceStatus | null> {
     return this.http.get<DiskSpaceStatus | null>(`${this.baseHref}Api/Torrents/DiskSpaceStatus`);
+  }
+
+  public getRateLimitStatus(): Observable<RateLimitStatus | null> {
+    return this.http.get<RateLimitStatus | null>(`${this.baseHref}Api/Torrents/RateLimitStatus`);
   }
 
   public uploadMagnet(magnetLink: string, torrent: Torrent): Observable<void> {
