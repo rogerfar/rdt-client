@@ -67,11 +67,14 @@ public class SettingData(DataContext dataContext, ILogger<SettingData> logger)
     {
         var dbSettings = await dataContext.Settings.AsNoTracking().ToListAsync();
 
-        var expectedSettings = GetSettings(Get, null).Where(m => m.Type != "Object").Select(m => new Setting
-        {
-            SettingId = m.Key,
-            Value = m.Value?.ToString()
-        }).ToList();
+        var expectedSettings = GetSettings(Get, null)
+                               .Where(m => m.Type != "Object")
+                               .Select(m => new Setting
+                               {
+                                   SettingId = m.Key,
+                                   Value = m.Value?.ToString()
+                               })
+                               .ToList();
 
         var newSettings = expectedSettings.Where(m => dbSettings.All(p => p.SettingId != m.SettingId)).ToList();
 

@@ -5,7 +5,7 @@ using Synology.Api.Client.Apis.DownloadStation.Task.Models;
 
 namespace RdtClient.Service.Services.Downloaders;
 
-class DelayProvider : IDelayProvider
+internal class DelayProvider : IDelayProvider
 {
     public Task Delay(Int32 delay)
     {
@@ -15,22 +15,25 @@ class DelayProvider : IDelayProvider
 
 public class DownloadStationDownloader : IDownloader
 {
-    public event EventHandler<DownloadCompleteEventArgs>? DownloadComplete;
-    public event EventHandler<DownloadProgressEventArgs>? DownloadProgress;
-
     private const Int32 RetryCount = 5;
-
-    private readonly ISynologyClient _synologyClient;
+    private readonly IDelayProvider _delayProvider;
+    private readonly String _filePath;
 
     private readonly ILogger _logger;
-    private readonly String _filePath;
-    private readonly String _uri;
     private readonly String? _remotePath;
-    private readonly IDelayProvider _delayProvider;
+
+    private readonly ISynologyClient _synologyClient;
+    private readonly String _uri;
 
     private String? _gid;
 
-    public DownloadStationDownloader(String? gid, String uri, String? remotePath, String filePath, String downloadPath, ISynologyClient synologyClient, IDelayProvider? delayProvider = null)
+    public DownloadStationDownloader(String? gid,
+                                     String uri,
+                                     String? remotePath,
+                                     String filePath,
+                                     String downloadPath,
+                                     ISynologyClient synologyClient,
+                                     IDelayProvider? delayProvider = null)
     {
         _logger = Log.ForContext<DownloadStationDownloader>();
         _logger.Debug($"Instantiated new DownloadStation Downloader for URI {uri} to filePath {filePath} and downloadPath {downloadPath} and GID {gid}");
@@ -43,48 +46,8 @@ public class DownloadStationDownloader : IDownloader
         _delayProvider = delayProvider ?? new DelayProvider();
     }
 
-    public static async Task<DownloadStationDownloader> Init(String? gid, String uri, String filePath, String downloadPath, String? category)
-    {
-        if (Settings.Get.DownloadClient.DownloadStationUrl == null)
-        {
-            throw new("No URL specified for Synology download station");
-        }
-
-        if (Settings.Get.DownloadClient.DownloadStationUsername == null || Settings.Get.DownloadClient.DownloadStationPassword == null)
-        {
-            throw new("No username/password specified for Synology download station");
-        }
-
-        var synologyClient = new SynologyClient(Settings.Get.DownloadClient.DownloadStationUrl);
-        await synologyClient.LoginAsync(Settings.Get.DownloadClient.DownloadStationUsername, Settings.Get.DownloadClient.DownloadStationPassword);
-
-        String? remotePath = null;
-        String? rootPath;
-
-        if (!String.IsNullOrWhiteSpace(Settings.Get.DownloadClient.DownloadStationDownloadPath))
-        {
-            rootPath = Settings.Get.DownloadClient.DownloadStationDownloadPath;
-        }
-        else
-        {
-            var config = await synologyClient.DownloadStationApi().InfoEndpoint().GetConfigAsync();
-            rootPath = config.DefaultDestination;
-        }
-
-        if (rootPath != null)
-        {
-            if (String.IsNullOrWhiteSpace(category))
-            {
-                remotePath = Path.Combine(rootPath, downloadPath).Replace('\\', '/');
-            }
-            else
-            {
-                remotePath = Path.Combine(rootPath, category, downloadPath).Replace('\\', '/');
-            }
-        }
-
-        return new(gid, uri, remotePath, filePath, downloadPath, synologyClient);
-    }
+    public event EventHandler<DownloadCompleteEventArgs>? DownloadComplete;
+    public event EventHandler<DownloadProgressEventArgs>? DownloadProgress;
 
     public async Task Cancel()
     {
@@ -173,13 +136,6 @@ public class DownloadStationDownloader : IDownloader
         throw new($"Unable to download file");
     }
 
-    private async Task<String?> GetGidFromUri()
-    {
-        var tasks = await _synologyClient.DownloadStationApi().TaskEndpoint().ListAsync();
-
-        return tasks.Task?.FirstOrDefault(t => t.Additional?.Detail?.Uri == _uri)?.Id;
-    }
-
     public async Task Pause()
     {
         _logger.Debug($"Pausing download {_uri} {_gid}");
@@ -198,6 +154,56 @@ public class DownloadStationDownloader : IDownloader
         {
             await _synologyClient.DownloadStationApi().TaskEndpoint().ResumeAsync(_gid);
         }
+    }
+
+    public static async Task<DownloadStationDownloader> Init(String? gid, String uri, String filePath, String downloadPath, String? category)
+    {
+        if (Settings.Get.DownloadClient.DownloadStationUrl == null)
+        {
+            throw new("No URL specified for Synology download station");
+        }
+
+        if (Settings.Get.DownloadClient.DownloadStationUsername == null || Settings.Get.DownloadClient.DownloadStationPassword == null)
+        {
+            throw new("No username/password specified for Synology download station");
+        }
+
+        var synologyClient = new SynologyClient(Settings.Get.DownloadClient.DownloadStationUrl);
+        await synologyClient.LoginAsync(Settings.Get.DownloadClient.DownloadStationUsername, Settings.Get.DownloadClient.DownloadStationPassword);
+
+        String? remotePath = null;
+        String? rootPath;
+
+        if (!String.IsNullOrWhiteSpace(Settings.Get.DownloadClient.DownloadStationDownloadPath))
+        {
+            rootPath = Settings.Get.DownloadClient.DownloadStationDownloadPath;
+        }
+        else
+        {
+            var config = await synologyClient.DownloadStationApi().InfoEndpoint().GetConfigAsync();
+            rootPath = config.DefaultDestination;
+        }
+
+        if (rootPath != null)
+        {
+            if (String.IsNullOrWhiteSpace(category))
+            {
+                remotePath = Path.Combine(rootPath, downloadPath).Replace('\\', '/');
+            }
+            else
+            {
+                remotePath = Path.Combine(rootPath, category, downloadPath).Replace('\\', '/');
+            }
+        }
+
+        return new(gid, uri, remotePath, filePath, downloadPath, synologyClient);
+    }
+
+    private async Task<String?> GetGidFromUri()
+    {
+        var tasks = await _synologyClient.DownloadStationApi().TaskEndpoint().ListAsync();
+
+        return tasks.Task?.FirstOrDefault(t => t.Additional?.Detail?.Uri == _uri)?.Id;
     }
 
     public async Task Update()

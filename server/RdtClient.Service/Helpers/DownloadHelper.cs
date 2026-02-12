@@ -1,6 +1,6 @@
 ﻿using System.IO.Abstractions;
-using RdtClient.Data.Models.Data;
 using System.Web;
+using RdtClient.Data.Models.Data;
 
 namespace RdtClient.Service.Helpers;
 
@@ -16,7 +16,7 @@ public static class DownloadHelper
         }
 
         var directory = RemoveInvalidPathChars(torrent.RdName);
-        
+
         var torrentPath = Path.Combine(downloadPath, directory);
 
         var fileName = GetFileName(download);

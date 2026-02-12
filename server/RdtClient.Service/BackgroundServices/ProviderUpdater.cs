@@ -19,7 +19,7 @@ public class ProviderUpdater(ILogger<ProviderUpdater> logger, IServiceProvider s
 
         using var scope = serviceProvider.CreateScope();
         var torrentService = scope.ServiceProvider.GetRequiredService<Torrents>();
-            
+
         logger.LogInformation("ProviderUpdater started.");
 
         while (!stoppingToken.IsCancellationRequested)
@@ -31,7 +31,7 @@ public class ProviderUpdater(ILogger<ProviderUpdater> logger, IServiceProvider s
                 if (_nextUpdate < DateTime.UtcNow && (Settings.Get.Provider.AutoImport || torrents.Any(t => t.RdStatus != TorrentStatus.Finished)))
                 {
                     logger.LogDebug($"Updating torrent info from debrid provider");
-                    
+
                     var updateTime = Settings.Get.Provider.CheckInterval * 3;
 
                     if (updateTime < 30)

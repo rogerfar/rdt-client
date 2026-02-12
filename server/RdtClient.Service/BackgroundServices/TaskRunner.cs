@@ -18,11 +18,11 @@ public class TaskRunner(ILogger<TaskRunner> logger, IServiceProvider serviceProv
 
         using var scope = serviceProvider.CreateScope();
         var torrentRunner = scope.ServiceProvider.GetRequiredService<TorrentRunner>();
-            
+
         logger.LogInformation("TaskRunner started.");
 
         await torrentRunner.Initialize();
-            
+
         while (!stoppingToken.IsCancellationRequested)
         {
             try

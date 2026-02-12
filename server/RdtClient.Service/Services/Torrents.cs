@@ -38,6 +38,8 @@ public class Torrents(
         ReferenceHandler = ReferenceHandler.IgnoreCycles
     };
 
+    private static readonly SemaphoreSlim TorrentResetLock = new(1, 1);
+
     private ITorrentClient TorrentClient
     {
         get
@@ -53,8 +55,6 @@ public class Torrents(
             };
         }
     }
-
-    private static readonly SemaphoreSlim TorrentResetLock = new(1, 1);
 
     public async Task<IList<Torrent>> Get()
     {
@@ -112,6 +112,7 @@ public class Torrents(
     {
         var enriched = await enricher.EnrichMagnetLink(magnetLink);
         MagnetLink magnet;
+
         try
         {
             magnet = MagnetLink.Parse(magnetLink);
@@ -119,6 +120,7 @@ public class Torrents(
         catch (Exception ex)
         {
             logger.LogError(ex, "{ex.Message}, trying to parse {magnetLink}", ex.Message, magnetLink);
+
             throw new($"{ex.Message}, trying to parse {magnetLink}");
         }
 
@@ -142,6 +144,7 @@ public class Torrents(
                     if (bannedUrls.Count > 0)
                     {
                         var bannedUrlsString = String.Join(", ", bannedUrls);
+
                         throw new($"Cannot add torrent, the torrent contains banned trackers: {bannedUrlsString}.");
                     }
                 }
@@ -213,12 +216,13 @@ public class Torrents(
                     if (bannedUrls.Count > 0)
                     {
                         var bannedUrlsString = String.Join(", ", bannedUrls);
+
                         throw new($"Cannot add torrent, the torrent contains banned trackers: {bannedUrlsString}.");
                     }
                 }
             }
         }
-        
+
         torrent.RdStatus = TorrentStatus.Queued;
         torrent.RdName = monoTorrent.Name;
 
@@ -262,9 +266,11 @@ public class Torrents(
                 {
                     case String magnetLink:
                         await File.WriteAllTextAsync(copyFileName, magnetLink);
+
                         break;
                     case Byte[] torrentFile:
                         await File.WriteAllBytesAsync(copyFileName, torrentFile);
+
                         break;
                 }
             }
@@ -276,7 +282,7 @@ public class Torrents(
     }
 
     /// <summary>
-    /// Adds torrent in database to debrid provider and updates database accordingly.
+    ///     Adds torrent in database to debrid provider and updates database accordingly.
     /// </summary>
     /// <param name="torrent">The torrent from the database to upload to the debrid provider</param>
     /// <returns>Updated torrent</returns>
@@ -373,7 +379,7 @@ public class Torrents(
     }
 
     /// <summary>
-    /// Logs a message to the console, sets the error on the torrent and ensures it is not retried.
+    ///     Logs a message to the console, sets the error on the torrent and ensures it is not retried.
     /// </summary>
     /// <param name="torrent">The torrent to mark as "All files excluded"</param>
     private async Task MarkAllFilesExcluded(Torrent torrent)
@@ -511,8 +517,9 @@ public class Torrents(
     }
 
     /// <summary>
-    /// To be called only when <see cref="Data.Models.Data.Download" />.<see cref="Data.Models.Data.Download.FileName" /> is not set by
-    /// <see cref="ITorrentClient.GetDownloadInfos" />
+    ///     To be called only when <see cref="Data.Models.Data.Download" />.<see cref="Data.Models.Data.Download.FileName" />
+    ///     is not set by
+    ///     <see cref="ITorrentClient.GetDownloadInfos" />
     /// </summary>
     public async Task<String> RetrieveFileName(Guid downloadId)
     {
@@ -566,7 +573,8 @@ public class Torrents(
                     {
                         Category = Settings.Get.Provider.Default.Category,
                         DownloadClient = Settings.Get.DownloadClient.Client,
-                        DownloadAction = Settings.Get.Provider.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
+                        DownloadAction =
+                            Settings.Get.Provider.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
                         HostDownloadAction = Settings.Get.Provider.Default.HostDownloadAction,
                         FinishedActionDelay = Settings.Get.Provider.Default.FinishedActionDelay,
                         FinishedAction = Settings.Get.Provider.Default.FinishedAction,
@@ -887,6 +895,7 @@ public class Torrents(
 
             outputSb.AppendLine(data.Trim());
         };
+
         process.ErrorDataReceived += (_, data) =>
         {
             if (data == null)

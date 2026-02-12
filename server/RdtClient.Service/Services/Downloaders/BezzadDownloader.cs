@@ -6,16 +6,14 @@ namespace RdtClient.Service.Services.Downloaders;
 
 public class BezzadDownloader : IDownloader
 {
-    public event EventHandler<DownloadCompleteEventArgs>? DownloadComplete;
-    public event EventHandler<DownloadProgressEventArgs>? DownloadProgress;
-
-    private readonly DownloadService _downloadService;
     private readonly DownloadConfiguration _downloadConfiguration;
 
+    private readonly DownloadService _downloadService;
+
     private readonly String _filePath;
-    private readonly String _uri;
 
     private readonly ILogger _logger;
+    private readonly String _uri;
 
     private Boolean _finished;
 
@@ -65,12 +63,12 @@ public class BezzadDownloader : IDownloader
             }
 
             DownloadProgress.Invoke(this,
-                                     new()
-                                     {
-                                         Speed = (Int64)args.BytesPerSecondSpeed,
-                                         BytesDone = args.ReceivedBytesSize,
-                                         BytesTotal = args.TotalBytesToReceive
-                                     });
+                                    new()
+                                    {
+                                        Speed = (Int64)args.BytesPerSecondSpeed,
+                                        BytesDone = args.ReceivedBytesSize,
+                                        BytesTotal = args.TotalBytesToReceive
+                                    });
         };
 
         _downloadService.DownloadFileCompleted += (_, args) =>
@@ -95,6 +93,9 @@ public class BezzadDownloader : IDownloader
             _finished = true;
         };
     }
+
+    public event EventHandler<DownloadCompleteEventArgs>? DownloadComplete;
+    public event EventHandler<DownloadProgressEventArgs>? DownloadProgress;
 
     public Task<String> Download()
     {
@@ -123,6 +124,7 @@ public class BezzadDownloader : IDownloader
     {
         _logger.Debug($"Pausing download {_uri}");
         _downloadService.Pause();
+
         return Task.CompletedTask;
     }
 
@@ -130,6 +132,7 @@ public class BezzadDownloader : IDownloader
     {
         _logger.Debug($"Resuming download {_uri}");
         _downloadService.Resume();
+
         return Task.CompletedTask;
     }
 
@@ -166,7 +169,7 @@ public class BezzadDownloader : IDownloader
         {
             _downloadConfiguration.ChunkCount = Settings.Get.DownloadClient.ChunkCount;
         }
-        
+
         _downloadConfiguration.MaximumBytesPerSecond = settingDownloadMaxSpeed;
         _downloadConfiguration.ParallelDownload = settingParallelCount > 1;
         _downloadConfiguration.ParallelCount = settingParallelCount;

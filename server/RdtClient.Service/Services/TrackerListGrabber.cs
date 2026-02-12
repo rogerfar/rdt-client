@@ -1,6 +1,6 @@
+using System.Reflection;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using System.Reflection;
 
 namespace RdtClient.Service.Services;
 
@@ -8,9 +8,9 @@ public class TrackerListGrabber(IHttpClientFactory httpClientFactory, IMemoryCac
 {
     private const String CacheKey = "TrackerList";
 
-    private Int32? _lastExpirationMinutes;
-
     private static readonly SemaphoreSlim Semaphore = new(1, 1);
+
+    private Int32? _lastExpirationMinutes;
 
     public async Task<String[]> GetTrackers()
     {
@@ -148,6 +148,7 @@ public class TrackerListGrabber(IHttpClientFactory httpClientFactory, IMemoryCac
                                {
                                    logger.LogDebug("Rejected tracker: {TrackerUrl} - Reason: Invalid format or unsupported scheme.", t);
                                    trackerRejectionCount++;
+
                                    return false;
                                }
 

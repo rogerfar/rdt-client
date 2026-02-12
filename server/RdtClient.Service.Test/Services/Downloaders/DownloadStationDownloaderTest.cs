@@ -7,7 +7,7 @@ using Synology.Api.Client.Apis.DownloadStation.Task.Models;
 
 namespace RdtClient.Service.Test.Services.Downloaders;
 
-class Mocks
+internal class Mocks
 {
     public readonly String Gid;
     public readonly Mock<ISynologyClient> SynologyClientMock = new();
@@ -22,7 +22,7 @@ class Mocks
     }
 }
 
-class FakeDelayProvider : IDelayProvider
+internal class FakeDelayProvider : IDelayProvider
 {
     public Task Delay(Int32 milliseconds)
     {

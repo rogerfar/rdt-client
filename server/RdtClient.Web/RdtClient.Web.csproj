@@ -5,7 +5,7 @@
     <OutputType>Exe</OutputType>
     <UserSecretsId>94c24cba-f03f-4453-a671-3640b517c573</UserSecretsId>
     <Version>1.0.0</Version>
-	<AssemblyVersion>1.0.0</AssemblyVersion>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
@@ -38,7 +38,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="10.0.3" />
     <PackageReference Include="Serilog" Version="4.3.1" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />

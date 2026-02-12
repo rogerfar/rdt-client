@@ -52,6 +52,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
     public ActionResult<DiskSpaceStatus?> GetDiskSpaceStatus()
     {
         var status = DiskSpaceMonitor.GetCurrentStatus();
+
         return Ok(status);
     }
 
@@ -107,7 +108,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
         {
             return BadRequest();
         }
-        
+
         if (String.IsNullOrEmpty(request.MagnetLink))
         {
             return BadRequest("Invalid magnet link");
@@ -208,7 +209,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
 
         return Ok();
     }
-        
+
     [HttpPut]
     [Route("Update")]
     public async Task<ActionResult> Update([FromBody] Torrent? torrent)
@@ -280,7 +281,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
                     includeError = ex.Message;
                 }
             }
-        } 
+        }
         else if (!String.IsNullOrWhiteSpace(request.ExcludeRegex))
         {
             foreach (var availableFile in availableFiles)
@@ -339,5 +340,5 @@ public class TorrentControllerVerifyRegexRequest
 {
     public String? IncludeRegex { get; set; }
     public String? ExcludeRegex { get; set; }
-    public String? MagnetLink { get; set;}
+    public String? MagnetLink { get; set; }
 }

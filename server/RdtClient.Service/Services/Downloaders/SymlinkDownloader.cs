@@ -6,14 +6,13 @@ namespace RdtClient.Service.Services.Downloaders;
 
 public class SymlinkDownloader(String uri, String destinationPath, String path, Provider? clientKind) : IDownloader
 {
-    public event EventHandler<DownloadCompleteEventArgs>? DownloadComplete;
-    public event EventHandler<DownloadProgressEventArgs>? DownloadProgress;
+    private const Int32 MaxRetries = 10;
 
     private readonly CancellationTokenSource _cancellationToken = new();
 
     private readonly ILogger _logger = Log.ForContext<SymlinkDownloader>();
-
-    private const Int32 MaxRetries = 10;
+    public event EventHandler<DownloadCompleteEventArgs>? DownloadComplete;
+    public event EventHandler<DownloadProgressEventArgs>? DownloadProgress;
 
     public async Task<String> Download()
     {
@@ -23,9 +22,9 @@ public class SymlinkDownloader(String uri, String destinationPath, String path, 
         {
             var filePath = new FileInfo(path);
 
-            var rcloneMountPath = Settings.Get.DownloadClient.RcloneMountPath.TrimEnd(['\\', '/']);
+            var rcloneMountPath = Settings.Get.DownloadClient.RcloneMountPath.TrimEnd('\\', '/');
             var searchSubDirectories = rcloneMountPath.EndsWith('*');
-            rcloneMountPath = rcloneMountPath.TrimEnd('*').TrimEnd(['\\', '/']);
+            rcloneMountPath = rcloneMountPath.TrimEnd('*').TrimEnd('\\', '/');
 
             if (!Directory.Exists(rcloneMountPath))
             {
@@ -35,7 +34,7 @@ public class SymlinkDownloader(String uri, String destinationPath, String path, 
             var fileName = filePath.Name;
             var fileExtension = filePath.Extension;
             var fileNameWithoutExtension = fileName.Replace(fileExtension, "");
-            var pathWithoutFileName = path.Replace(fileName, "").TrimEnd(['\\', '/']);
+            var pathWithoutFileName = path.Replace(fileName, "").TrimEnd('\\', '/');
             var searchPath = Path.Combine(rcloneMountPath, pathWithoutFileName);
 
             List<String> unWantedExtensions =
@@ -57,7 +56,7 @@ public class SymlinkDownloader(String uri, String destinationPath, String path, 
                                          BytesTotal = 0,
                                          Speed = 0
                                      });
-            
+
             String? file = null;
             var shouldSearch = true;
 
@@ -65,7 +64,7 @@ public class SymlinkDownloader(String uri, String destinationPath, String path, 
             if (clientKind == Provider.AllDebrid)
             {
                 var potentialFilePath = Path.Combine(rcloneMountPath, path);
-                
+
                 // Make sure the file exists before making any assumptions.
                 // If this somehow fails, fallback to the search below.
                 if (File.Exists(potentialFilePath))
@@ -95,7 +94,7 @@ public class SymlinkDownloader(String uri, String destinationPath, String path, 
                     potentialFilePaths.Add(directoryInfo.Name);
                     directoryInfo = directoryInfo.Parent;
 
-                    if (directoryInfo.FullName.TrimEnd(['\\', '/']) == rcloneMountPath)
+                    if (directoryInfo.FullName.TrimEnd('\\', '/') == rcloneMountPath)
                     {
                         break;
                     }
@@ -182,10 +181,11 @@ public class SymlinkDownloader(String uri, String destinationPath, String path, 
         }
         catch (Exception ex)
         {
-            DownloadComplete?.Invoke(this, new()
-            {
-                Error = ex.Message
-            });
+            DownloadComplete?.Invoke(this,
+                                     new()
+                                     {
+                                         Error = ex.Message
+                                     });
 
             throw;
         }
