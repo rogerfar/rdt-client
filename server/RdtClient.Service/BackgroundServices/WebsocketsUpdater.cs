@@ -22,7 +22,7 @@ public class WebsocketsUpdater(ILogger<WebsocketsUpdater> logger, IServiceProvid
             {
                 using var scope = serviceProvider.CreateScope();
                 var remoteService = scope.ServiceProvider.GetRequiredService<RemoteService>();
-                
+
                 await remoteService.Update();
             }
             catch (Exception ex)
@@ -30,10 +30,10 @@ public class WebsocketsUpdater(ILogger<WebsocketsUpdater> logger, IServiceProvid
                 logger.LogError(ex, $"Unexpected error occurred in WebsocketsUpdater: {ex.Message}");
             }
 
-            var delay = RdtHub.HasConnections 
-                ? TimeSpan.FromSeconds(1) 
+            var delay = RdtHub.HasConnections
+                ? TimeSpan.FromSeconds(1)
                 : TimeSpan.FromSeconds(5);
-            
+
             await Task.Delay(delay, stoppingToken);
         }
 

@@ -17,10 +17,10 @@ public class TorrentData(DataContext dataContext) : ITorrentData
         try
         {
             _torrentCache ??= await dataContext.Torrents
-                                                .AsNoTracking()
-                                                .AsSplitQuery()
-                                                .Include(m => m.Downloads)
-                                                .ToListAsync();
+                                               .AsNoTracking()
+                                               .AsSplitQuery()
+                                               .Include(m => m.Downloads)
+                                               .ToListAsync();
 
             return [.. _torrentCache.OrderBy(m => m.Priority ?? 9999).ThenBy(m => m.Added)];
         }

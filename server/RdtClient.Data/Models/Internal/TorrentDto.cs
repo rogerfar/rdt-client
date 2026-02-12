@@ -1,5 +1,4 @@
 using RdtClient.Data.Enums;
-using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.TorrentClient;
 
 namespace RdtClient.Data.Models.Internal;
