@@ -1,4 +1,4 @@
-const minorOnly = [];
+const minorOnly = ['eslint'];
 const patchOnly = [];
 
 module.exports = {
