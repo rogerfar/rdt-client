@@ -6,28 +6,17 @@ namespace RdtClient.Data.Data;
 
 public class TorrentData(DataContext dataContext) : ITorrentData
 {
-    private static IList<Torrent>? _torrentCache;
-
-    private static readonly SemaphoreSlim TorrentCacheLock = new(1, 1);
-
     public async Task<IList<Torrent>> Get()
     {
-        await TorrentCacheLock.WaitAsync();
+        var torrents = await dataContext.Torrents
+                                        .AsNoTracking()
+                                        .AsSplitQuery()
+                                        .Include(m => m.Downloads)
+                                        .OrderBy(m => m.Priority ?? 9999)
+                                        .ThenBy(m => m.Added)
+                                        .ToListAsync();
 
-        try
-        {
-            _torrentCache ??= await dataContext.Torrents
-                                               .AsNoTracking()
-                                               .AsSplitQuery()
-                                               .Include(m => m.Downloads)
-                                               .ToListAsync();
-
-            return [.. _torrentCache.OrderBy(m => m.Priority ?? 9999).ThenBy(m => m.Added)];
-        }
-        finally
-        {
-            TorrentCacheLock.Release();
-        }
+        return torrents;
     }
 
     public async Task<Torrent?> GetById(Guid torrentId)
@@ -110,8 +99,6 @@ public class TorrentData(DataContext dataContext) : ITorrentData
 
         await dataContext.SaveChangesAsync();
 
-        await VoidCache();
-
         return newTorrent;
     }
 
@@ -138,8 +125,6 @@ public class TorrentData(DataContext dataContext) : ITorrentData
         dbTorrent.RdFiles = torrent.RdFiles;
 
         await dataContext.SaveChangesAsync();
-
-        await VoidCache();
     }
 
     public async Task UpdateRdId(Torrent torrent, String rdId)
@@ -154,8 +139,6 @@ public class TorrentData(DataContext dataContext) : ITorrentData
         dbTorrent.RdId = rdId;
 
         await dataContext.SaveChangesAsync();
-
-        await VoidCache();
     }
 
     public async Task Update(Torrent torrent)
@@ -177,8 +160,6 @@ public class TorrentData(DataContext dataContext) : ITorrentData
         dbTorrent.Lifetime = torrent.Lifetime;
 
         await dataContext.SaveChangesAsync();
-
-        await VoidCache();
     }
 
     public async Task UpdateCategory(Guid torrentId, String? category)
@@ -193,8 +174,6 @@ public class TorrentData(DataContext dataContext) : ITorrentData
         dbTorrent.Category = category;
 
         await dataContext.SaveChangesAsync();
-
-        await VoidCache();
     }
 
     public async Task UpdateComplete(Guid torrentId, String? error, DateTimeOffset? datetime, Boolean retry)
@@ -230,8 +209,6 @@ public class TorrentData(DataContext dataContext) : ITorrentData
         dbTorrent.Error = error;
 
         await dataContext.SaveChangesAsync();
-
-        await VoidCache();
     }
 
     public async Task UpdateFilesSelected(Guid torrentId, DateTimeOffset datetime)
@@ -246,8 +223,6 @@ public class TorrentData(DataContext dataContext) : ITorrentData
         dbTorrent.FilesSelected = datetime;
 
         await dataContext.SaveChangesAsync();
-
-        await VoidCache();
     }
 
     public async Task UpdatePriority(Guid torrentId, Int32? priority)
@@ -262,8 +237,6 @@ public class TorrentData(DataContext dataContext) : ITorrentData
         dbTorrent.Priority = priority;
 
         await dataContext.SaveChangesAsync();
-
-        await VoidCache();
     }
 
     public async Task UpdateRetry(Guid torrentId, DateTimeOffset? dateTime, Int32 retryCount)
@@ -279,8 +252,6 @@ public class TorrentData(DataContext dataContext) : ITorrentData
         dbTorrent.Retry = dateTime;
 
         await dataContext.SaveChangesAsync();
-
-        await VoidCache();
     }
 
     public async Task UpdateError(Guid torrentId, String error)
@@ -295,8 +266,6 @@ public class TorrentData(DataContext dataContext) : ITorrentData
         dbTorrent.Error = error;
 
         await dataContext.SaveChangesAsync();
-
-        await VoidCache();
     }
 
     public async Task Delete(Guid torrentId)
@@ -311,21 +280,5 @@ public class TorrentData(DataContext dataContext) : ITorrentData
         dataContext.Torrents.Remove(dbTorrent);
 
         await dataContext.SaveChangesAsync();
-
-        await VoidCache();
-    }
-
-    public static async Task VoidCache()
-    {
-        await TorrentCacheLock.WaitAsync();
-
-        try
-        {
-            _torrentCache = null;
-        }
-        finally
-        {
-            TorrentCacheLock.Release();
-        }
     }
 }
