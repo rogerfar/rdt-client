@@ -194,8 +194,6 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
 
         var prio = 0;
 
-        Double downloadProgress = 0;
-
         foreach (var torrent in allTorrents)
         {
             var downloadPath = savePath;
@@ -220,38 +218,32 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
                 }
             }
 
-            Int64 bytesDone = 0;
-            Int64 bytesTotal = 0;
-            Int64 speed = 0;
-            Double rdProgress = 0;
+            var rdProgress = Math.Clamp(torrent.RdProgress ?? 0.0, 0.0, 100.0) / 100.0;
+            var bytesTotal = torrent.RdSize ?? 0;
+            var speed = torrent.RdSpeed ?? 0;
+            var bytesDone = (Int64) (bytesTotal * rdProgress);
 
-            try
+            Double downloadProgress = 0;
+            if (torrent.Downloads is { Count: > 0 })
             {
-                rdProgress = (torrent.RdProgress ?? 0.0) / 100.0;
-                bytesTotal = torrent.RdSize ?? 1;
-                bytesDone = (Int64)(bytesTotal * rdProgress);
-                speed = torrent.RdSpeed ?? 0;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex,
-                                $"""
-                                Error calculating progress:
-                                RdProgress: {torrent.RdProgress}
-                                RdSize: {torrent.RdSize}
-                                RdSpeed: {torrent.RdSpeed}
-                                """);
-            }
-
-            if (torrent.Downloads.Count > 0)
-            {
-                bytesDone = torrent.Downloads.Sum(m => m.BytesDone);
-                bytesTotal = torrent.Downloads.Sum(m => m.BytesTotal);
-                speed = (Int32)torrent.Downloads.Average(m => m.Speed);
-                downloadProgress = bytesTotal > 0 ? (Double)bytesDone / bytesTotal : 0;
+                var dlBytesDone = torrent.Downloads.Sum(m => m.BytesDone);
+                var dlBytesTotal = torrent.Downloads.Sum(m => m.BytesTotal);
+                speed = (Int32) torrent.Downloads.Average(m => m.Speed);
+                downloadProgress = bytesTotal > 0 ? Math.Clamp((Double) dlBytesDone / dlBytesTotal, 0.0, 1.0) : 0;
             }
 
             var progress = (rdProgress + downloadProgress) / 2.0;
+            var remaining = TimeSpan.Zero;
+            var bytesRemaining = bytesTotal - bytesDone;
+            if (speed > 0 && bytesRemaining > 0)
+            {
+                remaining = TimeSpan.FromSeconds(bytesRemaining / (Double)speed);
+                // In case there is clock skew
+                if (remaining < TimeSpan.Zero)
+                {
+                    remaining = TimeSpan.Zero;
+                }
+            }
 
             var result = new TorrentInfo
             {
@@ -267,7 +259,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
                 Dlspeed = speed,
                 Downloaded = bytesDone,
                 DownloadedSession = bytesDone,
-                Eta = 0,
+                Eta = (Int64)remaining.TotalSeconds,
                 FlPiecePrio = false,
                 ForceStart = false,
                 Hash = torrent.Hash,
