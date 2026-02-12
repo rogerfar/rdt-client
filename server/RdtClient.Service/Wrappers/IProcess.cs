@@ -4,10 +4,9 @@ namespace RdtClient.Service.Wrappers;
 
 public interface IProcess : IDisposable
 {
+    public ProcessStartInfo StartInfo { get; set; }
     event EventHandler<String?>? OutputDataReceived;
     event EventHandler<String?>? ErrorDataReceived;
-
-    public ProcessStartInfo StartInfo { get; set; }
 
     void BeginOutputReadLine();
     void BeginErrorReadLine();

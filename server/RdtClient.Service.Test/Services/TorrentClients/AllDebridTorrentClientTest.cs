@@ -522,8 +522,8 @@ public class AllDebridTorrentClientTest
     {
         public readonly Mock<IAllDebridNetClientFactory> AllDebridClientFactoryMock;
         public readonly Mock<IAllDebridNETClient> AllDebridClientMock;
-        public readonly Mock<ILogger<AllDebridTorrentClient>> LoggerMock;
         public readonly Mock<IDownloadableFileFilter> FileFilterMock;
+        public readonly Mock<ILogger<AllDebridTorrentClient>> LoggerMock;
 
         public Mocks()
         {

@@ -3,78 +3,19 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PremiumizeNET;
 using RdtClient.Data.Enums;
+using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
-using RdtClient.Data.Models.Data;
 using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
 public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter) : ITorrentClient
 {
-    private PremiumizeNETClient GetClient()
-    {
-        try
-        {
-            var apiKey = Settings.Get.Provider.ApiKey;
-
-            if (String.IsNullOrWhiteSpace(apiKey))
-            {
-                throw new("Premiumize API Key not set in the settings");
-            }
-
-            var httpClient = httpClientFactory.CreateClient();
-            httpClient.Timeout = TimeSpan.FromSeconds(10);
-
-            var premiumizeNetClient = new PremiumizeNETClient(apiKey, httpClient);
-
-            return premiumizeNetClient;
-        }
-        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
-        {
-            logger.LogError(ex, $"The connection to Premiumize has timed out: {ex.Message}");
-
-            throw;
-        }
-        catch (TaskCanceledException ex)
-        {
-            logger.LogError(ex, $"The connection to Premiumize has timed out: {ex.Message}");
-
-            throw; 
-        }
-    }
-
-    private static TorrentClientTorrent Map(Transfer transfer)
-    {
-        return new()
-        {
-            Id = transfer.Id,
-            Filename = transfer.Name,
-            OriginalFilename = transfer.Name,
-            Hash = transfer.Src,
-            Bytes = 0,
-            OriginalBytes = 0,
-            Host = null,
-            Split = 0,
-            Progress = (Int64) ((transfer.Progress ?? 1.0) * 100.0),
-            Status = transfer.Status,
-            Message = transfer.Message,
-            StatusCode = 0,
-            Added = null,
-            Files = [],
-            Links =
-            [
-                transfer.FolderId
-            ],
-            Ended = null,
-            Speed = 0,
-            Seeders = 0
-        };
-    }
-
     public async Task<IList<TorrentClientTorrent>> GetTorrents()
     {
         var results = await GetClient().Transfers.ListAsync();
+
         return results.Select(Map).ToList();
     }
 
@@ -217,7 +158,7 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
         Log($"Found transfer {transfer.Name} ({transfer.Id})", torrent);
 
         var downloadInfos = await GetAllDownloadInfos(torrent, transfer.FolderId);
-        
+
         if (!String.IsNullOrWhiteSpace(transfer.FileId))
         {
             var file = await GetClient().Items.DetailsAsync(transfer.FileId);
@@ -229,7 +170,11 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
                 Log($"File {file.Name} ({file.Id}) does not contain a link", torrent);
             }
 
-            downloadInfos.Add(new () {RestrictedLink = file.Link, FileName = file.Name });
+            downloadInfos.Add(new()
+            {
+                RestrictedLink = file.Link,
+                FileName = file.Name
+            });
         }
 
         foreach (var info in downloadInfos)
@@ -245,8 +190,68 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
     {
         // FileName is set in GetDownlaadInfos
         Debug.Assert(download.FileName != null);
-        
+
         return Task.FromResult(download.FileName);
+    }
+
+    private PremiumizeNETClient GetClient()
+    {
+        try
+        {
+            var apiKey = Settings.Get.Provider.ApiKey;
+
+            if (String.IsNullOrWhiteSpace(apiKey))
+            {
+                throw new("Premiumize API Key not set in the settings");
+            }
+
+            var httpClient = httpClientFactory.CreateClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(10);
+
+            var premiumizeNetClient = new PremiumizeNETClient(apiKey, httpClient);
+
+            return premiumizeNetClient;
+        }
+        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+        {
+            logger.LogError(ex, $"The connection to Premiumize has timed out: {ex.Message}");
+
+            throw;
+        }
+        catch (TaskCanceledException ex)
+        {
+            logger.LogError(ex, $"The connection to Premiumize has timed out: {ex.Message}");
+
+            throw;
+        }
+    }
+
+    private static TorrentClientTorrent Map(Transfer transfer)
+    {
+        return new()
+        {
+            Id = transfer.Id,
+            Filename = transfer.Name,
+            OriginalFilename = transfer.Name,
+            Hash = transfer.Src,
+            Bytes = 0,
+            OriginalBytes = 0,
+            Host = null,
+            Split = 0,
+            Progress = (Int64)((transfer.Progress ?? 1.0) * 100.0),
+            Status = transfer.Status,
+            Message = transfer.Message,
+            StatusCode = 0,
+            Added = null,
+            Files = [],
+            Links =
+            [
+                transfer.FolderId
+            ],
+            Ended = null,
+            Speed = 0,
+            Seeders = 0
+        };
     }
 
     private async Task<TorrentClientTorrent> GetInfo(String id)
@@ -259,7 +264,6 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
 
     private async Task<List<DownloadInfo>> GetAllDownloadInfos(Torrent torrent, String folderId)
     {
-
         if (String.IsNullOrWhiteSpace(folderId))
         {
             return [];
@@ -270,6 +274,7 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
         if (folder.Content == null)
         {
             Log($"Found no items in folder {folder.Name} ({folderId})", torrent);
+
             return [];
         }
 
@@ -295,7 +300,11 @@ public class PremiumizeTorrentClient(ILogger<PremiumizeTorrentClient> logger, IH
 
                 Log($"Found item {item.Name} in folder {folder.Name} ({folderId})", torrent);
 
-                downloadInfos.Add(new () { RestrictedLink = item.Link, FileName = item.Name});
+                downloadInfos.Add(new()
+                {
+                    RestrictedLink = item.Link,
+                    FileName = item.Name
+                });
             }
             else if (item.Type == "folder")
             {

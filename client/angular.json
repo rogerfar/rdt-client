@@ -50,7 +50,12 @@
             "assets": ["src/favicon.ico", "src/assets"],
             "styles": ["src/styles.scss"],
             "scripts": [],
-            "browser": "src/main.ts"
+            "browser": "src/main.ts",
+            "stylePreprocessorOptions": {
+              "sass": {
+                "silenceDeprecations": ["if-function"]
+              }
+            }
           },
           "configurations": {
             "production": {

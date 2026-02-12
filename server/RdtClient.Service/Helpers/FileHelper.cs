@@ -80,11 +80,12 @@ public static class FileHelper
     {
         return String.Concat(filename.Split(Path.GetInvalidFileNameChars()));
     }
-    
+
     public static String GetDirectoryContents(String path)
     {
         var stringBuilder = new StringBuilder();
         GetDirectoryContents(path, stringBuilder, "");
+
         return stringBuilder.ToString();
     }
 
@@ -93,6 +94,7 @@ public static class FileHelper
         var directoryInfo = new DirectoryInfo(path);
 
         var directories = directoryInfo.GetDirectories();
+
         foreach (var directory in directories)
         {
             stringBuilder.AppendLine($"{indent}{directory.Name}");
@@ -100,6 +102,7 @@ public static class FileHelper
         }
 
         var files = directoryInfo.GetFiles();
+
         foreach (var file in files)
         {
             stringBuilder.AppendLine($"{indent}{file.Name}");
@@ -112,13 +115,16 @@ public static class FileHelper
         {
             return 0;
         }
+
         try
         {
             if (!Directory.Exists(path))
             {
                 return 0;
             }
+
             var driveInfo = new DriveInfo(path);
+
             return driveInfo.AvailableFreeSpace / (1024 * 1024 * 1024);
         }
         catch

@@ -1,14 +1,18 @@
+using System.Web;
 using Microsoft.Extensions.Logging;
+using MonoTorrent.BEncoding;
 using Moq;
 using RdtClient.Service.Services;
-using MonoTorrent.BEncoding;
 
 namespace RdtClient.Service.Test.Services;
 
 public class EnricherTest : IDisposable
 {
-    private readonly MockRepository _mockRepository;
+    private const String TestMagnetLink =
+        "magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567&dn=TestFile&tr=http%3A%2F%2Ftracker1.com%2Fannounce&tr=http%3A%2F%2Ftracker2.com%2Fannounce";
+
     private readonly Mock<ILogger<Enricher>> _loggerMock;
+    private readonly MockRepository _mockRepository;
     private readonly Mock<ITrackerListGrabber> _trackerListGrabberMock;
 
     public EnricherTest()
@@ -22,9 +26,6 @@ public class EnricherTest : IDisposable
     {
         _mockRepository.VerifyAll();
     }
-
-    private const String TestMagnetLink =
-        "magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567&dn=TestFile&tr=http%3A%2F%2Ftracker1.com%2Fannounce&tr=http%3A%2F%2Ftracker2.com%2Fannounce";
 
     // Helper methods for creating BEncodedDictionary objects for torrents
     private static BEncodedDictionary CreateStandardTorrentDict(String announceUrl, List<String>? announceListTier = null)
@@ -216,7 +217,7 @@ public class EnricherTest : IDisposable
         var result = await enricher.EnrichMagnetLink(magnetLink);
 
         // Assert
-        var queryParams = System.Web.HttpUtility.ParseQueryString(new Uri(result).Query);
+        var queryParams = HttpUtility.ParseQueryString(new Uri(result).Query);
         Assert.Equal("urn:btih:HASH", queryParams["xt"]);
         Assert.Equal("MyFile", queryParams["dn"]);
     }
@@ -239,7 +240,7 @@ public class EnricherTest : IDisposable
         var result = await enricher.EnrichMagnetLink(magnetLink);
 
         // Assert
-        var queryParams = System.Web.HttpUtility.ParseQueryString(new Uri(result).Query);
+        var queryParams = HttpUtility.ParseQueryString(new Uri(result).Query);
         var trValues = queryParams.GetValues("tr")?.ToList() ?? new List<String>();
 
         Assert.Contains("udp://existing", trValues);

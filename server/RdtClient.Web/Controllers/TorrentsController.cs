@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MonoTorrent;
+using RdtClient.Data.Models.Internal;
 using RdtClient.Data.Models.TorrentClient;
+using RdtClient.Service.BackgroundServices;
 using RdtClient.Service.Helpers;
 using RdtClient.Service.Services;
 using Torrent = RdtClient.Data.Models.Data.Torrent;
@@ -15,41 +17,158 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
 {
     [HttpGet]
     [Route("")]
-    public async Task<ActionResult<IList<Torrent>>> GetAll()
+    public async Task<ActionResult<IList<TorrentDto>>> GetAll()
     {
         var results = await torrents.Get();
 
-        // Prevent infinite recursion when serializing
-        foreach (var file in results.SelectMany(torrent => torrent.Downloads))
+        var torrentDtos = results.Select(torrent => new TorrentDto
         {
-            file.Torrent = null;
-        }
+            TorrentId = torrent.TorrentId,
+            Hash = torrent.Hash,
+            Category = torrent.Category,
+            DownloadAction = torrent.DownloadAction,
+            FinishedAction = torrent.FinishedAction,
+            FinishedActionDelay = torrent.FinishedActionDelay,
+            HostDownloadAction = torrent.HostDownloadAction,
+            DownloadMinSize = torrent.DownloadMinSize,
+            IncludeRegex = torrent.IncludeRegex,
+            ExcludeRegex = torrent.ExcludeRegex,
+            DownloadManualFiles = torrent.DownloadManualFiles,
+            DownloadClient = torrent.DownloadClient,
+            Added = torrent.Added,
+            FilesSelected = torrent.FilesSelected,
+            Completed = torrent.Completed,
+            IsFile = torrent.IsFile,
+            Priority = torrent.Priority,
+            RetryCount = torrent.RetryCount,
+            DownloadRetryAttempts = torrent.DownloadRetryAttempts,
+            TorrentRetryAttempts = torrent.TorrentRetryAttempts,
+            DeleteOnError = torrent.DeleteOnError,
+            Lifetime = torrent.Lifetime,
+            Error = torrent.Error,
+            RdId = torrent.RdId,
+            RdName = torrent.RdName,
+            RdSize = torrent.RdSize,
+            RdHost = torrent.RdHost,
+            RdSplit = torrent.RdSplit,
+            RdProgress = torrent.RdProgress,
+            RdStatus = torrent.RdStatus,
+            RdStatusRaw = torrent.RdStatusRaw,
+            RdAdded = torrent.RdAdded,
+            RdEnded = torrent.RdEnded,
+            RdSpeed = torrent.RdSpeed,
+            RdSeeders = torrent.RdSeeders,
+            Files = torrent.Files,
+            Downloads = torrent.Downloads.Select(download => new DownloadDto
+            {
+                DownloadId = download.DownloadId,
+                TorrentId = download.TorrentId,
+                Path = download.Path,
+                Link = download.Link,
+                Added = download.Added,
+                DownloadQueued = download.DownloadQueued,
+                DownloadStarted = download.DownloadStarted,
+                DownloadFinished = download.DownloadFinished,
+                UnpackingQueued = download.UnpackingQueued,
+                UnpackingStarted = download.UnpackingStarted,
+                UnpackingFinished = download.UnpackingFinished,
+                Completed = download.Completed,
+                RetryCount = download.RetryCount,
+                Error = download.Error,
+                BytesTotal = download.BytesTotal,
+                BytesDone = download.BytesDone,
+                Speed = download.Speed
+            }).ToList()
+        }).ToList();
 
-        return Ok(results);
+        return Ok(torrentDtos);
     }
 
     [HttpGet]
     [Route("Get/{torrentId:guid}")]
-    public async Task<ActionResult<Torrent>> GetById(Guid torrentId)
+    public async Task<ActionResult<TorrentDto>> GetById(Guid torrentId)
     {
         var torrent = await torrents.GetById(torrentId);
 
-        if (torrent?.Downloads != null)
+        if (torrent == null)
         {
-            foreach (var file in torrent.Downloads)
-            {
-                file.Torrent = null;
-            }
+            return NotFound();
         }
 
-        return Ok(torrent);
+        foreach (var file in torrent.Downloads)
+        {
+            file.Torrent = null;
+        }
+
+        var torrentDto = new TorrentDto
+        {
+            TorrentId = torrent!.TorrentId,
+            Hash = torrent.Hash,
+            Category = torrent.Category,
+            DownloadAction = torrent.DownloadAction,
+            FinishedAction = torrent.FinishedAction,
+            FinishedActionDelay = torrent.FinishedActionDelay,
+            HostDownloadAction = torrent.HostDownloadAction,
+            DownloadMinSize = torrent.DownloadMinSize,
+            IncludeRegex = torrent.IncludeRegex,
+            ExcludeRegex = torrent.ExcludeRegex,
+            DownloadManualFiles = torrent.DownloadManualFiles,
+            DownloadClient = torrent.DownloadClient,
+            Added = torrent.Added,
+            FilesSelected = torrent.FilesSelected,
+            Completed = torrent.Completed,
+            IsFile = torrent.IsFile,
+            Priority = torrent.Priority,
+            RetryCount = torrent.RetryCount,
+            DownloadRetryAttempts = torrent.DownloadRetryAttempts,
+            TorrentRetryAttempts = torrent.TorrentRetryAttempts,
+            DeleteOnError = torrent.DeleteOnError,
+            Lifetime = torrent.Lifetime,
+            Error = torrent.Error,
+            RdId = torrent.RdId,
+            RdName = torrent.RdName,
+            RdSize = torrent.RdSize,
+            RdHost = torrent.RdHost,
+            RdSplit = torrent.RdSplit,
+            RdProgress = torrent.RdProgress,
+            RdStatus = torrent.RdStatus,
+            RdStatusRaw = torrent.RdStatusRaw,
+            RdAdded = torrent.RdAdded,
+            RdEnded = torrent.RdEnded,
+            RdSpeed = torrent.RdSpeed,
+            RdSeeders = torrent.RdSeeders,
+            Files = torrent.Files,
+            Downloads = (torrent.Downloads).Select(download => new DownloadDto
+            {
+                DownloadId = download.DownloadId,
+                TorrentId = download.TorrentId,
+                Path = download.Path,
+                Link = download.Link,
+                Added = download.Added,
+                DownloadQueued = download.DownloadQueued,
+                DownloadStarted = download.DownloadStarted,
+                DownloadFinished = download.DownloadFinished,
+                UnpackingQueued = download.UnpackingQueued,
+                UnpackingStarted = download.UnpackingStarted,
+                UnpackingFinished = download.UnpackingFinished,
+                Completed = download.Completed,
+                RetryCount = download.RetryCount,
+                Error = download.Error,
+                BytesTotal = download.BytesTotal,
+                BytesDone = download.BytesDone,
+                Speed = download.Speed
+            }).ToList()
+        };
+
+        return Ok(torrentDto);
     }
 
     [HttpGet]
     [Route("DiskSpaceStatus")]
-    public ActionResult<RdtClient.Data.Models.Internal.DiskSpaceStatus?> GetDiskSpaceStatus()
+    public ActionResult<DiskSpaceStatus?> GetDiskSpaceStatus()
     {
-        var status = RdtClient.Service.BackgroundServices.DiskSpaceMonitor.GetCurrentStatus();
+        var status = DiskSpaceMonitor.GetCurrentStatus();
+
         return Ok(status);
     }
 
@@ -105,7 +224,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
         {
             return BadRequest();
         }
-        
+
         if (String.IsNullOrEmpty(request.MagnetLink))
         {
             return BadRequest("Invalid magnet link");
@@ -206,7 +325,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
 
         return Ok();
     }
-        
+
     [HttpPut]
     [Route("Update")]
     public async Task<ActionResult> Update([FromBody] Torrent? torrent)
@@ -278,7 +397,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
                     includeError = ex.Message;
                 }
             }
-        } 
+        }
         else if (!String.IsNullOrWhiteSpace(request.ExcludeRegex))
         {
             foreach (var availableFile in availableFiles)
@@ -337,5 +456,5 @@ public class TorrentControllerVerifyRegexRequest
 {
     public String? IncludeRegex { get; set; }
     public String? ExcludeRegex { get; set; }
-    public String? MagnetLink { get; set;}
+    public String? MagnetLink { get; set; }
 }

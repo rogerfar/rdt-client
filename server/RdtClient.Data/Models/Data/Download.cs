@@ -44,17 +44,19 @@ public class Download
 }
 
 /// <summary>
-/// Used to create <see cref="Download"/>s
+///     Used to create <see cref="Download" />s
 /// </summary>
 public class DownloadInfo
 {
     /// <summary>
-    /// The name of the file. Should not include directory.
-    /// If the filename is not known, set tn null and `GetFileName` will be called with the unrestricted link.
+    ///     The name of the file. Should not include directory.
+    ///     If the filename is not known, set tn null and `GetFileName` will be called with the unrestricted link.
     /// </summary>
     public required String? FileName;
+
     /// <summary>
-    /// The restricted link to download this download. If the debrid serice in question does not have restricted links, use either a fake or the unrestricted link
+    ///     The restricted link to download this download. If the debrid serice in question does not have restricted links, use
+    ///     either a fake or the unrestricted link
     /// </summary>
     public required String RestrictedLink;
 }

@@ -9,25 +9,25 @@ public class DownloadData(DataContext dataContext)
     public async Task<List<Download>> GetForTorrent(Guid torrentId)
     {
         return await dataContext.Downloads
-                                 .AsNoTracking()
-                                 .Where(m => m.TorrentId == torrentId)
-                                 .ToListAsync();
+                                .AsNoTracking()
+                                .Where(m => m.TorrentId == torrentId)
+                                .ToListAsync();
     }
 
     public async Task<Download?> GetById(Guid downloadId)
     {
         return await dataContext.Downloads
-                                 .Include(m => m.Torrent)
-                                 .AsNoTracking()
-                                 .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+                                .Include(m => m.Torrent)
+                                .AsNoTracking()
+                                .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
     }
 
     public async Task<Download?> Get(Guid torrentId, String path)
     {
         return await dataContext.Downloads
-                                 .Include(m => m.Torrent)
-                                 .AsNoTracking()
-                                 .FirstOrDefaultAsync(m => m.TorrentId == torrentId && m.Path == path);
+                                .Include(m => m.Torrent)
+                                .AsNoTracking()
+                                .FirstOrDefaultAsync(m => m.TorrentId == torrentId && m.Path == path);
     }
 
     public async Task<Download> Add(Guid torrentId, DownloadInfo downloadInfo)
@@ -53,7 +53,7 @@ public class DownloadData(DataContext dataContext)
     public async Task UpdateUnrestrictedLink(Guid downloadId, String unrestrictedLink)
     {
         var dbDownload = await dataContext.Downloads
-                                           .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+                                          .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
         if (dbDownload == null)
         {
@@ -68,7 +68,7 @@ public class DownloadData(DataContext dataContext)
     public async Task UpdateFileName(Guid downloadId, String fileName)
     {
         var dbDownload = await dataContext.Downloads
-                                           .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+                                          .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
         if (dbDownload == null)
         {
@@ -83,7 +83,7 @@ public class DownloadData(DataContext dataContext)
     public async Task UpdateDownloadStarted(Guid downloadId, DateTimeOffset? dateTime)
     {
         var dbDownload = await dataContext.Downloads
-                                           .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+                                          .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
         if (dbDownload == null)
         {
@@ -98,13 +98,13 @@ public class DownloadData(DataContext dataContext)
     public async Task UpdateDownloadFinished(Guid downloadId, DateTimeOffset? dateTime)
     {
         var dbDownload = await dataContext.Downloads
-                                           .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+                                          .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
         if (dbDownload == null)
         {
             return;
         }
-            
+
         dbDownload.DownloadFinished = dateTime;
 
         await dataContext.SaveChangesAsync();
@@ -113,7 +113,7 @@ public class DownloadData(DataContext dataContext)
     public async Task UpdateUnpackingQueued(Guid downloadId, DateTimeOffset? dateTime)
     {
         var dbDownload = await dataContext.Downloads
-                                           .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+                                          .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
         if (dbDownload == null)
         {
@@ -128,7 +128,7 @@ public class DownloadData(DataContext dataContext)
     public async Task UpdateUnpackingStarted(Guid downloadId, DateTimeOffset? dateTime)
     {
         var dbDownload = await dataContext.Downloads
-                                           .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+                                          .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
         if (dbDownload == null)
         {
@@ -143,7 +143,7 @@ public class DownloadData(DataContext dataContext)
     public async Task UpdateUnpackingFinished(Guid downloadId, DateTimeOffset? dateTime)
     {
         var dbDownload = await dataContext.Downloads
-                                           .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+                                          .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
         if (dbDownload == null)
         {
@@ -154,11 +154,11 @@ public class DownloadData(DataContext dataContext)
 
         await dataContext.SaveChangesAsync();
     }
-        
+
     public async Task UpdateCompleted(Guid downloadId, DateTimeOffset? dateTime)
     {
         var dbDownload = await dataContext.Downloads
-                                           .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+                                          .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
         if (dbDownload == null)
         {
@@ -173,7 +173,7 @@ public class DownloadData(DataContext dataContext)
     public async Task UpdateError(Guid downloadId, String? error)
     {
         var dbDownload = await dataContext.Downloads
-                                           .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+                                          .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
         if (dbDownload == null)
         {
@@ -184,11 +184,11 @@ public class DownloadData(DataContext dataContext)
 
         await dataContext.SaveChangesAsync();
     }
-    
+
     public async Task UpdateRetryCount(Guid downloadId, Int32 retryCount)
     {
         var dbDownload = await dataContext.Downloads
-                                           .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+                                          .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
         if (dbDownload == null)
         {
@@ -203,7 +203,7 @@ public class DownloadData(DataContext dataContext)
     public async Task UpdateRemoteId(Guid downloadId, String remoteId)
     {
         var dbDownload = await dataContext.Downloads
-                                           .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+                                          .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
         if (dbDownload == null)
         {
@@ -218,8 +218,8 @@ public class DownloadData(DataContext dataContext)
     public async Task DeleteForTorrent(Guid torrentId)
     {
         var downloads = await dataContext.Downloads
-                                          .Where(m => m.TorrentId == torrentId)
-                                          .ToListAsync();
+                                         .Where(m => m.TorrentId == torrentId)
+                                         .ToListAsync();
 
         dataContext.Downloads.RemoveRange(downloads);
 
@@ -229,7 +229,7 @@ public class DownloadData(DataContext dataContext)
     public async Task Reset(Guid downloadId)
     {
         var dbDownload = await dataContext.Downloads
-                                           .FirstOrDefaultAsync(m => m.DownloadId == downloadId) 
+                                          .FirstOrDefaultAsync(m => m.DownloadId == downloadId)
                          ?? throw new($"Cannot find download with ID {downloadId}");
 
         dbDownload.RetryCount = 0;

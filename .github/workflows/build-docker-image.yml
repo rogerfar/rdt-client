@@ -33,7 +33,7 @@ jobs:
     runs-on: ${{ matrix.config.runs-on }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Extract version and patch .csproj
         run: |
@@ -127,7 +127,7 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME }}@${{ needs.build.outputs.digest-arm64 }}
       
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Docker Hub Registry Description
         if: ${{ env.ENABLE_DOCKERHUB == 1 }}

@@ -1,6 +1,6 @@
 namespace RdtClient.Service.Wrappers;
 
-public class ProcessFactory: IProcessFactory
+public class ProcessFactory : IProcessFactory
 {
     public IProcess NewProcess()
     {

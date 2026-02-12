@@ -3,13 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.QBittorrent;
 using RdtClient.Service.Services;
-
+using RealDebridException = RDNET.RealDebridException;
 
 namespace RdtClient.Web.Controllers;
 
 /// <summary>
-/// This API behaves as a regular QBittorrent 4+ API
-/// Documentation is found here: https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)
+///     This API behaves as a regular QBittorrent 4+ API
+///     Documentation is found here: https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)
 /// </summary>
 [ApiController]
 [Route("api/v2")]
@@ -41,7 +41,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
 
         return Ok("Fails.");
     }
-        
+
     [AllowAnonymous]
     [Route("auth/login")]
     [HttpPost]
@@ -59,9 +59,11 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
         logger.LogDebug($"Auth logout");
 
         await qBittorrent.AuthLogout();
+
         return Ok();
     }
 
+    [AllowAnonymous]
     [Route("app/version")]
     [HttpGet]
     [HttpPost]
@@ -70,6 +72,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
         return Ok("v4.3.2");
     }
 
+    [AllowAnonymous]
     [Route("app/webapiVersion")]
     [HttpGet]
     [HttpPost]
@@ -78,6 +81,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
         return Ok("2.7");
     }
 
+    [AllowAnonymous]
     [Route("app/buildInfo")]
     [HttpGet]
     [HttpPost]
@@ -92,6 +96,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
             Qt = "5.15.2",
             Zlib = "1.2.11"
         };
+
         return Ok(result);
     }
 
@@ -111,6 +116,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     public async Task<ActionResult<AppPreferences>> AppPreferences()
     {
         var result = await qBittorrent.AppPreferences();
+
         return Ok(result);
     }
 
@@ -130,9 +136,10 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     public ActionResult<AppPreferences> AppDefaultSavePath()
     {
         var result = Settings.AppDefaultSavePath;
+
         return Ok(result);
     }
-        
+
     [Authorize(Policy = "AuthSetting")]
     [Route("torrents/info")]
     [HttpGet]
@@ -339,7 +346,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
                     return BadRequest($"Invalid torrent link format {url}");
                 }
             }
-            catch (RDNET.RealDebridException ex)
+            catch (RealDebridException ex)
             {
                 // Infringing file.
                 if (ex.ErrorCode == 35)
@@ -369,7 +376,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
                 await qBittorrent.TorrentsAddFile(fileBytes, request.Category, request.Priority);
             }
         }
-            
+
         if (request.Urls != null)
         {
             return await TorrentsAdd(request);
@@ -386,7 +393,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     {
         return Ok();
     }
-        
+
     [Authorize(Policy = "AuthSetting")]
     [Route("torrents/setCategory")]
     [HttpGet]
@@ -450,7 +457,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     {
         return Ok();
     }
-        
+
     [Authorize(Policy = "AuthSetting")]
     [Route("torrents/removeCategories")]
     [HttpGet]
@@ -480,7 +487,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     {
         return Ok();
     }
-    
+
     [Authorize(Policy = "AuthSetting")]
     [Route("torrents/tags")]
     [HttpGet]
@@ -535,7 +542,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     {
         return await SyncMainData();
     }
-    
+
     [Authorize(Policy = "AuthSetting")]
     [Route("transfer/info")]
     [HttpGet]
@@ -563,7 +570,7 @@ public class QBTorrentsInfoRequest
 {
     public String? Category { get; set; }
 }
-    
+
 public class QBTorrentsHashRequest
 {
     public String? Hash { get; set; }
@@ -587,7 +594,7 @@ public class QBTorrentsSetCategoryRequest
     public String? Hashes { get; set; }
     public String? Category { get; set; }
 }
-    
+
 public class QBTorrentsCreateCategoryRequest
 {
     public String? Category { get; set; }

@@ -33,9 +33,9 @@ public class TorrentData(DataContext dataContext) : ITorrentData
     public async Task<Torrent?> GetById(Guid torrentId)
     {
         var dbTorrent = await dataContext.Torrents
-                                          .AsNoTracking()
-                                          .Include(m => m.Downloads)
-                                          .FirstOrDefaultAsync(m => m.TorrentId == torrentId);
+                                         .AsNoTracking()
+                                         .Include(m => m.Downloads)
+                                         .FirstOrDefaultAsync(m => m.TorrentId == torrentId);
 
         if (dbTorrent == null)
         {
@@ -55,9 +55,9 @@ public class TorrentData(DataContext dataContext) : ITorrentData
         hash = hash.ToLower();
 
         var dbTorrent = await dataContext.Torrents
-                                          .AsNoTracking()
-                                          .Include(m => m.Downloads)
-                                          .FirstOrDefaultAsync(m => m.Hash == hash);
+                                         .AsNoTracking()
+                                         .Include(m => m.Downloads)
+                                         .FirstOrDefaultAsync(m => m.Hash == hash);
 
         if (dbTorrent == null)
         {
@@ -136,7 +136,7 @@ public class TorrentData(DataContext dataContext) : ITorrentData
         dbTorrent.RdSpeed = torrent.RdSpeed;
         dbTorrent.RdSeeders = torrent.RdSeeders;
         dbTorrent.RdFiles = torrent.RdFiles;
-        
+
         await dataContext.SaveChangesAsync();
 
         await VoidCache();
@@ -150,7 +150,7 @@ public class TorrentData(DataContext dataContext) : ITorrentData
         {
             return;
         }
-        
+
         dbTorrent.RdId = rdId;
 
         await dataContext.SaveChangesAsync();

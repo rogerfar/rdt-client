@@ -8,5 +8,5 @@ public enum TorrentHostDownloadAction
     DownloadAll = 0,
 
     [Description("Don't download any files to host")]
-    DownloadNone = 1,
+    DownloadNone = 1
 }
