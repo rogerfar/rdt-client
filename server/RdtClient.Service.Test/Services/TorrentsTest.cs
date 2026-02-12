@@ -13,14 +13,14 @@ using TorrentsService = RdtClient.Service.Services.Torrents;
 
 namespace RdtClient.Service.Test.Services;
 
-class Mocks
+internal class Mocks
 {
+    public readonly Mock<IDownloads> DownloadsMock;
+    public readonly Mock<IEnricher> EnricherMock;
     public readonly Mock<IProcessFactory> ProcessFactoryMock;
     public readonly Mock<IProcess> ProcessMock;
-    public readonly Mock<ILogger<TorrentsService>> TorrentsLoggerMock;
-    public readonly Mock<IDownloads> DownloadsMock;
     public readonly Mock<ITorrentData> TorrentDataMock;
-    public readonly Mock<IEnricher> EnricherMock;
+    public readonly Mock<ILogger<TorrentsService>> TorrentsLoggerMock;
 
     public Mocks()
     {
@@ -63,8 +63,7 @@ public class TorrentsTest
         return new()
         {
             {
-              torrent,
-              downloads
+                torrent, downloads
             }
         };
     }
@@ -96,7 +95,7 @@ public class TorrentsTest
         {
             {
                 filePath, new("Test file")
-            },
+            }
         });
 
         var torrents = new TorrentsService(mocks.TorrentsLoggerMock.Object,
@@ -162,7 +161,7 @@ public class TorrentsTest
         {
             {
                 filePath, new("Test file")
-            },
+            }
         });
 
         var torrents = new TorrentsService(mocks.TorrentsLoggerMock.Object,
@@ -210,7 +209,7 @@ public class TorrentsTest
         {
             {
                 filePath, new("Test file")
-            },
+            }
         });
 
         var torrents = new TorrentsService(mocks.TorrentsLoggerMock.Object,
@@ -277,7 +276,7 @@ public class TorrentsTest
         {
             {
                 filePath, new("Test file")
-            },
+            }
         });
 
         var torrents = new TorrentsService(mocks.TorrentsLoggerMock.Object,

@@ -61,9 +61,10 @@ public static class DiConfig
         var retryPolicy = HttpPolicyExtensions
                           .HandleTransientHttpError()
                           .OrResult(r => r.StatusCode == HttpStatusCode.TooManyRequests)
-                          .WaitAndRetryAsync(retryCount: 5, sleepDurationProvider: attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)));
+                          .WaitAndRetryAsync(5, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)));
 
         services.AddHttpClient();
+
         services.ConfigureHttpClientDefaults(builder =>
         {
             builder.ConfigureHttpClient(httpClient =>

@@ -21,7 +21,7 @@ public class DownloadableFileFilter(ILogger<DownloadableFileFilter> logger) : ID
         {
             logger.LogDebug("File {filePath} was included after filtering", filePath);
         }
-        
+
         return isDownloadable;
     }
 

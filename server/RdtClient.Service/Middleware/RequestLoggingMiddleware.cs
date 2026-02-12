@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Text;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System.Text;
 
 namespace RdtClient.Service.Middleware;
 
@@ -43,7 +43,7 @@ public class RequestLoggingMiddleware(RequestDelegate next, ILoggerFactory logge
     {
         request.EnableBuffering();
 
-        using var reader = new StreamReader(request.Body, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, leaveOpen: true);
+        using var reader = new StreamReader(request.Body, Encoding.UTF8, false, leaveOpen: true);
         var body = await reader.ReadToEndAsync();
 
         request.Body.Position = 0;

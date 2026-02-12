@@ -117,6 +117,7 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
         {
             return;
         }
+
         await Downloader.Cancel();
     }
 
@@ -126,6 +127,7 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
         {
             return;
         }
+
         await Downloader.Pause();
     }
 
@@ -135,6 +137,7 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
         {
             return;
         }
+
         await Downloader.Resume();
     }
 

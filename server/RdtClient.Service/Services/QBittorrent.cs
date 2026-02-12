@@ -204,13 +204,15 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             }
 
             var torrentPath = downloadPath;
+
             if (!String.IsNullOrWhiteSpace(torrent.RdName))
             {
                 // Alldebrid stores single file torrents at the root folder.
                 if (torrent.ClientKind == Provider.AllDebrid && torrent.Files.Count == 1)
                 {
                     torrentPath = Path.Combine(downloadPath, torrent.Files[0].Path);
-                } else
+                }
+                else
                 {
                     torrentPath = Path.Combine(downloadPath, torrent.RdName) + Path.DirectorySeparatorChar;
                 }
@@ -282,7 +284,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
                 State = "downloading",
                 SuperSeeding = false,
                 Tags = "",
-                TimeActive = (Int64) (DateTimeOffset.UtcNow - torrent.Added).TotalSeconds,
+                TimeActive = (Int64)(DateTimeOffset.UtcNow - torrent.Added).TotalSeconds,
                 TotalSize = bytesTotal,
                 Tracker = "udp://tracker.opentrackr.org:1337",
                 UpLimit = -1,
@@ -358,7 +360,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
         {
             bytesDone = torrent.Downloads.Sum(m => m.BytesDone);
             bytesTotal = torrent.Downloads.Sum(m => m.BytesTotal);
-            speed = (Int32) torrent.Downloads.Average(m => m.Speed);
+            speed = (Int32)torrent.Downloads.Average(m => m.Speed);
         }
 
         var result = new TorrentProperties
@@ -386,7 +388,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             Seeds = 100,
             SeedsTotal = 100,
             ShareRatio = 9999,
-            TimeElapsed = (Int64) (DateTimeOffset.UtcNow - torrent.Added).TotalSeconds,
+            TimeElapsed = (Int64)(DateTimeOffset.UtcNow - torrent.Added).TotalSeconds,
             TotalDownloaded = bytesDone,
             TotalDownloadedSession = bytesDone,
             TotalSize = bytesTotal,
@@ -507,8 +509,8 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
         var allTorrents = await torrents.Get();
 
         var torrentsToGroup = allTorrents.Where(m => !String.IsNullOrWhiteSpace(m.Category))
-                                      .Select(m => m.Category!.ToLower())
-                                      .ToList();
+                                         .Select(m => m.Category!.ToLower())
+                                         .ToList();
 
         var categoryList = (Settings.Get.General.Categories ?? "")
                            .Split(",", StringSplitOptions.RemoveEmptyEntries)

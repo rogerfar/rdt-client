@@ -46,7 +46,7 @@ public class Settings(SettingData settingData)
     {
         await settingData.ResetCache();
 
-        LoggingLevelSwitch.MinimumLevel = Settings.Get.General.LogLevel switch
+        LoggingLevelSwitch.MinimumLevel = Get.General.LogLevel switch
         {
             LogLevel.Verbose => LogEventLevel.Verbose,
             LogLevel.Debug => LogEventLevel.Debug,

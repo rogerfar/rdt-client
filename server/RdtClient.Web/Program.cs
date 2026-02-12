@@ -8,7 +8,9 @@ using RdtClient.Service;
 using RdtClient.Service.Middleware;
 using RdtClient.Service.Services;
 using Serilog;
+using Serilog.Debugging;
 using Serilog.Events;
+using DiConfig = RdtClient.Data.DiConfig;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -51,7 +53,7 @@ if (appSettings.Logging?.File?.Path != null)
                                          .MinimumLevel.Override("System.Net.Http", LogEventLevel.Warning));
 }
 
-Serilog.Debugging.SelfLog.Enable(msg =>
+SelfLog.Enable(msg =>
 {
     Debug.Print(msg);
     Debugger.Break();
@@ -69,12 +71,12 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
            options.SlidingExpiration = true;
        });
 
-
-builder.Services.AddAuthorizationBuilder().AddPolicy("AuthSetting", policyCorrectUser =>
-{
-    policyCorrectUser.Requirements.Add(new AuthSettingRequirement());
-});
-
+builder.Services.AddAuthorizationBuilder()
+       .AddPolicy("AuthSetting",
+                  policyCorrectUser =>
+                  {
+                      policyCorrectUser.Requirements.Add(new AuthSettingRequirement());
+                  });
 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
        {
@@ -93,8 +95,10 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Events.OnRedirectToLogin = context =>
     {
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+
         return Task.CompletedTask;
     };
+
     options.Cookie.Name = "SID";
 });
 
@@ -132,7 +136,7 @@ builder.Services.AddSignalR(hubOptions =>
 
 builder.Host.UseWindowsService();
 
-RdtClient.Data.DiConfig.Config(builder.Services, appSettings);
+DiConfig.Config(builder.Services, appSettings);
 builder.Services.RegisterRdtServices();
 
 try
@@ -160,7 +164,8 @@ try
         }
     });
 
-    var basePath = !String.IsNullOrWhiteSpace(appSettings.BasePath) ? appSettings.BasePath : !String.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("BASE_PATH")) ? Environment.GetEnvironmentVariable("BASE_PATH") : null;
+    var basePath = !String.IsNullOrWhiteSpace(appSettings.BasePath) ? appSettings.BasePath :
+        !String.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("BASE_PATH")) ? Environment.GetEnvironmentVariable("BASE_PATH") : null;
 
     if (basePath != null)
     {
@@ -180,16 +185,18 @@ try
 
     app.MapControllers();
 
-    app.UseWhen(x => !x.Request.Path.StartsWithSegments("/api"), routeBuilder =>
-    {
-        routeBuilder.UseSpaStaticFiles();
-        routeBuilder.UseSpa(spa =>
-        {
-            spa.Options.SourcePath = "wwwroot";
-            spa.Options.DefaultPage = "/index.html";
-        });
-    });
-    
+    app.UseWhen(x => !x.Request.Path.StartsWithSegments("/api"),
+                routeBuilder =>
+                {
+                    routeBuilder.UseSpaStaticFiles();
+
+                    routeBuilder.UseSpa(spa =>
+                    {
+                        spa.Options.SourcePath = "wwwroot";
+                        spa.Options.DefaultPage = "/index.html";
+                    });
+                });
+
     // Run the app
     app.Run();
 }

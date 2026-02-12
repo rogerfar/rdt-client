@@ -70,7 +70,7 @@ public class Downloads(DownloadData downloadData) : IDownloads
     {
         await downloadData.UpdateError(downloadId, error);
     }
-    
+
     public async Task UpdateRetryCount(Guid downloadId, Int32 retryCount)
     {
         await downloadData.UpdateRetryCount(downloadId, retryCount);
@@ -80,12 +80,12 @@ public class Downloads(DownloadData downloadData) : IDownloads
     {
         await downloadData.UpdateRemoteId(downloadId, remoteId);
     }
-    
+
     public async Task DeleteForTorrent(Guid torrentId)
     {
         await downloadData.DeleteForTorrent(torrentId);
     }
-        
+
     public async Task Reset(Guid downloadId)
     {
         await downloadData.Reset(downloadId);

@@ -7,12 +7,11 @@ namespace RdtClient.Service.BackgroundServices;
 
 public class UpdateChecker(ILogger<UpdateChecker> logger) : BackgroundService
 {
+    private static readonly List<String> KnownGhsaIds = [];
     public static String? CurrentVersion { get; private set; }
     public static String? LatestVersion { get; private set; }
-    
-    public static Boolean? IsInsecure { get; private set; }
 
-    private static readonly List<String> KnownGhsaIds = [];
+    public static Boolean? IsInsecure { get; private set; }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -45,6 +44,7 @@ public class UpdateChecker(ILogger<UpdateChecker> logger) : BackgroundService
                 if (latestRelease == null)
                 {
                     logger.LogWarning($"Unable to find latest version on GitHub");
+
                     return;
                 }
 
@@ -58,10 +58,11 @@ public class UpdateChecker(ILogger<UpdateChecker> logger) : BackgroundService
                 var gitHubSecurityAdvisories = await GitHubRequest<List<GitHubSecurityAdvisoriesResponse>>("/repos/rogerfar/rdt-client/security-advisories", stoppingToken);
 
                 var unseenGhsaIds = gitHubSecurityAdvisories?.Where(advisory => !KnownGhsaIds.Contains(advisory.GhsaId));
-                
+
                 if (unseenGhsaIds == null)
                 {
                     logger.LogWarning($"Unable to find security advisories on GitHub");
+
                     return;
                 }
 
@@ -80,15 +81,15 @@ public class UpdateChecker(ILogger<UpdateChecker> logger) : BackgroundService
 
     private static async Task<T?> GitHubRequest<T>(String endpoint, CancellationToken cancellationToken)
     {
-            var httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.UserAgent.Add(new("RdtClient", CurrentVersion));
-            var response = await httpClient.GetStringAsync($"https://api.github.com{endpoint}", cancellationToken);
-            
-            return JsonConvert.DeserializeObject<T>(response);
+        var httpClient = new HttpClient();
+        httpClient.DefaultRequestHeaders.UserAgent.Add(new("RdtClient", CurrentVersion));
+        var response = await httpClient.GetStringAsync($"https://api.github.com{endpoint}", cancellationToken);
+
+        return JsonConvert.DeserializeObject<T>(response);
     }
 }
 
-public class GitHubReleasesResponse 
+public class GitHubReleasesResponse
 {
     [JsonProperty("name")]
     public String? Name { get; set; }
@@ -97,5 +98,5 @@ public class GitHubReleasesResponse
 public class GitHubSecurityAdvisoriesResponse
 {
     [JsonProperty("ghsa_id")]
-    public required String GhsaId { get; set; } 
+    public required String GhsaId { get; set; }
 }

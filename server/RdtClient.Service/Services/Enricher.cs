@@ -12,12 +12,12 @@ public interface IEnricher
 }
 
 /// <summary>
-/// Enriches magnet links and torrents by adding trackers from the tracker list grabber.
+///     Enriches magnet links and torrents by adding trackers from the tracker list grabber.
 /// </summary>
 public sealed class Enricher(ILogger<Enricher> logger, ITrackerListGrabber trackerListGrabber) : IEnricher
 {
     /// <summary>
-    /// Add trackers from the tracker list grabber to the magnet link.
+    ///     Add trackers from the tracker list grabber to the magnet link.
     /// </summary>
     /// <param name="magnetLink">Magnet link to add trackers to. Is not modified</param>
     /// <returns>Magnet link with additional trackers</returns>
@@ -127,7 +127,7 @@ public sealed class Enricher(ILogger<Enricher> logger, ITrackerListGrabber track
     }
 
     /// <summary>
-    /// Add trackers from the tracker list grabber to the .torrent file bytes.
+    ///     Add trackers from the tracker list grabber to the .torrent file bytes.
     /// </summary>
     /// <param name="torrentBytes">Torrent file bytes to add trackers to. Is not modified</param>
     /// <returns>Torrent file bytes with additional trackers</returns>

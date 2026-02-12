@@ -12,7 +12,7 @@ public enum TorrentFinishedAction
 
     [Description("Remove Torrent From Provider")]
     RemoveRealDebrid = 2,
-    
+
     [Description("Remove Torrent From Client")]
     RemoveClient = 3
 }

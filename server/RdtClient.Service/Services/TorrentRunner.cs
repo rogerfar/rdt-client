@@ -1,13 +1,13 @@
-﻿using Aria2NET;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Text.Json;
+using Aria2NET;
 using Microsoft.Extensions.Logging;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Helpers;
 using RdtClient.Service.Services.Downloaders;
-using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.Text.Json;
 
 namespace RdtClient.Service.Services;
 
@@ -16,12 +16,12 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
     public static readonly ConcurrentDictionary<Guid, DownloadClient> ActiveDownloadClients = new();
     public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new();
 
-    public static Boolean IsPausedForLowDiskSpace { get; set; }
-
     private readonly HttpClient _httpClient = new()
     {
         Timeout = TimeSpan.FromSeconds(10)
     };
+
+    public static Boolean IsPausedForLowDiskSpace { get; set; }
 
     public async Task Initialize()
     {
@@ -73,25 +73,30 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
         if (String.IsNullOrWhiteSpace(Settings.Get.Provider.ApiKey))
         {
             Log($"No RealDebridApiKey set in settings");
+
             return;
         }
 
         var settingDownloadLimit = Settings.Get.General.DownloadLimit;
+
         if (settingDownloadLimit < 1)
         {
             settingDownloadLimit = 1;
         }
 
         var settingUnpackLimit = Settings.Get.General.UnpackLimit;
+
         if (settingUnpackLimit < 0)
         {
             settingUnpackLimit = 0;
         }
 
         var settingDownloadPath = Settings.Get.DownloadClient.DownloadPath;
+
         if (String.IsNullOrWhiteSpace(settingDownloadPath))
         {
             logger.LogError("No DownloadPath set in settings");
+
             return;
         }
 
@@ -163,7 +168,10 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                 {
                     // Retry the download if an error is encountered.
                     LogError($"Download reported an error: {downloadClient.Error}", download, download.Torrent);
-                    Log($"Download retry count {download.RetryCount}/{download.Torrent!.DownloadRetryAttempts}, torrent retry count {download.Torrent.RetryCount}/{download.Torrent.TorrentRetryAttempts}", download, download.Torrent);
+
+                    Log($"Download retry count {download.RetryCount}/{download.Torrent!.DownloadRetryAttempts}, torrent retry count {download.Torrent.RetryCount}/{download.Torrent.TorrentRetryAttempts}",
+                        download,
+                        download.Torrent);
 
                     if (download.RetryCount < download.Torrent.DownloadRetryAttempts)
                     {
@@ -246,6 +254,7 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
             {
                 await activeDownload.Value.Cancel();
                 ActiveDownloadClients.TryRemove(activeDownload.Key, out _);
+
                 break;
             }
         }
@@ -258,6 +267,7 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
             {
                 activeUnpacks.Value.Cancel();
                 ActiveUnpackClients.TryRemove(activeUnpacks.Key, out _);
+
                 break;
             }
         }
@@ -273,6 +283,7 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                 {
                     await torrents.UpdateRetry(torrent.TorrentId, null, torrent.RetryCount);
                     Log($"Torrent reach max retry count");
+
                     continue;
                 }
 
@@ -567,14 +578,14 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                     }
 
                     // Check if we have reached the download limit, if so queue the download, but don't start it.
-                    if (TorrentRunner.ActiveUnpackClients.Count >= settingUnpackLimit)
+                    if (ActiveUnpackClients.Count >= settingUnpackLimit)
                     {
                         Log($"Not starting unpack because there are already the max number of unpacks active", download, torrent);
 
                         continue;
                     }
 
-                    if (TorrentRunner.ActiveUnpackClients.ContainsKey(download.DownloadId))
+                    if (ActiveUnpackClients.ContainsKey(download.DownloadId))
                     {
                         Log($"Not starting unpack because this download is already active", download, torrent);
 
@@ -596,7 +607,7 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                     // Start the unpacking process
                     var unpackClient = new UnpackClient(download, downloadPath);
 
-                    if (TorrentRunner.ActiveUnpackClients.TryAdd(download.DownloadId, unpackClient))
+                    if (ActiveUnpackClients.TryAdd(download.DownloadId, unpackClient))
                     {
                         Log($"Starting unpack", download, torrent);
 
@@ -647,8 +658,8 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                 }
 
                 // Check if torrent is complete, or if we don't want to download any files to the host.
-                if ((torrent.Downloads.Count > 0) ||
-                    torrent.RdStatus == TorrentStatus.Finished && torrent.HostDownloadAction == TorrentHostDownloadAction.DownloadNone)
+                if (torrent.Downloads.Count > 0 ||
+                    (torrent.RdStatus == TorrentStatus.Finished && torrent.HostDownloadAction == TorrentHostDownloadAction.DownloadNone))
                 {
                     var completeCount = torrent.Downloads.Count(m => m.Completed != null);
 
@@ -659,7 +670,7 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
 
                     if (totalDownloadBytes > 0)
                     {
-                        completePerc = (Int32)((Double)totalDoneBytes / totalDownloadBytes * 100);
+                        completePerc = (Int32)(((Double)totalDoneBytes / totalDownloadBytes) * 100);
                     }
 
                     if (completeCount == torrent.Downloads.Count)
