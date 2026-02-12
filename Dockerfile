@@ -15,7 +15,7 @@ COPY root ./root
 RUN \
    cd client && \
    echo "**** Building Code  ****" && \
-   npm ci && \
+   npm install && \
    npx ng build --output-path=out
 
 RUN ls -FCla /appclient/root

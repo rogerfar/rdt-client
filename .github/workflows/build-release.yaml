@@ -28,11 +28,11 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '9'
+          dotnet-version: '10'
       
       - name: Install Frontend Dependencies
         working-directory: client
-        run: npm ci
+        run: npm install
 
       - name: Build Frontend
         working-directory: client
