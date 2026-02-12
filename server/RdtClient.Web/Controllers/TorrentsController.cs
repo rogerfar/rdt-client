@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MonoTorrent;
+using RdtClient.Data.Models.Internal;
 using RdtClient.Data.Models.TorrentClient;
+using RdtClient.Service.BackgroundServices;
 using RdtClient.Service.Helpers;
 using RdtClient.Service.Services;
 using Torrent = RdtClient.Data.Models.Data.Torrent;
@@ -47,9 +49,9 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
 
     [HttpGet]
     [Route("DiskSpaceStatus")]
-    public ActionResult<RdtClient.Data.Models.Internal.DiskSpaceStatus?> GetDiskSpaceStatus()
+    public ActionResult<DiskSpaceStatus?> GetDiskSpaceStatus()
     {
-        var status = RdtClient.Service.BackgroundServices.DiskSpaceMonitor.GetCurrentStatus();
+        var status = DiskSpaceMonitor.GetCurrentStatus();
         return Ok(status);
     }
 

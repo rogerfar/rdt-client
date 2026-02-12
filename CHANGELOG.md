@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased
 
+## [2.0.120] - 2026-02-11
+### Changed
+- Upgrade to .NET 10.
+- Upgrade to Angular 21.
+
 ## [2.0.119] - 2025-10-13
 ### Removed
 - Removed internal downloader from the GUI.

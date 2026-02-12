@@ -1,5 +1,5 @@
 # Stage 1 - Build the frontend
-FROM node:22.16.0-alpine3.22 AS node-build-env
+FROM node:lts-alpine AS node-build-env
 ARG TARGETPLATFORM
 ENV TARGETPLATFORM=${TARGETPLATFORM:-linux/amd64}
 ARG BUILDPLATFORM
@@ -21,7 +21,7 @@ RUN \
 RUN ls -FCla /appclient/root
 
 # Stage 2 - Build the backend
-FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS dotnet-build-env
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS dotnet-build-env
 ARG TARGETPLATFORM
 ENV TARGETPLATFORM=${TARGETPLATFORM:-linux/amd64}
 ARG BUILDPLATFORM
@@ -67,14 +67,14 @@ RUN \
 
 RUN \
    if [ "$TARGETPLATFORM" = "linux/arm/v7" ] ; then \
-   wget https://download.visualstudio.microsoft.com/download/pr/59a041e1-921e-405e-8092-95333f80f9ca/63e83e3feb70e05ca05ed5db3c579be2/aspnetcore-runtime-9.0.0-linux-musl-arm.tar.gz && \
-   tar zxf aspnetcore-runtime-9.0.0-linux-musl-arm.tar.gz -C /usr/share/dotnet ; \
+   wget https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/10.0.0/aspnetcore-runtime-10.0.0-linux-musl-arm.tar.gz && \
+   tar zxf aspnetcore-runtime-10.0.0-linux-musl-arm.tar.gz -C /usr/share/dotnet ; \
    elif [ "$TARGETPLATFORM" = "linux/arm64" ] ; then \
-   wget https://download.visualstudio.microsoft.com/download/pr/e137f557-83cb-4f55-b1c8-e5f59ccd3cba/b8ba6f2ab96d0961757b71b00c201f31/aspnetcore-runtime-9.0.0-linux-musl-arm64.tar.gz && \
-   tar zxf aspnetcore-runtime-9.0.0-linux-musl-arm64.tar.gz -C /usr/share/dotnet ; \
+   wget https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/10.0.0/aspnetcore-runtime-10.0.0-linux-musl-arm64.tar.gz && \
+   tar zxf aspnetcore-runtime-10.0.0-linux-musl-arm64.tar.gz -C /usr/share/dotnet ; \
    else \
-   wget https://download.visualstudio.microsoft.com/download/pr/86d7a513-fe71-4f37-b9ec-fdcf5566cce8/e72574fc82d7496c73a61f411d967d8e/aspnetcore-runtime-9.0.0-linux-musl-x64.tar.gz && \
-   tar zxf aspnetcore-runtime-9.0.0-linux-musl-x64.tar.gz -C /usr/share/dotnet ; \
+   wget https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/10.0.0/aspnetcore-runtime-10.0.0-linux-musl-x64.tar.gz && \
+   tar zxf aspnetcore-runtime-10.0.0-linux-musl-x64.tar.gz -C /usr/share/dotnet ; \
    fi
 
 RUN \

@@ -35,7 +35,6 @@ public class BezzadDownloader : IDownloader
             MaxTryAgainOnFailure = 5,
             RangeDownload = false,
             ClearPackageOnCompletionWithFailure = true,
-            ReserveStorageSpaceBeforeStartingDownload = false,
             CheckDiskSizeBeforeDownload = false,
             MaximumMemoryBufferBytes = 1024 * 1024 * 10,
             RequestConfiguration =
@@ -171,7 +170,8 @@ public class BezzadDownloader : IDownloader
         _downloadConfiguration.MaximumBytesPerSecond = settingDownloadMaxSpeed;
         _downloadConfiguration.ParallelDownload = settingParallelCount > 1;
         _downloadConfiguration.ParallelCount = settingParallelCount;
-        _downloadConfiguration.Timeout = settingDownloadTimeout;
+        _downloadConfiguration.BlockTimeout = settingDownloadTimeout;
+        _downloadConfiguration.HttpClientTimeout = settingDownloadTimeout;
     }
 
     private async Task StartTimer()
