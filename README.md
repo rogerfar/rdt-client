@@ -6,7 +6,7 @@ This is a web interface to manage your torrents on Real-Debrid, AllDebrid, Premi
 - Download all files from Real-Debrid, AllDebrid, Premiumize or TorBox to your local machine automatically
 - Unpack all files when finished downloading
 - Implements a fake qBittorrent API so you can hook up other applications like Sonarr, Radarr or Couchpotato.
-- Built with Angular 15 and .NET 9
+- Built with Angular 21 and .NET 10
 
 **You will need a Premium service at Real-Debrid, AllDebrid, Premiumize or Torbox!**
 
@@ -34,7 +34,7 @@ Instead of running in Docker you can install it as a service in Windows or Linux
 
 ## Windows Service
 
-1. Make sure you have the **ASP.NET Core Runtime 9.0.0** installed: [https://dotnet.microsoft.com/download/dotnet/9.0](https://dotnet.microsoft.com/download/dotnet/9.0)
+1. Make sure you have the **ASP.NET Core Runtime 10.0.0** installed: [https://dotnet.microsoft.com/download/dotnet/10.0](https://dotnet.microsoft.com/download/dotnet/10.0)
 2. Get the latest zip file from the Releases page and extract it to your host.
 3. Open the `appsettings.json` file and replace the `LogLevel` `Path` to a path on your host.
 4. In `appsettings.json` replace the `Database` `Path` to a path on your host.
@@ -56,7 +56,7 @@ Instead of running in Docker you can install it as a service in Linux.
 
     ```rm packages-microsoft-prod.deb```  
 
-    ```sudo apt-get update && sudo apt-get install -y dotnet-sdk-9.0```  
+    ```sudo apt-get update && sudo apt-get install -y dotnet-sdk-10.0```  
 
 2. Get latest archive from [releases](https://github.com/rogerfar/rdt-client/releases):  
 ```wget <zip_url>```
@@ -193,13 +193,13 @@ By default the application runs in the root of your hosted address (i.e. https:/
 - NodeJS
 - NPM
 - Angular CLI
-- .NET 9
-- Visual Studio 2022
+- .NET 10
+- Visual Studio 2025
 - (optional) Resharper
 
 1. Open the client folder project in VS Code and run `npm install`.
 1. To debug run `ng serve`, to build run `ng build -c production`.
-1. Open the Visual Studio 2019 project `RdtClient.sln` and `Publish` the `RdtClient.Web` to the given `PublishFolder` target.
+1. Open the Visual Studio 2025 project `RdtClient.sln` and `Publish` the `RdtClient.Web` to the given `PublishFolder` target.
 1. When debugging, make sure to run `RdtClient.Web.dll` and not `IISExpress`.
 1. The result is found in `Publish`.
 
