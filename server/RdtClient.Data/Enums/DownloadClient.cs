@@ -14,5 +14,5 @@ public enum DownloadClient
     Symlink,
 
     [Description("Synology DownloadStation")]
-    DownloadStation,
+    DownloadStation
 }

@@ -1,106 +1,33 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
+using MonoTorrent;
 using Newtonsoft.Json;
-using TorBoxNET;
 using RdtClient.Data.Enums;
-using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Data.Models.Data;
+using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.Helpers;
+using TorBoxNET;
+using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services.TorrentClients;
 
 public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter) : ITorrentClient
 {
     private TimeSpan? _offset;
-    private TorBoxNetClient GetClient()
-    {
-        try
-        {
-            var apiKey = Settings.Get.Provider.ApiKey;
-
-            if (String.IsNullOrWhiteSpace(apiKey))
-            {
-                throw new("TorBox API Key not set in the settings");
-            }
-
-            var httpClient = httpClientFactory.CreateClient(); 
-            httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
-
-            var torBoxNetClient = new TorBoxNetClient(null, httpClient, 5);
-            torBoxNetClient.UseApiAuthentication(apiKey);
-
-            // Get the server time to fix up the timezones on results
-            if (_offset == null)
-            {
-                var serverTime = DateTimeOffset.UtcNow;
-                _offset = serverTime.Offset;
-            }
-
-            return torBoxNetClient;
-        }
-        catch (AggregateException ae)
-        {
-            foreach (var inner in ae.InnerExceptions)
-            {
-                logger.LogError(inner, $"The connection to TorBox has failed: {inner.Message}");
-            }
-
-            throw;
-        }
-        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
-        {
-            logger.LogError(ex, $"The connection to TorBox has timed out: {ex.Message}");
-
-            throw;
-        }
-        catch (TaskCanceledException ex)
-        {
-            logger.LogError(ex, $"The connection to TorBox has timed out: {ex.Message}");
-
-            throw;
-        }
-    }
-
-    private TorrentClientTorrent Map(TorrentInfoResult torrent)
-    {
-        return new()
-        {
-            Id = torrent.Hash,
-            Filename = torrent.Name,
-            OriginalFilename = torrent.Name,
-            Hash = torrent.Hash,
-            Bytes = torrent.Size,
-            OriginalBytes = torrent.Size,
-            Host = torrent.DownloadPresent.ToString(),
-            Split = 0,
-            Progress = (Int64)(torrent.Progress * 100.0),
-            Status = torrent.DownloadState,
-            Added = ChangeTimeZone(torrent.CreatedAt)!.Value,
-            Files = (torrent.Files ?? []).Select(m => new TorrentClientFile
-            {
-                Path = String.Join("/", m.Name.Split('/').Skip(1)),
-                Bytes = m.Size,
-                Id = m.Id,
-                Selected = true
-            }).ToList(),
-            Links = [],
-            Ended = ChangeTimeZone(torrent.UpdatedAt),
-            Speed = torrent.DownloadSpeed,
-            Seeders = torrent.Seeds,
-        };
-    }
 
     public async Task<IList<TorrentClientTorrent>> GetTorrents()
     {
         var torrents = new List<TorrentInfoResult>();
 
         var currentTorrents = await GetClient().Torrents.GetCurrentAsync(true);
+
         if (currentTorrents != null)
         {
             torrents.AddRange(currentTorrents);
         }
 
         var queuedTorrents = await GetClient().Torrents.GetQueuedAsync(true);
+
         if (queuedTorrents != null)
         {
             torrents.AddRange(queuedTorrents);
@@ -124,11 +51,12 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
     {
         var user = await GetClient().User.GetAsync(true);
 
-        var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, user.Data?.Settings?.SeedTorrents ?? 3, false);
+        var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, user.Data?.Settings?.SeedTorrents ?? 3);
 
         if (result.Error == "ACTIVE_LIMIT")
         {
-            var magnetLinkInfo = MonoTorrent.MagnetLink.Parse(magnetLink);
+            var magnetLinkInfo = MagnetLink.Parse(magnetLink);
+
             return magnetLinkInfo.InfoHashes.V1!.ToHex().ToLowerInvariant();
         }
 
@@ -140,11 +68,13 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
         var user = await GetClient().User.GetAsync(true);
 
         var result = await GetClient().Torrents.AddFileAsync(bytes, user.Data?.Settings?.SeedTorrents ?? 3);
+
         if (result.Error == "ACTIVE_LIMIT")
         {
             using var stream = new MemoryStream(bytes);
 
             var torrent = await MonoTorrent.Torrent.LoadAsync(stream);
+
             return torrent.InfoHashes.V1!.ToHex().ToLowerInvariant();
         }
 
@@ -153,15 +83,16 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     public async Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
     {
-        var availability = await GetClient().Torrents.GetAvailabilityAsync(hash, listFiles: true);
+        var availability = await GetClient().Torrents.GetAvailabilityAsync(hash, true);
 
         if (availability.Data != null && availability.Data.Count > 0)
         {
             return (availability.Data[0]?.Files ?? []).Select(file => new TorrentClientAvailableFile
-            {
-                Filename = file.Name,
-                Filesize = file.Size
-            }).ToList();
+                                                      {
+                                                          Filename = file.Name,
+                                                          Filesize = file.Size
+                                                      })
+                                                      .ToList();
         }
 
         return [];
@@ -265,7 +196,6 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
                     _ => TorrentStatus.Error
                 };
             }
-
         }
         catch (Exception ex)
         {
@@ -284,7 +214,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     public async Task<IList<DownloadInfo>?> GetDownloadInfos(Torrent torrent)
     {
-        var torrentId = await GetClient().Torrents.GetHashInfoAsync(torrent.Hash, skipCache: true);
+        var torrentId = await GetClient().Torrents.GetHashInfoAsync(torrent.Hash, true);
         var downloadableFiles = torrent.Files.Where(file => fileFilter.IsDownloadable(torrent, file.Path, file.Bytes)).ToList();
 
         if (downloadableFiles.Count == torrent.Files.Count && torrent.DownloadClient != Data.Enums.DownloadClient.Symlink && Settings.Get.Provider.PreferZippedDownloads)
@@ -316,8 +246,87 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
     {
         // FileName is set in GetDownlaadInfos
         Debug.Assert(download.FileName != null);
-        
+
         return Task.FromResult(download.FileName);
+    }
+
+    private TorBoxNetClient GetClient()
+    {
+        try
+        {
+            var apiKey = Settings.Get.Provider.ApiKey;
+
+            if (String.IsNullOrWhiteSpace(apiKey))
+            {
+                throw new("TorBox API Key not set in the settings");
+            }
+
+            var httpClient = httpClientFactory.CreateClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
+
+            var torBoxNetClient = new TorBoxNetClient(null, httpClient, 5);
+            torBoxNetClient.UseApiAuthentication(apiKey);
+
+            // Get the server time to fix up the timezones on results
+            if (_offset == null)
+            {
+                var serverTime = DateTimeOffset.UtcNow;
+                _offset = serverTime.Offset;
+            }
+
+            return torBoxNetClient;
+        }
+        catch (AggregateException ae)
+        {
+            foreach (var inner in ae.InnerExceptions)
+            {
+                logger.LogError(inner, $"The connection to TorBox has failed: {inner.Message}");
+            }
+
+            throw;
+        }
+        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+        {
+            logger.LogError(ex, $"The connection to TorBox has timed out: {ex.Message}");
+
+            throw;
+        }
+        catch (TaskCanceledException ex)
+        {
+            logger.LogError(ex, $"The connection to TorBox has timed out: {ex.Message}");
+
+            throw;
+        }
+    }
+
+    private TorrentClientTorrent Map(TorrentInfoResult torrent)
+    {
+        return new()
+        {
+            Id = torrent.Hash,
+            Filename = torrent.Name,
+            OriginalFilename = torrent.Name,
+            Hash = torrent.Hash,
+            Bytes = torrent.Size,
+            OriginalBytes = torrent.Size,
+            Host = torrent.DownloadPresent.ToString(),
+            Split = 0,
+            Progress = (Int64)(torrent.Progress * 100.0),
+            Status = torrent.DownloadState,
+            Added = ChangeTimeZone(torrent.CreatedAt)!.Value,
+            Files = (torrent.Files ?? []).Select(m => new TorrentClientFile
+                                         {
+                                             Path = String.Join("/", m.Name.Split('/').Skip(1)),
+                                             Bytes = m.Size,
+                                             Id = m.Id,
+                                             Selected = true
+                                         })
+                                         .ToList(),
+            Links = [],
+            Ended = ChangeTimeZone(torrent.UpdatedAt),
+            Speed = torrent.DownloadSpeed,
+            Seeders = torrent.Seeds
+        };
     }
 
     private DateTimeOffset? ChangeTimeZone(DateTimeOffset? dateTimeOffset)
@@ -332,7 +341,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
 
     private async Task<TorrentClientTorrent> GetInfo(String torrentHash)
     {
-        var result = await GetClient().Torrents.GetHashInfoAsync(torrentHash, skipCache: true);
+        var result = await GetClient().Torrents.GetHashInfoAsync(torrentHash, true);
 
         return Map(result!);
     }
@@ -346,6 +355,7 @@ public class TorBoxTorrentClient(ILogger<TorBoxTorrentClient> logger, IHttpClien
             var innerFolder = Directory.GetDirectories(hashDir)[0];
 
             var moveDir = extractPath;
+
             if (!extractPath.EndsWith(_torrent.RdName!))
             {
                 moveDir = hashDir;

@@ -21,7 +21,7 @@ public class WatchFolderChecker(ILogger<WatchFolderChecker> logger, IServiceProv
 
         using var scope = serviceProvider.CreateScope();
         var torrentService = scope.ServiceProvider.GetRequiredService<Torrents>();
-            
+
         logger.LogInformation("WatchFolderChecker started.");
 
         while (!stoppingToken.IsCancellationRequested)
@@ -112,7 +112,7 @@ public class WatchFolderChecker(ILogger<WatchFolderChecker> logger, IServiceProv
                         {
                             Directory.CreateDirectory(processedStorePath);
                         }
-                        
+
                         var processedPath = Path.Combine(processedStorePath, fileInfo.Name);
 
                         if (File.Exists(processedPath))
@@ -147,6 +147,7 @@ public class WatchFolderChecker(ILogger<WatchFolderChecker> logger, IServiceProv
                                        fileInfo.Name,
                                        errorStorePath);
                         }
+
                         File.Move(torrentFile, processedPath);
                     }
                 }
@@ -169,6 +170,7 @@ public class WatchFolderChecker(ILogger<WatchFolderChecker> logger, IServiceProv
         {
             return true;
         }
+
         return false;
     }
 }

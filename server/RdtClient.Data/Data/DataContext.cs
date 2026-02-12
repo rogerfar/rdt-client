@@ -15,7 +15,7 @@ public class DataContext(DbContextOptions options) : IdentityDbContext(options)
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-            
+
         var cascadeFKs = builder.Model.GetEntityTypes()
                                 .SelectMany(t => t.GetForeignKeys())
                                 .Where(fk => !fk.IsOwnership && fk.DeleteBehavior == DeleteBehavior.Cascade);

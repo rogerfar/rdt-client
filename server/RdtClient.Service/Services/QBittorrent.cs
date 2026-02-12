@@ -194,8 +194,6 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
 
         var prio = 0;
 
-        Double downloadProgress = 0;
-
         foreach (var torrent in allTorrents)
         {
             var downloadPath = savePath;
@@ -206,48 +204,46 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             }
 
             var torrentPath = downloadPath;
+
             if (!String.IsNullOrWhiteSpace(torrent.RdName))
             {
                 // Alldebrid stores single file torrents at the root folder.
                 if (torrent.ClientKind == Provider.AllDebrid && torrent.Files.Count == 1)
                 {
                     torrentPath = Path.Combine(downloadPath, torrent.Files[0].Path);
-                } else
+                }
+                else
                 {
                     torrentPath = Path.Combine(downloadPath, torrent.RdName) + Path.DirectorySeparatorChar;
                 }
             }
 
-            Int64 bytesDone = 0;
-            Int64 bytesTotal = 0;
-            Int64 speed = 0;
-            Double rdProgress = 0;
-            try
-            {
-                rdProgress = (torrent.RdProgress ?? 0.0) / 100.0;
-                bytesTotal = torrent.RdSize ?? 1;
-                bytesDone = (Int64) (bytesTotal * rdProgress);
-                speed = torrent.RdSpeed ?? 0;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, $"""
-                Error calculating progress:
-                RdProgress: {torrent.RdProgress}
-                RdSize: {torrent.RdSize}
-                RdSpeed: {torrent.RdSpeed}
-                """);
-            }
+            var rdProgress = Math.Clamp(torrent.RdProgress ?? 0.0, 0.0, 100.0) / 100.0;
+            var bytesTotal = torrent.RdSize ?? 0;
+            var speed = torrent.RdSpeed ?? 0;
+            var bytesDone = (Int64) (bytesTotal * rdProgress);
 
-            if (torrent.Downloads.Count > 0)
+            Double downloadProgress = 0;
+            if (torrent.Downloads is { Count: > 0 })
             {
-                bytesDone = torrent.Downloads.Sum(m => m.BytesDone);
-                bytesTotal = torrent.Downloads.Sum(m => m.BytesTotal);
+                var dlBytesDone = torrent.Downloads.Sum(m => m.BytesDone);
+                var dlBytesTotal = torrent.Downloads.Sum(m => m.BytesTotal);
                 speed = (Int32) torrent.Downloads.Average(m => m.Speed);
-                downloadProgress = bytesTotal > 0 ? (Double) bytesDone / bytesTotal : 0;
+                downloadProgress = bytesTotal > 0 ? Math.Clamp((Double) dlBytesDone / dlBytesTotal, 0.0, 1.0) : 0;
             }
 
             var progress = (rdProgress + downloadProgress) / 2.0;
+            var remaining = TimeSpan.Zero;
+            var bytesRemaining = bytesTotal - bytesDone;
+            if (speed > 0 && bytesRemaining > 0)
+            {
+                remaining = TimeSpan.FromSeconds(bytesRemaining / (Double)speed);
+                // In case there is clock skew
+                if (remaining < TimeSpan.Zero)
+                {
+                    remaining = TimeSpan.Zero;
+                }
+            }
 
             var result = new TorrentInfo
             {
@@ -263,7 +259,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
                 Dlspeed = speed,
                 Downloaded = bytesDone,
                 DownloadedSession = bytesDone,
-                Eta = 0,
+                Eta = (Int64)remaining.TotalSeconds,
                 FlPiecePrio = false,
                 ForceStart = false,
                 Hash = torrent.Hash,
@@ -288,7 +284,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
                 State = "downloading",
                 SuperSeeding = false,
                 Tags = "",
-                TimeActive = (Int64) (DateTimeOffset.UtcNow - torrent.Added).TotalSeconds,
+                TimeActive = (Int64)(DateTimeOffset.UtcNow - torrent.Added).TotalSeconds,
                 TotalSize = bytesTotal,
                 Tracker = "udp://tracker.opentrackr.org:1337",
                 UpLimit = -1,
@@ -364,7 +360,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
         {
             bytesDone = torrent.Downloads.Sum(m => m.BytesDone);
             bytesTotal = torrent.Downloads.Sum(m => m.BytesTotal);
-            speed = (Int32) torrent.Downloads.Average(m => m.Speed);
+            speed = (Int32)torrent.Downloads.Average(m => m.Speed);
         }
 
         var result = new TorrentProperties
@@ -392,7 +388,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             Seeds = 100,
             SeedsTotal = 100,
             ShareRatio = 9999,
-            TimeElapsed = (Int64) (DateTimeOffset.UtcNow - torrent.Added).TotalSeconds,
+            TimeElapsed = (Int64)(DateTimeOffset.UtcNow - torrent.Added).TotalSeconds,
             TotalDownloaded = bytesDone,
             TotalDownloadedSession = bytesDone,
             TotalSize = bytesTotal,
@@ -513,8 +509,8 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
         var allTorrents = await torrents.Get();
 
         var torrentsToGroup = allTorrents.Where(m => !String.IsNullOrWhiteSpace(m.Category))
-                                      .Select(m => m.Category!.ToLower())
-                                      .ToList();
+                                         .Select(m => m.Category!.ToLower())
+                                         .ToList();
 
         var categoryList = (Settings.Get.General.Categories ?? "")
                            .Split(",", StringSplitOptions.RemoveEmptyEntries)

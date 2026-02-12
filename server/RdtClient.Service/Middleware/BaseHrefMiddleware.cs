@@ -5,6 +5,8 @@ namespace RdtClient.Service.Middleware;
 
 public partial class BaseHrefMiddleware(RequestDelegate next, String basePath)
 {
+    private readonly String _basePath = $"/{basePath.TrimStart('/').TrimEnd('/')}/";
+
     [GeneratedRegex(@"<base href=""/""")]
     private partial Regex BodyRegex();
 
@@ -13,8 +15,6 @@ public partial class BaseHrefMiddleware(RequestDelegate next, String basePath)
 
     [GeneratedRegex("(<link.*?href=\")(.*?)(\".*?>)")]
     private partial Regex LinkRegex();
-
-    private readonly String _basePath = $"/{basePath.TrimStart('/').TrimEnd('/')}/";
 
     public async Task InvokeAsync(HttpContext context)
     {

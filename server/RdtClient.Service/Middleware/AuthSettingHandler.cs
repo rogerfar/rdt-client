@@ -6,12 +6,11 @@ namespace RdtClient.Service.Middleware;
 
 public class AuthSettingRequirement : IAuthorizationRequirement
 {
-
 }
 
 public class AuthSettingHandler : AuthorizationHandler<AuthSettingRequirement>
 {
-    protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, AuthSettingRequirement requirement) 
+    protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, AuthSettingRequirement requirement)
     {
         if (context.User.Identity?.IsAuthenticated == true)
         {
@@ -23,6 +22,6 @@ public class AuthSettingHandler : AuthorizationHandler<AuthSettingRequirement>
             context.Succeed(requirement);
         }
 
-        return Task.CompletedTask; 
+        return Task.CompletedTask;
     }
 }

@@ -26,10 +26,10 @@ public class AuthController(Authentication authentication, Settings settings) : 
             {
                 return StatusCode(402, "Setup required");
             }
-                
+
             return StatusCode(403);
         }
-            
+
         return Ok();
     }
 
@@ -49,7 +49,7 @@ public class AuthController(Authentication authentication, Settings settings) : 
         {
             return StatusCode(401);
         }
-        
+
         if (String.IsNullOrEmpty(request.UserName) || String.IsNullOrEmpty(request.Password))
         {
             return BadRequest("Invalid UserName or Password");
@@ -61,7 +61,7 @@ public class AuthController(Authentication authentication, Settings settings) : 
         {
             return BadRequest(registerResult.Errors.First().Description);
         }
-            
+
         await authentication.Login(request.UserName, request.Password);
 
         return Ok();
@@ -119,15 +119,16 @@ public class AuthController(Authentication authentication, Settings settings) : 
 
         return Ok();
     }
-        
+
     [Route("Logout")]
     [HttpPost]
     public async Task<ActionResult> Logout()
     {
         await authentication.Logout();
+
         return Ok();
     }
-                
+
     [Route("Update")]
     [HttpPost]
     [Authorize(Policy = "AuthSetting")]

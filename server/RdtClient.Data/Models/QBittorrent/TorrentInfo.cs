@@ -24,7 +24,7 @@ public class TorrentInfo
 
     [JsonPropertyName("completion_on")]
     public Int64? CompletionOn { get; set; }
-            
+
     [JsonPropertyName("content_path")]
     public String? ContentPath { get; set; }
 

@@ -1,5 +1,5 @@
-﻿using RdtClient.Data.Enums;
-using System.ComponentModel;
+﻿using System.ComponentModel;
+using RdtClient.Data.Enums;
 
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
@@ -155,6 +155,7 @@ http://127.0.0.1:6800/jsonrpc.")]
     [DisplayName("Synology DownloadStation Username")]
     [Description("The username to use when connecting to the Synology DownloadStation.")]
     public String? DownloadStationUsername { get; set; } = null;
+
     [DisplayName("Synology DownloadStation Password")]
     [Description("The password to use when connecting to the Synology DownloadStation.")]
     public String? DownloadStationPassword { get; set; } = null;
@@ -202,7 +203,7 @@ or
     public String ApiKey { get; set; } = "";
 
     /// <summary>
-    /// API hostname to use <b>for Real Debrid only</b> 
+    ///     API hostname to use <b>for Real Debrid only</b>
     /// </summary>
     [DisplayName("API Hostname (RD only)")]
     [Description("Use this instead of the normal hostname for Real Debrid API requests. Only used by Real Debrid. Leave blank to use default.")]
@@ -281,7 +282,7 @@ public class DbSettingsDefaultsWithCategory : DbSettingsDefaults
     [DisplayName("Post Download Action")]
     [Description("When all files are downloaded from the provider to the host, perform this action. Does not apply when using the symlink downloader.")]
     public TorrentFinishedAction FinishedAction { get; set; } = TorrentFinishedAction.RemoveAllTorrents;
-    
+
     [DisplayName("Finished Action Delay")]
     [Description("When all files are downloaded from the provider to the host, wait this many minutes before performing the action above.")]
     public Int32 FinishedActionDelay { get; set; } = 0;

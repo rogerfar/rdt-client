@@ -15,84 +15,6 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
 {
     private TimeSpan? _offset;
 
-    private RdNetClient GetClient()
-    {
-        try
-        {
-            var apiKey = Settings.Get.Provider.ApiKey;
-
-            if (String.IsNullOrWhiteSpace(apiKey))
-            {
-                throw new("Real-Debrid API Key not set in the settings");
-            }
-
-            var httpClient = httpClientFactory.CreateClient(DiConfig.RD_CLIENT);
-            httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
-
-            var rdtNetClient = new RdNetClient(null, httpClient, 5, Settings.Get.Provider.ApiHostname);
-            rdtNetClient.UseApiAuthentication(apiKey);
-
-            // Get the server time to fix up the timezones on results
-            if (_offset == null)
-            {
-                var serverTime = rdtNetClient.Api.GetIsoTimeAsync().Result;
-                _offset = serverTime.Offset;
-            }
-
-            return rdtNetClient;
-        }
-        catch (AggregateException ae)
-        {
-            foreach (var inner in ae.InnerExceptions)
-            {
-                logger.LogError(inner, $"The connection to RealDebrid has failed: {inner.Message}");
-            }
-
-            throw;
-        }
-        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
-        {
-            logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
-
-            throw;
-        }
-        catch (TaskCanceledException ex)
-        {
-            logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
-
-            throw; 
-        }
-    }
-
-    private TorrentClientTorrent Map(Torrent torrent)
-    {
-        return new()
-        {
-            Id = torrent.Id,
-            Filename = torrent.Filename,
-            OriginalFilename = torrent.OriginalFilename,
-            Hash = torrent.Hash,
-            Bytes = torrent.Bytes,
-            OriginalBytes = torrent.OriginalBytes,
-            Host = torrent.Host,
-            Split = torrent.Split,
-            Progress = torrent.Progress,
-            Status = torrent.Status,
-            Added = ChangeTimeZone(torrent.Added)!.Value,
-            Files = (torrent.Files ?? []).Select(m => new TorrentClientFile
-            {
-                Path = m.Path,
-                Bytes = m.Bytes,
-                Id = m.Id,
-                Selected = m.Selected
-            }).ToList(),
-            Links = torrent.Links,
-            Ended = ChangeTimeZone(torrent.Ended),
-            Speed = torrent.Speed,
-            Seeders = torrent.Seeders,
-        };
-    }
-
     public async Task<IList<TorrentClientTorrent>> GetTorrents()
     {
         var offset = 0;
@@ -118,7 +40,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
     public async Task<TorrentClientUser> GetUser()
     {
         var user = await GetClient().User.GetAsync();
-            
+
         return new()
         {
             Username = user.Username,
@@ -166,7 +88,6 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
             Log("Selecting files", torrent);
             files = [.. torrent.Files];
         }
-
 
         files = files.Where(f => fileFilter.IsDownloadable(torrent, f.Path, f.Bytes)).ToList();
 
@@ -310,8 +231,9 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
             Log($"{link}", torrent);
         }
 
-        Log($"Torrent has {torrent.Files.Count(m => m.Selected)} selected files out of {torrent.Files.Count} files, found {downloadLinks.Count} links, torrent ended: {torrent.RdEnded}", torrent);
-        
+        Log($"Torrent has {torrent.Files.Count(m => m.Selected)} selected files out of {torrent.Files.Count} files, found {downloadLinks.Count} links, torrent ended: {torrent.RdEnded}",
+            torrent);
+
         // Check if all the links are set that have been selected
         if (torrent.Files.Count(m => m.Selected) == downloadLinks.Count)
         {
@@ -344,7 +266,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         }
 
         Log($"Did not find any suiteable download links", torrent);
-            
+
         return null;
     }
 
@@ -359,6 +281,85 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         var uri = new Uri(download.Link);
 
         return Task.FromResult(HttpUtility.UrlDecode(uri.Segments.Last()));
+    }
+
+    private RdNetClient GetClient()
+    {
+        try
+        {
+            var apiKey = Settings.Get.Provider.ApiKey;
+
+            if (String.IsNullOrWhiteSpace(apiKey))
+            {
+                throw new("Real-Debrid API Key not set in the settings");
+            }
+
+            var httpClient = httpClientFactory.CreateClient(DiConfig.RD_CLIENT);
+            httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
+
+            var rdtNetClient = new RdNetClient(null, httpClient, 5, Settings.Get.Provider.ApiHostname);
+            rdtNetClient.UseApiAuthentication(apiKey);
+
+            // Get the server time to fix up the timezones on results
+            if (_offset == null)
+            {
+                var serverTime = rdtNetClient.Api.GetIsoTimeAsync().Result;
+                _offset = serverTime.Offset;
+            }
+
+            return rdtNetClient;
+        }
+        catch (AggregateException ae)
+        {
+            foreach (var inner in ae.InnerExceptions)
+            {
+                logger.LogError(inner, $"The connection to RealDebrid has failed: {inner.Message}");
+            }
+
+            throw;
+        }
+        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+        {
+            logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
+
+            throw;
+        }
+        catch (TaskCanceledException ex)
+        {
+            logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
+
+            throw;
+        }
+    }
+
+    private TorrentClientTorrent Map(Torrent torrent)
+    {
+        return new()
+        {
+            Id = torrent.Id,
+            Filename = torrent.Filename,
+            OriginalFilename = torrent.OriginalFilename,
+            Hash = torrent.Hash,
+            Bytes = torrent.Bytes,
+            OriginalBytes = torrent.OriginalBytes,
+            Host = torrent.Host,
+            Split = torrent.Split,
+            Progress = torrent.Progress,
+            Status = torrent.Status,
+            Added = ChangeTimeZone(torrent.Added)!.Value,
+            Files = (torrent.Files ?? []).Select(m => new TorrentClientFile
+                                         {
+                                             Path = m.Path,
+                                             Bytes = m.Bytes,
+                                             Id = m.Id,
+                                             Selected = m.Selected
+                                         })
+                                         .ToList(),
+            Links = torrent.Links,
+            Ended = ChangeTimeZone(torrent.Ended),
+            Speed = torrent.Speed,
+            Seeders = torrent.Seeders
+        };
     }
 
     private DateTimeOffset? ChangeTimeZone(DateTimeOffset? dateTimeOffset)

@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using RdtClient.Data.Data;
 using RdtClient.Service.Services;
 
-
 namespace RdtClient.Service.BackgroundServices;
 
 public class Startup(IServiceProvider serviceProvider) : IHostedService
@@ -16,7 +15,7 @@ public class Startup(IServiceProvider serviceProvider) : IHostedService
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         var version = Assembly.GetEntryAssembly()?.GetName().Version;
-        
+
         using var scope = serviceProvider.CreateScope();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Startup>>();
 
@@ -32,5 +31,8 @@ public class Startup(IServiceProvider serviceProvider) : IHostedService
         Ready = true;
     }
 
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
 }

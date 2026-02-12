@@ -9,6 +9,7 @@ using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Helpers;
 using RdtClient.Service.Services;
 using RdtClient.Service.Services.Downloaders;
+using DownloadClient = RdtClient.Data.Enums.DownloadClient;
 
 namespace RdtClient.Web.Controllers;
 
@@ -21,6 +22,7 @@ public class SettingsController(Settings settings, Torrents torrents) : Controll
     public ActionResult Get()
     {
         var result = SettingData.GetAll();
+
         return Ok(result);
     }
 
@@ -34,7 +36,7 @@ public class SettingsController(Settings settings, Torrents torrents) : Controll
         }
 
         await settings.Update(settings1);
-        
+
         return Ok();
     }
 
@@ -43,6 +45,7 @@ public class SettingsController(Settings settings, Torrents torrents) : Controll
     public async Task<ActionResult<Profile>> Profile()
     {
         var profile = await torrents.GetProfile();
+
         return Ok(profile);
     }
 
@@ -57,7 +60,7 @@ public class SettingsController(Settings settings, Torrents torrents) : Controll
             Version = version
         });
     }
-        
+
     [HttpPost]
     [Route("TestPath")]
     public async Task<ActionResult> TestPath([FromBody] SettingsControllerTestPathRequest? request)
@@ -82,12 +85,12 @@ public class SettingsController(Settings settings, Torrents torrents) : Controll
         var testFile = $"{path}/test.txt";
 
         await System.IO.File.WriteAllTextAsync(testFile, "RealDebridClient Test File, you can remove this file.");
-            
+
         await FileHelper.Delete(testFile);
 
         return Ok();
     }
-        
+
     [HttpGet]
     [Route("TestDownloadSpeed")]
     public async Task<ActionResult> TestDownloadSpeed(CancellationToken cancellationToken)
@@ -103,12 +106,12 @@ public class SettingsController(Settings settings, Torrents torrents) : Controll
             Link = "https://34.download.real-debrid.com/speedtest/testDefault.rar",
             Torrent = new()
             {
-                DownloadClient = Settings.Get.DownloadClient.Client == Data.Enums.DownloadClient.Symlink ? Data.Enums.DownloadClient.Bezzad : Settings.Get.DownloadClient.Client,
+                DownloadClient = Settings.Get.DownloadClient.Client == DownloadClient.Symlink ? DownloadClient.Bezzad : Settings.Get.DownloadClient.Client,
                 RdName = "testDefault.rar"
             }
         };
 
-        var downloadClient = new DownloadClient(download, download.Torrent, downloadPath, null);
+        var downloadClient = new Service.Services.DownloadClient(download, download.Torrent, downloadPath, null);
 
         await downloadClient.Start();
 
@@ -134,7 +137,7 @@ public class SettingsController(Settings settings, Torrents torrents) : Controll
 
                 await aria2Downloader.Update(allDownloads);
             }
-            
+
             if (downloadClient.BytesDone > 1024 * 1024 * 50)
             {
                 await downloadClient.Cancel();
@@ -147,7 +150,7 @@ public class SettingsController(Settings settings, Torrents torrents) : Controll
 
         return Ok(downloadClient.Speed);
     }
-        
+
     [HttpGet]
     [Route("TestWriteSpeed")]
     public async Task<ActionResult> TestWriteSpeed()
@@ -176,15 +179,15 @@ public class SettingsController(Settings settings, Torrents torrents) : Controll
 
             await fileStream.WriteAsync(buffer.AsMemory(0, buffer.Length));
         }
-            
+
         watch.Stop();
 
         var writeSpeed = fileStream.Length / watch.Elapsed.TotalSeconds;
-            
+
         fileStream.Close();
 
         await FileHelper.Delete(testFilePath);
-        
+
         return Ok(writeSpeed);
     }
 

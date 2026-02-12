@@ -1,24 +1,24 @@
-﻿using System.Diagnostics;
+﻿using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Service.Helpers;
 using RdtClient.Service.Services.TorrentClients;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.Zip;
+using SharpCompress.Common;
 
 namespace RdtClient.Service.Services;
 
 public class UnpackClient(Download download, String destinationPath)
 {
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    private readonly Torrent _torrent = download.Torrent ?? throw new($"Torrent is null");
     public Boolean Finished { get; private set; }
 
     public String? Error { get; private set; }
 
     public Int32 Progess { get; private set; }
-
-    private readonly Torrent _torrent = download.Torrent ?? throw new($"Torrent is null");
-
-    private readonly CancellationTokenSource _cancellationTokenSource = new();
 
     public void Start()
     {
@@ -104,7 +104,7 @@ public class UnpackClient(Download download, String destinationPath)
                 await FileHelper.Delete(filePath);
             }
 
-            if (_torrent.ClientKind == Data.Enums.Provider.TorBox)
+            if (_torrent.ClientKind == Provider.TorBox)
             {
                 TorBoxTorrentClient.MoveHashDirContents(extractPath, _torrent);
             }
@@ -119,7 +119,6 @@ public class UnpackClient(Download download, String destinationPath)
         }
     }
 
-
     private static async Task<IList<String>> GetArchiveFiles(String filePath)
     {
         await using Stream stream = File.OpenRead(filePath);
@@ -127,13 +126,14 @@ public class UnpackClient(Download download, String destinationPath)
         var extension = Path.GetExtension(filePath);
 
         IArchive archive;
+
         if (extension == ".zip")
         {
-            archive = ZipArchive.Open(stream);
+            archive = ZipArchive.OpenArchive(stream);
         }
         else
         {
-            archive = RarArchive.Open(stream);
+            archive = RarArchive.OpenArchive(stream);
         }
 
         var entries = archive.Entries
@@ -155,22 +155,21 @@ public class UnpackClient(Download download, String destinationPath)
         var extension = Path.GetExtension(filePath);
 
         IArchive archive;
+
         if (extension == ".zip")
         {
-            archive = ZipArchive.Open(fi);
+            archive = ZipArchive.OpenArchive(fi);
         }
         else
         {
-            archive = RarArchive.Open(fi);
+            archive = RarArchive.OpenArchive(fi);
         }
 
-        archive.ExtractToDirectory(extractPath,
-                                   d =>
-                                   {
-                                       Debug.WriteLine(d);
-                                       Progess = (Int32)Math.Round(d);
-                                   },
-                                   cancellationToken: cancellationToken);
+        archive.WriteToDirectory(extractPath,
+                                 new Progress<ProgressReport>(d =>
+                                 {
+                                     Progess = (Int32)Math.Round(d.PercentComplete ?? 0);
+                                 }));
 
         archive.Dispose();
 
