@@ -62,6 +62,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
         return Ok();
     }
 
+    [AllowAnonymous]
     [Route("app/version")]
     [HttpGet]
     [HttpPost]
@@ -70,6 +71,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
         return Ok("v4.3.2");
     }
 
+    [AllowAnonymous]
     [Route("app/webapiVersion")]
     [HttpGet]
     [HttpPost]
@@ -78,6 +80,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
         return Ok("2.7");
     }
 
+    [AllowAnonymous]
     [Route("app/buildInfo")]
     [HttpGet]
     [HttpPost]
