@@ -638,9 +638,9 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                     Log($"Torrent reported an error: {torrent.RdStatusRaw}", torrent);
                     Log($"Torrent retry count {torrent.RetryCount}/{torrent.TorrentRetryAttempts}", torrent);
 
-                    Log($"Received RealDebrid error: {torrent.RdStatusRaw}, not processing further", torrent);
+                    Log($"Received provider error: {torrent.RdStatusRaw}, not processing further", torrent);
 
-                    await torrents.UpdateComplete(torrent.TorrentId, $"Received RealDebrid error: {torrent.RdStatusRaw}.", DateTimeOffset.UtcNow, true);
+                    await torrents.UpdateComplete(torrent.TorrentId, $"Debrid error: {torrent.RdStatusRaw}.", DateTimeOffset.UtcNow, true);
 
                     continue;
                 }
@@ -712,7 +712,7 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
             catch (Exception ex)
             {
                 logger.LogError(ex.Message, "Torrent processing result in an unexpected exception: {Message}", ex.Message);
-                await torrents.UpdateComplete(torrent.TorrentId, ex.Message, DateTimeOffset.UtcNow, true);
+                await torrents.UpdateComplete(torrent.TorrentId, $"Runner error: {ex.Message}", DateTimeOffset.UtcNow, true);
             }
         }
 
