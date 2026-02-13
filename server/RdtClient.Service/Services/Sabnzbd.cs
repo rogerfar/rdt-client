@@ -60,12 +60,13 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
 
                     Status = t.RdStatus switch
                     {
-                        TorrentStatus.Processing => "Propagating",
-                        TorrentStatus.Finished => "Completed",
-                        TorrentStatus.Downloading => "Downloading",
-                        TorrentStatus.WaitingForFileSelection => "Propagating",
-                        TorrentStatus.Error => "Failed",
                         TorrentStatus.Queued => "Queued",
+                        TorrentStatus.Processing => "Downloading",
+                        TorrentStatus.WaitingForFileSelection => "Downloading",
+                        TorrentStatus.Downloading => "Downloading",
+                        TorrentStatus.Uploading => "Downloading",
+                        TorrentStatus.Finished => "Completed",
+                        TorrentStatus.Error => "Failed",
                         _ => "Downloading"
                     },
                     Category = t.Category ?? "*",

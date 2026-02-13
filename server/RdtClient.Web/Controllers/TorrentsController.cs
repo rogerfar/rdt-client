@@ -169,7 +169,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
     [Route("DiskSpaceStatus")]
     public ActionResult<DiskSpaceStatus?> GetDiskSpaceStatus()
     {
-        var status = Service.BackgroundServices.DiskSpaceMonitor.GetCurrentStatus();
+        var status = DiskSpaceMonitor.GetCurrentStatus();
         return Ok(status);
     }
 
