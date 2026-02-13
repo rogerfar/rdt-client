@@ -1,5 +1,5 @@
 using RdtClient.Data.Enums;
-using RdtClient.Data.Models.TorrentClient;
+using RdtClient.Data.Models.DebridClient;
 
 namespace RdtClient.Data.Models.Internal;
 
@@ -20,6 +20,7 @@ public class TorrentDto
     public DateTimeOffset Added { get; set; }
     public DateTimeOffset? FilesSelected { get; set; }
     public DateTimeOffset? Completed { get; set; }
+    public DownloadType Type { get; set; }
     public Boolean IsFile { get; set; }
     public Int32? Priority { get; set; }
     public Int32 RetryCount { get; set; }
@@ -40,7 +41,7 @@ public class TorrentDto
     public DateTimeOffset? RdEnded { get; set; }
     public Int64? RdSpeed { get; set; }
     public Int64? RdSeeders { get; set; }
-    public IList<TorrentClientFile> Files { get; set; } = [];
+    public IList<DebridClientFile> Files { get; set; } = [];
     public IList<DownloadDto> Downloads { get; set; } = [];
 }
 

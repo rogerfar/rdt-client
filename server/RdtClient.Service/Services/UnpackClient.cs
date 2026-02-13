@@ -1,7 +1,7 @@
 ﻿using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Service.Helpers;
-using RdtClient.Service.Services.TorrentClients;
+using RdtClient.Service.Services.DebridClients;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.Zip;
@@ -106,7 +106,7 @@ public class UnpackClient(Download download, String destinationPath)
 
             if (_torrent.ClientKind == Provider.TorBox)
             {
-                TorBoxTorrentClient.MoveHashDirContents(extractPath, _torrent);
+                TorBoxDebridClient.MoveHashDirContents(extractPath, _torrent);
             }
         }
         catch (Exception ex)

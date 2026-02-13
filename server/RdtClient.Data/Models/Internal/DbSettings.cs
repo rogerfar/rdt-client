@@ -1,5 +1,6 @@
-﻿using System.ComponentModel;
-using RdtClient.Data.Enums;
+﻿using RdtClient.Data.Enums;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
@@ -263,6 +264,7 @@ public class DbSettingsWatch
 
     [DisplayName("Check  Interval")]
     [Description("Time in seconds to check the folder for new files.")]
+    [Range(10, Int32.MaxValue, ErrorMessage = "Interval must be at least 10 seconds.")]
     public Int32 Interval { get; set; } = 60;
 
     [DisplayName("Import Defaults")]

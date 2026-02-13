@@ -13,6 +13,7 @@ namespace RdtClient.Web.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/v2")]
+[Route("qbittorrent/api/v2")]
 public class QBittorrentController(ILogger<QBittorrentController> logger, QBittorrent qBittorrent) : Controller
 {
     [AllowAnonymous]

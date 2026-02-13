@@ -1,6 +1,8 @@
-﻿namespace RdtClient.Data.Models.TorrentClient;
+﻿using RdtClient.Data.Enums;
 
-public class TorrentClientTorrent
+namespace RdtClient.Data.Models.DebridClient;
+
+public class DebridClientTorrent
 {
     public String Id { get; set; } = default!;
     public String Filename { get; set; } = default!;
@@ -15,7 +17,9 @@ public class TorrentClientTorrent
     public String? Message { get; set; }
     public Int64 StatusCode { get; set; }
     public DateTimeOffset? Added { get; set; }
-    public List<TorrentClientFile>? Files { get; set; }
+
+    public DownloadType Type { get; set; } = DownloadType.Torrent;
+    public List<DebridClientFile>? Files { get; set; }
     public List<String>? Links { get; set; }
     public DateTimeOffset? Ended { get; set; }
     public Int64? Speed { get; set; }

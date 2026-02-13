@@ -1,0 +1,220 @@
+using Microsoft.Extensions.Logging;
+using RdtClient.Data.Enums;
+using RdtClient.Data.Models.Data;
+using RdtClient.Data.Models.Internal;
+using RdtClient.Data.Models.Sabnzbd;
+using RdtClient.Service.Helpers;
+
+namespace RdtClient.Service.Services;
+
+public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings appSettings)
+{
+    public virtual async Task<SabnzbdQueue> GetQueue()
+    {
+        var allTorrents = await torrents.Get();
+        var activeTorrents = allTorrents.Where(t => t.Type == DownloadType.Nzb && t.Completed == null).ToList();
+
+        var queue = new SabnzbdQueue
+        {
+            NoOfSlots = activeTorrents.Count,
+            Slots = activeTorrents.Select((t, index) =>
+            {
+                Double downloadProgress = 0;
+                var rdProgress = Math.Clamp(t.RdProgress ?? 0.0, 0.0, 100.0) / 100.0;
+
+                if (t.Downloads is { Count: > 0 })
+                {
+                    var bytesDone = t.Downloads.Sum(m => m.BytesDone);
+                    var bytesTotal = t.Downloads.Sum(m => m.BytesTotal);
+                    downloadProgress = bytesTotal > 0 ? Math.Clamp((Double)bytesDone / bytesTotal, 0.0, 1.0) : 0;
+                }
+
+                var progress = (rdProgress + downloadProgress) / 2.0;
+
+                var timeLeft = "0:00:00";
+                var startTime = t.Retry > t.Added ? t.Retry.Value : t.Added;
+                var elapsed = DateTimeOffset.UtcNow - startTime;
+
+                if (progress is > 0 and < 1.0)
+                {
+                    var totalEstimatedTime = TimeSpan.FromTicks((Int64)(elapsed.Ticks / progress));
+                    var remaining = totalEstimatedTime - elapsed;
+                    if (remaining.TotalSeconds > 0)
+                    {
+                        timeLeft = $"{(Int32)remaining.TotalHours}:{remaining.Minutes:D2}:{remaining.Seconds:D2}";
+                    }
+                }
+
+                return new SabnzbdQueueSlot
+                {
+                    Index = index,
+                    NzoId = t.Hash,
+                    Filename = t.RdName ?? t.Hash,
+                    Size = FileSizeHelper.FormatSize(t.Downloads.Sum(d => d.BytesTotal)),
+                    SizeLeft = FileSizeHelper.FormatSize(t.Downloads.Sum(d => d.BytesTotal - d.BytesDone)),
+                    Percentage = (progress * 100.0).ToString("0"),
+
+                    Status = t.RdStatus switch
+                    {
+                        TorrentStatus.Processing => "Propagating",
+                        TorrentStatus.Finished => "Completed",
+                        TorrentStatus.Downloading => "Downloading",
+                        TorrentStatus.WaitingForFileSelection => "Propagating",
+                        TorrentStatus.Error => "Failed",
+                        TorrentStatus.Queued => "Queued",
+                        _ => "Downloading"
+                    },
+                    Category = t.Category ?? "*",
+                    Priority = "Normal",
+                    TimeLeft = timeLeft
+                };
+            }).ToList()
+        };
+
+        return queue;
+    }
+
+    public virtual async Task<SabnzbdHistory> GetHistory()
+    {
+        var allTorrents = await torrents.Get();
+        var completedTorrents = allTorrents.Where(t => t.Type == DownloadType.Nzb && t.Completed != null).ToList();
+
+        var savePath = Settings.AppDefaultSavePath;
+
+        var history = new SabnzbdHistory
+        {
+            NoOfSlots = completedTorrents.Count,
+            TotalSlots = completedTorrents.Count,
+            Slots = completedTorrents.Select(t =>
+            {
+                var path = savePath;
+
+                if (!String.IsNullOrWhiteSpace(t.Category))
+                {
+                    path = Path.Combine(path, t.Category);
+                }
+
+                if (!String.IsNullOrWhiteSpace(t.RdName))
+                {
+                    path = Path.Combine(path, t.RdName);
+                }
+
+                return new SabnzbdHistorySlot
+                {
+                    NzoId = t.Hash,
+                    Name = t.RdName ?? t.Hash,
+                    Size = FileSizeHelper.FormatSize(t.Downloads.Sum(d => d.BytesTotal)),
+                    Status = String.IsNullOrWhiteSpace(t.Error) ? "Completed" : "Failed",
+                    Category = t.Category ?? "Default",
+                    Path = path
+                };
+            }).ToList()
+        };
+
+        return history;
+    }
+
+    public virtual async Task<String> AddFile(Byte[] fileBytes, String? fileName, String? category, Int32? priority)
+    {
+        logger.LogDebug($"Add file {category}");
+
+        var torrent = new Torrent
+        {
+            Category = category,
+            DownloadClient = Settings.Get.DownloadClient.Client,
+            HostDownloadAction = Settings.Get.Integrations.Default.HostDownloadAction,
+            FinishedActionDelay = Settings.Get.Integrations.Default.FinishedActionDelay,
+            DownloadAction = Settings.Get.Integrations.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
+            FinishedAction = TorrentFinishedAction.None,
+            DownloadMinSize = Settings.Get.Integrations.Default.MinFileSize,
+            IncludeRegex = Settings.Get.Integrations.Default.IncludeRegex,
+            ExcludeRegex = Settings.Get.Integrations.Default.ExcludeRegex,
+            TorrentRetryAttempts = Settings.Get.Integrations.Default.TorrentRetryAttempts,
+            DownloadRetryAttempts = Settings.Get.Integrations.Default.DownloadRetryAttempts,
+            DeleteOnError = Settings.Get.Integrations.Default.DeleteOnError,
+            Lifetime = Settings.Get.Integrations.Default.TorrentLifetime,
+            Priority = (priority ?? Settings.Get.Integrations.Default.Priority) > 0 ? 1 : null
+        };
+
+        var result = await torrents.AddNzbFileToDebridQueue(fileBytes, fileName, torrent);
+        return result.Hash;
+    }
+
+    public virtual async Task<String> AddUrl(String url, String? category, Int32? priority)
+    {
+        logger.LogDebug($"Add url {category}");
+
+        var torrent = new Torrent
+        {
+            Category = category,
+            DownloadClient = Settings.Get.DownloadClient.Client,
+            HostDownloadAction = Settings.Get.Integrations.Default.HostDownloadAction,
+            FinishedActionDelay = Settings.Get.Integrations.Default.FinishedActionDelay,
+            DownloadAction = Settings.Get.Integrations.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
+            FinishedAction = TorrentFinishedAction.None,
+            DownloadMinSize = Settings.Get.Integrations.Default.MinFileSize,
+            IncludeRegex = Settings.Get.Integrations.Default.IncludeRegex,
+            ExcludeRegex = Settings.Get.Integrations.Default.ExcludeRegex,
+            TorrentRetryAttempts = Settings.Get.Integrations.Default.TorrentRetryAttempts,
+            DownloadRetryAttempts = Settings.Get.Integrations.Default.DownloadRetryAttempts,
+            DeleteOnError = Settings.Get.Integrations.Default.DeleteOnError,
+            Lifetime = Settings.Get.Integrations.Default.TorrentLifetime,
+            Priority = priority ?? (Settings.Get.Integrations.Default.Priority > 0 ? Settings.Get.Integrations.Default.Priority : null)
+        };
+
+        var result = await torrents.AddNzbLinkToDebridQueue(url, torrent);
+        return result.Hash;
+    }
+
+    public virtual async Task Delete(String hash)
+    {
+        var torrent = await torrents.GetByHash(hash);
+
+        if (torrent != null)
+        {
+            await torrents.Delete(torrent.TorrentId, true, true, true);
+        }
+    }
+
+    public virtual List<String> GetCategories()
+    {
+        var categoryList = (Settings.Get.General.Categories ?? "")
+                           .Split(",", StringSplitOptions.RemoveEmptyEntries)
+                           .Select(m => m.Trim())
+                           .Where(m => m != "*")
+                           .Distinct(StringComparer.CurrentCultureIgnoreCase)
+                           .ToList();
+
+        categoryList.Insert(0, "*");
+
+        return categoryList;
+    }
+
+    public virtual SabnzbdConfig GetConfig()
+    {
+        var savePath = Settings.AppDefaultSavePath;
+
+        var categoryList = GetCategories();
+
+        var categories = categoryList.Select((c, i) => new SabnzbdCategory
+        {
+            Name = c,
+            Order = i,
+            Dir = c == "*" ? "" : Path.Combine(savePath, c)
+        }).ToList();
+
+        var config = new SabnzbdConfig
+        {
+            Misc = new SabnzbdMisc
+            {
+                CompleteDir = savePath,
+                DownloadDir = savePath,
+                Port = appSettings.Port.ToString(),
+                Version = "4.4.0"
+            },
+            Categories = categories
+        };
+
+        return config;
+    }
+}

@@ -14,7 +14,7 @@ public class Authentication(SignInManager<IdentityUser> signInManager, UserManag
         return result;
     }
 
-    public async Task<SignInResult> Login(String userName, String password)
+    public virtual async Task<SignInResult> Login(String userName, String password)
     {
         if (String.IsNullOrWhiteSpace(userName) || String.IsNullOrWhiteSpace(password))
         {

@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 using RdtClient.Data.Enums;
-using RdtClient.Data.Models.TorrentClient;
+using RdtClient.Data.Models.DebridClient;
 
 namespace RdtClient.Data.Models.Data;
 
@@ -30,6 +30,7 @@ public class Torrent
     public DateTimeOffset? Completed { get; set; }
     public DateTimeOffset? Retry { get; set; }
 
+    public DownloadType Type { get; set; }
     public String? FileOrMagnet { get; set; }
     public Boolean IsFile { get; set; }
 
@@ -61,7 +62,7 @@ public class Torrent
     public String? RdFiles { get; set; }
 
     [NotMapped]
-    public IList<TorrentClientFile> Files
+    public IList<DebridClientFile> Files
     {
         get
         {
@@ -72,7 +73,7 @@ public class Torrent
 
             try
             {
-                return JsonSerializer.Deserialize<List<TorrentClientFile>>(RdFiles) ?? [];
+                return JsonSerializer.Deserialize<List<DebridClientFile>>(RdFiles) ?? [];
             }
             catch
             {

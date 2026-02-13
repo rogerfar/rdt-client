@@ -13,6 +13,7 @@ public interface ITorrentData
                       String hash,
                       String? fileOrMagnetContents,
                       Boolean isFile,
+                      DownloadType downloadType,
                       DownloadClient downloadClient,
                       Torrent torrent);
 
