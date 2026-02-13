@@ -223,29 +223,28 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             var speed = torrent.RdSpeed ?? 0;
             var bytesDone = (Int64)(bytesTotal * rdProgress);
 
-            Double downloadProgress = 0;
-
+            Double progress;
             if (torrent.Downloads is { Count: > 0 })
             {
-                var dlBytesDone = torrent.Downloads.Sum(m => m.BytesDone);
-                var dlBytesTotal = torrent.Downloads.Sum(m => m.BytesTotal);
-                speed = (Int32)torrent.Downloads.Average(m => m.Speed);
-                downloadProgress = bytesTotal > 0 ? Math.Clamp((Double)dlBytesDone / dlBytesTotal, 0.0, 1.0) : 0;
+                var dlStats = torrent.Downloads.Select(m => torrents.GetDownloadStats(m.DownloadId)).ToList();
+                var dlBytesDone = dlStats.Sum(m => m.BytesDone);
+                var dlBytesTotal = dlStats.Sum(m => m.BytesTotal);
+                speed = (Int32)(dlStats.Any() ? dlStats.Average(m => m.Speed) : 0);
+                var downloadProgress = dlBytesTotal > 0 ? Math.Clamp((Double)dlBytesDone / dlBytesTotal, 0.0, 1.0) : 0;
+                progress = (rdProgress + downloadProgress) / 2.0;
+            }
+            else
+            {
+                progress = rdProgress;
             }
 
-            var progress = (rdProgress + downloadProgress) / 2.0;
             var remaining = TimeSpan.Zero;
-            var bytesRemaining = bytesTotal - bytesDone;
-
-            if (speed > 0 && bytesRemaining > 0)
+            if (progress > 0 && progress < 1.0)
             {
-                remaining = TimeSpan.FromSeconds(bytesRemaining / (Double)speed);
-
-                // In case there is clock skew
-                if (remaining < TimeSpan.Zero)
-                {
-                    remaining = TimeSpan.Zero;
-                }
+                var startTime = torrent.Retry > torrent.Added ? torrent.Retry.Value : torrent.Added;
+                var elapsed = DateTimeOffset.UtcNow - startTime;
+                var totalEstimatedTime = TimeSpan.FromTicks((Int64)(elapsed.Ticks / progress));
+                remaining = totalEstimatedTime - elapsed;
             }
 
             var result = new TorrentInfo
@@ -361,9 +360,10 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
 
         if (torrent.Downloads.Count > 0)
         {
-            bytesDone = torrent.Downloads.Sum(m => m.BytesDone);
-            bytesTotal = torrent.Downloads.Sum(m => m.BytesTotal);
-            speed = (Int32)torrent.Downloads.Average(m => m.Speed);
+            var dlStats = torrent.Downloads.Select(m => torrents.GetDownloadStats(m.DownloadId)).ToList();
+            bytesDone = dlStats.Sum(m => m.BytesDone);
+            bytesTotal = dlStats.Sum(m => m.BytesTotal);
+            speed = (Int32)(dlStats.Any() ? dlStats.Average(m => m.Speed) : 0);
         }
 
         var result = new TorrentProperties

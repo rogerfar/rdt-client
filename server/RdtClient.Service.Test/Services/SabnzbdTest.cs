@@ -40,6 +40,7 @@ public class SabnzbdTest
         };
 
         _torrentsMock.Setup(t => t.Get()).ReturnsAsync(torrentList);
+        _torrentsMock.Setup(t => t.GetDownloadStats(It.IsAny<Guid>())).Returns((0, 1000, 500));
 
         var sabnzbd = new Sabnzbd(_loggerMock.Object, _torrentsMock.Object, _appSettings);
 
