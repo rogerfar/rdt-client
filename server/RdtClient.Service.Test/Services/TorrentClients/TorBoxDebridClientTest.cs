@@ -478,4 +478,36 @@ public class TorBoxDebridClientTest
         Assert.Equal("https://real-usenet-link", result);
         usenetApiMock.Verify(m => m.RequestDownloadAsync(98765, 4321, false, It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task UpdateData_LogsWarning_WhenTorBoxStatusIsUnmapped()
+    {
+        // Arrange
+        var torrent = new Torrent
+        {
+            RdId = "test-rd-id",
+            RdStatus = TorrentStatus.Downloading,
+            RdName = "test-torrent"
+        };
+        var torrentClientTorrent = new DebridClientTorrent
+        {
+            Status = "some-unknown-status",
+            Filename = "test-torrent"
+        };
+
+        var clientMock = new Mock<TorBoxDebridClient>(_loggerMock.Object, _httpClientFactoryMock.Object, _fileFilterMock.Object);
+
+        // Act
+        await clientMock.Object.UpdateData(torrent, torrentClientTorrent);
+
+        // Assert
+        _loggerMock.Verify(
+            x => x.Log(
+                Microsoft.Extensions.Logging.LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("unmapped status") && v.ToString()!.Contains("some-unknown-status")),
+                It.IsAny<Exception>(),
+                It.Is<Func<It.IsAnyType, Exception?, String>>((v, t) => true)),
+            Times.Once);
+    }
 }

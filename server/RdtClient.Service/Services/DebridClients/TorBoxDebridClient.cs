@@ -389,13 +389,17 @@ public class TorBoxDebridClient(ILogger<TorBoxDebridClient> logger, IHttpClientF
             }
             else
             {
+                logger.LogTrace("Updating status for {TorrentName} from {OldStatus} to {NewStatus}", torrent.RdName, torrent.RdStatus, rdTorrent.Status);
                 torrent.RdStatus = rdTorrent.Status switch
                 {
+                    "allocating" => TorrentStatus.Processing,
                     "queued" => TorrentStatus.Processing,
+                    "queuedDL" => TorrentStatus.Processing,
                     "metaDL" => TorrentStatus.Processing,
                     "checking" => TorrentStatus.Processing,
                     "checkingResumeData" => TorrentStatus.Processing,
                     "paused" => TorrentStatus.Downloading,
+                    "pausedDL" => TorrentStatus.Downloading,
                     "stalledDL" => TorrentStatus.Downloading,
                     "downloading" => TorrentStatus.Downloading,
                     "completed" => TorrentStatus.Downloading,
@@ -404,8 +408,11 @@ public class TorBoxDebridClient(ILogger<TorBoxDebridClient> logger, IHttpClientF
                     "stalled" => TorrentStatus.Downloading,
                     "stalled (no seeds)" => TorrentStatus.Downloading,
                     "processing" => TorrentStatus.Downloading,
+                    "checkingDL" => TorrentStatus.Downloading,
                     "cached" => TorrentStatus.Finished,
-                    _ => TorrentStatus.Error
+                    "error" => TorrentStatus.Error,
+                    _ when rdTorrent.Status != null && rdTorrent.Status.StartsWith("failed") => TorrentStatus.Error,
+                    _ => LogUnmappedStatus(rdTorrent.Status, torrent)
                 };
             }
         }
@@ -553,6 +560,16 @@ public class TorBoxDebridClient(ILogger<TorBoxDebridClient> logger, IHttpClientF
                 Directory.Delete(hashDir, true);
             }
         }
+    }
+
+    private TorrentStatus LogUnmappedStatus(String? status, Torrent torrent)
+    {
+        if (!String.IsNullOrWhiteSpace(status))
+        {
+            logger.LogInformation("TorBoxDebridClient encountered an unmapped status: {Status} for torrent {TorrentName}", status, torrent.RdName);
+        }
+
+        return torrent.RdStatus ?? TorrentStatus.Processing;
     }
 
     private void Log(String message, Torrent? torrent = null)
