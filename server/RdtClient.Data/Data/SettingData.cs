@@ -9,7 +9,7 @@ namespace RdtClient.Data.Data;
 
 public class SettingData(DataContext dataContext, ILogger<SettingData> logger)
 {
-    public static DbSettings Get { get; } = new();
+    public static DbSettings Get { get; private set; } = new();
 
     public static IList<SettingProperty> GetAll()
     {

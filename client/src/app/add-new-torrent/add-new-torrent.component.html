@@ -1,5 +1,24 @@
 <div class="field">
-  <div>
+  <div class="tabs is-toggle is-fullwidth">
+    <ul>
+      <li [class.is-active]="type === 'torrent'">
+        <a (click)="changeType('torrent')">
+          <span class="icon is-small"><i class="fas fa-magnet" aria-hidden="true"></i></span>
+          <span>Torrent</span>
+        </a>
+      </li>
+      <li [class.is-active]="type === 'nzb'">
+        <a (click)="changeType('nzb')">
+          <span class="icon is-small"><i class="fas fa-file-archive" aria-hidden="true"></i></span>
+          <span>NZB</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="field">
+  <div [hidden]="type !== 'torrent'">
     <div class="field">
       <label class="label">Torrent file</label>
       <div class="file has-name">
@@ -31,15 +50,53 @@
         ></textarea>
       </div>
     </div>
+  </div>
 
+  <div [hidden]="type !== 'nzb'">
     <div class="field">
-      <div class="control">
-        <button class="button is-success" [disabled]="saving" [ngClass]="{ 'is-loading': saving }" (click)="ok()">
-          <span>Add Torrent</span>
-        </button>
+      <label class="label">NZB file</label>
+      <div class="file has-name">
+        <label class="file-label">
+          <input class="file-input" type="file" name="resume" (change)="pickFile($event)" [disabled]="saving" />
+          <span class="file-cta">
+            <span class="file-icon">
+              <i class="fas fa-upload"></i>
+            </span>
+            <span class="file-label"> Pick an NZB file... </span>
+          </span>
+          <span class="file-name">
+            {{ fileName }}
+          </span>
+        </label>
       </div>
     </div>
 
+    <div class="field">
+      <label class="label">NZB Link</label>
+      <div class="control">
+        <textarea
+          class="textarea"
+          placeholder="Paste your NZB link here"
+          [(ngModel)]="nzbLink"
+          [disabled]="saving"
+        ></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="field" style="margin-top: 10px">
+    <div class="control">
+      <button class="button is-success" [disabled]="saving" [ngClass]="{ 'is-loading': saving }" (click)="ok()">
+        @if (type === 'torrent') {
+          <span>Add Torrent</span>
+        } @else {
+          <span>Add NZB</span>
+        }
+      </button>
+    </div>
+  </div>
+
+  <div>
     <div class="separator">Advanced settings</div>
 
     <div class="field">
@@ -53,7 +110,7 @@
         </select>
       </div>
       <p class="help">
-        Select which downloader is used to download this torrent from the debrid provider to your host.
+        Select which downloader is used to download this from the debrid provider to your host.
       </p>
     </div>
 
@@ -66,7 +123,7 @@
         </select>
       </div>
       <p class="help">
-        When a torrent is finished downloading on the provider, perform this action. Use this setting if you only want
+        When a download is finished on the provider, perform this action. Use this setting if you only want
         to add files to your debrid provider but not download them to the host.
       </p>
     </div>
@@ -142,10 +199,10 @@
         <select [(ngModel)]="finishedAction">
           <option [ngValue]="0">Do nothing</option>
           @if (downloadClient !== 2) {
-            <option [ngValue]="1">Remove torrent from provider and client</option>
-            <option [ngValue]="2">Remove torrent from provider</option>
+            <option [ngValue]="1">Remove from provider and client</option>
+            <option [ngValue]="2">Remove from provider</option>
           }
-          <option [ngValue]="3">Remove torrent from client</option>
+          <option [ngValue]="3">Remove from client</option>
         </select>
       </div>
     </div>
@@ -156,7 +213,7 @@
         <input class="input" type="number" [(ngModel)]="finishedActionDelay" />
       </div>
       <p class="help">
-        When a torrent is finished downloading on the provider, perform this action. Use this setting if you only want
+        When a download is finished on the provider, perform this action. Use this setting if you only want
         to add files to your debrid provider but not download them to the host.
       </p>
     </div>
@@ -175,9 +232,14 @@
         <input class="input" type="number" step="1" [(ngModel)]="priority" />
       </div>
       <p class="help">
-        Set the priority for this torrent where 1 is the highest. When empty it will be assigned the lowest priority.
+        Set the priority where 1 is the highest. When empty it will be assigned the lowest priority.
       </p>
     </div>
+  </div>
+</div>
+
+<div class="field">
+  <div>
     <div class="field">
       <label class="label">Automatic retry downloads</label>
       <div class="control">
@@ -186,13 +248,13 @@
       <p class="help">When a single download fails it will retry it this many times before marking it as failed.</p>
     </div>
     <div class="field">
-      <label class="label">Automatic retry torrent</label>
+      <label class="label">Automatic retry download</label>
       <div class="control">
         <input class="input" type="number" max="1000" min="0" step="1" [(ngModel)]="torrentRetryAttempts" />
       </div>
       <p class="help">
-        When a single download has failed multiple times (see setting above) or when the torrent itself received an
-        error it will retry the full torrent this many times before marking it failed.
+        When a single download has failed multiple times (see setting above) or when the download itself received an
+        error it will retry the full download this many times before marking it failed.
       </p>
     </div>
     <div class="field">
@@ -206,13 +268,13 @@
       </p>
     </div>
     <div class="field">
-      <label class="label">Torrent maximum lifetime</label>
+      <label class="label">Maximum lifetime</label>
       <div class="control">
         <input class="input" type="number" max="100000" min="0" step="1" [(ngModel)]="torrentLifetime" />
       </div>
       <p class="help">
-        The maximum lifetime of a torrent in minutes. When this time has passed, mark the torrent as error. If the
-        torrent is completed and has downloads, the lifetime setting will not apply. 0 to disable.
+        The maximum lifetime of a download in minutes. When this time has passed, mark it as error. If the
+        download is completed, the lifetime setting will not apply. 0 to disable.
       </p>
     </div>
   </div>
@@ -226,10 +288,3 @@
   </div>
 </div>
 
-<div class="field">
-  <div class="control">
-    <button class="button is-success" [disabled]="saving" [ngClass]="{ 'is-loading': saving }" (click)="ok()">
-      <span>Add Torrent</span>
-    </button>
-  </div>
-</div>

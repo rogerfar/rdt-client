@@ -77,7 +77,7 @@ export class TorrentStatusPipe implements PipeTransform {
       case RealDebridStatus.Queued:
         return 'Not Yet Added to Provider';
       case RealDebridStatus.Downloading:
-        if (torrent.rdSeeders < 1) {
+        if (torrent.rdSeeders < 1 && torrent.type !== 1) {
           return `Torrent stalled`;
         }
         const speed = this.pipe.transform(torrent.rdSpeed, 'filesize');

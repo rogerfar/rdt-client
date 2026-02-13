@@ -5,12 +5,12 @@ using Newtonsoft.Json;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Service.Services;
-using RdtClient.Service.Services.TorrentClients;
+using RdtClient.Service.Services.DebridClients;
 using File = AllDebridNET.File;
 
 namespace RdtClient.Service.Test.Services.TorrentClients;
 
-public class AllDebridTorrentClientTest
+public class AllDebridDebridClientTest
 {
     private static readonly Magnet Magnet1HalfDownloaded = new()
     {
@@ -84,10 +84,10 @@ public class AllDebridTorrentClientTest
                  Fullsync = true
              });
 
-        var allDebridTorrentClient = new AllDebridTorrentClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
+        var allDebridTorrentClient = new AllDebridDebridClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
 
         // Act
-        var result = await allDebridTorrentClient.GetTorrents();
+        var result = await allDebridTorrentClient.GetDownloads();
 
         // Assert
         Assert.NotNull(result);
@@ -114,10 +114,10 @@ public class AllDebridTorrentClientTest
                  Fullsync = false
              });
 
-        var allDebridTorrentClient = new AllDebridTorrentClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
+        var allDebridTorrentClient = new AllDebridDebridClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
 
         // Act
-        var result = await allDebridTorrentClient.GetTorrents();
+        var result = await allDebridTorrentClient.GetDownloads();
 
         // Assert
         Assert.NotNull(result);
@@ -144,15 +144,15 @@ public class AllDebridTorrentClientTest
                  Fullsync = true
              });
 
-        var allDebridTorrentClient = new AllDebridTorrentClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
+        var allDebridTorrentClient = new AllDebridDebridClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
 
         // Act
 
-        // `GetTorrents` returns a reference to `_cache` if the `StatusLiveAsync` has `Fullsync = false`,
+        // `GetDownloads` returns a reference to `_cache` if the `StatusLiveAsync` has `Fullsync = false`,
         // so when the second call `_cache.Add`s, it also affects `firstResult`.
         // `.ToList()` clones it so it won't be changed by the second call
-        var firstResult = (await allDebridTorrentClient.GetTorrents()).ToList();
-        var secondResult = await allDebridTorrentClient.GetTorrents();
+        var firstResult = (await allDebridTorrentClient.GetDownloads()).ToList();
+        var secondResult = await allDebridTorrentClient.GetDownloads();
 
         // Assert
         Assert.Single(firstResult);
@@ -180,15 +180,15 @@ public class AllDebridTorrentClientTest
                  Fullsync = false
              });
 
-        var allDebridTorrentClient = new AllDebridTorrentClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
+        var allDebridTorrentClient = new AllDebridDebridClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
 
         // Act
 
-        // `GetTorrents` returns a reference to `_cache` if the `StatusLiveAsync` has `Fullsync = false`,
+        // `GetDownloads` returns a reference to `_cache` if the `StatusLiveAsync` has `Fullsync = false`,
         // so when the second call `_cache.Add`s, it also affects `firstResult`.
         // `.ToList()` clones it so it won't be changed by the second call
-        var firstResult = (await allDebridTorrentClient.GetTorrents()).ToList();
-        var secondResult = await allDebridTorrentClient.GetTorrents();
+        var firstResult = (await allDebridTorrentClient.GetDownloads()).ToList();
+        var secondResult = await allDebridTorrentClient.GetDownloads();
 
         // Assert
         Assert.Single(firstResult);
@@ -222,15 +222,15 @@ public class AllDebridTorrentClientTest
                  Fullsync = false
              });
 
-        var allDebridTorrentClient = new AllDebridTorrentClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
+        var allDebridTorrentClient = new AllDebridDebridClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
 
         // Act
 
-        // `GetTorrents` returns a reference to `_cache` if the `StatusLiveAsync` has `Fullsync = false`,
+        // `GetDownloads` returns a reference to `_cache` if the `StatusLiveAsync` has `Fullsync = false`,
         // so when the second call `_cache.Add`s, it also affects `firstResult`.
         // `.ToList()` clones it so it won't be changed by the second call
-        var firstResult = (await allDebridTorrentClient.GetTorrents()).ToList();
-        var secondResult = await allDebridTorrentClient.GetTorrents();
+        var firstResult = (await allDebridTorrentClient.GetDownloads()).ToList();
+        var secondResult = await allDebridTorrentClient.GetDownloads();
 
         // Assert
         Assert.Equal(2, firstResult.Count);
@@ -269,12 +269,12 @@ public class AllDebridTorrentClientTest
                  Fullsync = true
              });
 
-        var allDebridTorrentClient = new AllDebridTorrentClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
+        var allDebridTorrentClient = new AllDebridDebridClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
 
         // Act
 
-        // We have to use `GetTorrents` since `Map` is private
-        var result = await allDebridTorrentClient.GetTorrents();
+        // We have to use `GetDownloads` since `Map` is private
+        var result = await allDebridTorrentClient.GetDownloads();
 
         // Assert
         Assert.Equal(expectedProgress, result.First().Progress);
@@ -294,7 +294,7 @@ public class AllDebridTorrentClientTest
         };
 
         var serializedOriginal = JsonConvert.SerializeObject(torrent);
-        var allDebridTorrentClient = new AllDebridTorrentClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
+        var allDebridTorrentClient = new AllDebridDebridClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
 
         // Act
         var result = await allDebridTorrentClient.UpdateData(torrent, null);
@@ -320,7 +320,7 @@ public class AllDebridTorrentClientTest
         };
 
         mocks.AllDebridClientMock.Setup(c => c.Magnet.StatusAsync(torrent.RdId, It.IsAny<CancellationToken>())).ReturnsAsync(Magnet1Finished);
-        var allDebridTorrentClient = new AllDebridTorrentClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
+        var allDebridTorrentClient = new AllDebridDebridClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
 
         // Act
         var result = await allDebridTorrentClient.UpdateData(torrent, null);
@@ -353,7 +353,7 @@ public class AllDebridTorrentClientTest
         mocks.AllDebridClientMock.Setup(c => c.Magnet.StatusAsync(torrent.RdId, It.IsAny<CancellationToken>()))
              .ThrowsAsync(new AllDebridException("Magnet not found", "MAGNET_INVALID_ID"));
 
-        var allDebridTorrentClient = new AllDebridTorrentClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
+        var allDebridTorrentClient = new AllDebridDebridClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
 
         // Act
         var result = await allDebridTorrentClient.UpdateData(torrent, null);
@@ -388,8 +388,8 @@ public class AllDebridTorrentClientTest
                  Fullsync = true
              });
 
-        var allDebridTorrentClient = new AllDebridTorrentClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
-        var torrentClientTorrent = (await allDebridTorrentClient.GetTorrents()).First();
+        var allDebridTorrentClient = new AllDebridDebridClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
+        var torrentClientTorrent = (await allDebridTorrentClient.GetDownloads()).First();
 
         // Act
         var result = await allDebridTorrentClient.UpdateData(torrent, torrentClientTorrent);
@@ -415,7 +415,7 @@ public class AllDebridTorrentClientTest
             RdId = null
         };
 
-        var allDebridTorrentClient = new AllDebridTorrentClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
+        var allDebridTorrentClient = new AllDebridDebridClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
 
         // Act
         var result = await allDebridTorrentClient.GetDownloadInfos(torrent);
@@ -464,7 +464,7 @@ public class AllDebridTorrentClientTest
         mocks.FileFilterMock.Setup(f => f.IsDownloadable(torrent, "file1.txt", 123)).Returns(true);
         mocks.FileFilterMock.Setup(f => f.IsDownloadable(torrent, "folder/file2.txt", 180)).Returns(false);
 
-        var allDebridTorrentClient = new AllDebridTorrentClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
+        var allDebridTorrentClient = new AllDebridDebridClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
 
         // Act
         var result = await allDebridTorrentClient.GetDownloadInfos(torrent);
@@ -505,7 +505,7 @@ public class AllDebridTorrentClientTest
         mocks.AllDebridClientMock.Setup(c => c.Magnet.FilesAsync(Int64.Parse(torrent.RdId), It.IsAny<CancellationToken>())).ReturnsAsync(files);
         mocks.FileFilterMock.Setup(f => f.IsDownloadable(torrent, It.IsAny<String>(), It.IsAny<Int64>())).Returns(false);
 
-        var allDebridTorrentClient = new AllDebridTorrentClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
+        var allDebridTorrentClient = new AllDebridDebridClient(mocks.LoggerMock.Object, mocks.AllDebridClientFactoryMock.Object, mocks.FileFilterMock.Object);
 
         // Act
         var result = await allDebridTorrentClient.GetDownloadInfos(torrent);
@@ -522,8 +522,8 @@ public class AllDebridTorrentClientTest
     {
         public readonly Mock<IAllDebridNetClientFactory> AllDebridClientFactoryMock;
         public readonly Mock<IAllDebridNETClient> AllDebridClientMock;
+        public readonly Mock<ILogger<AllDebridDebridClient>> LoggerMock;
         public readonly Mock<IDownloadableFileFilter> FileFilterMock;
-        public readonly Mock<ILogger<AllDebridTorrentClient>> LoggerMock;
 
         public Mocks()
         {

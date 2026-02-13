@@ -1,16 +1,17 @@
 ﻿using RdtClient.Data.Models.Data;
-using RdtClient.Data.Models.TorrentClient;
+using RdtClient.Data.Models.DebridClient;
 
-namespace RdtClient.Service.Services.TorrentClients;
+namespace RdtClient.Service.Services.DebridClients;
 
-public interface ITorrentClient
+public interface IDebridClient
 {
-    Task<IList<TorrentClientTorrent>> GetTorrents();
-    Task<TorrentClientUser> GetUser();
-    Task<String> AddMagnet(String magnetLink);
-    Task<String> AddFile(Byte[] bytes);
-    Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash);
-
+    Task<IList<DebridClientTorrent>> GetDownloads();
+    Task<DebridClientUser> GetUser();
+    Task<String> AddTorrentMagnet(String magnetLink);
+    Task<String> AddTorrentFile(Byte[] bytes);
+    Task<String> AddNzbLink(String nzbLink);
+    Task<String> AddNzbFile(Byte[] bytes, String? name);
+    Task<IList<DebridClientAvailableFile>> GetAvailableFiles(String hash);
     /// <summary>
     ///     Tell the debrid provider which files to download.
     /// </summary>
@@ -20,10 +21,9 @@ public interface ITorrentClient
     /// <param name="torrent">The torrent to select files for</param>
     /// <returns>Number of files selected</returns>
     Task<Int32?> SelectFiles(Torrent torrent);
-
-    Task Delete(String torrentId);
-    Task<String> Unrestrict(String link);
-    Task<Torrent> UpdateData(Torrent torrent, TorrentClientTorrent? torrentClientTorrent);
+    Task Delete(Torrent torrent);
+    Task<String> Unrestrict(Torrent torrent, String link);
+    Task<Torrent> UpdateData(Torrent torrent, DebridClientTorrent? torrentClientTorrent);
     Task<IList<DownloadInfo>?> GetDownloadInfos(Torrent torrent);
 
     /// <summary>

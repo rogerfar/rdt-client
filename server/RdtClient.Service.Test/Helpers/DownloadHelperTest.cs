@@ -1,7 +1,7 @@
 using System.IO.Abstractions.TestingHelpers;
 using System.Text.Json;
 using RdtClient.Data.Models.Data;
-using RdtClient.Data.Models.TorrentClient;
+using RdtClient.Data.Models.DebridClient;
 using RdtClient.Service.Helpers;
 
 namespace RdtClient.Service.Test.Helpers;
@@ -183,7 +183,7 @@ public class DownloadHelperTest
 
         var fileRelativePath = "inside/lots/of/subdirectories/file.txt";
 
-        IList<TorrentClientFile> files =
+        IList<DebridClientFile> files =
         [
             new()
             {
@@ -219,7 +219,7 @@ public class DownloadHelperTest
 
         var fileRelativePath = "inside/lots/of/subdirectories/file.txt";
 
-        IList<TorrentClientFile> files =
+        IList<DebridClientFile> files =
         [
             new()
             {

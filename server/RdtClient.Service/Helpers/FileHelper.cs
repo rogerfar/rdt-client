@@ -78,7 +78,15 @@ public static class FileHelper
 
     public static String RemoveInvalidFileNameChars(String filename)
     {
-        return String.Concat(filename.Split(Path.GetInvalidFileNameChars()));
+        var invalidChars = Path.GetInvalidFileNameChars()
+            .Concat(['/', '\\'])
+            .Distinct()
+            .ToArray();
+
+        var cleaned = String.Concat(filename.Split(invalidChars));
+        cleaned = cleaned.Replace("..", "");
+        cleaned = cleaned.TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        return cleaned;
     }
 
     public static String GetDirectoryContents(String path)

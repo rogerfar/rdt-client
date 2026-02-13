@@ -2,7 +2,7 @@
 using RdtClient.Data.Models.Data;
 using RdtClient.Service.Helpers;
 using RdtClient.Service.Services.Downloaders;
-using RdtClient.Service.Services.TorrentClients;
+using RdtClient.Service.Services.DebridClients;
 
 namespace RdtClient.Service.Services;
 
@@ -45,7 +45,7 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
 
             if (torrent.ClientKind == Provider.AllDebrid && Type == Data.Enums.DownloadClient.Symlink)
             {
-                downloadPath = AllDebridTorrentClient.GetSymlinkPath(torrent, download);
+                downloadPath = AllDebridDebridClient.GetSymlinkPath(torrent, download);
             }
 
             if (torrent.ClientKind == Provider.DebridLink && Type == Data.Enums.DownloadClient.Symlink)

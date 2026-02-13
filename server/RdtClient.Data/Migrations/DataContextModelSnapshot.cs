@@ -402,6 +402,9 @@ namespace RdtClient.Data.Migrations
                     b.Property<int>("TorrentRetryAttempts")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("TorrentId");
 
                     b.ToTable("Torrents");

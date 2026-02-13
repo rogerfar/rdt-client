@@ -24,13 +24,13 @@
         <span class="icon">
           <i class="fas fa-table" aria-hidden="true"></i>
         </span>
-        <span>Torrents</span>
+        <span>Torrents/NZBs</span>
       </a>
-      <a class="navbar-item" routerLink="/add">
+      <a class="navbar-item" routerLink="/add" [queryParams]="{ type: 'torrent' }">
         <span class="icon">
           <i class="fas fa-plus" aria-hidden="true"></i>
         </span>
-        <span>Add New Torrent</span>
+        <span>Add Torrent/NZB</span>
       </a>
       <a class="navbar-item" routerLink="/settings">
         <span class="icon">
