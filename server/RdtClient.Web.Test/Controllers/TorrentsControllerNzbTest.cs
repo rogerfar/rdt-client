@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
-using RdtClient.Data.Models.Data;
 using RdtClient.Service.Services;
 using RdtClient.Web.Controllers;
 
@@ -16,9 +15,9 @@ public class TorrentsControllerNzbTest
 
     public TorrentsControllerNzbTest()
     {
-        _torrentsMock = new Mock<Torrents>(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!);
-        _loggerMock = new Mock<ILogger<TorrentsController>>();
-        _controller = new TorrentsController(_loggerMock.Object, _torrentsMock.Object, null!);
+        _torrentsMock = new(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!);
+        _loggerMock = new();
+        _controller = new(_loggerMock.Object, _torrentsMock.Object, null!);
     }
 
     [Fact]
@@ -28,7 +27,7 @@ public class TorrentsControllerNzbTest
         var request = new TorrentControllerUploadNzbLinkRequest
         {
             NzbLink = "http://example.com/test.nzb",
-            Torrent = new Torrent()
+            Torrent = new()
         };
 
         // Act
@@ -56,7 +55,7 @@ public class TorrentsControllerNzbTest
         var request = new TorrentControllerUploadNzbLinkRequest
         {
             NzbLink = "",
-            Torrent = new Torrent()
+            Torrent = new()
         };
 
         // Act
@@ -86,7 +85,7 @@ public class TorrentsControllerNzbTest
 
         var formData = new TorrentControllerUploadFileRequest
         {
-            Torrent = new Torrent()
+            Torrent = new()
         };
 
         // Act
@@ -102,7 +101,7 @@ public class TorrentsControllerNzbTest
     public async Task UploadNzbFile_NoFile_ReturnsBadRequest()
     {
         // Act
-        var result = await _controller.UploadNzbFile(null, new TorrentControllerUploadFileRequest());
+        var result = await _controller.UploadNzbFile(null, new());
 
         // Assert
         var badRequest = Assert.IsType<BadRequestObjectResult>(result);

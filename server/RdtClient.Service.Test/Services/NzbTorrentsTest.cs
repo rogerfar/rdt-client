@@ -15,21 +15,21 @@ public class NzbTorrentsTest
 
     public NzbTorrentsTest()
     {
-        _mocks = new Mocks();
-        _fileSystem = new MockFileSystem();
-        _torrents = new TorrentsService(
-            _mocks.TorrentsLoggerMock.Object,
-            _mocks.TorrentDataMock.Object,
-            _mocks.DownloadsMock.Object,
-            _mocks.ProcessFactoryMock.Object,
-            _fileSystem,
-            _mocks.EnricherMock.Object,
-            null!,
-            null!,
-            null!,
-            null!,
-            null!
-        );
+        _mocks = new();
+        _fileSystem = new();
+        _torrents = new(
+                        _mocks.TorrentsLoggerMock.Object,
+                        _mocks.TorrentDataMock.Object,
+                        _mocks.DownloadsMock.Object,
+                        _mocks.ProcessFactoryMock.Object,
+                        _fileSystem,
+                        _mocks.EnricherMock.Object,
+                        null!,
+                        null!,
+                        null!,
+                        null!,
+                        null!
+                       );
     }
 
     [Fact]

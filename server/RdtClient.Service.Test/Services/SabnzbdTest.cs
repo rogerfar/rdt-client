@@ -15,7 +15,7 @@ public class SabnzbdTest
 
     public SabnzbdTest()
     {
-        _torrentsMock = new Mock<Torrents>(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!);
+        _torrentsMock = new(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!);
         _torrentsMock.Setup(t => t.Get()).ReturnsAsync(new List<Torrent>());
     }
 

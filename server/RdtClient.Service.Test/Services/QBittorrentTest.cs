@@ -15,11 +15,11 @@ public class QBittorrentTest
 
     public QBittorrentTest()
     {
-        _loggerMock = new Mock<ILogger<QBittorrent>>();
-        _torrentsMock = new Mock<Torrents>(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!);
-        _authenticationMock = new Mock<Authentication>(null!, null!, null!);
+        _loggerMock = new();
+        _torrentsMock = new(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!);
+        _authenticationMock = new(null!, null!, null!);
         
-        _qBittorrent = new QBittorrent(_loggerMock.Object, null!, _authenticationMock.Object, _torrentsMock.Object, null!);
+        _qBittorrent = new(_loggerMock.Object, null!, _authenticationMock.Object, _torrentsMock.Object, null!);
     }
 
     [Fact]

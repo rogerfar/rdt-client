@@ -210,7 +210,7 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
 
         var config = new SabnzbdConfig
         {
-            Misc = new SabnzbdMisc
+            Misc = new()
             {
                 CompleteDir = savePath,
                 DownloadDir = savePath,

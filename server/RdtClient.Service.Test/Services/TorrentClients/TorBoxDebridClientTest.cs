@@ -19,9 +19,9 @@ public class TorBoxDebridClientTest
 
     public TorBoxDebridClientTest()
     {
-        _loggerMock = new Mock<ILogger<TorBoxDebridClient>>();
-        _httpClientFactoryMock = new Mock<IHttpClientFactory>();
-        _fileFilterMock = new Mock<IDownloadableFileFilter>();
+        _loggerMock = new();
+        _httpClientFactoryMock = new();
+        _fileFilterMock = new();
         
         var httpClient = new HttpClient();
         _httpClientFactoryMock.Setup(m => m.CreateClient(It.IsAny<String>())).Returns(httpClient);
@@ -71,11 +71,11 @@ public class TorBoxDebridClientTest
         var hash = "test-hash";
         var availability = new Response<List<AvailableTorrent?>>
         {
-            Data = new List<AvailableTorrent?>
+            Data = new()
             {
                 new()
                 {
-                    Files = new List<AvailableTorrentFile>
+                    Files = new()
                     {
                         new() { Name = "file1.mkv", Size = 100 },
                         new() { Name = "file2.txt", Size = 10 }
@@ -103,14 +103,14 @@ public class TorBoxDebridClientTest
     {
         // Arrange
         var hash = "test-hash";
-        var torrentAvailability = new Response<List<AvailableTorrent?>> { Data = new List<AvailableTorrent?>() };
+        var torrentAvailability = new Response<List<AvailableTorrent?>> { Data = new() };
         var usenetAvailability = new Response<List<AvailableUsenet?>>
         {
-            Data = new List<AvailableUsenet?>
+            Data = new()
             {
                 new()
                 {
-                    Files = new List<AvailableUsenetFile>
+                    Files = new()
                     {
                         new() { Name = "file1.nzb", Size = 200 }
                     }
@@ -136,8 +136,8 @@ public class TorBoxDebridClientTest
     {
         // Arrange
         var hash = "test-hash";
-        var torrentAvailability = new Response<List<AvailableTorrent?>> { Data = new List<AvailableTorrent?>() };
-        var usenetAvailability = new Response<List<AvailableUsenet?>> { Data = new List<AvailableUsenet?>() };
+        var torrentAvailability = new Response<List<AvailableTorrent?>> { Data = new() };
+        var usenetAvailability = new Response<List<AvailableUsenet?>> { Data = new() };
 
         var clientMock = new Mock<TorBoxDebridClient>(_loggerMock.Object, _httpClientFactoryMock.Object, _fileFilterMock.Object);
         clientMock.Protected().Setup<Task<Response<List<AvailableTorrent?>>>>("GetTorrentAvailability", hash).ReturnsAsync(torrentAvailability);
@@ -270,7 +270,8 @@ public class TorBoxDebridClientTest
         clientMock.Protected().Setup<ITorBoxNetClient>("GetClient").Returns(torBoxClientMock.Object);
         
         usenetApiMock.Setup(m => m.AddFileAsync(bytes, -1, name, null, It.IsAny<CancellationToken>()))
-                     .ReturnsAsync(new Response<UsenetAddResult> { Data = new UsenetAddResult { Hash = "new-hash" } });
+                     .ReturnsAsync(new Response<UsenetAddResult> { Data = new()
+                                       { Hash = "new-hash" } });
 
         // Act
         var result = await clientMock.Object.AddNzbFile(bytes, name);

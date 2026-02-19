@@ -53,7 +53,7 @@ public class CredentialRedactorEnricher : ILogEventEnricher
                 if (property.Value is ScalarValue scalarValue && scalarValue.Value is String stringValue && stringValue.Contains(sensitiveValue))
                 {
                     var newValue = stringValue.Replace(sensitiveValue, "*****");
-                    propertiesToUpdate.Add(new LogEventProperty(property.Key, new ScalarValue(newValue)));
+                    propertiesToUpdate.Add(new(property.Key, new ScalarValue(newValue)));
                 }
             }
 

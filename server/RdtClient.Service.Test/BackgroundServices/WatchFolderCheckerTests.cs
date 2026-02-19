@@ -20,11 +20,11 @@ public class WatchFolderCheckerTests : IDisposable
 
     public WatchFolderCheckerTests()
     {
-        _loggerMock = new Mock<ILogger<WatchFolderChecker>>();
-        _serviceProviderMock = new Mock<IServiceProvider>();
-        _serviceScopeMock = new Mock<IServiceScope>();
-        _scopeServiceProviderMock = new Mock<IServiceProvider>();
-        _torrentsServiceMock = new Mock<Torrents>(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!);
+        _loggerMock = new();
+        _serviceProviderMock = new();
+        _serviceScopeMock = new();
+        _scopeServiceProviderMock = new();
+        _torrentsServiceMock = new(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!);
 
         _serviceProviderMock
             .Setup(x => x.GetService(typeof(IServiceScopeFactory)))
@@ -65,12 +65,12 @@ public class WatchFolderCheckerTests : IDisposable
     {
         var settings = new Data.Models.Internal.DbSettings
         {
-            Watch = new Data.Models.Internal.DbSettingsWatch
+            Watch = new()
             {
                 Interval = 0,
-                Default = new Data.Models.Internal.DbSettingsDefaultsWithCategory()
+                Default = new()
             },
-            DownloadClient = new Data.Models.Internal.DbSettingsDownloadClient()
+            DownloadClient = new()
         };
 
         var property = typeof(SettingData).GetProperty("Get", BindingFlags.Public | BindingFlags.Static);

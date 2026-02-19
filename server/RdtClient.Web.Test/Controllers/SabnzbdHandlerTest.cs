@@ -15,9 +15,9 @@ public class SabnzbdHandlerTest
 
     public SabnzbdHandlerTest()
     {
-        _authenticationMock = new Mock<Authentication>(null!, null!, null!);
-        _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-        _handler = new SabnzbdHandler(_authenticationMock.Object, _httpContextAccessorMock.Object);
+        _authenticationMock = new(null!, null!, null!);
+        _httpContextAccessorMock = new();
+        _handler = new(_authenticationMock.Object, _httpContextAccessorMock.Object);
         Data.Data.SettingData.Get.General.AuthenticationType = AuthenticationType.UserNamePassword;
     }
 
@@ -41,7 +41,7 @@ public class SabnzbdHandlerTest
         // Arrange
         Settings.Get.General.AuthenticationType = AuthenticationType.UserNamePassword;
         var httpContext = new DefaultHttpContext();
-        httpContext.Request.QueryString = new QueryString("?ma_username=user&ma_password=pass");
+        httpContext.Request.QueryString = new("?ma_username=user&ma_password=pass");
         _httpContextAccessorMock.Setup(a => a.HttpContext).Returns(httpContext);
         
         var context = CreateContext(httpContext);
@@ -79,7 +79,7 @@ public class SabnzbdHandlerTest
         // Arrange
         Settings.Get.General.AuthenticationType = AuthenticationType.UserNamePassword;
         var httpContext = new DefaultHttpContext();
-        httpContext.Request.QueryString = new QueryString("?ma_username=user&ma_password=wrong");
+        httpContext.Request.QueryString = new("?ma_username=user&ma_password=wrong");
         _httpContextAccessorMock.Setup(a => a.HttpContext).Returns(httpContext);
         
         var context = CreateContext(httpContext);
@@ -113,6 +113,6 @@ public class SabnzbdHandlerTest
     {
         var requirement = new SabnzbdRequirement();
         var user = httpContext?.User ?? new System.Security.Claims.ClaimsPrincipal();
-        return new AuthorizationHandlerContext([requirement], user, null);
+        return new([requirement], user, null);
     }
 }
