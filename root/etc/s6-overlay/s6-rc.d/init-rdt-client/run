@@ -10,4 +10,4 @@
 # permissions
 echo "Setting permissions"
 chown -R abc:abc \
-	/app /data
+	/data
