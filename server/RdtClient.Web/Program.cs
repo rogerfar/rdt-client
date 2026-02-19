@@ -7,6 +7,7 @@ using RdtClient.Data.Models.Internal;
 using RdtClient.Service;
 using RdtClient.Service.Middleware;
 using RdtClient.Service.Services;
+using RdtClient.Service.Helpers;
 using Serilog;
 using Serilog.Debugging;
 using Serilog.Events;
@@ -41,6 +42,7 @@ builder.WebHost.ConfigureKestrel(options =>
 if (appSettings.Logging?.File?.Path != null)
 {
     builder.Host.UseSerilog((_, lc) => lc.Enrich.FromLogContext()
+                                         .Enrich.With<CredentialRedactorEnricher>()
                                          .WriteTo.File(appSettings.Logging.File.Path,
                                                        rollOnFileSizeLimit: true,
                                                        fileSizeLimitBytes: appSettings.Logging.File.FileSizeLimitBytes,
@@ -72,11 +74,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
        });
 
 builder.Services.AddAuthorizationBuilder()
-       .AddPolicy("AuthSetting",
-                  policyCorrectUser =>
-                  {
-                      policyCorrectUser.Requirements.Add(new AuthSettingRequirement());
-                  });
+       .AddPolicy("AuthSetting", policyCorrectUser => { policyCorrectUser.Requirements.Add(new AuthSettingRequirement()); })
+       .AddPolicy("Sabnzbd", policyCorrectUser => { policyCorrectUser.Requirements.Add(new SabnzbdRequirement()); });
 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
        {

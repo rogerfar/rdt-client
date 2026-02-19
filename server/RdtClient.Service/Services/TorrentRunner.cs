@@ -23,6 +23,21 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
 
     public static Boolean IsPausedForLowDiskSpace { get; set; }
 
+    public static (Int64 Speed, Int64 BytesTotal, Int64 BytesDone) GetStats(Guid downloadId)
+    {
+        if (ActiveDownloadClients.TryGetValue(downloadId, out var downloadClient))
+        {
+            return (downloadClient.Speed, downloadClient.BytesTotal, downloadClient.BytesDone);
+        }
+
+        if (ActiveUnpackClients.TryGetValue(downloadId, out var unpackClient))
+        {
+            return (0, 100, unpackClient.Progess);
+        }
+
+        return (0, 0, 0);
+    }
+    
     public async Task Initialize()
     {
         Log("Initializing TorrentRunner");
@@ -623,9 +638,9 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                     Log($"Torrent reported an error: {torrent.RdStatusRaw}", torrent);
                     Log($"Torrent retry count {torrent.RetryCount}/{torrent.TorrentRetryAttempts}", torrent);
 
-                    Log($"Received RealDebrid error: {torrent.RdStatusRaw}, not processing further", torrent);
+                    Log($"Received provider error: {torrent.RdStatusRaw}, not processing further", torrent);
 
-                    await torrents.UpdateComplete(torrent.TorrentId, $"Received RealDebrid error: {torrent.RdStatusRaw}.", DateTimeOffset.UtcNow, true);
+                    await torrents.UpdateComplete(torrent.TorrentId, $"Debrid error: {torrent.RdStatusRaw}.", DateTimeOffset.UtcNow, true);
 
                     continue;
                 }
@@ -665,8 +680,8 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
 
                     var completePerc = 0;
 
-                    var totalDownloadBytes = torrent.Downloads.Sum(m => m.BytesTotal);
-                    var totalDoneBytes = torrent.Downloads.Sum(m => m.BytesDone);
+                    var totalDownloadBytes = torrent.Downloads.Sum(m => GetStats(m.DownloadId).BytesTotal);
+                    var totalDoneBytes = torrent.Downloads.Sum(m => GetStats(m.DownloadId).BytesDone);
 
                     if (totalDownloadBytes > 0)
                     {
@@ -697,7 +712,7 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
             catch (Exception ex)
             {
                 logger.LogError(ex.Message, "Torrent processing result in an unexpected exception: {Message}", ex.Message);
-                await torrents.UpdateComplete(torrent.TorrentId, ex.Message, DateTimeOffset.UtcNow, true);
+                await torrents.UpdateComplete(torrent.TorrentId, $"Runner error: {ex.Message}", DateTimeOffset.UtcNow, true);
             }
         }
 

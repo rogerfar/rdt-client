@@ -1,6 +1,6 @@
-﻿namespace RdtClient.Data.Models.TorrentClient;
+﻿namespace RdtClient.Data.Models.DebridClient;
 
-public class TorrentClientFile
+public class DebridClientFile
 {
     public Int64 Id { get; set; }
     public String Path { get; set; } = default!;

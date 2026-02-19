@@ -4,18 +4,96 @@ using Newtonsoft.Json;
 using RDNET;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
-using RdtClient.Data.Models.TorrentClient;
+using RdtClient.Data.Models.DebridClient;
 using RdtClient.Service.Helpers;
 using Download = RdtClient.Data.Models.Data.Download;
 using Torrent = RDNET.Torrent;
 
-namespace RdtClient.Service.Services.TorrentClients;
+namespace RdtClient.Service.Services.DebridClients;
 
-public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter) : ITorrentClient
+public class RealDebridDebridClient(ILogger<RealDebridDebridClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter) : IDebridClient
 {
     private TimeSpan? _offset;
 
-    public async Task<IList<TorrentClientTorrent>> GetTorrents()
+    private RdNetClient GetClient()
+    {
+        try
+        {
+            var apiKey = Settings.Get.Provider.ApiKey;
+
+            if (String.IsNullOrWhiteSpace(apiKey))
+            {
+                throw new("Real-Debrid API Key not set in the settings");
+            }
+
+            var httpClient = httpClientFactory.CreateClient(DiConfig.RD_CLIENT);
+            httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
+
+            var rdtNetClient = new RdNetClient(null, httpClient, 5, Settings.Get.Provider.ApiHostname);
+            rdtNetClient.UseApiAuthentication(apiKey);
+
+            // Get the server time to fix up the timezones on results
+            if (_offset == null)
+            {
+                var serverTime = rdtNetClient.Api.GetIsoTimeAsync().Result;
+                _offset = serverTime.Offset;
+            }
+
+            return rdtNetClient;
+        }
+        catch (AggregateException ae)
+        {
+            foreach (var inner in ae.InnerExceptions)
+            {
+                logger.LogError(inner, $"The connection to RealDebrid has failed: {inner.Message}");
+            }
+
+            throw;
+        }
+        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+        {
+            logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
+
+            throw;
+        }
+        catch (TaskCanceledException ex)
+        {
+            logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
+
+            throw; 
+        }
+    }
+
+    private DebridClientTorrent Map(Torrent torrent)
+    {
+        return new()
+        {
+            Id = torrent.Id,
+            Filename = torrent.Filename,
+            OriginalFilename = torrent.OriginalFilename,
+            Hash = torrent.Hash,
+            Bytes = torrent.Bytes,
+            OriginalBytes = torrent.OriginalBytes,
+            Host = torrent.Host,
+            Split = torrent.Split,
+            Progress = torrent.Progress,
+            Status = torrent.Status,
+            Added = ChangeTimeZone(torrent.Added)!.Value,
+            Files = (torrent.Files ?? []).Select(m => new DebridClientFile
+            {
+                Path = m.Path,
+                Bytes = m.Bytes,
+                Id = m.Id,
+                Selected = m.Selected
+            }).ToList(),
+            Links = torrent.Links,
+            Ended = ChangeTimeZone(torrent.Ended),
+            Speed = torrent.Speed,
+            Seeders = torrent.Seeders,
+        };
+    }
+
+    public async Task<IList<DebridClientTorrent>> GetDownloads()
     {
         var offset = 0;
         var results = new List<Torrent>();
@@ -37,7 +115,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         return results.Select(Map).ToList();
     }
 
-    public async Task<TorrentClientUser> GetUser()
+    public async Task<DebridClientUser> GetUser()
     {
         var user = await GetClient().User.GetAsync();
 
@@ -48,7 +126,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         };
     }
 
-    public async Task<String> AddMagnet(String magnetLink)
+    public async Task<String> AddTorrentMagnet(String magnetLink)
     {
         var timeoutCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(Settings.Get.Provider.Timeout));
 
@@ -57,7 +135,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         return result.Id;
     }
 
-    public async Task<String> AddFile(Byte[] bytes)
+    public async Task<String> AddTorrentFile(Byte[] bytes)
     {
         var timeoutCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(Settings.Get.Provider.Timeout));
 
@@ -66,15 +144,25 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         return result.Id;
     }
 
-    public Task<IList<TorrentClientAvailableFile>> GetAvailableFiles(String hash)
+    public Task<String> AddNzbLink(String nzbLink)
     {
-        return Task.FromResult<IList<TorrentClientAvailableFile>>([]);
+        throw new NotSupportedException();
+    }
+
+    public Task<String> AddNzbFile(Byte[] bytes, String? name)
+    {
+        throw new NotSupportedException();
+    }
+
+    public Task<IList<DebridClientAvailableFile>> GetAvailableFiles(String hash)
+    {
+        return Task.FromResult<IList<DebridClientAvailableFile>>([]);
     }
 
     /// <inheritdoc />
     public async Task<Int32?> SelectFiles(Data.Models.Data.Torrent torrent)
     {
-        List<TorrentClientFile> files;
+        List<DebridClientFile> files;
 
         Log("Seleting files", torrent);
 
@@ -105,12 +193,12 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         return fileIds.Length;
     }
 
-    public async Task Delete(String torrentId)
+    public async Task Delete(Data.Models.Data.Torrent torrent)
     {
-        await GetClient().Torrents.DeleteAsync(torrentId);
+        await GetClient().Torrents.DeleteAsync(torrent.RdId!);
     }
 
-    public async Task<String> Unrestrict(String link)
+    public async Task<String> Unrestrict(Data.Models.Data.Torrent torrent, String link)
     {
         var result = await GetClient().Unrestrict.LinkAsync(link);
 
@@ -122,7 +210,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         return result.Download;
     }
 
-    public async Task<Data.Models.Data.Torrent> UpdateData(Data.Models.Data.Torrent torrent, TorrentClientTorrent? torrentClientTorrent)
+    public async Task<Data.Models.Data.Torrent> UpdateData(Data.Models.Data.Torrent torrent, DebridClientTorrent? torrentClientTorrent)
     {
         try
         {
@@ -283,84 +371,6 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         return Task.FromResult(HttpUtility.UrlDecode(uri.Segments.Last()));
     }
 
-    private RdNetClient GetClient()
-    {
-        try
-        {
-            var apiKey = Settings.Get.Provider.ApiKey;
-
-            if (String.IsNullOrWhiteSpace(apiKey))
-            {
-                throw new("Real-Debrid API Key not set in the settings");
-            }
-
-            var httpClient = httpClientFactory.CreateClient(DiConfig.RD_CLIENT);
-            httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
-
-            var rdtNetClient = new RdNetClient(null, httpClient, 5, Settings.Get.Provider.ApiHostname);
-            rdtNetClient.UseApiAuthentication(apiKey);
-
-            // Get the server time to fix up the timezones on results
-            if (_offset == null)
-            {
-                var serverTime = rdtNetClient.Api.GetIsoTimeAsync().Result;
-                _offset = serverTime.Offset;
-            }
-
-            return rdtNetClient;
-        }
-        catch (AggregateException ae)
-        {
-            foreach (var inner in ae.InnerExceptions)
-            {
-                logger.LogError(inner, $"The connection to RealDebrid has failed: {inner.Message}");
-            }
-
-            throw;
-        }
-        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
-        {
-            logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
-
-            throw;
-        }
-        catch (TaskCanceledException ex)
-        {
-            logger.LogError(ex, $"The connection to RealDebrid has timed out: {ex.Message}");
-
-            throw;
-        }
-    }
-
-    private TorrentClientTorrent Map(Torrent torrent)
-    {
-        return new()
-        {
-            Id = torrent.Id,
-            Filename = torrent.Filename,
-            OriginalFilename = torrent.OriginalFilename,
-            Hash = torrent.Hash,
-            Bytes = torrent.Bytes,
-            OriginalBytes = torrent.OriginalBytes,
-            Host = torrent.Host,
-            Split = torrent.Split,
-            Progress = torrent.Progress,
-            Status = torrent.Status,
-            Added = ChangeTimeZone(torrent.Added)!.Value,
-            Files = (torrent.Files ?? []).Select(m => new TorrentClientFile
-                                         {
-                                             Path = m.Path,
-                                             Bytes = m.Bytes,
-                                             Id = m.Id,
-                                             Selected = m.Selected
-                                         })
-                                         .ToList(),
-            Links = torrent.Links,
-            Ended = ChangeTimeZone(torrent.Ended),
-            Speed = torrent.Speed,
-            Seeders = torrent.Seeders
-        };
-    }
 
     private DateTimeOffset? ChangeTimeZone(DateTimeOffset? dateTimeOffset)
     {
@@ -372,7 +382,7 @@ public class RealDebridTorrentClient(ILogger<RealDebridTorrentClient> logger, IH
         return dateTimeOffset?.Subtract(_offset.Value).ToOffset(_offset.Value);
     }
 
-    private async Task<TorrentClientTorrent> GetInfo(String torrentId)
+    private async Task<DebridClientTorrent> GetInfo(String torrentId)
     {
         var result = await GetClient().Torrents.GetInfoAsync(torrentId);
 

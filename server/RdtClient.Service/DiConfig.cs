@@ -8,7 +8,7 @@ using Polly.Extensions.Http;
 using RdtClient.Service.BackgroundServices;
 using RdtClient.Service.Middleware;
 using RdtClient.Service.Services;
-using RdtClient.Service.Services.TorrentClients;
+using RdtClient.Service.Services.DebridClients;
 using RdtClient.Service.Wrappers;
 
 namespace RdtClient.Service;
@@ -23,7 +23,7 @@ public static class DiConfig
         services.AddMemoryCache();
 
         services.AddSingleton<IAllDebridNetClientFactory, AllDebridNetClientFactory>();
-        services.AddScoped<AllDebridTorrentClient>();
+        services.AddScoped<AllDebridDebridClient>();
 
         services.AddSingleton<IProcessFactory, ProcessFactory>();
         services.AddSingleton<IFileSystem, FileSystem>();
@@ -31,12 +31,13 @@ public static class DiConfig
         services.AddScoped<Authentication>();
         services.AddScoped<IDownloads, Downloads>();
         services.AddScoped<Downloads>();
-        services.AddScoped<PremiumizeTorrentClient>();
+        services.AddScoped<PremiumizeDebridClient>();
         services.AddScoped<QBittorrent>();
+        services.AddScoped<Sabnzbd>();
         services.AddScoped<RemoteService>();
-        services.AddScoped<RealDebridTorrentClient>();
+        services.AddScoped<RealDebridDebridClient>();
         services.AddScoped<Settings>();
-        services.AddScoped<TorBoxTorrentClient>();
+        services.AddScoped<TorBoxDebridClient>();
         services.AddScoped<Torrents>();
         services.AddScoped<TorrentRunner>();
         services.AddScoped<DebridLinkClient>();
@@ -46,6 +47,7 @@ public static class DiConfig
         services.AddSingleton<IEnricher, Enricher>();
 
         services.AddSingleton<IAuthorizationHandler, AuthSettingHandler>();
+        services.AddScoped<IAuthorizationHandler, SabnzbdHandler>();
 
         services.AddHostedService<DiskSpaceMonitor>();
         services.AddHostedService<ProviderUpdater>();

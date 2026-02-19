@@ -2,6 +2,7 @@
 
 public enum TorrentStatus
 {
+    // Queued by RDTClient, not the provider.
     Queued = 0,
 
     Processing = 1,

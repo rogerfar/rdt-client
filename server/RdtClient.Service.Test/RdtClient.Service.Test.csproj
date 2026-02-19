@@ -20,6 +20,7 @@
         <PackageReference Include="TestableIO.System.IO.Abstractions" Version="22.1.0" />
         <PackageReference Include="TestableIO.System.IO.Abstractions.TestingHelpers" Version="22.1.0" />
         <PackageReference Include="TestableIO.System.IO.Abstractions.Wrappers" Version="22.1.0" />
+        <PackageReference Include="TorBox.NET" Version="1.6.0" />
         <PackageReference Include="xunit" Version="2.9.3" />
         <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
           <PrivateAssets>all</PrivateAssets>
@@ -33,6 +34,12 @@
 
     <ItemGroup>
       <ProjectReference Include="..\RdtClient.Service\RdtClient.Service.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="TorBoxNET">
+        <HintPath>..\..\..\torbox-net\TorBoxNET\bin\Release\netstandard2.0\TorBoxNET.dll</HintPath>
+      </Reference>
     </ItemGroup>
 
 </Project>

@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MonoTorrent;
+using RdtClient.Data.Models.DebridClient;
 using RdtClient.Data.Models.Internal;
-using RdtClient.Data.Models.TorrentClient;
 using RdtClient.Service.BackgroundServices;
 using RdtClient.Service.Helpers;
 using RdtClient.Service.Services;
@@ -22,66 +22,65 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
         var results = await torrents.Get();
 
         var torrentDtos = results.Select(torrent => new TorrentDto
-                                 {
-                                     TorrentId = torrent.TorrentId,
-                                     Hash = torrent.Hash,
-                                     Category = torrent.Category,
-                                     DownloadAction = torrent.DownloadAction,
-                                     FinishedAction = torrent.FinishedAction,
-                                     FinishedActionDelay = torrent.FinishedActionDelay,
-                                     HostDownloadAction = torrent.HostDownloadAction,
-                                     DownloadMinSize = torrent.DownloadMinSize,
-                                     IncludeRegex = torrent.IncludeRegex,
-                                     ExcludeRegex = torrent.ExcludeRegex,
-                                     DownloadManualFiles = torrent.DownloadManualFiles,
-                                     DownloadClient = torrent.DownloadClient,
-                                     Added = torrent.Added,
-                                     FilesSelected = torrent.FilesSelected,
-                                     Completed = torrent.Completed,
-                                     IsFile = torrent.IsFile,
-                                     Priority = torrent.Priority,
-                                     RetryCount = torrent.RetryCount,
-                                     DownloadRetryAttempts = torrent.DownloadRetryAttempts,
-                                     TorrentRetryAttempts = torrent.TorrentRetryAttempts,
-                                     DeleteOnError = torrent.DeleteOnError,
-                                     Lifetime = torrent.Lifetime,
-                                     Error = torrent.Error,
-                                     RdId = torrent.RdId,
-                                     RdName = torrent.RdName,
-                                     RdSize = torrent.RdSize,
-                                     RdHost = torrent.RdHost,
-                                     RdSplit = torrent.RdSplit,
-                                     RdProgress = torrent.RdProgress,
-                                     RdStatus = torrent.RdStatus,
-                                     RdStatusRaw = torrent.RdStatusRaw,
-                                     RdAdded = torrent.RdAdded,
-                                     RdEnded = torrent.RdEnded,
-                                     RdSpeed = torrent.RdSpeed,
-                                     RdSeeders = torrent.RdSeeders,
-                                     Files = torrent.Files,
-                                     Downloads = torrent.Downloads.Select(download => new DownloadDto
-                                                        {
-                                                            DownloadId = download.DownloadId,
-                                                            TorrentId = download.TorrentId,
-                                                            Path = download.Path,
-                                                            Link = download.Link,
-                                                            Added = download.Added,
-                                                            DownloadQueued = download.DownloadQueued,
-                                                            DownloadStarted = download.DownloadStarted,
-                                                            DownloadFinished = download.DownloadFinished,
-                                                            UnpackingQueued = download.UnpackingQueued,
-                                                            UnpackingStarted = download.UnpackingStarted,
-                                                            UnpackingFinished = download.UnpackingFinished,
-                                                            Completed = download.Completed,
-                                                            RetryCount = download.RetryCount,
-                                                            Error = download.Error,
-                                                            BytesTotal = download.BytesTotal,
-                                                            BytesDone = download.BytesDone,
-                                                            Speed = download.Speed
-                                                        })
-                                                        .ToList()
-                                 })
-                                 .ToList();
+        {
+            TorrentId = torrent.TorrentId,
+            Hash = torrent.Hash,
+            Category = torrent.Category,
+            DownloadAction = torrent.DownloadAction,
+            FinishedAction = torrent.FinishedAction,
+            FinishedActionDelay = torrent.FinishedActionDelay,
+            HostDownloadAction = torrent.HostDownloadAction,
+            DownloadMinSize = torrent.DownloadMinSize,
+            IncludeRegex = torrent.IncludeRegex,
+            ExcludeRegex = torrent.ExcludeRegex,
+            DownloadManualFiles = torrent.DownloadManualFiles,
+            DownloadClient = torrent.DownloadClient,
+            Added = torrent.Added,
+            FilesSelected = torrent.FilesSelected,
+            Completed = torrent.Completed,
+            Type = torrent.Type,
+            IsFile = torrent.IsFile,
+            Priority = torrent.Priority,
+            RetryCount = torrent.RetryCount,
+            DownloadRetryAttempts = torrent.DownloadRetryAttempts,
+            TorrentRetryAttempts = torrent.TorrentRetryAttempts,
+            DeleteOnError = torrent.DeleteOnError,
+            Lifetime = torrent.Lifetime,
+            Error = torrent.Error,
+            RdId = torrent.RdId,
+            RdName = torrent.RdName,
+            RdSize = torrent.RdSize,
+            RdHost = torrent.RdHost,
+            RdSplit = torrent.RdSplit,
+            RdProgress = torrent.RdProgress,
+            RdStatus = torrent.RdStatus,
+            RdStatusRaw = torrent.RdStatusRaw,
+            RdAdded = torrent.RdAdded,
+            RdEnded = torrent.RdEnded,
+            RdSpeed = torrent.RdSpeed,
+            RdSeeders = torrent.RdSeeders,
+            Files = torrent.Files,
+            Downloads = torrent.Downloads.Select(download => new DownloadDto
+            {
+                DownloadId = download.DownloadId,
+                TorrentId = download.TorrentId,
+                Path = download.Path,
+                Link = download.Link,
+                Added = download.Added,
+                DownloadQueued = download.DownloadQueued,
+                DownloadStarted = download.DownloadStarted,
+                DownloadFinished = download.DownloadFinished,
+                UnpackingQueued = download.UnpackingQueued,
+                UnpackingStarted = download.UnpackingStarted,
+                UnpackingFinished = download.UnpackingFinished,
+                Completed = download.Completed,
+                RetryCount = download.RetryCount,
+                Error = download.Error,
+                BytesTotal = download.BytesTotal,
+                BytesDone = download.BytesDone,
+                Speed = download.Speed
+            }).ToList()
+        }).ToList();
 
         return Ok(torrentDtos);
     }
@@ -119,6 +118,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
             Added = torrent.Added,
             FilesSelected = torrent.FilesSelected,
             Completed = torrent.Completed,
+            Type = torrent.Type,
             IsFile = torrent.IsFile,
             Priority = torrent.Priority,
             RetryCount = torrent.RetryCount,
@@ -141,26 +141,25 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
             RdSeeders = torrent.RdSeeders,
             Files = torrent.Files,
             Downloads = torrent.Downloads.Select(download => new DownloadDto
-                               {
-                                   DownloadId = download.DownloadId,
-                                   TorrentId = download.TorrentId,
-                                   Path = download.Path,
-                                   Link = download.Link,
-                                   Added = download.Added,
-                                   DownloadQueued = download.DownloadQueued,
-                                   DownloadStarted = download.DownloadStarted,
-                                   DownloadFinished = download.DownloadFinished,
-                                   UnpackingQueued = download.UnpackingQueued,
-                                   UnpackingStarted = download.UnpackingStarted,
-                                   UnpackingFinished = download.UnpackingFinished,
-                                   Completed = download.Completed,
-                                   RetryCount = download.RetryCount,
-                                   Error = download.Error,
-                                   BytesTotal = download.BytesTotal,
-                                   BytesDone = download.BytesDone,
-                                   Speed = download.Speed
-                               })
-                               .ToList()
+            {
+                DownloadId = download.DownloadId,
+                TorrentId = download.TorrentId,
+                Path = download.Path,
+                Link = download.Link,
+                Added = download.Added,
+                DownloadQueued = download.DownloadQueued,
+                DownloadStarted = download.DownloadStarted,
+                DownloadFinished = download.DownloadFinished,
+                UnpackingQueued = download.UnpackingQueued,
+                UnpackingStarted = download.UnpackingStarted,
+                UnpackingFinished = download.UnpackingFinished,
+                Completed = download.Completed,
+                RetryCount = download.RetryCount,
+                Error = download.Error,
+                BytesTotal = download.BytesTotal,
+                BytesDone = download.BytesDone,
+                Speed = download.Speed
+            }).ToList()
         };
 
         return Ok(torrentDto);
@@ -171,7 +170,6 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
     public ActionResult<DiskSpaceStatus?> GetDiskSpaceStatus()
     {
         var status = DiskSpaceMonitor.GetCurrentStatus();
-
         return Ok(status);
     }
 
@@ -241,6 +239,68 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
         logger.LogDebug($"Add magnet");
 
         await torrents.AddMagnetToDebridQueue(request.MagnetLink, request.Torrent);
+
+        return Ok();
+    }
+
+    [HttpPost]
+    [Route("UploadNzbFile")]
+    public async Task<ActionResult> UploadNzbFile([FromForm] IFormFile? file,
+                                                  [ModelBinder(BinderType = typeof(JsonModelBinder))]
+                                                  TorrentControllerUploadFileRequest? formData)
+    {
+        if (file == null || file.Length <= 0)
+        {
+            return BadRequest("Invalid nzb file");
+        }
+
+        if (formData?.Torrent == null)
+        {
+            return BadRequest("Invalid Torrent");
+        }
+
+        logger.LogDebug($"Add nzb file");
+
+        if (String.IsNullOrWhiteSpace(formData.Torrent.RdName))
+        {
+            formData.Torrent.RdName = file.FileName;
+        }
+
+        var fileStream = file.OpenReadStream();
+
+        await using var memoryStream = new MemoryStream();
+
+        await fileStream.CopyToAsync(memoryStream);
+
+        var bytes = memoryStream.ToArray();
+
+        await torrents.AddNzbFileToDebridQueue(bytes, file.FileName, formData.Torrent);
+
+        return Ok();
+    }
+
+    [HttpPost]
+    [Route("UploadNzbLink")]
+    public async Task<ActionResult> UploadNzbLink([FromBody] TorrentControllerUploadNzbLinkRequest? request)
+    {
+        if (request == null)
+        {
+            return BadRequest();
+        }
+
+        if (String.IsNullOrEmpty(request.NzbLink))
+        {
+            return BadRequest("Invalid nzb link");
+        }
+
+        if (request.Torrent == null)
+        {
+            return BadRequest("Invalid Torrent");
+        }
+
+        logger.LogDebug($"Add nzb link {request.NzbLink}");
+
+        await torrents.AddNzbLinkToDebridQueue(request.NzbLink, request.Torrent);
 
         return Ok();
     }
@@ -355,7 +415,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
         var includeError = "";
         var excludeError = "";
 
-        IList<TorrentClientAvailableFile> availableFiles;
+        IList<DebridClientAvailableFile> availableFiles;
 
         if (!String.IsNullOrWhiteSpace(request.MagnetLink))
         {
@@ -382,7 +442,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
             return BadRequest();
         }
 
-        var selectedFiles = new List<TorrentClientAvailableFile>();
+        var selectedFiles = new List<DebridClientAvailableFile>();
 
         if (!String.IsNullOrWhiteSpace(request.IncludeRegex))
         {
@@ -440,6 +500,12 @@ public class TorrentControllerUploadFileRequest
 public class TorrentControllerUploadMagnetRequest
 {
     public String? MagnetLink { get; set; }
+    public Torrent? Torrent { get; set; }
+}
+
+public class TorrentControllerUploadNzbLinkRequest
+{
+    public String? NzbLink { get; set; }
     public Torrent? Torrent { get; set; }
 }
 
