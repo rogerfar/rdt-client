@@ -1,8 +1,9 @@
-# Real-Debrid Torrent Client
+# Real-Debrid Torrent & Usenet Client
 
 This is a web interface to manage your torrents on Real-Debrid, AllDebrid, Premiumize TorBox or DebridLink. It supports the following features:
 
 - Add new torrents through magnets or files
+- Add usenet downloads through NZB files (TorBox only)
 - Download all files from Real-Debrid, AllDebrid, Premiumize or TorBox to your local machine automatically
 - Unpack all files when finished downloading
 - Implements a fake qBittorrent API so you can hook up other applications like Sonarr, Radarr or Couchpotato.
@@ -34,7 +35,7 @@ Instead of running in Docker you can install it as a service in Windows or Linux
 
 ## Windows Service
 
-1. Make sure you have the **ASP.NET Core Runtime 10.0.0** installed: [https://dotnet.microsoft.com/download/dotnet/10.0](https://dotnet.microsoft.com/download/dotnet/10.0)
+1. Make sure you have the **ASP.NET Core Runtime 10.0.0** and the **SDK** installed: [https://dotnet.microsoft.com/download/dotnet/10.0](https://dotnet.microsoft.com/download/dotnet/10.0)
 2. Get the latest zip file from the Releases page and extract it to your host.
 3. Open the `appsettings.json` file and replace the `LogLevel` `Path` to a path on your host.
 4. In `appsettings.json` replace the `Database` `Path` to a path on your host.

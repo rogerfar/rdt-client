@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased
 
+## [2.0.121] - 2026-02-18
+### Added
+- NZB/Usernet support thanks to @omgbeez!
+
+### Changed
+- Make some qBittorrent endpoints accessible without authentication.
+- Improved ETA calculations.
+- Few performance improvements when the download page has a lot of torrents.
+- Performance improvements for the sqlite connection.
+
 ## [2.0.120] - 2026-02-11
 ### Changed
 - Upgrade to .NET 10.
