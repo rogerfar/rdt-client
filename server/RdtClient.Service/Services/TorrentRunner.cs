@@ -544,6 +544,9 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
                         catch (Exception ex)
                         {
                             LogError($"Unable to start download: {ex.Message}", download, torrent);
+
+                            await downloads.UpdateError(download.DownloadId, ex.Message);
+                            await downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
                         }
 
                         Log($"Started download", download, torrent);

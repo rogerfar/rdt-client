@@ -51,8 +51,17 @@ public class SabnzbdHandler(Authentication authentication, IHttpContextAccessor 
                 if (loginResult.Succeeded)
                 {
                     context.Succeed(requirement);
+                    return;
                 }
+
+                // Invalid credentials provided
+                context.Fail();
+                return;
             }
+
+            // Authentication required but missing credentials
+            context.Fail();
+            return;
         }
     }
 }

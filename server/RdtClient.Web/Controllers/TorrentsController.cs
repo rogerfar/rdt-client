@@ -60,25 +60,30 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
             RdSpeed = torrent.RdSpeed,
             RdSeeders = torrent.RdSeeders,
             Files = torrent.Files,
-            Downloads = torrent.Downloads.Select(download => new DownloadDto
+            Downloads = torrent.Downloads.Select(download =>
             {
-                DownloadId = download.DownloadId,
-                TorrentId = download.TorrentId,
-                Path = download.Path,
-                Link = download.Link,
-                Added = download.Added,
-                DownloadQueued = download.DownloadQueued,
-                DownloadStarted = download.DownloadStarted,
-                DownloadFinished = download.DownloadFinished,
-                UnpackingQueued = download.UnpackingQueued,
-                UnpackingStarted = download.UnpackingStarted,
-                UnpackingFinished = download.UnpackingFinished,
-                Completed = download.Completed,
-                RetryCount = download.RetryCount,
-                Error = download.Error,
-                BytesTotal = download.BytesTotal,
-                BytesDone = download.BytesDone,
-                Speed = download.Speed
+                var (speed, bytesTotal, bytesDone) = torrents.GetDownloadStats(download.DownloadId);
+
+                return new DownloadDto
+                {
+                    DownloadId = download.DownloadId,
+                    TorrentId = download.TorrentId,
+                    Path = download.Path,
+                    Link = download.Link,
+                    Added = download.Added,
+                    DownloadQueued = download.DownloadQueued,
+                    DownloadStarted = download.DownloadStarted,
+                    DownloadFinished = download.DownloadFinished,
+                    UnpackingQueued = download.UnpackingQueued,
+                    UnpackingStarted = download.UnpackingStarted,
+                    UnpackingFinished = download.UnpackingFinished,
+                    Completed = download.Completed,
+                    RetryCount = download.RetryCount,
+                    Error = download.Error,
+                    BytesTotal = bytesTotal,
+                    BytesDone = bytesDone,
+                    Speed = speed
+                };
             }).ToList()
         }).ToList();
 
@@ -140,25 +145,30 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
             RdSpeed = torrent.RdSpeed,
             RdSeeders = torrent.RdSeeders,
             Files = torrent.Files,
-            Downloads = torrent.Downloads.Select(download => new DownloadDto
+            Downloads = torrent.Downloads.Select(download =>
             {
-                DownloadId = download.DownloadId,
-                TorrentId = download.TorrentId,
-                Path = download.Path,
-                Link = download.Link,
-                Added = download.Added,
-                DownloadQueued = download.DownloadQueued,
-                DownloadStarted = download.DownloadStarted,
-                DownloadFinished = download.DownloadFinished,
-                UnpackingQueued = download.UnpackingQueued,
-                UnpackingStarted = download.UnpackingStarted,
-                UnpackingFinished = download.UnpackingFinished,
-                Completed = download.Completed,
-                RetryCount = download.RetryCount,
-                Error = download.Error,
-                BytesTotal = download.BytesTotal,
-                BytesDone = download.BytesDone,
-                Speed = download.Speed
+                var (speed, bytesTotal, bytesDone) = torrents.GetDownloadStats(download.DownloadId);
+
+                return new DownloadDto
+                {
+                    DownloadId = download.DownloadId,
+                    TorrentId = download.TorrentId,
+                    Path = download.Path,
+                    Link = download.Link,
+                    Added = download.Added,
+                    DownloadQueued = download.DownloadQueued,
+                    DownloadStarted = download.DownloadStarted,
+                    DownloadFinished = download.DownloadFinished,
+                    UnpackingQueued = download.UnpackingQueued,
+                    UnpackingStarted = download.UnpackingStarted,
+                    UnpackingFinished = download.UnpackingFinished,
+                    Completed = download.Completed,
+                    RetryCount = download.RetryCount,
+                    Error = download.Error,
+                    BytesTotal = bytesTotal,
+                    BytesDone = bytesDone,
+                    Speed = speed
+                };
             }).ToList()
         };
 
