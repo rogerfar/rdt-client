@@ -21,8 +21,8 @@ export class TorrentTableComponent implements OnInit {
   public torrents: Torrent[] = [];
   public selectedTorrents: string[] = [];
   public error: string;
-  public sortProperty = 'rdName';
-  public sortDirection: 'asc' | 'desc' = 'asc';
+  public sortProperty = 'added';
+  public sortDirection: 'asc' | 'desc' = 'desc';
 
   public isDeleteModalActive: boolean;
   public deleteError: string;
