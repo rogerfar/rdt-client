@@ -1,5 +1,6 @@
 ﻿using System.Web;
 using RdtClient.Data.Models.Data;
+using RdtClient.Service.Services;
 
 namespace RdtClient.Service.Helpers;
 
@@ -16,14 +17,15 @@ public static class Logger
             fileName = HttpUtility.UrlDecode(fileName);
         }
 
-        var done = (Int32)(((Double)download.BytesDone / download.BytesTotal) * 100);
+        var stats = TorrentRunner.GetStats(download.DownloadId);
+        var done = (Int32)((Double)stats.BytesDone / stats.BytesTotal * 100);
 
-        if (done < 0)
+        if (done < 0 || Double.IsNaN(done) || Double.IsInfinity(done))
         {
             done = 0;
         }
 
-        return $"for download {fileName}. Completed: {done}%, avg speed: {download.Speed}bytes/s ({download.DownloadId}) remoteID: {download.RemoteId}";
+        return $"for download {fileName}. Completed: {done}%, avg speed: {stats.Speed}bytes/s ({download.DownloadId}) remoteID: {download.RemoteId}";
     }
 
     public static String ToLog(this Torrent torrent)
