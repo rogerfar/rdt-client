@@ -175,9 +175,36 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
     {
         var torrent = await torrents.GetByHash(hash);
 
-        if (torrent != null)
+        if (torrent == null || torrent.Type != DownloadType.Nzb)
         {
-            await torrents.Delete(torrent.TorrentId, true, true, true);
+            return;
+        }
+        
+        switch (Settings.Get.Integrations.Default.FinishedAction)
+        {
+            case TorrentFinishedAction.RemoveAllTorrents:
+                logger.LogDebug("Removing nzb from debrid provider and RDT-Client, no files");
+                await torrents.Delete(torrent.TorrentId, true, true, true);
+
+                break;
+            case TorrentFinishedAction.RemoveRealDebrid:
+                logger.LogDebug("Removing nzb from debrid provider, no files");
+                await torrents.Delete(torrent.TorrentId, false, true, true);
+
+                break;
+            case TorrentFinishedAction.RemoveClient:
+                logger.LogDebug("Removing nzb from client, no files");
+                await torrents.Delete(torrent.TorrentId, true, false, true);
+
+                break;
+            case TorrentFinishedAction.None:
+                logger.LogDebug("Not removing nzb files");
+
+                break;
+            default:
+                logger.LogDebug($"Invalid nzb FinishedAction {torrent.FinishedAction}", torrent);
+
+                break;
         }
     }
 
