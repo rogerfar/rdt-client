@@ -14,7 +14,7 @@ using TorrentsService = RdtClient.Service.Services.Torrents;
 
 namespace RdtClient.Service.Test.Services;
 
-internal class Mocks
+class Mocks
 {
     public readonly Mock<IDownloads> DownloadsMock;
     public readonly Mock<IEnricher> EnricherMock;

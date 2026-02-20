@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace RdtClient.Service.BackgroundServices;
 
-public class UpdateChecker(ILogger<UpdateChecker> logger) : BackgroundService
+public class UpdateChecker(ILogger<UpdateChecker> logger, IHttpClientFactory httpClientFactory) : BackgroundService
 {
     private static readonly List<String> KnownGhsaIds = [];
     public static String? CurrentVersion { get; private set; }
@@ -79,13 +79,13 @@ public class UpdateChecker(ILogger<UpdateChecker> logger) : BackgroundService
         logger.LogInformation("UpdateChecker stopped.");
     }
 
-    private static async Task<T?> GitHubRequest<T>(String endpoint, CancellationToken cancellationToken)
+    private async Task<T?> GitHubRequest<T>(String endpoint, CancellationToken cancellationToken)
     {
-        var httpClient = new HttpClient();
-        httpClient.DefaultRequestHeaders.UserAgent.Add(new("RdtClient", CurrentVersion));
-        var response = await httpClient.GetStringAsync($"https://api.github.com{endpoint}", cancellationToken);
-
-        return JsonConvert.DeserializeObject<T>(response);
+            var httpClient = httpClientFactory.CreateClient();
+            httpClient.DefaultRequestHeaders.UserAgent.Add(new("RdtClient", CurrentVersion));
+            var response = await httpClient.GetStringAsync($"https://api.github.com{endpoint}", cancellationToken);
+            
+            return JsonConvert.DeserializeObject<T>(response);
     }
 }
 

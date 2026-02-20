@@ -5,6 +5,7 @@ using RDNET;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.DebridClient;
+using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Helpers;
 using Download = RdtClient.Data.Models.Data.Download;
 using Torrent = RDNET.Torrent;
@@ -128,20 +129,36 @@ public class RealDebridDebridClient(ILogger<RealDebridDebridClient> logger, IHtt
 
     public async Task<String> AddTorrentMagnet(String magnetLink)
     {
-        var timeoutCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(Settings.Get.Provider.Timeout));
+        try
+        {
+            var timeoutCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(Settings.Get.Provider.Timeout));
 
-        var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, timeoutCancellationToken.Token);
+            var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, timeoutCancellationToken.Token);
 
-        return result.Id;
+            return result.Id;
+        }
+        catch (Exception ex) when (ex.Message.Contains("slow_down", StringComparison.OrdinalIgnoreCase) ||
+                           ex.Message.Contains("rate limit exceeded", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new RateLimitException(ex.Message, TimeSpan.FromMinutes(2));
+        }
     }
 
     public async Task<String> AddTorrentFile(Byte[] bytes)
     {
-        var timeoutCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(Settings.Get.Provider.Timeout));
+        try
+        {
+            var timeoutCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(Settings.Get.Provider.Timeout));
 
-        var result = await GetClient().Torrents.AddFileAsync(bytes, timeoutCancellationToken.Token);
+            var result = await GetClient().Torrents.AddFileAsync(bytes, timeoutCancellationToken.Token);
 
-        return result.Id;
+            return result.Id;
+        }
+        catch (Exception ex) when (ex.Message.Contains("slow_down", StringComparison.OrdinalIgnoreCase) ||
+                           ex.Message.Contains("rate limit exceeded", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new RateLimitException(ex.Message, TimeSpan.FromMinutes(2));
+        }
     }
 
     public Task<String> AddNzbLink(String nzbLink)

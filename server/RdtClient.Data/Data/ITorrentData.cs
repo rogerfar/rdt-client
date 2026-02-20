@@ -19,6 +19,7 @@ public interface ITorrentData
 
     Task UpdateRdData(Torrent torrent);
     Task UpdateRdId(Torrent torrent, String rdId);
+    Task UpdateHash(Torrent torrent, String hash);
     Task Update(Torrent torrent);
     Task UpdateCategory(Guid torrentId, String? category);
     Task UpdateComplete(Guid torrentId, String? error, DateTimeOffset? datetime, Boolean retry);

@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.DebridClient;
+using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Helpers;
 using Download = RdtClient.Data.Models.Data.Download;
 using Torrent = DebridLinkFrNET.Models.Torrent;
@@ -120,16 +121,32 @@ public class DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFacto
 
     public async Task<String> AddTorrentMagnet(String magnetLink)
     {
-        var result = await GetClient().Seedbox.AddTorrentAsync(magnetLink);
+        try
+        {
+            var result = await GetClient().Seedbox.AddTorrentAsync(magnetLink);
 
-        return result.Id ?? "";
+            return result.Id ?? "";
+        }
+        catch (Exception ex) when (ex.Message.Contains("slow_down", StringComparison.OrdinalIgnoreCase) ||
+                           ex.Message.Contains("rate limit exceeded", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new RateLimitException(ex.Message, TimeSpan.FromMinutes(2));
+        }
     }
 
     public async Task<String> AddTorrentFile(Byte[] bytes)
     {
-        var result = await GetClient().Seedbox.AddTorrentByFileAsync(bytes);
+        try
+        {
+            var result = await GetClient().Seedbox.AddTorrentByFileAsync(bytes);
 
-        return result.Id ?? "";
+            return result.Id ?? "";
+        }
+        catch (Exception ex) when (ex.Message.Contains("slow_down", StringComparison.OrdinalIgnoreCase) ||
+                           ex.Message.Contains("rate limit exceeded", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new RateLimitException(ex.Message, TimeSpan.FromMinutes(2));
+        }
     }
 
     public Task<String> AddNzbLink(String nzbLink)
