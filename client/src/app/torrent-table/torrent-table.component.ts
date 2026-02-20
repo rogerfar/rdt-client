@@ -96,9 +96,12 @@ export class TorrentTableComponent implements OnInit {
   }
 
   public sort(property: string): void {
-    const isSameProperty = this.sortProperty === property;
-    this.sortProperty = property;
-    this.sortDirection = isSameProperty ? (this.sortDirection === 'asc' ? 'desc' : 'asc') : this.sortDirection;
+    if (this.sortProperty === property) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortProperty = property;
+      this.sortDirection = 'desc';
+    }
 
     // Persist sort settings
     try {
