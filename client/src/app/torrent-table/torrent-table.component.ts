@@ -57,6 +57,20 @@ export class TorrentTableComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Load persisted sort settings (if any)
+    try {
+      const sp = localStorage.getItem('torrentTable.sortProperty');
+      const sd = localStorage.getItem('torrentTable.sortDirection');
+      if (sp) {
+        this.sortProperty = sp;
+      }
+      if (sd === 'asc' || sd === 'desc') {
+        this.sortDirection = sd as 'asc' | 'desc';
+      }
+    } catch (_) {
+      // Ignore storage errors (e.g., disabled storage)
+    }
+
     this.torrentService.getDiskSpaceStatus().subscribe({
       next: (status) => {
         this.diskSpaceStatus = status;
@@ -82,8 +96,17 @@ export class TorrentTableComponent implements OnInit {
   }
 
   public sort(property: string): void {
+    const isSameProperty = this.sortProperty === property;
     this.sortProperty = property;
-    this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    this.sortDirection = isSameProperty ? (this.sortDirection === 'asc' ? 'desc' : 'asc') : this.sortDirection;
+
+    // Persist sort settings
+    try {
+      localStorage.setItem('torrentTable.sortProperty', this.sortProperty);
+      localStorage.setItem('torrentTable.sortDirection', this.sortDirection);
+    } catch (_) {
+      // Ignore storage errors
+    }
   }
 
   public openTorrent(torrentId: string): void {
