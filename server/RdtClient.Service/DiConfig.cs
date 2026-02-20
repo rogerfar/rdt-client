@@ -123,7 +123,7 @@ public static class DiConfig
 
                     if (delay >= TimeSpan.FromSeconds(Settings.Get.Provider.Timeout))
                     {
-                        throw new RateLimitException("TorBox rate limit exceeded", delay);
+                        throw new RateLimitException("Provider rate limit exceeded", delay);
                     }
 
                     return new ValueTask<TimeSpan?>(delay);

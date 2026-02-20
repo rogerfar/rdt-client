@@ -22,6 +22,7 @@ public class RateLimitHandler : DelegatingHandler
                     delay = TimeSpan.FromMinutes(2);
                 }
 
+                response.Dispose();
                 throw new RateLimitException("TorBox rate limit exceeded", delay);
             }
 
@@ -29,7 +30,7 @@ public class RateLimitHandler : DelegatingHandler
         }
         catch (Exception ex) when (ex is TimeoutRejectedException or TaskCanceledException)
         {
-            throw new RateLimitException("TorBox rate limit exceeded (timeout)", TimeSpan.FromMinutes(2));
+            throw new RateLimitException("Provider rate limit exceeded (timeout)", TimeSpan.FromMinutes(2));
         }
     }
 }

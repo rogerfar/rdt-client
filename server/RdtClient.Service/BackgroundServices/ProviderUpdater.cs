@@ -44,9 +44,9 @@ public class ProviderUpdater(ILogger<ProviderUpdater> logger, IServiceProvider s
                     {
                         updateTime = Settings.Get.Provider.CheckInterval;
 
-                        if (updateTime < 1)
+                        if (updateTime < 5)
                         {
-                            updateTime = 1;
+                            updateTime = 5;
                         }
                     }
 
