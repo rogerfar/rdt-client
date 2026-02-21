@@ -9,6 +9,7 @@ using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Services;
+using RdtClient.Service.Test.Helpers;
 using RdtClient.Service.Wrappers;
 using TorrentsService = RdtClient.Service.Services.Torrents;
 
@@ -88,9 +89,22 @@ public class TorrentsTest
         mocks.TorrentDataMock.Setup(t => t.GetById(torrent.TorrentId)).Returns(Task.FromResult<Torrent?>(torrent));
         mocks.DownloadsMock.Setup(d => d.GetForTorrent(torrent.TorrentId)).ReturnsAsync(downloads);
 
-        var downloadPath = $"{settings.DownloadClient.DownloadPath}/{torrent.Category}";
-        var torrentPath = $"{downloadPath}/{torrent.RdName}";
-        var filePath = $"{torrentPath}/{downloads[0].FileName}";
+        String downloadPath;
+        String torrentPath;
+        String filePath;
+        if (OSHelper.IsLinux)
+        {
+            downloadPath = $"{settings.DownloadClient.DownloadPath}/{torrent.Category}";
+            torrentPath = $"{downloadPath}/{torrent.RdName}";
+            filePath = $"{torrentPath}/{downloads[0].FileName}";
+        }
+        else
+        {
+            Settings.Get.DownloadClient.DownloadPath = settings.DownloadClient.DownloadPath = @"C:\Downloads";
+            downloadPath = @$"{settings.DownloadClient.DownloadPath}\{torrent.Category}";
+            torrentPath = @$"{downloadPath}\{torrent.RdName}";
+            filePath = @$"{torrentPath}\{downloads[0].FileName}";
+        }
 
         var fileSystemMock = new MockFileSystem(new Dictionary<String, MockFileData>
         {

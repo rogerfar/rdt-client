@@ -181,7 +181,15 @@ public class DownloadHelperTest
             FileName = "file.txt"
         };
 
-        var fileRelativePath = "inside/lots/of/subdirectories/file.txt";
+        String fileRelativePath;
+        if (OSHelper.IsLinux)
+        {
+            fileRelativePath = "inside/lots/of/subdirectories/file.txt";
+        }
+        else
+        {
+            fileRelativePath = @"inside\lots\of\subdirectories\file.txt";
+        }
 
         IList<DebridClientFile> files =
         [
@@ -217,7 +225,15 @@ public class DownloadHelperTest
             FileName = "file.txt"
         };
 
-        var fileRelativePath = "inside/lots/of/subdirectories/file.txt";
+        String fileRelativePath;
+        if (OSHelper.IsLinux)
+        {
+            fileRelativePath = "inside/lots/of/subdirectories/file.txt";
+        }
+        else
+        {
+            fileRelativePath = @"inside\lots\of\subdirectories\file.txt";
+        }
 
         IList<DebridClientFile> files =
         [
