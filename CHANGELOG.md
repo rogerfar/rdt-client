@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased
 
+## [2.0.122] - 2026-02-21
+### Added
+- Sort torrents by added date by default, remember sort order in the browser.
+
+### Changed
+- Fixed ETA calculations.
+- Fixed Torrentbox statuses.
+- Fixed download progress reports.
+- Fixed NZB delete actions.
+
 ## [2.0.121] - 2026-02-18
 ### Added
 - NZB/Usernet support thanks to @omgbeez!
