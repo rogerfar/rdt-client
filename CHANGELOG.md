@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased
 
+## [2.0.123] - 2026-02-21
+### Changed
+- Reverted SharpCompress to 0.42.1 due to file locking issues.
+
 ## [2.0.122] - 2026-02-21
 ### Added
 - Sort torrents by added date by default, remember sort order in the browser.

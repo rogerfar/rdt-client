@@ -5,7 +5,6 @@ using RdtClient.Service.Services.DebridClients;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.Zip;
-using SharpCompress.Common;
 
 namespace RdtClient.Service.Services;
 
@@ -129,11 +128,11 @@ public class UnpackClient(Download download, String destinationPath)
 
         if (extension == ".zip")
         {
-            archive = ZipArchive.OpenArchive(stream);
+            archive = ZipArchive.Open(stream);
         }
         else
         {
-            archive = RarArchive.OpenArchive(stream);
+            archive = RarArchive.Open(stream);
         }
 
         var entries = archive.Entries
@@ -158,18 +157,19 @@ public class UnpackClient(Download download, String destinationPath)
 
         if (extension == ".zip")
         {
-            archive = ZipArchive.OpenArchive(fi);
+            archive = ZipArchive.Open(fi);
         }
         else
         {
-            archive = RarArchive.OpenArchive(fi);
+            archive = RarArchive.Open(fi);
         }
 
-        archive.WriteToDirectory(extractPath,
-                                 new Progress<ProgressReport>(d =>
-                                 {
-                                     Progess = (Int32)Math.Round(d.PercentComplete ?? 0);
-                                 }));
+        archive.ExtractToDirectory(extractPath,
+                                   d =>
+                                   {
+                                       Progess = (Int32)Math.Round(d);
+                                   },
+                                   cancellationToken: cancellationToken);
 
         archive.Dispose();
 

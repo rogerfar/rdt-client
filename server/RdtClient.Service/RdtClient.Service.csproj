@@ -21,7 +21,7 @@
     <PackageReference Include="RD.NET" Version="2.1.11" />
     <PackageReference Include="Serilog" Version="4.3.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="SharpCompress" Version="0.46.2" />
+    <PackageReference Include="SharpCompress" Version="0.42.1" />
     <PackageReference Include="Synology.Api.Client" Version="0.3.93" />
     <PackageReference Include="TestableIO.System.IO.Abstractions" Version="22.1.0" />
     <PackageReference Include="TestableIO.System.IO.Abstractions.Wrappers" Version="22.1.0" />
