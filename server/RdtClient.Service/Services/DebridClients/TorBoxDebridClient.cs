@@ -393,25 +393,23 @@ public class TorBoxDebridClient(ILogger<TorBoxDebridClient> logger, IHttpClientF
                 torrent.RdStatus = rdTorrent.Status switch
                 {
                     "allocating" => TorrentStatus.Processing,
-                    "queued" => TorrentStatus.Processing,
-                    "queuedDL" => TorrentStatus.Processing,
                     "metaDL" => TorrentStatus.Processing,
-                    "checking" => TorrentStatus.Processing,
-                    "checkingResumeData" => TorrentStatus.Processing,
-                    "paused" => TorrentStatus.Downloading,
-                    "pausedDL" => TorrentStatus.Downloading,
-                    "stalledDL" => TorrentStatus.Downloading,
-                    "downloading" => TorrentStatus.Downloading,
+                    _ when rdTorrent.Status != null && rdTorrent.Status.StartsWith("queued", StringComparison.OrdinalIgnoreCase) => TorrentStatus.Processing,
                     "completed" => TorrentStatus.Downloading,
-                    "uploading" => TorrentStatus.Downloading,
-                    "uploading (no peers)" => TorrentStatus.Downloading,
-                    "stalled" => TorrentStatus.Downloading,
-                    "stalled (no seeds)" => TorrentStatus.Downloading,
                     "processing" => TorrentStatus.Downloading,
-                    "checkingDL" => TorrentStatus.Downloading,
+                    _ when rdTorrent.Status != null && rdTorrent.Status.StartsWith("paused", StringComparison.OrdinalIgnoreCase) => TorrentStatus.Downloading,
+                    _ when rdTorrent.Status != null && rdTorrent.Status.StartsWith("stalled", StringComparison.OrdinalIgnoreCase) => TorrentStatus.Downloading,
+                    _ when rdTorrent.Status != null && rdTorrent.Status.StartsWith("downloading", StringComparison.OrdinalIgnoreCase) => TorrentStatus.Downloading,
+                    _ when rdTorrent.Status != null && rdTorrent.Status.StartsWith("checking", StringComparison.OrdinalIgnoreCase) => TorrentStatus.Downloading,
+                    _ when rdTorrent.Status != null && rdTorrent.Status.StartsWith("waiting", StringComparison.OrdinalIgnoreCase) => TorrentStatus.Downloading,
+                    _ when rdTorrent.Status != null && rdTorrent.Status.StartsWith("direct unpack", StringComparison.OrdinalIgnoreCase) => TorrentStatus.Downloading,
+                    _ when rdTorrent.Status != null && rdTorrent.Status.StartsWith("repair", StringComparison.OrdinalIgnoreCase) => TorrentStatus.Downloading,
+                    _ when rdTorrent.Status != null && rdTorrent.Status.StartsWith("verifying", StringComparison.OrdinalIgnoreCase) => TorrentStatus.Downloading,
+                    _ when rdTorrent.Status != null && rdTorrent.Status.StartsWith("uploading", StringComparison.OrdinalIgnoreCase) => TorrentStatus.Uploading,
                     "cached" => TorrentStatus.Finished,
+                    "missing" => TorrentStatus.Error, // NZB missing parts
                     "error" => TorrentStatus.Error,
-                    _ when rdTorrent.Status != null && rdTorrent.Status.StartsWith("failed") => TorrentStatus.Error,
+                    _ when rdTorrent.Status != null && rdTorrent.Status.StartsWith("failed", StringComparison.OrdinalIgnoreCase) => TorrentStatus.Error,
                     _ => LogUnmappedStatus(rdTorrent.Status, torrent)
                 };
             }
