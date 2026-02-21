@@ -102,6 +102,7 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
                 await Downloader.Cancel();
             }
 
+            Error = ex.Message;
             Finished = true;
 
             throw new($"An unexpected error occurred preparing download {download.Link} for torrent {torrent.RdName}: {ex.Message}");
