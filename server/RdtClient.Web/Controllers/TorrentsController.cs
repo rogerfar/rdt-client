@@ -183,6 +183,28 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
         return Ok(status);
     }
 
+    [HttpGet]
+    [Route("RateLimitStatus")]
+    public ActionResult<RateLimitStatus> GetRateLimitStatus()
+    {
+        var nextDequeueTime = TorrentRunner.NextDequeueTime;
+
+        if (nextDequeueTime < DateTimeOffset.Now)
+        {
+            return Ok(new RateLimitStatus
+            {
+                NextDequeueTime = null,
+                SecondsRemaining = 0
+            });
+        }
+
+        return Ok(new RateLimitStatus
+        {
+            NextDequeueTime = nextDequeueTime,
+            SecondsRemaining = (nextDequeueTime - DateTimeOffset.Now).TotalSeconds
+        });
+    }
+
     /// <summary>
     ///     Used for debugging only. Force a tick.
     /// </summary>

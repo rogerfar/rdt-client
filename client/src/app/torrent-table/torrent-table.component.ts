@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Torrent } from '../models/torrent.model';
 import { DiskSpaceStatus } from '../models/disk-space-status.model';
+import { RateLimitStatus } from '../models/rate-limit-status.model';
 import { TorrentService } from '../torrent.service';
 import { forkJoin, Observable } from 'rxjs';
 import { FormsModule } from '@angular/forms';
@@ -50,6 +51,7 @@ export class TorrentTableComponent implements OnInit {
   public updateSettingsTorrentLifetime: number;
 
   public diskSpaceStatus: DiskSpaceStatus | null = null;
+  public rateLimitStatus: RateLimitStatus | null = null;
 
   constructor(
     private router: Router,
@@ -79,6 +81,16 @@ export class TorrentTableComponent implements OnInit {
 
     this.torrentService.diskSpaceStatus$.subscribe((status) => {
       this.diskSpaceStatus = status;
+    });
+
+    this.torrentService.getRateLimitStatus().subscribe({
+      next: (status) => {
+        this.rateLimitStatus = status;
+      },
+    });
+
+    this.torrentService.rateLimitStatus$.subscribe((status) => {
+      this.rateLimitStatus = status;
     });
 
     this.torrentService.update$.subscribe((result) => {

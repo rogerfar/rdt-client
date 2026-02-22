@@ -14,7 +14,7 @@ namespace RdtClient.Web.Controllers;
 [ApiController]
 [Route("api/v2")]
 [Route("qbittorrent/api/v2")]
-public class QBittorrentController(ILogger<QBittorrentController> logger, QBittorrent qBittorrent) : Controller
+public class QBittorrentController(ILogger<QBittorrentController> logger, QBittorrent qBittorrent, IHttpClientFactory httpClientFactory) : Controller
 {
     [AllowAnonymous]
     [Route("/version/api")]
@@ -348,7 +348,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
                 }
                 else if (url.StartsWith("http"))
                 {
-                    var httpClient = new HttpClient();
+                    var httpClient = httpClientFactory.CreateClient();
                     var result = await httpClient.GetByteArrayAsync(url);
                     await qBittorrent.TorrentsAddFile(result, request.Category, null);
                 }

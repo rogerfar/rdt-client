@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RdtClient.Data.Enums;
+using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Services;
 
 namespace RdtClient.Service.BackgroundServices;
@@ -19,7 +20,7 @@ public class ProviderUpdater(ILogger<ProviderUpdater> logger, IServiceProvider s
 
         using var scope = serviceProvider.CreateScope();
         var torrentService = scope.ServiceProvider.GetRequiredService<Torrents>();
-
+        var torrentRunner = scope.ServiceProvider.GetRequiredService<TorrentRunner>();
         logger.LogInformation("ProviderUpdater started.");
 
         while (!stoppingToken.IsCancellationRequested)
@@ -28,7 +29,7 @@ public class ProviderUpdater(ILogger<ProviderUpdater> logger, IServiceProvider s
             {
                 var torrents = await torrentService.Get();
 
-                if (_nextUpdate < DateTime.UtcNow && (Settings.Get.Provider.AutoImport || torrents.Any(t => t.RdStatus != TorrentStatus.Finished)))
+                if (_nextUpdate < DateTime.UtcNow && (Settings.Get.Provider.AutoImport || torrents.Any(t => t.RdStatus != TorrentStatus.Finished) || RdtHub.HasConnections))
                 {
                     logger.LogDebug($"Updating torrent info from debrid provider");
 
@@ -55,6 +56,11 @@ public class ProviderUpdater(ILogger<ProviderUpdater> logger, IServiceProvider s
 
                     logger.LogDebug("Finished updating torrent info from debrid provider, next update in {updateTime} seconds", updateTime);
                 }
+            }
+            catch (RateLimitException ex)
+            {
+                await torrentRunner.SetRateLimit(ex.RetryAfter, ex.Message);
+                _nextUpdate = DateTime.UtcNow.Add(ex.RetryAfter);
             }
             catch (Exception ex)
             {

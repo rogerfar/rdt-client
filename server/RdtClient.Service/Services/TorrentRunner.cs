@@ -11,17 +11,10 @@ using RdtClient.Service.Services.Downloaders;
 
 namespace RdtClient.Service.Services;
 
-public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Downloads downloads)
+public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Downloads downloads, RemoteService remoteService, IHttpClientFactory httpClientFactory)
 {
     public static readonly ConcurrentDictionary<Guid, DownloadClient> ActiveDownloadClients = new();
     public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new();
-
-    private readonly HttpClient _httpClient = new()
-    {
-        Timeout = TimeSpan.FromSeconds(10)
-    };
-
-    public static Boolean IsPausedForLowDiskSpace { get; set; }
 
     public static (Int64 Speed, Int64 BytesTotal, Int64 BytesDone) GetStats(Guid downloadId)
     {
@@ -37,7 +30,11 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
 
         return (0, 0, 0);
     }
-    
+
+    public static Boolean IsPausedForLowDiskSpace { get; set; }
+
+    public static DateTimeOffset NextDequeueTime { get; private set; } = DateTimeOffset.MinValue;
+
     public async Task Initialize()
     {
         Log("Initializing TorrentRunner");
@@ -127,7 +124,10 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
         {
             Log("Updating Aria2 status");
 
-            var aria2NetClient = new Aria2NetClient(Settings.Get.DownloadClient.Aria2cUrl, Settings.Get.DownloadClient.Aria2cSecret, _httpClient, 1);
+            var httpClient = httpClientFactory.CreateClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(10);
+
+            var aria2NetClient = new Aria2NetClient(Settings.Get.DownloadClient.Aria2cUrl, Settings.Get.DownloadClient.Aria2cSecret, httpClient, 1);
 
             var allDownloads = await aria2NetClient.TellAllAsync();
 
@@ -349,27 +349,51 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
 
         if (torrentsToAddToProvider.Count != 0)
         {
-            var downloadingTorrentsCount = allTorrents.Count(m => m.RdStatus is not (TorrentStatus.Queued or TorrentStatus.Finished or TorrentStatus.Error));
-
-            var maxParallelDownloads = Settings.Get.Provider.MaxParallelDownloads;
-
-            logger.LogDebug("Currently downloading {downloadingTorrentCount}/{maxParallelDownloads} torrents, {queuedCount} queued.",
-                            downloadingTorrentsCount,
-                            maxParallelDownloads,
-                            torrentsToAddToProvider.Count);
-
-            var dequeueCount = maxParallelDownloads == 0 ? torrentsToAddToProvider.Count : maxParallelDownloads - downloadingTorrentsCount;
-
-            foreach (var torrent in torrentsToAddToProvider.Take(dequeueCount))
+            if (DateTimeOffset.Now < NextDequeueTime)
             {
-                try
+                logger.LogDebug($"Dequeuing torrents is paused until {NextDequeueTime}, {NextDequeueTime - DateTimeOffset.Now} remaining");
+            }
+            else
+            {
+                if (NextDequeueTime != DateTimeOffset.MinValue)
                 {
-                    await torrents.DequeueFromDebridQueue(torrent);
+                    NextDequeueTime = DateTimeOffset.MinValue;
+
+                    await remoteService.UpdateRateLimitStatus(new RateLimitStatus
+                    {
+                        NextDequeueTime = null,
+                        SecondsRemaining = 0
+                    });
                 }
-                catch (Exception ex)
+
+                var downloadingTorrentsCount = allTorrents.Count(m => m.RdStatus is not (TorrentStatus.Queued or TorrentStatus.Finished or TorrentStatus.Error));
+
+                var maxParallelDownloads = Settings.Get.Provider.MaxParallelDownloads;
+
+                logger.LogDebug("Currently downloading {downloadingTorrentCount}/{maxParallelDownloads} torrents, {queuedCount} queued.",
+                                downloadingTorrentsCount,
+                                maxParallelDownloads,
+                                torrentsToAddToProvider.Count);
+
+                var dequeueCount = maxParallelDownloads == 0 ? torrentsToAddToProvider.Count : maxParallelDownloads - downloadingTorrentsCount;
+
+                foreach (var torrent in torrentsToAddToProvider.Take(dequeueCount))
                 {
-                    await torrents.UpdateComplete(torrent.TorrentId, $"Could not add to provider: {ex.Message}", DateTimeOffset.Now, true);
-                    logger.LogWarning(ex, "Could not dequeue torrent {torrentId}", torrent.TorrentId);
+                    try
+                    {
+                        await torrents.DequeueFromDebridQueue(torrent);
+                    }
+                    catch (RateLimitException ex)
+                    {
+                        await SetRateLimit(ex.RetryAfter, ex.Message);
+
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        await torrents.UpdateComplete(torrent.TorrentId, $"Could not add to provider: {ex.Message}", DateTimeOffset.Now, true);
+                        logger.LogWarning(ex, "Could not dequeue torrent {torrentId}", torrent.TorrentId);
+                    }
                 }
             }
         }
@@ -723,6 +747,19 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
         {
             Log($"TorrentRunner Tick End (took {sw.ElapsedMilliseconds}ms)");
         }
+    }
+
+    public async Task SetRateLimit(TimeSpan retryAfter, String message)
+    {
+        NextDequeueTime = DateTimeOffset.Now.Add(retryAfter);
+
+        Log($"Rate-limit reached, pausing dequeuing for {retryAfter.TotalMinutes} minutes (until {NextDequeueTime}): {message}");
+
+        await remoteService.UpdateRateLimitStatus(new RateLimitStatus
+        {
+            NextDequeueTime = NextDequeueTime,
+            SecondsRemaining = retryAfter.TotalSeconds
+        });
     }
 
     private void Log(String message, Download? download, Torrent? torrent)

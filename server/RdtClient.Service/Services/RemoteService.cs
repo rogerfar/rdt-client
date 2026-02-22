@@ -84,4 +84,9 @@ public class RemoteService(IHubContext<RdtHub> hub, Torrents torrents)
     {
         await hub.Clients.All.SendCoreAsync("diskSpaceStatus", [status]);
     }
+
+    public async Task UpdateRateLimitStatus(RateLimitStatus status)
+    {
+        await hub.Clients.All.SendCoreAsync("rateLimitStatus", [status]);
+    }
 }

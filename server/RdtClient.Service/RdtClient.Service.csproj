@@ -18,6 +18,7 @@
     <PackageReference Include="MonoTorrent" Version="3.0.2" />
     <PackageReference Include="Polly" Version="8.6.5" />
     <PackageReference Include="Premiumize.NET" Version="1.0.10" />
+    <PackageReference Include="RateLimitHeaders.Polly" Version="1.0.0" />
     <PackageReference Include="RD.NET" Version="2.1.11" />
     <PackageReference Include="Serilog" Version="4.3.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
@@ -25,7 +26,7 @@
     <PackageReference Include="Synology.Api.Client" Version="0.3.93" />
     <PackageReference Include="TestableIO.System.IO.Abstractions" Version="22.1.0" />
     <PackageReference Include="TestableIO.System.IO.Abstractions.Wrappers" Version="22.1.0" />
-    <PackageReference Include="TorBox.NET" Version="1.6.0" />
+    <PackageReference Include="TorBox.NET" Version="1.6.2" />
   </ItemGroup>
 
   <ItemGroup>
