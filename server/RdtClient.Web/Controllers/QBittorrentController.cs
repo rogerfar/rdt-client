@@ -17,6 +17,16 @@ namespace RdtClient.Web.Controllers;
 public class QBittorrentController(ILogger<QBittorrentController> logger, QBittorrent qBittorrent) : Controller
 {
     [AllowAnonymous]
+    [Route("/version/api")]
+    [HttpGet]
+    [HttpPost]
+    public ActionResult LegacyVersionApi()
+    {
+        // Returning 20 nudges older qB clients to use /api/v2 endpoints.
+        return Content("20", "text/plain");
+    }
+
+    [AllowAnonymous]
     [Route("auth/login")]
     [HttpGet]
     public async Task<ActionResult> AuthLogin([FromQuery] QBAuthLoginRequest request)
