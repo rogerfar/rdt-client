@@ -692,4 +692,25 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             DlRateLimit = Settings.Get.DownloadClient.MaxSpeed
         };
     }
+
+    public async Task<List<Tracker>> TorrentsTrackers(String hash)
+    {
+        var torrent = await torrents.GetByHash(hash);
+
+        if (torrent == null || torrent.Type != DownloadType.Torrent)
+        {
+            return [];
+        }
+
+        return
+        [
+            new()
+            {
+                Url = $"http://{torrent.RdHost ?? torrent.ClientKind.ToString()}/**".ToLower(),
+                Status = "Working",
+                NumPeers = torrent.RdSeeders ?? 1,
+                Msg = $"Fake Tracker for {torrent.ClientKind}"
+            }
+        ];
+    }
 }

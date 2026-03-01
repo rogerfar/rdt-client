@@ -569,6 +569,30 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     {
         return TransferInfo();
     }
+
+    [Authorize(Policy = "AuthSetting")]
+    [Route("torrents/trackers")]
+    [HttpGet]
+    [HttpPost]
+    public async Task<ActionResult<IList<TorrentInfo>>> TorrentsTrackers([FromQuery] QBTorrentsHashRequest request)
+    {
+        if (String.IsNullOrWhiteSpace(request.Hash))
+        {
+            return BadRequest();
+        }
+
+        var results = await qBittorrent.TorrentsTrackers(request.Hash);
+
+        return Ok(results);
+    }
+
+    [Authorize(Policy = "AuthSetting")]
+    [Route("torrents/trackers")]
+    [HttpPost]
+    public async Task<ActionResult<IList<TorrentInfo>>> TorrentsTrackersPost([FromForm] QBTorrentsHashRequest request)
+    {
+        return await TorrentsTrackers(request);
+    }
 }
 
 public class QBAuthLoginRequest
