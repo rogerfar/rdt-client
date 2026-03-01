@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased
 
+## [2.0.125] - 2026-03-01
+### Added
+- Added extra qBittorrent endpoints for Cleanuparr compatibility.
+
 ## [2.0.124] - 2026-02-23
 ### Added
 - Added /version/api for qBittorrent to support clients that still want to talk to the old API.
