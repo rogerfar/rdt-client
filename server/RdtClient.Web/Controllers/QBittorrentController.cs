@@ -35,22 +35,22 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
 
         if (Settings.Get.General.AuthenticationType == AuthenticationType.None)
         {
-            return Ok("Ok.");
+            return Content("Ok.", "text/plain");
         }
 
         if (String.IsNullOrWhiteSpace(request.UserName) || String.IsNullOrEmpty(request.Password))
         {
-            return Ok("Fails.");
+            return Content("Fails.", "text/plain");
         }
 
         var result = await qBittorrent.AuthLogin(request.UserName, request.Password);
 
         if (result)
         {
-            return Ok("Ok.");
+            return Content("Ok.", "text/plain");
         }
 
-        return Ok("Fails.");
+        return Content("Fails.", "text/plain");
     }
 
     [AllowAnonymous]
