@@ -18,6 +18,9 @@
     <strong>Debrid provider rate limit reached</strong>
     <br />
     Processing paused until {{ rateLimitStatus.nextDequeueTime | date: 'medium' }}
+    @if (rateLimitStatus.secondsRemaining > 0) {
+      ({{ rateLimitStatus.secondsRemaining | number: '1.0-0' }} seconds remaining)
+    }
   </div>
 }
 <div class="table-container">
