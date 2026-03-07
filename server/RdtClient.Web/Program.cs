@@ -52,7 +52,8 @@ if (appSettings.Logging?.File?.Path != null)
                                          .WriteTo.Console()
                                          .MinimumLevel.ControlledBy(Settings.LoggingLevelSwitch)
                                          .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-                                         .MinimumLevel.Override("System.Net.Http", LogEventLevel.Warning));
+                                         .MinimumLevel.Override("System.Net.Http", LogEventLevel.Warning)
+                                         .MinimumLevel.Override("Polly", LogEventLevel.Warning));
 }
 
 SelfLog.Enable(msg =>

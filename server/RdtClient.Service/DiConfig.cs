@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using Polly.Timeout;
 using RateLimitHeaders.Polly;
-using RdtClient.Data.Models.Internal;
 using RdtClient.Service.BackgroundServices;
 using RdtClient.Service.Helpers;
 using RdtClient.Service.Middleware;
@@ -20,6 +19,7 @@ public static class DiConfig
 {
     public const String RD_CLIENT = "RdClient";
     public const String TORBOX_CLIENT = "TorBoxClient";
+    public const String TORBOX_CLIENT_SLOW = "TorBoxClientSlow";
     public static readonly String UserAgent = $"rdt-client {Assembly.GetEntryAssembly()?.GetName().Version}";
 
     public static void RegisterRdtServices(this IServiceCollection services)
@@ -29,6 +29,7 @@ public static class DiConfig
         services.AddSingleton<IAllDebridNetClientFactory, AllDebridNetClientFactory>();
         services.AddScoped<AllDebridDebridClient>();
 
+        services.AddSingleton<IRateLimitCoordinator, RateLimitCoordinator>();
         services.AddSingleton<IProcessFactory, ProcessFactory>();
         services.AddSingleton<IFileSystem, FileSystem>();
 
@@ -65,7 +66,6 @@ public static class DiConfig
     public static void RegisterHttpClients(this IServiceCollection services)
     {
         services.AddHttpClient();
-
         services.ConfigureHttpClientDefaults(builder =>
         {
             builder.ConfigureHttpClient(httpClient =>
@@ -75,7 +75,7 @@ public static class DiConfig
         });
 
         services.AddTransient<RateLimitHandler>();
-
+        
         services.AddHttpClient(RD_CLIENT)
                 .AddHttpMessageHandler<RateLimitHandler>()
                 .AddResilienceHandler("rd_client_handler", ConfigureResiliencePipeline);
@@ -83,8 +83,11 @@ public static class DiConfig
         // This likely works for most providers, but should be verified and then the providers changed
         // to this HTTP client for added resilience.
         services.AddHttpClient(TORBOX_CLIENT)
-                .AddHttpMessageHandler<RateLimitHandler>()
                 .AddResilienceHandler("torbox_client_handler", ConfigureResiliencePipeline);
+        
+        services.AddHttpClient(TORBOX_CLIENT_SLOW)
+                .AddHttpMessageHandler<RateLimitHandler>()
+                .AddResilienceHandler("torbox_client_handler_slow", ConfigureResiliencePipeline);
     }
 
     private static void ConfigureResiliencePipeline(ResiliencePipelineBuilder<HttpResponseMessage> builder)
@@ -116,17 +119,11 @@ public static class DiConfig
             {
                 if (args.Outcome.Result is { StatusCode: HttpStatusCode.TooManyRequests } response)
                 {
-                    var retryAfter = response.Headers.RetryAfter;
-                    var delay = retryAfter?.Delta ?? (retryAfter?.Date.HasValue == true ? retryAfter.Date.Value - DateTimeOffset.UtcNow : TimeSpan.FromMinutes(2));
+                    var delay = RateLimitHandler.GetRetryAfterDelay(response);
 
-                    if (delay < TimeSpan.Zero)
+                    if (delay >= TimeSpan.FromMinutes(10))
                     {
-                        delay = TimeSpan.FromMinutes(2);
-                    }
-
-                    if (delay >= TimeSpan.FromSeconds(Settings.Get.Provider.Timeout))
-                    {
-                        throw new RateLimitException("Provider rate limit exceeded", delay);
+                        return new ValueTask<TimeSpan?>((TimeSpan?)null);
                     }
 
                     return new(delay);
