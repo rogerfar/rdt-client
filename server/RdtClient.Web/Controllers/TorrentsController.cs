@@ -13,7 +13,7 @@ namespace RdtClient.Web.Controllers;
 
 [Authorize(Policy = "AuthSetting")]
 [Route("Api/Torrents")]
-public class TorrentsController(ILogger<TorrentsController> logger, Torrents torrents, TorrentRunner torrentRunner) : Controller
+public class TorrentsController(ILogger<TorrentsController> logger, Torrents torrents, TorrentRunner torrentRunner, IRateLimitCoordinator coordinator) : Controller
 {
     [HttpGet]
     [Route("")]
@@ -191,9 +191,9 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
     [Route("RateLimitStatus")]
     public ActionResult<RateLimitStatus> GetRateLimitStatus()
     {
-        var nextDequeueTime = TorrentRunner.NextDequeueTime;
+        var nextDequeueTime = coordinator.GetMaxNextAllowedAt();
 
-        if (nextDequeueTime < DateTimeOffset.Now)
+        if (nextDequeueTime == null || nextDequeueTime < DateTimeOffset.Now)
         {
             return Ok(new RateLimitStatus
             {
@@ -205,7 +205,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
         return Ok(new RateLimitStatus
         {
             NextDequeueTime = nextDequeueTime,
-            SecondsRemaining = (nextDequeueTime - DateTimeOffset.Now).TotalSeconds
+            SecondsRemaining = (nextDequeueTime.Value - DateTimeOffset.Now).TotalSeconds
         });
     }
 

@@ -11,14 +11,10 @@ using RdtClient.Service.Services.Downloaders;
 
 namespace RdtClient.Service.Services;
 
-public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Downloads downloads, RemoteService remoteService, IHttpClientFactory httpClientFactory)
+public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Downloads downloads, RemoteService remoteService, IHttpClientFactory httpClientFactory, IRateLimitCoordinator coordinator)
 {
     public static readonly ConcurrentDictionary<Guid, DownloadClient> ActiveDownloadClients = new();
     public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new();
-
-    public static Boolean IsPausedForLowDiskSpace { get; set; }
-
-    public static DateTimeOffset NextDequeueTime { get; private set; } = DateTimeOffset.MinValue;
 
     public static (Int64 Speed, Int64 BytesTotal, Int64 BytesDone) GetStats(Guid downloadId)
     {
@@ -34,6 +30,8 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
 
         return (0, 0, 0);
     }
+
+    public static Boolean IsPausedForLowDiskSpace { get; set; }
 
     public async Task Initialize()
     {
@@ -349,23 +347,13 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
 
         if (torrentsToAddToProvider.Count != 0)
         {
-            if (DateTimeOffset.Now < NextDequeueTime)
+            var nextAllowedAt = coordinator.GetMaxNextAllowedAt();
+            if (nextAllowedAt > DateTimeOffset.UtcNow)
             {
-                logger.LogDebug($"Dequeuing torrents is paused until {NextDequeueTime}, {NextDequeueTime - DateTimeOffset.Now} remaining");
+                logger.LogDebug($"Dequeuing torrents is paused until {nextAllowedAt}, {nextAllowedAt - DateTimeOffset.Now} remaining");
             }
             else
             {
-                if (NextDequeueTime != DateTimeOffset.MinValue)
-                {
-                    NextDequeueTime = DateTimeOffset.MinValue;
-
-                    await remoteService.UpdateRateLimitStatus(new()
-                    {
-                        NextDequeueTime = null,
-                        SecondsRemaining = 0
-                    });
-                }
-
                 var downloadingTorrentsCount = allTorrents.Count(m => m.RdStatus is not (TorrentStatus.Queued or TorrentStatus.Finished or TorrentStatus.Error));
 
                 var maxParallelDownloads = Settings.Get.Provider.MaxParallelDownloads;
@@ -752,13 +740,14 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
 
     public async Task SetRateLimit(TimeSpan retryAfter, String message)
     {
-        NextDequeueTime = DateTimeOffset.Now.Add(retryAfter);
+        coordinator.UpdateCooldown("General", retryAfter);
+        var nextDequeueTime = coordinator.GetMaxNextAllowedAt();
 
-        Log($"Rate-limit reached, pausing dequeuing for {retryAfter.TotalMinutes} minutes (until {NextDequeueTime}): {message}");
+        Log($"Rate-limit reached, pausing dequeuing for {retryAfter.TotalMinutes} minutes (until {nextDequeueTime}): {message}");
 
         await remoteService.UpdateRateLimitStatus(new()
         {
-            NextDequeueTime = NextDequeueTime,
+            NextDequeueTime = nextDequeueTime,
             SecondsRemaining = retryAfter.TotalSeconds
         });
     }
