@@ -38,7 +38,12 @@ public static class DownloadHelper
             {
                 subPath = subPath.Trim('/').Trim('\\');
 
-                torrentPath = Path.Combine(torrentPath, subPath);
+                subPath = StripTorrentNamePrefix(subPath, directory);
+
+                if (!String.IsNullOrWhiteSpace(subPath))
+                {
+                    torrentPath = Path.Combine(torrentPath, subPath);
+                }
             }
         }
 
@@ -87,7 +92,12 @@ public static class DownloadHelper
             {
                 subPath = subPath.Trim('/').Trim('\\');
 
-                torrentPath = Path.Combine(torrentPath, subPath);
+                subPath = StripTorrentNamePrefix(subPath, torrentPath);
+
+                if (!String.IsNullOrWhiteSpace(subPath))
+                {
+                    torrentPath = Path.Combine(torrentPath, subPath);
+                }
             }
         }
 
@@ -116,5 +126,23 @@ public static class DownloadHelper
     public static String RemoveInvalidPathChars(String path)
     {
         return String.Concat(path.Split(Path.GetInvalidPathChars()));
+    }
+
+    private static String StripTorrentNamePrefix(String subPath, String torrentName)
+    {
+        var prefix = torrentName.TrimEnd('/', '\\');
+
+        if (subPath.Equals(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return String.Empty;
+        }
+
+        if (subPath.StartsWith(prefix + "/", StringComparison.OrdinalIgnoreCase) ||
+            subPath.StartsWith(prefix + "\\", StringComparison.OrdinalIgnoreCase))
+        {
+            return subPath[(prefix.Length + 1)..];
+        }
+
+        return subPath;
     }
 }
