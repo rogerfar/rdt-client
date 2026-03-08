@@ -164,6 +164,15 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
             results = results.Where(m => m.Category == request.Category).ToList();
         }
 
+        if (!String.IsNullOrWhiteSpace(request.Hashes))
+        {
+            var hashSet = new HashSet<String>(
+                request.Hashes.Split('|', StringSplitOptions.RemoveEmptyEntries),
+                StringComparer.OrdinalIgnoreCase
+            );
+            results = results.Where(m => hashSet.Contains(m.Hash)).ToList();
+        }
+
         return Ok(results);
     }
 
@@ -604,6 +613,7 @@ public class QBAuthLoginRequest
 public class QBTorrentsInfoRequest
 {
     public String? Category { get; set; }
+    public String? Hashes { get; set; }
 }
 
 public class QBTorrentsHashRequest
