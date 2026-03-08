@@ -130,17 +130,27 @@ public static class DownloadHelper
 
     private static String StripTorrentNamePrefix(String subPath, String torrentName)
     {
-        var prefix = torrentName.TrimEnd('/', '\\');
+        var separatorIndex = subPath.IndexOfAny(['/', '\\']);
 
-        if (subPath.Equals(prefix, StringComparison.OrdinalIgnoreCase))
+        String firstComponent;
+        String remainder;
+
+        if (separatorIndex < 0)
         {
-            return String.Empty;
+            firstComponent = subPath;
+            remainder = String.Empty;
+        }
+        else
+        {
+            firstComponent = subPath[..separatorIndex];
+            remainder = subPath[(separatorIndex + 1)..];
         }
 
-        if (subPath.StartsWith(prefix + "/", StringComparison.OrdinalIgnoreCase) ||
-            subPath.StartsWith(prefix + "\\", StringComparison.OrdinalIgnoreCase))
+        var normalizedFirst = RemoveInvalidPathChars(firstComponent);
+
+        if (normalizedFirst.Equals(torrentName.TrimEnd('/', '\\'), StringComparison.OrdinalIgnoreCase))
         {
-            return subPath[(prefix.Length + 1)..];
+            return remainder;
         }
 
         return subPath;
