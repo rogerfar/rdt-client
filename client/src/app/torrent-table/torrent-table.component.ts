@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Torrent } from '../models/torrent.model';
 import { DiskSpaceStatus } from '../models/disk-space-status.model';
@@ -18,7 +18,7 @@ import { FileSizePipe } from '../filesize.pipe';
   imports: [FormsModule, NgClass, DecimalPipe, DatePipe, TorrentStatusPipe, SortPipe, FileSizePipe],
   standalone: true,
 })
-export class TorrentTableComponent implements OnInit {
+export class TorrentTableComponent implements OnInit, OnDestroy {
   public torrents: Torrent[] = [];
   public selectedTorrents: string[] = [];
   public error: string;
@@ -53,12 +53,23 @@ export class TorrentTableComponent implements OnInit {
   public diskSpaceStatus: DiskSpaceStatus | null = null;
   public rateLimitStatus: RateLimitStatus | null = null;
 
+  public isMobile = false;
+  private mobileQuery: MediaQueryList;
+  private mobileQueryListener: (e: MediaQueryListEvent) => void;
+
   constructor(
     private router: Router,
     private torrentService: TorrentService,
   ) {}
 
   ngOnInit(): void {
+    this.mobileQuery = window.matchMedia('(max-width: 768px)');
+    this.isMobile = this.mobileQuery.matches;
+    this.mobileQueryListener = (e: MediaQueryListEvent) => {
+      this.isMobile = e.matches;
+    };
+    this.mobileQuery.addEventListener('change', this.mobileQueryListener);
+
     // Load persisted sort settings (if any)
     try {
       const sp = localStorage.getItem('torrentTable.sortProperty');
@@ -319,5 +330,9 @@ export class TorrentTableComponent implements OnInit {
 
   updateDeleteSelectAll() {
     this.deleteSelectAll = this.deleteData && this.deleteRdTorrent && this.deleteLocalFiles;
+  }
+
+  ngOnDestroy(): void {
+    this.mobileQuery?.removeEventListener('change', this.mobileQueryListener);
   }
 }

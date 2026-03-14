@@ -7,20 +7,8 @@ table {
   }
 }
 
-.desktop-table {
-  display: table;
-
-  @media screen and (max-width: 768px) {
-    display: none;
-  }
-}
-
 .mobile-cards {
-  display: none;
-
-  @media screen and (max-width: 768px) {
-    display: block;
-  }
+  display: block;
 }
 
 .mobile-card {
