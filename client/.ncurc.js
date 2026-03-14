@@ -1,14 +1,14 @@
-const minorOnly = ['eslint'];
+const minorOnly = ["eslint"];
 const patchOnly = [];
 
 module.exports = {
   target: (name) => {
     if (minorOnly.indexOf(name) > -1) {
-      return 'minor';
+      return "minor";
     }
     if (patchOnly.indexOf(name) > -1) {
-      return 'patch';
+      return "patch";
     }
-    return 'latest';
-  }
+    return "latest";
+  },
 };

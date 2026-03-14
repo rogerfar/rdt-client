@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { Profile } from '../models/profile.model';
@@ -13,17 +13,17 @@ import { NgClass, DatePipe } from '@angular/common';
   standalone: true,
 })
 export class NavbarComponent implements OnInit {
+  private settingsService = inject(SettingsService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
   public showMobileMenu = false;
 
   public profile: Profile;
   public providerLink: string;
   public version: string;
 
-  constructor(
-    private settingsService: SettingsService,
-    private authService: AuthService,
-    private router: Router,
-  ) {
+  constructor() {
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
         this.showMobileMenu = false;

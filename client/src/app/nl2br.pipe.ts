@@ -1,9 +1,9 @@
-import { Pipe, PipeTransform, SecurityContext, VERSION } from '@angular/core';
+import { Pipe, PipeTransform, SecurityContext, VERSION, inject } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 
-@Pipe({ name: 'nl2br', })
+@Pipe({ name: 'nl2br' })
 export class Nl2BrPipe implements PipeTransform {
-  constructor(private sanitizer: DomSanitizer) {}
+  private sanitizer = inject(DomSanitizer);
 
   transform(value: string, sanitizeBeforehand?: boolean): string {
     if (typeof value !== 'string') {

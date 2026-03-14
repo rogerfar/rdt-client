@@ -1,10 +1,10 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, PipeTransform, inject } from '@angular/core';
 import { RealDebridStatus, Torrent } from './models/torrent.model';
 import { FileSizePipe } from './filesize.pipe';
 
 @Pipe({ name: 'status' })
 export class TorrentStatusPipe implements PipeTransform {
-  constructor(private pipe: FileSizePipe) {}
+  private pipe = inject(FileSizePipe);
 
   transform(torrent: Torrent): string {
     if (torrent.error) {

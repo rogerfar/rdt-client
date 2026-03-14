@@ -87,7 +87,7 @@
   <div class="field" style="margin-top: 10px">
     <div class="control">
       <button class="button is-success" [disabled]="saving" [ngClass]="{ 'is-loading': saving }" (click)="ok()">
-        @if (type === 'torrent') {
+        @if (type === "torrent") {
           <span>Add Torrent</span>
         } @else {
           <span>Add NZB</span>
@@ -109,9 +109,7 @@
           <option [ngValue]="3">Synology DownloadStation</option>
         </select>
       </div>
-      <p class="help">
-        Select which downloader is used to download this from the debrid provider to your host.
-      </p>
+      <p class="help">Select which downloader is used to download this from the debrid provider to your host.</p>
     </div>
 
     <div class="field">
@@ -123,8 +121,8 @@
         </select>
       </div>
       <p class="help">
-        When a download is finished on the provider, perform this action. Use this setting if you only want
-        to add files to your debrid provider but not download them to the host.
+        When a download is finished on the provider, perform this action. Use this setting if you only want to add files
+        to your debrid provider but not download them to the host.
       </p>
     </div>
 
@@ -213,8 +211,8 @@
         <input class="input" type="number" [(ngModel)]="finishedActionDelay" />
       </div>
       <p class="help">
-        When a download is finished on the provider, perform this action. Use this setting if you only want
-        to add files to your debrid provider but not download them to the host.
+        When a download is finished on the provider, perform this action. Use this setting if you only want to add files
+        to your debrid provider but not download them to the host.
       </p>
     </div>
 
@@ -247,9 +245,7 @@
       <div class="control">
         <input class="input" type="number" step="1" [(ngModel)]="priority" />
       </div>
-      <p class="help">
-        Set the priority where 1 is the highest. When empty it will be assigned the lowest priority.
-      </p>
+      <p class="help">Set the priority where 1 is the highest. When empty it will be assigned the lowest priority.</p>
     </div>
   </div>
 </div>
@@ -289,8 +285,8 @@
         <input class="input" type="number" max="100000" min="0" step="1" [(ngModel)]="torrentLifetime" />
       </div>
       <p class="help">
-        The maximum lifetime of a download in minutes. When this time has passed, mark it as error. If the
-        download is completed, the lifetime setting will not apply. 0 to disable.
+        The maximum lifetime of a download in minutes. When this time has passed, mark it as error. If the download is
+        completed, the lifetime setting will not apply. 0 to disable.
       </p>
     </div>
   </div>
@@ -303,4 +299,3 @@
     }
   </div>
 </div>
-

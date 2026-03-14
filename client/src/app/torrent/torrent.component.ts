@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { saveAs } from 'file-saver-es';
 import { Torrent } from '../models/torrent.model';
@@ -28,6 +28,10 @@ import { FileSizePipe } from '../filesize.pipe';
   standalone: true,
 })
 export class TorrentComponent implements OnInit {
+  private activatedRoute = inject(ActivatedRoute);
+  private router = inject(Router);
+  private torrentService = inject(TorrentService);
+
   public torrent: Torrent;
 
   public activeTab: number = 0;
@@ -65,12 +69,6 @@ export class TorrentComponent implements OnInit {
   public updateSettingsTorrentLifetime: number;
 
   public updating: boolean;
-
-  constructor(
-    private activatedRoute: ActivatedRoute,
-    private router: Router,
-    private torrentService: TorrentService,
-  ) {}
 
   ngOnInit(): void {
     this.activatedRoute.params.subscribe((params) => {

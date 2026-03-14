@@ -10,16 +10,16 @@
     <br />
     Available: {{ diskSpaceStatus.availableSpaceGB }} GB | Resume at: {{ diskSpaceStatus.thresholdGB * 2 }} GB
     <br />
-    <small>Last check: {{ diskSpaceStatus.lastCheckTime | date: 'short' }}</small>
+    <small>Last check: {{ diskSpaceStatus.lastCheckTime | date: "short" }}</small>
   </div>
 }
 @if (rateLimitStatus?.nextDequeueTime) {
   <div class="notification is-warning">
     <strong>Debrid provider rate limit reached</strong>
     <br />
-    Processing paused until {{ rateLimitStatus.nextDequeueTime | date: 'medium' }}
+    Processing paused until {{ rateLimitStatus.nextDequeueTime | date: "medium" }}
     @if (rateLimitStatus.secondsRemaining > 0) {
-      ({{ rateLimitStatus.secondsRemaining | number: '1.0-0' }} seconds remaining)
+      ({{ rateLimitStatus.secondsRemaining | number: "1.0-0" }} seconds remaining)
     }
   </div>
 }
@@ -107,10 +107,16 @@
               }
             </div>
             <div class="mobile-card-details">
-              <span class="mobile-card-detail"><span class="detail-label">Size</span> {{ torrent.rdSize | filesize }}</span>
+              <span class="mobile-card-detail"
+                ><span class="detail-label">Size</span> {{ torrent.rdSize | filesize }}</span
+              >
               <span class="mobile-card-detail"><span class="detail-label">Seeders</span> {{ torrent.rdSeeders }}</span>
-              <span class="mobile-card-detail"><span class="detail-label">Files</span> {{ torrent.files.length | number }}</span>
-              <span class="mobile-card-detail"><span class="detail-label">Downloads</span> {{ torrent.downloads.length | number }}</span>
+              <span class="mobile-card-detail"
+                ><span class="detail-label">Files</span> {{ torrent.files.length | number }}</span
+              >
+              <span class="mobile-card-detail"
+                ><span class="detail-label">Downloads</span> {{ torrent.downloads.length | number }}</span
+              >
             </div>
           </div>
         </div>

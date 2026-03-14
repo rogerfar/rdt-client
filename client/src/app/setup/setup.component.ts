@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { NgClass } from '@angular/common';
@@ -12,6 +12,9 @@ import { FormsModule } from '@angular/forms';
   standalone: true,
 })
 export class SetupComponent {
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
   public userName: string;
   public password: string;
   public provider = 0;
@@ -21,11 +24,6 @@ export class SetupComponent {
   public working: boolean;
 
   public step: number = 1;
-
-  constructor(
-    private authService: AuthService,
-    private router: Router,
-  ) {}
 
   public setup(): void {
     this.error = null;

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Torrent } from '../models/torrent.model';
 import { DiskSpaceStatus } from '../models/disk-space-status.model';
@@ -19,6 +19,9 @@ import { FileSizePipe } from '../filesize.pipe';
   standalone: true,
 })
 export class TorrentTableComponent implements OnInit, OnDestroy {
+  private router = inject(Router);
+  private torrentService = inject(TorrentService);
+
   public torrents: Torrent[] = [];
   public selectedTorrents: string[] = [];
   public error: string;
@@ -56,11 +59,6 @@ export class TorrentTableComponent implements OnInit, OnDestroy {
   public isMobile = false;
   private mobileQuery: MediaQueryList;
   private mobileQueryListener: (e: MediaQueryListEvent) => void;
-
-  constructor(
-    private router: Router,
-    private torrentService: TorrentService,
-  ) {}
 
   ngOnInit(): void {
     this.mobileQuery = window.matchMedia('(max-width: 768px)');

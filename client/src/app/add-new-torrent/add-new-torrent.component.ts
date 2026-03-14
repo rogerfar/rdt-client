@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { TorrentService } from 'src/app/torrent.service';
 import { DownloadType, Torrent, TorrentFileAvailability } from '../models/torrent.model';
@@ -15,6 +15,11 @@ import { NgClass } from '@angular/common';
   standalone: true,
 })
 export class AddNewTorrentComponent implements OnInit {
+  private router = inject(Router);
+  private torrentService = inject(TorrentService);
+  private settingsService = inject(SettingsService);
+  private activatedRoute = inject(ActivatedRoute);
+
   public type: 'torrent' | 'nzb' = 'torrent';
   public fileName: string;
   public magnetLink: string;
@@ -53,13 +58,6 @@ export class AddNewTorrentComponent implements OnInit {
 
   private selectedFile: File;
 
-  constructor(
-    private router: Router,
-    private torrentService: TorrentService,
-    private settingsService: SettingsService,
-    private activatedRoute: ActivatedRoute,
-  ) {}
-
   ngOnInit(): void {
     this.activatedRoute.queryParams.subscribe((params) => {
       if (params['type'] === 'nzb') {
@@ -89,9 +87,7 @@ export class AddNewTorrentComponent implements OnInit {
         .map((c) => c.trim())
         .filter((c) => c.length > 0)
         .filter((c, i, arr) => arr.findIndex((a) => a.toLowerCase() === c.toLowerCase()) === i);
-      const matchedCategory = this.categories.find(
-        (c) => c.toLowerCase() === (this.category ?? '').toLowerCase(),
-      );
+      const matchedCategory = this.categories.find((c) => c.toLowerCase() === (this.category ?? '').toLowerCase());
       if (matchedCategory) {
         this.category = matchedCategory;
       }

@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { Observable, Subject } from 'rxjs';
 import { Torrent, TorrentFileAvailability } from './models/torrent.model';
@@ -11,16 +11,16 @@ import { APP_BASE_HREF } from '@angular/common';
   providedIn: 'root',
 })
 export class TorrentService {
+  private http = inject(HttpClient);
+  private baseHref = inject(APP_BASE_HREF);
+
   public update$: Subject<Torrent[]> = new Subject();
   public diskSpaceStatus$: Subject<DiskSpaceStatus> = new Subject();
   public rateLimitStatus$: Subject<RateLimitStatus> = new Subject();
 
   private connection: signalR.HubConnection;
 
-  constructor(
-    private http: HttpClient,
-    @Inject(APP_BASE_HREF) private baseHref: string,
-  ) {
+  constructor() {
     this.connect();
   }
 

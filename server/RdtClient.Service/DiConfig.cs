@@ -119,7 +119,7 @@ public static class DiConfig
 
                     if (delay >= timeout)
                     {
-                        return new ValueTask<TimeSpan?>((TimeSpan?)null);
+                        return new((TimeSpan?)null);
                     }
 
                     return new(delay);

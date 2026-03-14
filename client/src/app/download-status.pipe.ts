@@ -1,10 +1,10 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, PipeTransform, inject } from '@angular/core';
 import { Download } from './models/download.model';
 import { FileSizePipe } from './filesize.pipe';
 
 @Pipe({ name: 'downloadStatus' })
 export class DownloadStatusPipe implements PipeTransform {
-  constructor(private pipe: FileSizePipe) {}
+  private pipe = inject(FileSizePipe);
 
   transform(value: Download): string {
     if (!value) {

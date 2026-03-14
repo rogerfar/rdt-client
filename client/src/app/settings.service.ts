@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Profile } from './models/profile.model';
 import { Setting } from './models/setting.model';
@@ -10,10 +10,8 @@ import { Version } from './models/version.model';
   providedIn: 'root',
 })
 export class SettingsService {
-  constructor(
-    private http: HttpClient,
-    @Inject(APP_BASE_HREF) private baseHref: string,
-  ) {}
+  private http = inject(HttpClient);
+  private baseHref = inject(APP_BASE_HREF);
 
   public get(): Observable<Setting[]> {
     return this.http.get<Setting[]>(`${this.baseHref}Api/Settings`);

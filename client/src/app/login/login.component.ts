@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { FormsModule } from '@angular/forms';
@@ -12,15 +12,13 @@ import { NgClass } from '@angular/common';
   standalone: true,
 })
 export class LoginComponent {
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
   public userName: string;
   public password: string;
   public error: string;
   public loggingIn: boolean;
-
-  constructor(
-    private authService: AuthService,
-    private router: Router,
-  ) {}
 
   public setUserName(event: Event): void {
     this.userName = (event.target as any).value;

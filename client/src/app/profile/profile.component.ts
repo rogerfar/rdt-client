@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { AuthService } from '../auth.service';
 import { FormsModule } from '@angular/forms';
 import { NgClass } from '@angular/common';
@@ -11,7 +11,7 @@ import { NgClass } from '@angular/common';
   standalone: true,
 })
 export class ProfileComponent {
-  constructor(private authService: AuthService) {}
+  private authService = inject(AuthService);
 
   public username: string;
   public password: string;
