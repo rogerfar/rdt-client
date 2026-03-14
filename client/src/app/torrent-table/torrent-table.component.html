@@ -21,7 +21,7 @@
   </div>
 }
 <div class="table-container">
-  <table class="table is-fullwidth is-hoverable">
+  <table class="table is-fullwidth is-hoverable desktop-table">
     <thead>
       <tr>
         <th>
@@ -83,6 +83,35 @@
       }
     </tbody>
   </table>
+
+  <div class="mobile-cards">
+    @for (torrent of torrents | sort: sortProperty : sortDirection; track torrent.torrentId) {
+      <div class="box mobile-card" [class.is-selected]="selectedTorrents.includes(torrent.torrentId)">
+        <div class="mobile-card-checkbox">
+          <input
+            type="checkbox"
+            (click)="toggleSelect(torrent.torrentId)"
+            [checked]="selectedTorrents.includes(torrent.torrentId)"
+          />
+        </div>
+        <div class="mobile-card-body" (click)="openTorrent(torrent.torrentId)">
+          <p class="mobile-card-name">{{ torrent.rdName }}</p>
+          <div class="tags mb-2">
+            <span class="tag is-info is-light">{{ torrent | status }}</span>
+            @if (torrent.category) {
+              <span class="tag is-light">{{ torrent.category }}</span>
+            }
+          </div>
+          <div class="mobile-card-details">
+            <span class="mobile-card-detail"><span class="detail-label">Size</span> {{ torrent.rdSize | filesize }}</span>
+            <span class="mobile-card-detail"><span class="detail-label">Seeders</span> {{ torrent.rdSeeders }}</span>
+            <span class="mobile-card-detail"><span class="detail-label">Files</span> {{ torrent.files.length | number }}</span>
+            <span class="mobile-card-detail"><span class="detail-label">Downloads</span> {{ torrent.downloads.length | number }}</span>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
 
   <div class="flex-container">
     @if (torrents.length > 0) {
