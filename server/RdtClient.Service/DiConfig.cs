@@ -92,11 +92,6 @@ public static class DiConfig
 
     private static void ConfigureResiliencePipeline(ResiliencePipelineBuilder<HttpResponseMessage> builder)
     {
-        builder.AddTimeout(new TimeoutStrategyOptions
-        {
-            TimeoutGenerator = _ => new(TimeSpan.FromSeconds(Settings.Get.Provider.Timeout))
-        });
-
         builder.AddRateLimitHeaders(options =>
         {
             options.EnableProactiveThrottling = true;
@@ -120,8 +115,9 @@ public static class DiConfig
                 if (args.Outcome.Result is { StatusCode: HttpStatusCode.TooManyRequests } response)
                 {
                     var delay = RateLimitHandler.GetRetryAfterDelay(response);
+                    var timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
 
-                    if (delay >= TimeSpan.FromMinutes(10))
+                    if (delay >= timeout)
                     {
                         return new ValueTask<TimeSpan?>((TimeSpan?)null);
                     }
@@ -131,6 +127,11 @@ public static class DiConfig
 
                 return new((TimeSpan?)null);
             }
+        });
+
+        builder.AddTimeout(new TimeoutStrategyOptions
+        {
+            TimeoutGenerator = _ => new(TimeSpan.FromSeconds(Settings.Get.Provider.Timeout))
         });
     }
 }
