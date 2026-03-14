@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased
 
+## [2.0.126] - 2026-03-14
+### Added
+- qBittorrent hash filtering on the /torrrents/info endpoint, thanks to @jfrconley!
+- Category select as a dropdown when adding a new torrent, thanks to @sylvaindd!
+
+### Changed
+- Rate limiting fixes, thanks to @omgbeez!
+- AllDebrid Symlink fixes, thanks to @AlexandreVassard!
+
 ## [2.0.125] - 2026-03-01
 ### Added
 - Added extra qBittorrent endpoints for Cleanuparr compatibility.
