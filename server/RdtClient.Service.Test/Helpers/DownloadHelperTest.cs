@@ -259,6 +259,95 @@ public class DownloadHelperTest
         Assert.Equal(expectedPath, path);
     }
 
+    [Fact]
+    public void GetDownloadPath_WithPath_WhenFilePathStartsWithTorrentName_StripsPrefix()
+    {
+        // Arrange
+        var download = new Download
+        {
+            Link = "https://fake.url/file.txt",
+            FileName = "file.txt"
+        };
+
+        String fileRelativePath;
+
+        if (OSHelper.IsLinux)
+        {
+            fileRelativePath = "Torrent Name/Saison 1/file.txt";
+        }
+        else
+        {
+            fileRelativePath = @"Torrent Name\Saison 1\file.txt";
+        }
+
+        IList<DebridClientFile> files =
+        [
+            new()
+            {
+                Path = fileRelativePath
+            }
+        ];
+
+        var torrent = new Torrent
+        {
+            RdName = "Torrent Name",
+            RdFiles = JsonSerializer.Serialize(files)
+        };
+
+        var fileSystem = new MockFileSystem();
+
+        // Act
+        var path = DownloadHelper.GetDownloadPath("/data/downloads", torrent, download, fileSystem);
+
+        // Assert
+        // The torrent name prefix in the file path should not duplicate the torrent name in the base dir
+        var expectedPath = Path.Combine("/data/downloads", "Torrent Name", "Saison 1", "file.txt");
+        Assert.Equal(expectedPath, path);
+    }
+
+    [Fact]
+    public void GetDownloadPath_WithoutPath_WhenFilePathStartsWithTorrentName_StripsPrefix()
+    {
+        // Arrange
+        var download = new Download
+        {
+            Link = "https://fake.url/file.txt",
+            FileName = "file.txt"
+        };
+
+        String fileRelativePath;
+
+        if (OSHelper.IsLinux)
+        {
+            fileRelativePath = "Torrent Name/Saison 1/file.txt";
+        }
+        else
+        {
+            fileRelativePath = @"Torrent Name\Saison 1\file.txt";
+        }
+
+        IList<DebridClientFile> files =
+        [
+            new()
+            {
+                Path = fileRelativePath
+            }
+        ];
+
+        var torrent = new Torrent
+        {
+            RdName = "Torrent Name",
+            RdFiles = JsonSerializer.Serialize(files)
+        };
+
+        // Act
+        var path = DownloadHelper.GetDownloadPath(torrent, download);
+
+        // Assert
+        var expectedPath = Path.Combine("Torrent Name", "Saison 1", "file.txt");
+        Assert.Equal(expectedPath, path);
+    }
+
     // This is probably a bug
     [Fact]
     public void GetDownloadPath_WithPath_WhenNoUriSegmentsOrFileName_ReturnsTorrentDirectory()
