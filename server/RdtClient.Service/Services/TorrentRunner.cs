@@ -11,12 +11,19 @@ using RdtClient.Service.Services.Downloaders;
 
 namespace RdtClient.Service.Services;
 
-public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Downloads downloads, RemoteService remoteService, IHttpClientFactory httpClientFactory, IRateLimitCoordinator coordinator)
+public class TorrentRunner(
+    ILogger<TorrentRunner> logger,
+    Torrents torrents,
+    Downloads downloads,
+    RemoteService remoteService,
+    IHttpClientFactory httpClientFactory,
+    IRateLimitCoordinator coordinator)
 {
-    private DateTimeOffset? _lastNextAllowedAt;
-
     public static readonly ConcurrentDictionary<Guid, DownloadClient> ActiveDownloadClients = new();
     public static readonly ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients = new();
+    private DateTimeOffset? _lastNextAllowedAt;
+
+    public static Boolean IsPausedForLowDiskSpace { get; set; }
 
     public static (Int64 Speed, Int64 BytesTotal, Int64 BytesDone) GetStats(Guid downloadId)
     {
@@ -32,8 +39,6 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
 
         return (0, 0, 0);
     }
-
-    public static Boolean IsPausedForLowDiskSpace { get; set; }
 
     public async Task Initialize()
     {
@@ -116,6 +121,7 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
         sw.Start();
 
         var currentNextAllowedAt = coordinator.GetMaxNextAllowedAt();
+
         if (currentNextAllowedAt != _lastNextAllowedAt)
         {
             if (currentNextAllowedAt == null || currentNextAllowedAt <= DateTimeOffset.UtcNow)
@@ -370,6 +376,7 @@ public class TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Dow
         if (torrentsToAddToProvider.Count != 0)
         {
             var nextAllowedAt = coordinator.GetMaxNextAllowedAt();
+
             if (nextAllowedAt > DateTimeOffset.UtcNow)
             {
                 logger.LogDebug($"Dequeuing torrents is paused until {nextAllowedAt}, {nextAllowedAt - DateTimeOffset.Now} remaining");

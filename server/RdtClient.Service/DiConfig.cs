@@ -66,6 +66,7 @@ public static class DiConfig
     public static void RegisterHttpClients(this IServiceCollection services)
     {
         services.AddHttpClient();
+
         services.ConfigureHttpClientDefaults(builder =>
         {
             builder.ConfigureHttpClient(httpClient =>
@@ -75,7 +76,7 @@ public static class DiConfig
         });
 
         services.AddTransient<RateLimitHandler>();
-        
+
         services.AddHttpClient(RD_CLIENT)
                 .AddHttpMessageHandler<RateLimitHandler>()
                 .AddResilienceHandler("rd_client_handler", ConfigureResiliencePipeline);
@@ -84,7 +85,7 @@ public static class DiConfig
         // to this HTTP client for added resilience.
         services.AddHttpClient(TORBOX_CLIENT)
                 .AddResilienceHandler("torbox_client_handler", ConfigureResiliencePipeline);
-        
+
         services.AddHttpClient(TORBOX_CLIENT_SLOW)
                 .AddHttpMessageHandler<RateLimitHandler>()
                 .AddResilienceHandler("torbox_client_handler_slow", ConfigureResiliencePipeline);

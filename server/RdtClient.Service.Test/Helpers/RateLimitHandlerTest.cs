@@ -24,7 +24,7 @@ public class RateLimitHandlerTest
         var ex = await Assert.ThrowsAsync<RateLimitException>(() => client.GetAsync("http://example.com"));
         Assert.Equal(TimeSpan.FromSeconds(3600), ex.RetryAfter);
         Assert.Contains("rate limit exceeded", ex.Message);
-        
+
         _coordinatorMock.Verify(m => m.UpdateCooldown("example.com", TimeSpan.FromSeconds(3600)), Times.Once);
     }
 
@@ -49,10 +49,12 @@ public class RateLimitHandlerTest
     {
         // Arrange
         _coordinatorMock.Setup(m => m.GetRemainingCooldown("example.com")).Returns(TimeSpan.FromMinutes(5));
+
         var handler = new RateLimitHandler(_coordinatorMock.Object)
         {
             InnerHandler = new MockHttpMessageHandler(HttpStatusCode.OK, null)
         };
+
         var client = new HttpClient(handler);
 
         // Act & Assert
@@ -69,6 +71,7 @@ public class RateLimitHandlerTest
         {
             InnerHandler = new MockExceptionHandler(new TimeoutException())
         };
+
         var client = new HttpClient(handler);
 
         // Act & Assert

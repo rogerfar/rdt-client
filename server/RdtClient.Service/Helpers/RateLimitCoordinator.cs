@@ -11,12 +11,15 @@ public class RateLimitCoordinator : IRateLimitCoordinator
         if (_cooldowns.TryGetValue(key, out var nextAllowedAt))
         {
             var remaining = nextAllowedAt - DateTimeOffset.UtcNow;
+
             if (remaining > TimeSpan.Zero)
             {
                 return remaining;
             }
+
             _cooldowns.TryRemove(key, out _);
         }
+
         return TimeSpan.Zero;
     }
 
@@ -24,9 +27,11 @@ public class RateLimitCoordinator : IRateLimitCoordinator
     {
         var now = DateTimeOffset.UtcNow;
         var max = TimeSpan.Zero;
+
         foreach (var (key, nextAllowedAt) in _cooldowns)
         {
             var remaining = nextAllowedAt - now;
+
             if (remaining > TimeSpan.Zero)
             {
                 if (remaining > max)
@@ -39,6 +44,7 @@ public class RateLimitCoordinator : IRateLimitCoordinator
                 _cooldowns.TryRemove(key, out _);
             }
         }
+
         return max;
     }
 
@@ -46,6 +52,7 @@ public class RateLimitCoordinator : IRateLimitCoordinator
     {
         var now = DateTimeOffset.UtcNow;
         DateTimeOffset? max = null;
+
         foreach (var (key, nextAllowedAt) in _cooldowns)
         {
             if (nextAllowedAt > now)
@@ -60,6 +67,7 @@ public class RateLimitCoordinator : IRateLimitCoordinator
                 _cooldowns.TryRemove(key, out _);
             }
         }
+
         return max;
     }
 
@@ -77,8 +85,10 @@ public class RateLimitCoordinator : IRateLimitCoordinator
             {
                 return nextAllowedAt;
             }
+
             _cooldowns.TryRemove(key, out _);
         }
+
         return null;
     }
 }

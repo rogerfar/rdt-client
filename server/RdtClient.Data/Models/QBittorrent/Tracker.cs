@@ -12,7 +12,7 @@ public class Tracker
 
     [JsonPropertyName("num_peers")]
     public required Int64 NumPeers { get; set; }
-    
+
     [JsonPropertyName("msg")]
     public required String Msg { get; set; }
 }

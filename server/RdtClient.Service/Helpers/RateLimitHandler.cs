@@ -26,12 +26,14 @@ public class RateLimitHandler(IRateLimitCoordinator coordinator) : DelegatingHan
         var host = request.RequestUri?.Host ?? "unknown";
 
         var cooldown = coordinator.GetRemainingCooldown(host);
+
         if (cooldown > TimeSpan.Zero)
         {
             throw new RateLimitException($"Rate limit cooldown active for {host}", cooldown);
         }
 
         var context = request.GetResilienceContext();
+
         if (context == null)
         {
             context = ResilienceContextPool.Shared.Get(cancellationToken);
@@ -50,6 +52,7 @@ public class RateLimitHandler(IRateLimitCoordinator coordinator) : DelegatingHan
             var delay = GetRetryAfterDelay(response);
             coordinator.UpdateCooldown(host, delay);
             response.Dispose();
+
             throw new RateLimitException($"Provider {host} rate limit exceeded", delay);
         }
 

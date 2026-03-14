@@ -166,10 +166,9 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
 
         if (!String.IsNullOrWhiteSpace(request.Hashes))
         {
-            var hashSet = new HashSet<String>(
-                request.Hashes.Split('|', StringSplitOptions.RemoveEmptyEntries),
-                StringComparer.OrdinalIgnoreCase
-            );
+            var hashSet = new HashSet<String>(request.Hashes.Split('|', StringSplitOptions.RemoveEmptyEntries),
+                                              StringComparer.OrdinalIgnoreCase);
+
             results = results.Where(m => hashSet.Contains(m.Hash)).ToList();
         }
 

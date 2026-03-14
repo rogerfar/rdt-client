@@ -10,10 +10,10 @@ namespace RdtClient.Web.Test.Controllers;
 
 public class TorrentsControllerNzbTest
 {
-    private readonly Mock<Torrents> _torrentsMock;
-    private readonly Mock<ILogger<TorrentsController>> _loggerMock;
-    private readonly Mock<IRateLimitCoordinator> _coordinatorMock;
     private readonly TorrentsController _controller;
+    private readonly Mock<IRateLimitCoordinator> _coordinatorMock;
+    private readonly Mock<ILogger<TorrentsController>> _loggerMock;
+    private readonly Mock<Torrents> _torrentsMock;
 
     public TorrentsControllerNzbTest()
     {
