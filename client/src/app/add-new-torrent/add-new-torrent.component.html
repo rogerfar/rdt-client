@@ -220,8 +220,24 @@
 
     <div class="field">
       <label class="label">Category</label>
-      <div class="control">
-        <input class="input" type="text" [(ngModel)]="category" />
+      <div class="control category-combo">
+        <input
+          class="input"
+          type="text"
+          [(ngModel)]="category"
+          (focus)="categoryDropdownOpen = true"
+          (input)="categoryDropdownOpen = true"
+          (blur)="onCategoryBlur()"
+          placeholder="Type or select a category"
+          autocomplete="off"
+        />
+        @if (categoryDropdownOpen && filteredCategories.length > 0) {
+          <div class="category-dropdown">
+            @for (cat of filteredCategories; track $index) {
+              <a class="category-option" (mousedown)="selectCategory(cat)">{{ cat }}</a>
+            }
+          </div>
+        }
       </div>
       <p class="help">The category becomes a sub-folder in your main download path.</p>
     </div>

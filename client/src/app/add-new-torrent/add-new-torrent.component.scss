@@ -27,3 +27,29 @@
 .separator:not(:empty)::after {
   margin-left: 0.25em;
 }
+
+.category-combo {
+  position: relative;
+}
+
+.category-dropdown {
+  position: absolute;
+  z-index: 10;
+  width: 100%;
+  background: white;
+  border: 1px solid #dbdbdb;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.category-option {
+  display: block;
+  padding: 0.375rem 0.75rem;
+  color: #363636;
+
+  &:hover {
+    background: #f5f5f5;
+  }
+}
