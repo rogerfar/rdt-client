@@ -25,6 +25,8 @@ export class AddNewTorrentComponent implements OnInit {
   public downloadClient: number;
 
   public category: string;
+  public categories: string[] = [];
+  public categorySelect: string = '';
   public hostDownloadAction: number = 0;
   public downloadAction: number = 0;
   public finishedAction: number = 0;
@@ -81,6 +83,13 @@ export class AddNewTorrentComponent implements OnInit {
       this.downloadClient = settings.find((m) => m.key === 'DownloadClient:Client')?.value as number;
 
       this.category = settings.find((m) => m.key === 'Gui:Default:Category')?.value as string;
+      const categoriesSetting = settings.find((m) => m.key === 'General:Categories')?.value as string;
+      this.categories = (categoriesSetting ?? '').split(',').map((c) => c.trim()).filter((c) => c.length > 0);
+      if (this.categories.includes(this.category)) {
+        this.categorySelect = this.category;
+      } else if (this.category) {
+        this.categorySelect = '__custom__';
+      }
       this.hostDownloadAction = this.downloadAction = settings.find((m) => m.key === 'Gui:Default:HostDownloadAction')
         ?.value as number;
       this.downloadAction =
@@ -98,6 +107,14 @@ export class AddNewTorrentComponent implements OnInit {
 
       this.setFinishAction();
     });
+  }
+
+  public onCategorySelectChange(value: string): void {
+    if (value !== '__custom__') {
+      this.category = value;
+    } else {
+      this.category = '';
+    }
   }
 
   public setFinishAction() {
