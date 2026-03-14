@@ -26,7 +26,7 @@ export class AddNewTorrentComponent implements OnInit {
 
   public category: string;
   public categories: string[] = [];
-  public categorySelect: string = '';
+  public categoryDropdownOpen = false;
   public hostDownloadAction: number = 0;
   public downloadAction: number = 0;
   public finishedAction: number = 0;
@@ -84,11 +84,16 @@ export class AddNewTorrentComponent implements OnInit {
 
       this.category = settings.find((m) => m.key === 'Gui:Default:Category')?.value as string;
       const categoriesSetting = settings.find((m) => m.key === 'General:Categories')?.value as string;
-      this.categories = (categoriesSetting ?? '').split(',').map((c) => c.trim()).filter((c) => c.length > 0);
-      if (this.categories.includes(this.category)) {
-        this.categorySelect = this.category;
-      } else if (this.category) {
-        this.categorySelect = '__custom__';
+      this.categories = (categoriesSetting ?? '')
+        .split(',')
+        .map((c) => c.trim())
+        .filter((c) => c.length > 0)
+        .filter((c, i, arr) => arr.findIndex((a) => a.toLowerCase() === c.toLowerCase()) === i);
+      const matchedCategory = this.categories.find(
+        (c) => c.toLowerCase() === (this.category ?? '').toLowerCase(),
+      );
+      if (matchedCategory) {
+        this.category = matchedCategory;
       }
       this.hostDownloadAction = this.downloadAction = settings.find((m) => m.key === 'Gui:Default:HostDownloadAction')
         ?.value as number;
@@ -109,12 +114,19 @@ export class AddNewTorrentComponent implements OnInit {
     });
   }
 
-  public onCategorySelectChange(value: string): void {
-    if (value !== '__custom__') {
-      this.category = value;
-    } else {
-      this.category = '';
-    }
+  get filteredCategories(): string[] {
+    if (!this.category) return this.categories;
+    const search = this.category.toLowerCase();
+    return this.categories.filter((c) => c.toLowerCase().includes(search));
+  }
+
+  public selectCategory(cat: string): void {
+    this.category = cat;
+    this.categoryDropdownOpen = false;
+  }
+
+  public onCategoryBlur(): void {
+    setTimeout(() => (this.categoryDropdownOpen = false), 150);
   }
 
   public setFinishAction() {

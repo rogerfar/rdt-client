@@ -220,26 +220,25 @@
 
     <div class="field">
       <label class="label">Category</label>
-      @if (categories.length > 0) {
-        <div class="control select is-fullwidth">
-          <select [(ngModel)]="categorySelect" (ngModelChange)="onCategorySelectChange($event)">
-            <option value="">— None —</option>
-            @for (cat of categories; track cat) {
-              <option [value]="cat">{{ cat }}</option>
+      <div class="control category-combo">
+        <input
+          class="input"
+          type="text"
+          [(ngModel)]="category"
+          (focus)="categoryDropdownOpen = true"
+          (input)="categoryDropdownOpen = true"
+          (blur)="onCategoryBlur()"
+          placeholder="Type or select a category"
+          autocomplete="off"
+        />
+        @if (categoryDropdownOpen && filteredCategories.length > 0) {
+          <div class="category-dropdown">
+            @for (cat of filteredCategories; track $index) {
+              <a class="category-option" (mousedown)="selectCategory(cat)">{{ cat }}</a>
             }
-            <option value="__custom__">Custom…</option>
-          </select>
-        </div>
-        @if (categorySelect === '__custom__') {
-          <div class="control" style="margin-top: 0.5rem">
-            <input class="input" type="text" placeholder="Enter custom category" [(ngModel)]="category" />
           </div>
         }
-      } @else {
-        <div class="control">
-          <input class="input" type="text" [(ngModel)]="category" />
-        </div>
-      }
+      </div>
       <p class="help">The category becomes a sub-folder in your main download path.</p>
     </div>
 
