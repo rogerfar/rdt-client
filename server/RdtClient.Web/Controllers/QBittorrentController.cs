@@ -159,6 +159,11 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     {
         var results = await qBittorrent.TorrentInfo();
 
+        if(!String.IsNullOrWhiteSpace(request.Filter))
+        {
+            results = results.Where(m => m.State != null && m.State.Equals(request.Filter, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+
         if (!String.IsNullOrWhiteSpace(request.Category))
         {
             results = results.Where(m => m.Category == request.Category).ToList();
@@ -178,9 +183,32 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     [Authorize(Policy = "AuthSetting")]
     [Route("torrents/info")]
     [HttpPost]
-    public async Task<ActionResult<IList<TorrentInfo>>> TorrentsFilesPost([FromForm] QBTorrentsInfoRequest request)
+    public async Task<ActionResult<IList<TorrentInfo>>> TorrentsInfoPost([FromForm] QBTorrentsInfoRequest request)
     {
         return await TorrentsInfo(request);
+    }
+
+    [Authorize(Policy = "AuthSetting")]
+    [Route("torrents/count")]
+    [HttpGet]
+    [HttpPost]
+    public async Task<ActionResult<int>> TorrentsCount([FromQuery] QBTorrentsCountRequest request)
+    {
+        var results = await qBittorrent.TorrentInfo();
+
+        if (!String.IsNullOrWhiteSpace(request.Filter))
+        {
+            results = results.Where(m => m.State != null && m.State.Equals(request.Filter, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+        return results.Count;
+    }
+
+    [Authorize(Policy = "AuthSetting")]
+    [Route("torrents/count")]
+    [HttpPost]
+    public async Task<ActionResult<int>> TorrentsCountPost([FromForm] QBTorrentsCountRequest request)
+    {
+        return await TorrentsCount(request);
     }
 
     [Authorize(Policy = "AuthSetting")]
@@ -611,8 +639,15 @@ public class QBAuthLoginRequest
 
 public class QBTorrentsInfoRequest
 {
+    public String? Filter { get; set; }
     public String? Category { get; set; }
     public String? Hashes { get; set; }
+}
+
+
+public class QBTorrentsCountRequest
+{
+    public String? Filter { get; set; }
 }
 
 public class QBTorrentsHashRequest
