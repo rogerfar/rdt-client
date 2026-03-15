@@ -192,7 +192,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     [Route("torrents/count")]
     [HttpGet]
     [HttpPost]
-    public async Task<ActionResult<int>> TorrentsCount([FromQuery] QBTorrentsCountRequest request)
+    public async Task<ActionResult<Int32>> TorrentsCount([FromQuery] QBTorrentsCountRequest request)
     {
         var results = await qBittorrent.TorrentInfo();
 
@@ -206,7 +206,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     [Authorize(Policy = "AuthSetting")]
     [Route("torrents/count")]
     [HttpPost]
-    public async Task<ActionResult<int>> TorrentsCountPost([FromForm] QBTorrentsCountRequest request)
+    public async Task<ActionResult<Int32>> TorrentsCountPost([FromForm] QBTorrentsCountRequest request)
     {
         return await TorrentsCount(request);
     }
