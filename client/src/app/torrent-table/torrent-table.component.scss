@@ -85,4 +85,12 @@ table {
   @media screen and (max-width: 1279px) {
     flex-direction: column;
   }
+
+  @media screen and (max-width: 768px) {
+    gap: 0.5rem;
+
+    .button {
+      width: 100%;
+    }
+  }
 }

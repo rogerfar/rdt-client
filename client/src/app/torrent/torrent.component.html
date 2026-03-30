@@ -23,7 +23,7 @@
     @if (activeTab === 0) {
       <div class="flex-container">
         <div style="flex: 1 1 0">
-          <div class="field is-grouped">
+          <div class="field is-grouped is-grouped-multiline action-buttons">
             <div class="control">
               <button class="button is-danger" (click)="showDeleteModal()">Delete Torrent</button>
             </div>
@@ -44,7 +44,7 @@
           </div>
           <div class="field">
             <label class="label">Hash</label>
-            {{ torrent.hash }}
+            <span class="break-all">{{ torrent.hash }}</span>
           </div>
           <div class="field">
             <label class="label">Priority</label>
@@ -240,72 +240,75 @@
     @if (activeTab === 1) {
       <div>
         <div class="field">
-          <table class="table is-fullwidth">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Path</th>
-                <th>Size</th>
-                <th>Selected</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (file of torrent.files; track file.id) {
+          <div class="table-container">
+            <table class="table is-fullwidth">
+              <thead>
                 <tr>
-                  <td>
-                    {{ file.id }}
-                  </td>
-                  <td>
-                    {{ file.path }}
-                  </td>
-                  <td>
-                    {{ file.bytes | filesize }}
-                  </td>
-                  <td>
-                    @if (file.selected) {
-                      <i class="fas fa-check" style="color: green"></i>
-                    } @else {
-                      <i class="fas fa-times" style="color: red"></i>
-                    }
-                  </td>
+                  <th>ID</th>
+                  <th>Path</th>
+                  <th>Size</th>
+                  <th>Selected</th>
                 </tr>
-              }
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                @for (file of torrent.files; track file.id) {
+                  <tr>
+                    <td>
+                      {{ file.id }}
+                    </td>
+                    <td class="break-all">
+                      {{ file.path }}
+                    </td>
+                    <td>
+                      {{ file.bytes | filesize }}
+                    </td>
+                    <td>
+                      @if (file.selected) {
+                        <i class="fas fa-check" style="color: green"></i>
+                      } @else {
+                        <i class="fas fa-times" style="color: red"></i>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     }
     @if (activeTab === 2) {
       <div>
         <div class="field">
-          <table class="table is-fullwidth is-hoverable">
-            <thead>
-              <tr>
-                <th style="width: 35px"></th>
-                <th>Link</th>
-                <th>Size</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (download of torrent.downloads; track download.downloadId) {
-                @let expanded = downloadExpanded[download.downloadId];
-                <tr (click)="downloadExpanded[download.downloadId] = !expanded">
-                  <td style="width: 35px">
-                    @if (!expanded) {
-                      <i class="fas fa-caret-right"></i>
-                    } @else {
-                      <i class="fas fa-caret-down"></i>
-                    }
-                  </td>
-                  <td>
-                    @if (download.link) {
-                      {{ download.link | decodeURI }}
-                    }
-                    @if (!download.link) {
-                      {{ download.path }}
-                    }
-                  </td>
+          <div class="table-container">
+            <table class="table is-fullwidth is-hoverable">
+              <thead>
+                <tr>
+                  <th style="width: 35px"></th>
+                  <th>Link</th>
+                  <th>Size</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (download of torrent.downloads; track download.downloadId) {
+                  @let expanded = downloadExpanded[download.downloadId];
+                  <tr (click)="downloadExpanded[download.downloadId] = !expanded">
+                    <td style="width: 35px">
+                      @if (!expanded) {
+                        <i class="fas fa-caret-right"></i>
+                      } @else {
+                        <i class="fas fa-caret-down"></i>
+                      }
+                    </td>
+                    <td class="break-all">
+                      @if (download.link) {
+                        {{ download.link | decodeURI }}
+                      }
+                      @if (!download.link) {
+                        {{ download.path }}
+                      }
+                    </td>
                   <td>
                     {{ download.bytesTotal | filesize }}
                   </td>
@@ -335,10 +338,10 @@
                           <div class="field">
                             <label class="label">Real-Debrid Unrestricted Link</label>
                             @if (download.link) {
-                              <a href="{{ download.link }}" target="_blank"> {{ download.link | decodeURI }}</a>
+                              <a class="break-all" href="{{ download.link }}" target="_blank"> {{ download.link | decodeURI }}</a>
                             }
                           </div>
-                          <div class="field">
+                          <div class="field break-all">
                             <label class="label">Real-Debrid Link</label>
                             {{ download.path }}
                           </div>
@@ -431,8 +434,9 @@
                   </tr>
                 }
               }
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     }
