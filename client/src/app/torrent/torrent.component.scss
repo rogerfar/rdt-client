@@ -8,6 +8,10 @@ table {
   }
 }
 
+.break-all {
+  word-break: break-all;
+}
+
 .flex-container {
   display: flex;
   flex: 1 1 0;
@@ -16,5 +20,26 @@ table {
 
   @media screen and (max-width: 1279px) {
     flex-direction: column;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .action-buttons {
+    .control {
+      width: 100%;
+
+      .button {
+        width: 100%;
+      }
+    }
+  }
+
+  .tabs ul {
+    flex-wrap: wrap;
+
+    li {
+      flex-grow: 1;
+      text-align: center;
+    }
   }
 }
