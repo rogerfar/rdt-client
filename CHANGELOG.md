@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased
 
+## [2.0.129] - 2026-04-06
+### Added
+- Optimized mobile views, thanks to @sylvaindd!
+
 ## [2.0.128] - 2026-04-06
 ### Changed
 - Fixed some qBittorrent endpoints.
