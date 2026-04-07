@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased
 
+## [2.0.128] - 2026-04-06
+### Changed
+- Fixed some qBittorrent endpoints.
+
 ## [2.0.127] - 2026-03-15
 ### Added
 - Implement qBittorrent endpoint for counting torrents, thanks to @vinodmishra!

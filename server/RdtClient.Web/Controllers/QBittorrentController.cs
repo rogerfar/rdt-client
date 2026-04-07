@@ -154,7 +154,6 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     [Authorize(Policy = "AuthSetting")]
     [Route("torrents/info")]
     [HttpGet]
-    [HttpPost]
     public async Task<ActionResult<IList<TorrentInfo>>> TorrentsInfo([FromQuery] QBTorrentsInfoRequest request)
     {
         var results = await qBittorrent.TorrentInfo();
@@ -191,7 +190,6 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     [Authorize(Policy = "AuthSetting")]
     [Route("torrents/count")]
     [HttpGet]
-    [HttpPost]
     public async Task<ActionResult<Int32>> TorrentsCount([FromQuery] QBTorrentsCountRequest request)
     {
         var results = await qBittorrent.TorrentInfo();
@@ -609,7 +607,6 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     [Authorize(Policy = "AuthSetting")]
     [Route("torrents/trackers")]
     [HttpGet]
-    [HttpPost]
     public async Task<ActionResult<IList<TorrentInfo>>> TorrentsTrackers([FromQuery] QBTorrentsHashRequest request)
     {
         if (String.IsNullOrWhiteSpace(request.Hash))
