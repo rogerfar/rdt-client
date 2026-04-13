@@ -1,6 +1,6 @@
 # Real-Debrid Torrent & Usenet Client
 
-This is a web interface to manage your torrents on Real-Debrid, AllDebrid, Premiumize TorBox or DebridLink. It supports the following features:
+This is a web interface to manage your torrents on Real-Debrid, AllDebrid, Premiumize, TorBox or DebridLink. It supports the following features:
 
 - Add new torrents through magnets or files
 - Add usenet downloads through NZB files (TorBox only)
@@ -9,7 +9,7 @@ This is a web interface to manage your torrents on Real-Debrid, AllDebrid, Premi
 - Implements a fake qBittorrent API so you can hook up other applications like Sonarr, Radarr or Couchpotato.
 - Built with Angular 21 and .NET 10
 
-**You will need a Premium service at Real-Debrid, AllDebrid, Premiumize or Torbox!**
+**You will need a Premium service at Real-Debrid, AllDebrid, Premiumize, Torbox or DebridLink!**
 
 [Click here to sign up for Real-Debrid.](https://real-debrid.com/?id=1348683)
 
