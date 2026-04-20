@@ -94,18 +94,18 @@ public class TorrentsTest
         String torrentPath;
         String filePath;
 
-        if (OSHelper.IsLinux)
-        {
-            downloadPath = $"{settings.DownloadClient.DownloadPath}/{torrent.Category}";
-            torrentPath = $"{downloadPath}/{torrent.RdName}";
-            filePath = $"{torrentPath}/{downloads[0].FileName}";
-        }
-        else
+        if (OSHelper.IsWindows)
         {
             Settings.Get.DownloadClient.DownloadPath = settings.DownloadClient.DownloadPath = @"C:\Downloads";
             downloadPath = @$"{settings.DownloadClient.DownloadPath}\{torrent.Category}";
             torrentPath = @$"{downloadPath}\{torrent.RdName}";
             filePath = @$"{torrentPath}\{downloads[0].FileName}";
+        }
+        else
+        {
+            downloadPath = $"{settings.DownloadClient.DownloadPath}/{torrent.Category}";
+            torrentPath = $"{downloadPath}/{torrent.RdName}";
+            filePath = $"{torrentPath}/{downloads[0].FileName}";
         }
 
         var fileSystemMock = new MockFileSystem(new Dictionary<String, MockFileData>

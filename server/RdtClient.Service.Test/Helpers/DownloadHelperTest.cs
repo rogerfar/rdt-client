@@ -183,13 +183,13 @@ public class DownloadHelperTest
 
         String fileRelativePath;
 
-        if (OSHelper.IsLinux)
+        if (OSHelper.IsWindows)
         {
-            fileRelativePath = "inside/lots/of/subdirectories/file.txt";
+            fileRelativePath = @"inside\lots\of\subdirectories\file.txt";
         }
         else
         {
-            fileRelativePath = @"inside\lots\of\subdirectories\file.txt";
+            fileRelativePath = "inside/lots/of/subdirectories/file.txt";
         }
 
         IList<DebridClientFile> files =
@@ -228,13 +228,13 @@ public class DownloadHelperTest
 
         String fileRelativePath;
 
-        if (OSHelper.IsLinux)
+        if (OSHelper.IsWindows)
         {
-            fileRelativePath = "inside/lots/of/subdirectories/file.txt";
+            fileRelativePath = @"inside\lots\of\subdirectories\file.txt";
         }
         else
         {
-            fileRelativePath = @"inside\lots\of\subdirectories\file.txt";
+            fileRelativePath = "inside/lots/of/subdirectories/file.txt";
         }
 
         IList<DebridClientFile> files =
@@ -271,13 +271,13 @@ public class DownloadHelperTest
 
         String fileRelativePath;
 
-        if (OSHelper.IsLinux)
+        if (OSHelper.IsWindows)
         {
-            fileRelativePath = "Torrent Name/Saison 1/file.txt";
+            fileRelativePath = @"Torrent Name\Saison 1\file.txt";
         }
         else
         {
-            fileRelativePath = @"Torrent Name\Saison 1\file.txt";
+            fileRelativePath = "Torrent Name/Saison 1/file.txt";
         }
 
         IList<DebridClientFile> files =
@@ -317,13 +317,13 @@ public class DownloadHelperTest
 
         String fileRelativePath;
 
-        if (OSHelper.IsLinux)
+        if (OSHelper.IsWindows)
         {
-            fileRelativePath = "Torrent Name/Saison 1/file.txt";
+            fileRelativePath = @"Torrent Name\Saison 1\file.txt";
         }
         else
         {
-            fileRelativePath = @"Torrent Name\Saison 1\file.txt";
+            fileRelativePath = "Torrent Name/Saison 1/file.txt";
         }
 
         IList<DebridClientFile> files =

@@ -4,5 +4,5 @@ namespace RdtClient.Service.Test.Helpers;
 
 public static class OSHelper
 {
-    public static Boolean IsLinux => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+    public static Boolean IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 }
