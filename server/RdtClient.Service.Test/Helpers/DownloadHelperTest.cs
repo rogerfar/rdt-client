@@ -181,16 +181,7 @@ public class DownloadHelperTest
             FileName = "file.txt"
         };
 
-        String fileRelativePath;
-
-        if (OSHelper.IsWindows)
-        {
-            fileRelativePath = @"inside\lots\of\subdirectories\file.txt";
-        }
-        else
-        {
-            fileRelativePath = "inside/lots/of/subdirectories/file.txt";
-        }
+        var fileRelativePath = Path.Combine("inside", "lots", "of", "subdirectories", "file.txt");
 
         IList<DebridClientFile> files =
         [
@@ -212,7 +203,7 @@ public class DownloadHelperTest
         var path = DownloadHelper.GetDownloadPath("/data/downloads", torrent, download, fileSystem);
 
         // Assert
-        var expectedPath = Path.Combine("/data/downloads", torrent.RdName, fileRelativePath);
+        var expectedPath = Path.Combine("/data/downloads", torrent.RdName, "inside", "lots", "of", "subdirectories", "file.txt");
         Assert.Equal(expectedPath, path);
     }
 
@@ -226,16 +217,7 @@ public class DownloadHelperTest
             FileName = "file.txt"
         };
 
-        String fileRelativePath;
-
-        if (OSHelper.IsWindows)
-        {
-            fileRelativePath = @"inside\lots\of\subdirectories\file.txt";
-        }
-        else
-        {
-            fileRelativePath = "inside/lots/of/subdirectories/file.txt";
-        }
+        var fileRelativePath = Path.Combine("inside", "lots", "of", "subdirectories", "file.txt");
 
         IList<DebridClientFile> files =
         [
@@ -255,7 +237,7 @@ public class DownloadHelperTest
         var path = DownloadHelper.GetDownloadPath(torrent, download);
 
         // Assert
-        var expectedPath = Path.Combine(torrent.RdName, fileRelativePath);
+        var expectedPath = Path.Combine(torrent.RdName, "inside", "lots", "of", "subdirectories", "file.txt");
         Assert.Equal(expectedPath, path);
     }
 
@@ -269,16 +251,7 @@ public class DownloadHelperTest
             FileName = "file.txt"
         };
 
-        String fileRelativePath;
-
-        if (OSHelper.IsWindows)
-        {
-            fileRelativePath = @"Torrent Name\Saison 1\file.txt";
-        }
-        else
-        {
-            fileRelativePath = "Torrent Name/Saison 1/file.txt";
-        }
+        var fileRelativePath = Path.Combine("Torrent Name", "Saison 1", "file.txt");
 
         IList<DebridClientFile> files =
         [
@@ -315,16 +288,7 @@ public class DownloadHelperTest
             FileName = "file.txt"
         };
 
-        String fileRelativePath;
-
-        if (OSHelper.IsWindows)
-        {
-            fileRelativePath = @"Torrent Name\Saison 1\file.txt";
-        }
-        else
-        {
-            fileRelativePath = "Torrent Name/Saison 1/file.txt";
-        }
+        var fileRelativePath = Path.Combine("Torrent Name", "Saison 1", "file.txt");
 
         IList<DebridClientFile> files =
         [
