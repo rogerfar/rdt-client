@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { saveAs } from 'file-saver-es';
 import { Torrent } from '../models/torrent.model';
@@ -10,6 +11,7 @@ import { TorrentStatusPipe } from '../torrent-status.pipe';
 import { DownloadStatusPipe } from '../download-status.pipe';
 import { DecodeURIPipe } from '../decode-uri.pipe';
 import { FileSizePipe } from '../filesize.pipe';
+import { EMPTY, distinctUntilChanged, map, switchMap, tap, catchError } from 'rxjs';
 
 @Component({
   selector: 'app-torrent',
@@ -28,9 +30,11 @@ import { FileSizePipe } from '../filesize.pipe';
   standalone: true,
 })
 export class TorrentComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private activatedRoute = inject(ActivatedRoute);
   private router = inject(Router);
   private torrentService = inject(TorrentService);
+  private currentTorrentId: string | null = null;
 
   public torrent: Torrent;
 
@@ -71,41 +75,65 @@ export class TorrentComponent implements OnInit {
   public updating: boolean;
 
   ngOnInit(): void {
-    this.activatedRoute.params.subscribe((params) => {
-      const torrentId = params['id'];
-
-      this.torrentService.get(torrentId).subscribe({
-        next: (torrent) => {
-          this.torrent = torrent;
-
-          this.torrentService.update$.subscribe((result) => {
-            this.update(result);
-          });
-        },
-        error: () => this.router.navigate(['/']),
+    this.activatedRoute.params
+      .pipe(
+        map((params) => params['id'] as string),
+        distinctUntilChanged(),
+        tap((torrentId) => {
+          this.currentTorrentId = torrentId;
+        }),
+        switchMap((torrentId) =>
+          this.torrentService.get(torrentId).pipe(
+            catchError(() => {
+              this.router.navigate(['/']);
+              return EMPTY;
+            }),
+          ),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((torrent) => {
+        this.torrent = torrent;
+        this.currentTorrentId = torrent.torrentId;
       });
+
+    this.torrentService.update$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((result) => {
+      this.update(result);
     });
   }
 
   public update(torrents: Torrent[]): void {
-    const updatedTorrent = torrents.find((m) => m.torrentId === this.torrent.torrentId);
+    const torrentId = this.currentTorrentId ?? this.torrent?.torrentId;
+
+    if (!torrentId) {
+      return;
+    }
+
+    const updatedTorrent = torrents.find((m) => m.torrentId === torrentId);
 
     if (updatedTorrent == null) {
       return;
     }
 
-    this.torrent = updatedTorrent;
+    const currentTorrent = this.torrent;
+    const hasIncomingFiles = Array.isArray(updatedTorrent.files) && updatedTorrent.files.length > 0;
+
+    this.torrent = {
+      ...currentTorrent,
+      ...updatedTorrent,
+      fileOrMagnet: updatedTorrent.fileOrMagnet ?? currentTorrent?.fileOrMagnet,
+      files: hasIncomingFiles ? updatedTorrent.files : currentTorrent?.files ?? [],
+      downloads: updatedTorrent.downloads ?? currentTorrent?.downloads ?? [],
+    };
   }
 
   public download(): void {
-    const byteArray = new Uint8Array(
-      window
-        .atob(this.torrent.fileOrMagnet)
-        .split('')
-        .map(function (c) {
-          return c.charCodeAt(0);
-        }),
-    );
+    const binaryString = window.atob(this.torrent.fileOrMagnet);
+    const byteArray = new Uint8Array(binaryString.length);
+
+    for (let index = 0; index < binaryString.length; index += 1) {
+      byteArray[index] = binaryString.charCodeAt(index);
+    }
 
     const blob = new Blob([byteArray], { type: 'application/x-bittorrent' });
     saveAs(blob, `${this.torrent.rdName}.torrent`);

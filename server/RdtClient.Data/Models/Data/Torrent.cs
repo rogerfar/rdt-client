@@ -8,6 +8,10 @@ namespace RdtClient.Data.Models.Data;
 
 public class Torrent
 {
+    private String? _rdFiles;
+    private IList<DebridClientFile> _filesCache = [];
+    private Boolean _filesCacheInitialized;
+
     [Key]
     public Guid TorrentId { get; set; }
 
@@ -59,26 +63,51 @@ public class Torrent
     public DateTimeOffset? RdEnded { get; set; }
     public Int64? RdSpeed { get; set; }
     public Int64? RdSeeders { get; set; }
-    public String? RdFiles { get; set; }
+    public String? RdFiles
+    {
+        get => _rdFiles;
+        set
+        {
+            if (_rdFiles == value)
+            {
+                return;
+            }
+
+            _rdFiles = value;
+            _filesCache = [];
+            _filesCacheInitialized = false;
+        }
+    }
 
     [NotMapped]
     public IList<DebridClientFile> Files
     {
         get
         {
+            if (_filesCacheInitialized)
+            {
+                return _filesCache;
+            }
+
+            _filesCacheInitialized = true;
+
             if (String.IsNullOrWhiteSpace(RdFiles))
             {
-                return [];
+                _filesCache = [];
+
+                return _filesCache;
             }
 
             try
             {
-                return JsonSerializer.Deserialize<List<DebridClientFile>>(RdFiles) ?? [];
+                _filesCache = JsonSerializer.Deserialize<List<DebridClientFile>>(RdFiles) ?? [];
             }
             catch
             {
-                return [];
+                _filesCache = [];
             }
+
+            return _filesCache;
         }
     }
 
