@@ -1,10 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RdtClient.Data.Models.Data;
 using Download = RdtClient.Data.Models.Data.Download;
 
 namespace RdtClient.Data.Data;
 
-public class DownloadData(DataContext dataContext)
+public class DownloadData(DataContext dataContext, ILogger<DownloadData>? logger = null)
 {
     public async Task<List<Download>> GetForTorrent(Guid torrentId)
     {
@@ -30,8 +32,29 @@ public class DownloadData(DataContext dataContext)
                                 .FirstOrDefaultAsync(m => m.TorrentId == torrentId && m.Path == path);
     }
 
-    public async Task<Download> Add(Guid torrentId, DownloadInfo downloadInfo)
+    public async Task<DownloadAddResult> TryAddForTorrent(Guid torrentId, DownloadInfo downloadInfo)
     {
+        if (String.IsNullOrWhiteSpace(downloadInfo.RestrictedLink))
+        {
+            logger?.LogDebug("Skipped download creation because the restricted link was blank. TorrentId: {torrentId}", torrentId);
+
+            return DownloadAddResult.InvalidInput;
+        }
+
+        if (!await dataContext.Torrents.AsNoTracking().AnyAsync(m => m.TorrentId == torrentId))
+        {
+            logger?.LogDebug("Skipped download creation because the torrent no longer exists. TorrentId: {torrentId}, Path: {path}", torrentId, downloadInfo.RestrictedLink);
+
+            return DownloadAddResult.TorrentMissing;
+        }
+
+        if (await dataContext.Downloads.AsNoTracking().AnyAsync(m => m.TorrentId == torrentId && m.Path == downloadInfo.RestrictedLink))
+        {
+            logger?.LogDebug("Skipped download creation because it already exists. TorrentId: {torrentId}, Path: {path}", torrentId, downloadInfo.RestrictedLink);
+
+            return DownloadAddResult.AlreadyExists;
+        }
+
         var download = new Download
         {
             DownloadId = Guid.NewGuid(),
@@ -45,9 +68,33 @@ public class DownloadData(DataContext dataContext)
 
         await dataContext.Downloads.AddAsync(download);
 
-        await dataContext.SaveChangesAsync();
+        try
+        {
+            await dataContext.SaveChangesAsync();
 
-        return download;
+            return DownloadAddResult.Added;
+        }
+        // These shouldn't be possible any longer, but added for safety and until confirmed.
+        catch (DbUpdateException ex)
+        {
+            dataContext.Entry(download).State = EntityState.Detached;
+
+            if (IsDuplicateDownloadViolation(ex))
+            {
+                logger?.LogDebug("Skipped download creation after a concurrent duplicate insert. TorrentId: {torrentId}, Path: {path}", torrentId, downloadInfo.RestrictedLink);
+
+                return DownloadAddResult.AlreadyExists;
+            }
+
+            if (IsForeignKeyViolation(ex) && !await dataContext.Torrents.AsNoTracking().AnyAsync(m => m.TorrentId == torrentId))
+            {
+                logger?.LogDebug("Skipped download creation after the torrent was deleted concurrently. TorrentId: {torrentId}, Path: {path}", torrentId, downloadInfo.RestrictedLink);
+
+                return DownloadAddResult.TorrentMissing;
+            }
+
+            throw;
+        }
     }
 
     public async Task UpdateUnrestrictedLink(Guid downloadId, String unrestrictedLink)
@@ -245,5 +292,21 @@ public class DownloadData(DataContext dataContext)
         dbDownload.Error = null;
 
         await dataContext.SaveChangesAsync();
+    }
+
+    private static Boolean IsDuplicateDownloadViolation(DbUpdateException exception)
+    {
+        var sqliteException = exception.InnerException as SqliteException;
+
+        return sqliteException?.SqliteExtendedErrorCode == 2067
+               || sqliteException?.Message.Contains("UNIQUE constraint failed: Downloads.TorrentId, Downloads.Path", StringComparison.Ordinal) == true;
+    }
+
+    private static Boolean IsForeignKeyViolation(DbUpdateException exception)
+    {
+        var sqliteException = exception.InnerException as SqliteException;
+
+        return sqliteException?.SqliteExtendedErrorCode == 787
+               || sqliteException?.Message.Contains("FOREIGN KEY constraint failed", StringComparison.Ordinal) == true;
     }
 }

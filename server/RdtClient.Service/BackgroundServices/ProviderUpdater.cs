@@ -18,13 +18,14 @@ public class ProviderUpdater(ILogger<ProviderUpdater> logger, IServiceProvider s
             await Task.Delay(1000, stoppingToken);
         }
 
-        using var scope = serviceProvider.CreateScope();
-        var torrentService = scope.ServiceProvider.GetRequiredService<Torrents>();
-        var torrentRunner = scope.ServiceProvider.GetRequiredService<TorrentRunner>();
         logger.LogInformation("ProviderUpdater started.");
 
         while (!stoppingToken.IsCancellationRequested)
         {
+            using var scope = serviceProvider.CreateScope();
+            var torrentService = scope.ServiceProvider.GetRequiredService<Torrents>();
+            var torrentRunner = scope.ServiceProvider.GetRequiredService<TorrentRunner>();
+
             try
             {
                 var torrents = await torrentService.Get();

@@ -1,10 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 
 namespace RdtClient.Data.Data;
 
-public class TorrentData(DataContext dataContext) : ITorrentData
+public class TorrentData(DataContext dataContext, ILogger<TorrentData>? logger = null) : ITorrentData
 {
     public async Task<IList<Torrent>> Get()
     {
@@ -286,15 +287,23 @@ public class TorrentData(DataContext dataContext) : ITorrentData
 
     public async Task Delete(Guid torrentId)
     {
-        var dbTorrent = await dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
+        await using var transaction = await dataContext.Database.BeginTransactionAsync();
 
-        if (dbTorrent == null)
+        await dataContext.Downloads
+                         .Where(m => m.TorrentId == torrentId)
+                         .ExecuteDeleteAsync();
+
+        var deletedTorrents = await dataContext.Torrents
+                                               .Where(m => m.TorrentId == torrentId)
+                                               .ExecuteDeleteAsync();
+
+        await transaction.CommitAsync();
+
+        if (deletedTorrents == 0)
         {
+            logger?.LogDebug("Skipped torrent graph deletion because the torrent was not found. TorrentId: {torrentId}", torrentId);
+
             return;
         }
-
-        dataContext.Torrents.Remove(dbTorrent);
-
-        await dataContext.SaveChangesAsync();
     }
 }
