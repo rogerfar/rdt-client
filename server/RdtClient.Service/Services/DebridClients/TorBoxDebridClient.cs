@@ -610,9 +610,13 @@ public class TorBoxDebridClient(ILogger<TorBoxDebridClient> logger, IHttpClientF
         {
             var innerFolder = Directory.GetDirectories(hashDir)[0];
 
+            // extractPath may have been sanitized by FilenameSanitizer when the torrent
+            // directory was created, so compare against the sanitized RdName too.
+            var rdName = FilenameSanitizer.SanitizeFilenameIfEnabled(torrent.RdName!);
+
             var moveDir = extractPath;
 
-            if (!extractPath.EndsWith(torrent.RdName!))
+            if (!extractPath.EndsWith(rdName))
             {
                 moveDir = hashDir;
             }
@@ -629,7 +633,7 @@ public class TorBoxDebridClient(ILogger<TorBoxDebridClient> logger, IHttpClientF
                 Directory.Move(dir, destDir);
             }
 
-            if (!extractPath.Contains(torrent.RdName!))
+            if (!extractPath.Contains(rdName))
             {
                 Directory.Delete(innerFolder, true);
             }
