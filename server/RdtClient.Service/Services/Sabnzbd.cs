@@ -104,7 +104,7 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
 
                                          if (!String.IsNullOrWhiteSpace(t.RdName))
                                          {
-                                             path = Path.Combine(path, t.RdName);
+                                             path = Path.Combine(path, FilenameSanitizer.SanitizeFilenameIfEnabled(t.RdName));
                                          }
 
                                          return new SabnzbdHistorySlot

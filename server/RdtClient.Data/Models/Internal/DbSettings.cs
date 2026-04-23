@@ -176,6 +176,10 @@ http://127.0.0.1:6800/jsonrpc.")]
     [DisplayName("Log level")]
     [Description("Only set when trying to debug a download client, can generate a lot of logs.")]
     public DownloadClientLogLevel LogLevel { get; set; } = DownloadClientLogLevel.None;
+
+    [DisplayName("Sanitize filenames")]
+    [Description("Strip characters from filenames and torrent directory names that cause issues on Linux containers (square brackets, curly braces, control characters) and collapse multiple consecutive spaces. Recommended on; disable only if you need to preserve the exact filenames from the debrid provider.")]
+    public Boolean SanitizeFilenames { get; set; } = true;
 }
 
 public class DbSettingsProvider

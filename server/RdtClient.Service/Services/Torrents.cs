@@ -560,7 +560,7 @@ public class Torrents(
         if (deleteLocalFiles && !String.IsNullOrWhiteSpace(torrent.RdName))
         {
             var downloadPath = DownloadPath(torrent);
-            downloadPath = Path.Combine(downloadPath, torrent.RdName);
+            downloadPath = Path.Combine(downloadPath, FilenameSanitizer.SanitizeFilenameIfEnabled(torrent.RdName));
 
             Log($"Deleting local files in {downloadPath}", torrent);
 
@@ -939,7 +939,7 @@ public class Torrents(
         Log($"Parsing external program {fileName} with arguments {arguments}", torrent);
 
         var downloadPath = DownloadPath(torrent);
-        var torrentPath = Path.Combine(downloadPath, torrent.RdName ?? "Unknown");
+        var torrentPath = Path.Combine(downloadPath, FilenameSanitizer.SanitizeFilenameIfEnabled(torrent.RdName ?? "Unknown"));
 
         var filePath = torrentPath;
 

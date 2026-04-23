@@ -15,18 +15,19 @@ public static class DownloadHelper
             return null;
         }
 
-        var directory = RemoveInvalidPathChars(torrent.RdName);
+        var originalDirectory = RemoveInvalidPathChars(torrent.RdName);
+        var directory = FilenameSanitizer.SanitizeFilenameIfEnabled(originalDirectory);
 
         var torrentPath = Path.Combine(downloadPath, directory);
 
-        var fileName = GetFileName(download);
+        var originalFileName = GetOriginalFileName(download);
 
-        if (fileName == null)
+        if (originalFileName == null)
         {
             return null;
         }
 
-        var matchingTorrentFiles = torrent.Files.Where(m => m.Path.EndsWith(fileName)).Where(m => !String.IsNullOrWhiteSpace(m.Path)).ToList();
+        var matchingTorrentFiles = torrent.Files.Where(m => m.Path.EndsWith(originalFileName)).Where(m => !String.IsNullOrWhiteSpace(m.Path)).ToList();
 
         if (matchingTorrentFiles.Count > 0)
         {
@@ -38,10 +39,12 @@ public static class DownloadHelper
             {
                 subPath = subPath.Trim('/').Trim('\\');
 
-                subPath = StripTorrentNamePrefix(subPath, directory);
+                subPath = StripTorrentNamePrefix(subPath, originalDirectory);
 
                 if (!String.IsNullOrWhiteSpace(subPath))
                 {
+                    subPath = FilenameSanitizer.SanitizePathIfEnabled(subPath);
+
                     torrentPath = Path.Combine(torrentPath, subPath);
                 }
             }
@@ -53,6 +56,8 @@ public static class DownloadHelper
         {
             fileSystem.Directory.CreateDirectory(torrentPath);
         }
+
+        var fileName = FilenameSanitizer.SanitizeFilenameIfEnabled(originalFileName);
 
         var filePath = Path.Combine(torrentPath, fileName);
 
@@ -107,6 +112,13 @@ public static class DownloadHelper
     }
 
     public static String? GetFileName(Download download)
+    {
+        var cleaned = GetOriginalFileName(download);
+
+        return cleaned == null ? null : FilenameSanitizer.SanitizeFilenameIfEnabled(cleaned);
+    }
+
+    private static String? GetOriginalFileName(Download download)
     {
         if (String.IsNullOrWhiteSpace(download.Link))
         {

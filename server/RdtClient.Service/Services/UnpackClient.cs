@@ -63,7 +63,7 @@ public class UnpackClient(Download download, String destinationPath)
 
             if (!archiveEntries.Any(m => m.StartsWith(_torrent.RdName + @"\")) && !archiveEntries.Any(m => m.StartsWith(_torrent.RdName + "/")))
             {
-                extractPath = Path.Combine(destinationPath, _torrent.RdName!);
+                extractPath = Path.Combine(destinationPath, FilenameSanitizer.SanitizeFilenameIfEnabled(_torrent.RdName!));
             }
 
             if (archiveEntries.Any(m => m.Contains(".r00")))

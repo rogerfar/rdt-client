@@ -2,6 +2,7 @@
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.QBittorrent;
+using RdtClient.Service.Helpers;
 
 namespace RdtClient.Service.Services;
 
@@ -210,11 +211,11 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
                 // Alldebrid stores single file torrents at the root folder.
                 if (torrent.ClientKind == Provider.AllDebrid && torrent.Files.Count == 1)
                 {
-                    torrentPath = Path.Combine(downloadPath, torrent.Files[0].Path);
+                    torrentPath = Path.Combine(downloadPath, FilenameSanitizer.SanitizePathIfEnabled(torrent.Files[0].Path));
                 }
                 else
                 {
-                    torrentPath = Path.Combine(downloadPath, torrent.RdName) + Path.DirectorySeparatorChar;
+                    torrentPath = Path.Combine(downloadPath, FilenameSanitizer.SanitizeFilenameIfEnabled(torrent.RdName)) + Path.DirectorySeparatorChar;
                 }
             }
 
