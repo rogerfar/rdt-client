@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased
+### Added
+- Filename sanitizer that strips `[ ] { }` and control characters and collapses runs of whitespace so downloads no longer fail on Linux containers when the debrid provider returns filenames with square brackets (e.g. `[eztv]`). Gated by a new `Sanitize filenames` setting (on by default).
 
 ## [2.0.129] - 2026-04-06
 ### Added
