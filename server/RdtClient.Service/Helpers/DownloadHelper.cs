@@ -20,7 +20,7 @@ public static class DownloadHelper
 
         var torrentPath = Path.Combine(downloadPath, directory);
 
-        var originalFileName = GetOriginalFileName(download);
+        var originalFileName = GetFileName(download);
 
         if (originalFileName == null)
         {
@@ -112,13 +112,6 @@ public static class DownloadHelper
     }
 
     public static String? GetFileName(Download download)
-    {
-        var cleaned = GetOriginalFileName(download);
-
-        return cleaned == null ? null : FilenameSanitizer.SanitizeFilenameIfEnabled(cleaned);
-    }
-
-    private static String? GetOriginalFileName(Download download)
     {
         if (String.IsNullOrWhiteSpace(download.Link))
         {

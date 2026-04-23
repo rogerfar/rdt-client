@@ -25,28 +25,28 @@ public static partial class FilenameSanitizer
     /// <summary>
     /// Sanitizes a filename if enabled in settings; otherwise returns it unchanged.
     /// </summary>
-    public static String SanitizeFilenameIfEnabled(String filename)
+    public static String SanitizeFilenameIfEnabled(String? filename)
     {
-        return IsEnabled ? SanitizeFilename(filename) : filename;
+        return IsEnabled ? SanitizeFilename(filename) : filename ?? String.Empty;
     }
 
     /// <summary>
     /// Sanitizes a full path if enabled in settings; otherwise returns it unchanged.
     /// </summary>
-    public static String SanitizePathIfEnabled(String filePath)
+    public static String SanitizePathIfEnabled(String? filePath)
     {
-        return IsEnabled ? SanitizePath(filePath) : filePath;
+        return IsEnabled ? SanitizePath(filePath) : filePath ?? String.Empty;
     }
 
     /// <summary>
     /// Sanitizes a filename by stripping problematic characters and normalizing whitespace.
     /// Does NOT touch directory separators — only a single filename segment.
     /// </summary>
-    public static String SanitizeFilename(String filename)
+    public static String SanitizeFilename(String? filename)
     {
         if (String.IsNullOrEmpty(filename))
         {
-            return filename;
+            return String.Empty;
         }
 
         var sb = new StringBuilder(filename.Length);
@@ -75,16 +75,18 @@ public static partial class FilenameSanitizer
 
     /// <summary>
     /// Sanitizes each segment of a full file path, preserving directory separators.
+    /// Splits on both '/' and '\' regardless of host OS so paths that arrive
+    /// from the debrid provider with foreign separators are still handled;
+    /// the result is re-joined with the host's native separator.
     /// </summary>
-    public static String SanitizePath(String filePath)
+    public static String SanitizePath(String? filePath)
     {
         if (String.IsNullOrEmpty(filePath))
         {
-            return filePath;
+            return String.Empty;
         }
 
-        var separator = Path.DirectorySeparatorChar;
-        var segments = filePath.Split(separator);
+        var segments = filePath.Split('/', '\\');
 
         for (var i = 0; i < segments.Length; i++)
         {
@@ -94,6 +96,6 @@ public static partial class FilenameSanitizer
             }
         }
 
-        return String.Join(separator, segments);
+        return String.Join(Path.DirectorySeparatorChar, segments);
     }
 }
