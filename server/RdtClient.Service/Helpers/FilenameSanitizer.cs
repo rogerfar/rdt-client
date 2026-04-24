@@ -5,10 +5,14 @@ using RdtClient.Service.Services;
 namespace RdtClient.Service.Helpers;
 
 /// <summary>
-/// Sanitizes filenames to prevent issues with special characters on Linux containers.
-/// Path.GetInvalidFileNameChars() on Linux only returns NUL and '/', so characters
-/// like [ ] { } that cause problems with shell globbing, URI handling, and various
-/// download clients pass through the built-in filter unchanged.
+/// Works around a known Linux-only failure in the Bezzad Downloader NuGet
+/// package, which throws "Access to the path is denied" when the target
+/// path contains square brackets, curly braces, or runs of consecutive
+/// whitespace — all common in debrid-provider release names.
+///
+/// Path.GetInvalidFileNameChars() on Linux only returns NUL and '/', so
+/// these characters pass through .NET's built-in filter unchanged.
+/// Control characters are also stripped as a defensive measure.
 /// </summary>
 public static partial class FilenameSanitizer
 {
@@ -23,7 +27,9 @@ public static partial class FilenameSanitizer
     public static Boolean IsEnabled => Settings.Get.DownloadClient.SanitizeFilenames;
 
     /// <summary>
-    /// Sanitizes a filename if enabled in settings; otherwise returns it unchanged.
+    /// When sanitization is enabled, returns <see cref="SanitizeFilename"/>.
+    /// When disabled, returns the input as-is; null is coerced to empty string
+    /// so callers can treat the return as non-null.
     /// </summary>
     public static String SanitizeFilenameIfEnabled(String? filename)
     {
@@ -31,7 +37,9 @@ public static partial class FilenameSanitizer
     }
 
     /// <summary>
-    /// Sanitizes a full path if enabled in settings; otherwise returns it unchanged.
+    /// When sanitization is enabled, returns <see cref="SanitizePath"/>.
+    /// When disabled, returns the input as-is; null is coerced to empty string
+    /// so callers can treat the return as non-null.
     /// </summary>
     public static String SanitizePathIfEnabled(String? filePath)
     {
@@ -39,8 +47,9 @@ public static partial class FilenameSanitizer
     }
 
     /// <summary>
-    /// Sanitizes a filename by stripping problematic characters and normalizing whitespace.
-    /// Does NOT touch directory separators — only a single filename segment.
+    /// Strips square brackets, curly braces, and control characters, collapses
+    /// runs of whitespace to a single space, and trims. Operates on a single
+    /// filename segment; does not interpret directory separators.
     /// </summary>
     public static String SanitizeFilename(String? filename)
     {

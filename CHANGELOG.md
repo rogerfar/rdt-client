@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased
 ### Added
-- Filename sanitizer that strips `[ ] { }` and control characters and collapses runs of whitespace so downloads no longer fail on Linux containers when the debrid provider returns filenames with square brackets (e.g. `[eztv]`). Gated by a new `Sanitize filenames` setting (on by default).
+- Filename sanitizer that strips `[ ] { }` and control characters and collapses runs of whitespace, working around a failure in the Bezzad Downloader NuGet package that blocks downloads on Linux when the debrid provider returns filenames with square brackets (e.g. `[eztv]`). Gated by a new `Sanitize filenames` setting; defaults to on for Linux hosts and off elsewhere.
 
 ## [2.0.129] - 2026-04-06
 ### Added
