@@ -183,7 +183,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
         return preferences;
     }
 
-    public async Task<IList<TorrentInfo>> TorrentInfo()
+    public virtual async Task<IList<TorrentInfo>> TorrentInfo()
     {
         var savePath = Settings.AppDefaultSavePath;
 
