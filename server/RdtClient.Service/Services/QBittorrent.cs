@@ -330,8 +330,6 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
 
     public async Task<IList<TorrentFileItem>?> TorrentFileContents(String hash)
     {
-        var results = new List<TorrentFileItem>();
-
         var torrent = await torrents.GetByHash(hash);
 
         if (torrent == null || torrent.Type != DownloadType.Torrent)
@@ -339,17 +337,19 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             return null;
         }
 
-        foreach (var file in torrent.Files.Where(m => m.Selected))
-        {
-            var result = new TorrentFileItem
+        var progress = torrent.Completed.HasValue || torrent.RdStatus == TorrentStatus.Finished ? 1f : 0f;
+
+        return torrent.Files
+            .Select((file, index) => new TorrentFileItem
             {
-                Name = file.Path
-            };
-
-            results.Add(result);
-        }
-
-        return results;
+                Index = index,
+                Name = file.Path,
+                Size = file.Bytes,
+                Progress = file.Selected ? progress : 0f,
+                Priority = file.Selected ? 1 : 0,
+                IsSeed = false
+            })
+            .ToList();
     }
 
     public async Task<TorrentProperties?> TorrentProperties(String hash)
@@ -385,6 +385,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             AdditionDate = torrent.Added.ToUnixTimeSeconds(),
             Comment = "RealDebridClient <https://github.com/rogerfar/rdt-client>",
             CompletionDate = torrent.Completed?.ToUnixTimeSeconds() ?? -1,
+            IsPrivate = false,
             CreatedBy = "RealDebridClient <https://github.com/rogerfar/rdt-client>",
             CreationDate = torrent.Added.ToUnixTimeSeconds(),
             DlLimit = -1,
@@ -418,6 +419,11 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
         };
 
         return result;
+    }
+
+    public async Task TorrentsFilePrio(String hash, IReadOnlyCollection<Int32> fileIds, Int32 priority)
+    {
+        await torrents.UpdateFileSelection(hash, fileIds, priority > 0);
     }
 
     public async Task TorrentsDelete(String hash, Boolean deleteFiles)
