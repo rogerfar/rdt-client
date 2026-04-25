@@ -204,6 +204,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             }
 
             var torrentPath = downloadPath;
+            var contentPathName = GetContentPathName(torrent);
 
             if (!String.IsNullOrWhiteSpace(torrent.RdName))
             {
@@ -214,7 +215,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
                 }
                 else
                 {
-                    torrentPath = Path.Combine(downloadPath, torrent.RdName) + Path.DirectorySeparatorChar;
+                    torrentPath = Path.Combine(downloadPath, contentPathName) + Path.DirectorySeparatorChar;
                 }
             }
 
@@ -326,6 +327,37 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
         }
 
         return results;
+    }
+
+    private static String GetContentPathName(Torrent torrent)
+    {
+        if (String.IsNullOrWhiteSpace(torrent.RdName))
+        {
+            return torrent.RdName ?? String.Empty;
+        }
+
+        var topLevelSelectedFiles = torrent.Files
+                                          .Where(m => m.Selected && !String.IsNullOrWhiteSpace(m.Path))
+                                          .Select(m => m.Path.Trim('/').Trim('\\'))
+                                          .Where(m => m.IndexOfAny(['/', '\\']) < 0)
+                                          .Select(Path.GetFileName)
+                                          .Where(m => !String.IsNullOrWhiteSpace(m))
+                                          .Distinct(StringComparer.OrdinalIgnoreCase)
+                                          .ToList();
+
+        if (topLevelSelectedFiles.Count == 1)
+        {
+            var selectedFileName = topLevelSelectedFiles[0]!;
+            var selectedFileBaseName = Path.GetFileNameWithoutExtension(selectedFileName);
+
+            if (!String.IsNullOrWhiteSpace(selectedFileBaseName) &&
+                selectedFileBaseName.Equals(torrent.RdName, StringComparison.OrdinalIgnoreCase))
+            {
+                return selectedFileName;
+            }
+        }
+
+        return torrent.RdName;
     }
 
     public async Task<IList<TorrentFileItem>?> TorrentFileContents(String hash)

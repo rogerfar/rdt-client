@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Moq;
+using System.Text.Json;
+using RdtClient.Data.Data;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.DebridClient;
@@ -207,5 +209,59 @@ public class QBittorrentTest
         // Assert
         Assert.NotNull(result);
         Assert.False(result!.IsPrivate);
+    }
+
+    [Fact]
+    public async Task TorrentInfo_ShouldUseSelectedTopLevelFileName_WhenRootFileAddsOnlyTheExtension()
+    {
+        // Arrange
+        var previousMappedPath = SettingData.Get.DownloadClient.MappedPath;
+        SettingData.Get.DownloadClient.MappedPath = "/data/downloads";
+
+        try
+        {
+            var torrentRootName = "Example.Series.S01E01.1080p.WEB-DL-GROUP";
+            var selectedFileName = $"{torrentRootName}.mkv";
+
+            var torrent = new Torrent
+            {
+                Hash = "hash1",
+                Category = "tv",
+                Completed = DateTimeOffset.UtcNow,
+                RdName = torrentRootName,
+                RdFiles = JsonSerializer.Serialize(new List<DebridClientFile>
+                {
+                    new()
+                    {
+                        Id = 1,
+                        Path = $"/{selectedFileName}",
+                        Bytes = 1000,
+                        Selected = true
+                    },
+                    new()
+                    {
+                        Id = 2,
+                        Path = $"/{torrentRootName}.nfo",
+                        Bytes = 10,
+                        Selected = false
+                    }
+                }),
+                Type = DownloadType.Torrent
+            };
+
+            _torrentsMock.Setup(m => m.Get()).ReturnsAsync(new List<Torrent> { torrent });
+
+            // Act
+            var result = await _qBittorrent.TorrentInfo();
+
+            // Assert
+            Assert.Single(result);
+            Assert.Equal(Path.Combine("/data/downloads", "tv", selectedFileName) + Path.DirectorySeparatorChar, result[0].ContentPath);
+            Assert.Equal(torrentRootName, result[0].Name);
+        }
+        finally
+        {
+            SettingData.Get.DownloadClient.MappedPath = previousMappedPath;
+        }
     }
 }
