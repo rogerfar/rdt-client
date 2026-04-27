@@ -12,7 +12,7 @@
     <PackageReference Include="AllDebrid.NET" Version="1.0.18" />
     <PackageReference Include="Aria2.NET" Version="1.0.6" />
     <PackageReference Include="DebridLinkFr.NET" Version="1.0.4" />
-    <PackageReference Include="Downloader" Version="5.1.0" />
+    <PackageReference Include="Downloader" Version="5.3.0" />
     <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="10.0.5" />
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="10.4.0" />
     <PackageReference Include="MonoTorrent" Version="3.0.2" />
