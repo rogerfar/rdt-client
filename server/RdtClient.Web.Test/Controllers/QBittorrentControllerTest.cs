@@ -22,7 +22,7 @@ public class QBittorrentControllerTest
             _qBittorrentMock.Object,
             new Mock<IHttpClientFactory>().Object);
 
-        _controller.ControllerContext = new ControllerContext
+        _controller.ControllerContext = new()
         {
             HttpContext = new DefaultHttpContext()
         };
@@ -43,7 +43,7 @@ public class QBittorrentControllerTest
         });
 
         // Act
-        var result = await _controller.TorrentsInfo(new QBTorrentsInfoRequest
+        var result = await _controller.TorrentsInfo(new()
         {
             Filter = "all",
             Hashes = "hash1"
@@ -77,7 +77,7 @@ public class QBittorrentControllerTest
         });
 
         // Act
-        var result = await _controller.TorrentsInfo(new QBTorrentsInfoRequest
+        var result = await _controller.TorrentsInfo(new()
         {
             Filter = "completed"
         });

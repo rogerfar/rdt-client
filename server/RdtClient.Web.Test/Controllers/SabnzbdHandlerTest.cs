@@ -43,8 +43,14 @@ public class SabnzbdHandlerTest
     {
         // Arrange
         Settings.Get.General.AuthenticationType = AuthenticationType.UserNamePassword;
-        var httpContext = new DefaultHttpContext();
-        httpContext.Request.QueryString = new("?ma_username=user&ma_password=pass");
+        var httpContext = new DefaultHttpContext
+        {
+            Request =
+            {
+                QueryString = new("?ma_username=user&ma_password=pass")
+            }
+        };
+
         _httpContextAccessorMock.Setup(a => a.HttpContext).Returns(httpContext);
 
         var context = CreateContext(httpContext);
@@ -81,8 +87,14 @@ public class SabnzbdHandlerTest
     {
         // Arrange
         Settings.Get.General.AuthenticationType = AuthenticationType.UserNamePassword;
-        var httpContext = new DefaultHttpContext();
-        httpContext.Request.QueryString = new("?ma_username=user&ma_password=wrong");
+        var httpContext = new DefaultHttpContext
+        {
+            Request =
+            {
+                QueryString = new("?ma_username=user&ma_password=wrong")
+            }
+        };
+
         _httpContextAccessorMock.Setup(a => a.HttpContext).Returns(httpContext);
 
         var context = CreateContext(httpContext);
