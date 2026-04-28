@@ -911,4 +911,30 @@ public class TorBoxDebridClientTest
                                       It.Is<Func<It.IsAnyType, Exception?, String>>((v, t) => true)),
                            Times.Once);
     }
+
+    [Fact]
+    public async Task UpdateData_SetsProcessingStatus_WhenTorBoxStatusIsUnmappedAndTorrentWasQueued()
+    {
+        // Arrange
+        var torrent = new Torrent
+        {
+            RdId = "test-rd-id",
+            RdStatus = TorrentStatus.Queued,
+            RdName = "test-torrent"
+        };
+
+        var torrentClientTorrent = new DebridClientTorrent
+        {
+            Status = "some-unknown-status",
+            Filename = "test-torrent"
+        };
+
+        var clientMock = new Mock<TorBoxDebridClient>(_loggerMock.Object, _httpClientFactoryMock.Object, _fileFilterMock.Object, _coordinatorMock.Object);
+
+        // Act
+        var result = await clientMock.Object.UpdateData(torrent, torrentClientTorrent);
+
+        // Assert
+        Assert.Equal(TorrentStatus.Processing, result.RdStatus);
+    }
 }

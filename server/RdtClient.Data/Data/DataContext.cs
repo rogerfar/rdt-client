@@ -16,6 +16,14 @@ public class DataContext(DbContextOptions options) : IdentityDbContext(options)
     {
         base.OnModelCreating(builder);
 
+        builder.Entity<Download>()
+               .HasIndex(m => new
+               {
+                   m.TorrentId,
+                   m.Path
+               })
+               .IsUnique();
+
         var cascadeFKs = builder.Model.GetEntityTypes()
                                 .SelectMany(t => t.GetForeignKeys())
                                 .Where(fk => !fk.IsOwnership && fk.DeleteBehavior == DeleteBehavior.Cascade);

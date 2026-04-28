@@ -644,10 +644,16 @@ public class TorBoxDebridClient(ILogger<TorBoxDebridClient> logger, IHttpClientF
     {
         if (!String.IsNullOrWhiteSpace(status))
         {
-            logger.LogInformation("TorBoxDebridClient encountered an unmapped status: {Status} for torrent {TorrentName}", status, torrent.RdName);
+            logger.LogInformation("TorBoxDebridClient encountered an unmapped status: {Status} for torrent {TorrentName} with previous status {PreviousStatus}",
+                                  status,
+                                  torrent.RdName,
+                                  torrent.RdStatus);
         }
 
-        return torrent.RdStatus ?? TorrentStatus.Processing;
+        // Once TorBox has acknowledged the torrent, an unknown provider-side status should not fall all the way back to
+        // the local queue state. Treat it as provider-side processing so the UI does not incorrectly show
+        // "Not Yet Added to Provider" while TorBox is already handling it.
+        return torrent.RdStatus is null or TorrentStatus.Queued ? TorrentStatus.Processing : torrent.RdStatus.Value;
     }
 
     private void Log(String message, Torrent? torrent = null)
