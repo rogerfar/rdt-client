@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO.Abstractions.TestingHelpers;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
@@ -9,7 +10,6 @@ using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Services;
-using RdtClient.Service.Test.Helpers;
 using RdtClient.Service.Wrappers;
 using DownloadClient = RdtClient.Data.Enums.DownloadClient;
 using TorrentsService = RdtClient.Service.Services.Torrents;
@@ -90,17 +90,18 @@ public class TorrentsTest
         mocks.TorrentDataMock.Setup(t => t.GetById(torrent.TorrentId)).Returns(Task.FromResult<Torrent?>(torrent));
         mocks.DownloadsMock.Setup(d => d.GetForTorrent(torrent.TorrentId)).ReturnsAsync(downloads);
 
-        String downloadPath;
-        String torrentPath;
-        String filePath;
-
         var category = torrent.Category!;
         var torrentName = torrent.RdName!;
         var fileName = downloads[0].FileName!;
 
-        downloadPath = Path.Combine(settings.DownloadClient.DownloadPath, category);
-        torrentPath = Path.Combine(downloadPath, torrentName);
-        filePath = Path.Combine(torrentPath, fileName);
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            Settings.Get.DownloadClient.DownloadPath = settings.DownloadClient.DownloadPath = @"C:\Downloads";
+        }
+
+        var downloadPath = Path.Combine(settings.DownloadClient.DownloadPath, category);
+        var torrentPath = Path.Combine(downloadPath, torrentName);
+        var filePath = Path.Combine(torrentPath, fileName);
 
         var fileSystemMock = new MockFileSystem(new Dictionary<String, MockFileData>
         {
