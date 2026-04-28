@@ -10,10 +10,11 @@ public class TorrentData(DataContext dataContext, ILogger<TorrentData>? logger =
     public async Task<IList<Torrent>> Get()
     {
         var torrents = await dataContext.Torrents
-                                        .AsNoTracking()
-                                        .AsSplitQuery()
-                                        .Include(m => m.Downloads)
-                                        .ToListAsync();
+                                         .AsNoTracking()
+                                         .AsSplitQuery()
+                                         .Include(m => m.Downloads)
+                                         .OrderBy(m => m.Priority ?? 9999)
+                                         .ToListAsync();
 
         return torrents.OrderBy(m => m.Priority ?? 9999)
                        .ThenBy(m => m.Added)

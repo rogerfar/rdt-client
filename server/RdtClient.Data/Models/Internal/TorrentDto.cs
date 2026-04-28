@@ -21,6 +21,7 @@ public class TorrentDto
     public DateTimeOffset? FilesSelected { get; set; }
     public DateTimeOffset? Completed { get; set; }
     public DownloadType Type { get; set; }
+    public String? FileOrMagnet { get; set; }
     public Boolean IsFile { get; set; }
     public Int32? Priority { get; set; }
     public Int32 RetryCount { get; set; }
@@ -41,6 +42,9 @@ public class TorrentDto
     public DateTimeOffset? RdEnded { get; set; }
     public Int64? RdSpeed { get; set; }
     public Int64? RdSeeders { get; set; }
+    public String StatusText { get; set; } = null!;
+    public Int32 FilesCount { get; set; }
+    public Int32 DownloadsCount { get; set; }
     public IList<DebridClientFile> Files { get; set; } = [];
     public IList<DownloadDto> Downloads { get; set; } = [];
 }

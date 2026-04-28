@@ -285,13 +285,12 @@ public class TorrentRunner(
         }
 
         var allTorrents = await torrents.Get();
+        var downloadsById = allTorrents.SelectMany(m => m.Downloads).ToDictionary(m => m.DownloadId, m => m);
 
         // Check for deleted torrents that are stuck in the ActiveDownloads or ActiveUnpacks
         foreach (var activeDownload in ActiveDownloadClients)
         {
-            var download = allTorrents.SelectMany(m => m.Downloads).FirstOrDefault(m => m.DownloadId == activeDownload.Key);
-
-            if (download == null)
+            if (!downloadsById.ContainsKey(activeDownload.Key))
             {
                 await activeDownload.Value.Cancel();
                 ActiveDownloadClients.TryRemove(activeDownload.Key, out _);
@@ -302,9 +301,7 @@ public class TorrentRunner(
 
         foreach (var activeUnpacks in ActiveUnpackClients)
         {
-            var download = allTorrents.SelectMany(m => m.Downloads).FirstOrDefault(m => m.DownloadId == activeUnpacks.Key);
-
-            if (download == null)
+            if (!downloadsById.ContainsKey(activeUnpacks.Key))
             {
                 activeUnpacks.Value.Cancel();
                 ActiveUnpackClients.TryRemove(activeUnpacks.Key, out _);
