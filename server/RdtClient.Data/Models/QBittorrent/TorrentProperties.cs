@@ -13,6 +13,9 @@ public class TorrentProperties
     [JsonPropertyName("completion_date")]
     public Int64? CompletionDate { get; set; }
 
+    [JsonPropertyName("is_private")]
+    public Boolean IsPrivate { get; set; }
+
     [JsonPropertyName("created_by")]
     public String? CreatedBy { get; set; }
 

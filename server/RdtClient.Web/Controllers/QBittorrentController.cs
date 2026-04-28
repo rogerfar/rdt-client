@@ -158,10 +158,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     {
         var results = await qBittorrent.TorrentInfo();
 
-        if(!String.IsNullOrWhiteSpace(request.Filter))
-        {
-            results = results.Where(m => m.State != null && m.State.Equals(request.Filter, StringComparison.OrdinalIgnoreCase)).ToList();
-        }
+        results = results.Where(m => MatchesFilter(m, request.Filter)).ToList();
 
         if (!String.IsNullOrWhiteSpace(request.Category))
         {
@@ -193,11 +190,8 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     public async Task<ActionResult<Int32>> TorrentsCount([FromQuery] QBTorrentsCountRequest request)
     {
         var results = await qBittorrent.TorrentInfo();
+        results = results.Where(m => MatchesFilter(m, request.Filter)).ToList();
 
-        if (!String.IsNullOrWhiteSpace(request.Filter))
-        {
-            results = results.Where(m => m.State != null && m.State.Equals(request.Filter, StringComparison.OrdinalIgnoreCase)).ToList();
-        }
         return results.Count;
     }
 
@@ -433,10 +427,36 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     [Authorize(Policy = "AuthSetting")]
     [Route("torrents/filePrio")]
     [HttpGet]
-    [HttpPost]
-    public ActionResult TorrentsFilePrio()
+    public async Task<ActionResult> TorrentsFilePrio([FromQuery] QBTorrentsFilePrioRequest request)
     {
+        if (String.IsNullOrWhiteSpace(request.Hash) || String.IsNullOrWhiteSpace(request.Id) || request.Priority == null)
+        {
+            return BadRequest();
+        }
+
+        var fileIds = request.Id
+            .Split('|', StringSplitOptions.RemoveEmptyEntries)
+            .Select(value => Int32.TryParse(value, out var parsedValue) ? parsedValue : (Int32?)null)
+            .Where(value => value.HasValue)
+            .Select(value => value!.Value)
+            .ToList();
+
+        if (fileIds.Count == 0)
+        {
+            return BadRequest();
+        }
+
+        await qBittorrent.TorrentsFilePrio(request.Hash, fileIds, request.Priority.Value);
+
         return Ok();
+    }
+
+    [Authorize(Policy = "AuthSetting")]
+    [Route("torrents/filePrio")]
+    [HttpPost]
+    public async Task<ActionResult> TorrentsFilePrioPost([FromForm] QBTorrentsFilePrioRequest request)
+    {
+        return await TorrentsFilePrio(request);
     }
 
     [Authorize(Policy = "AuthSetting")]
@@ -626,6 +646,31 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     {
         return await TorrentsTrackers(request);
     }
+
+    private static Boolean MatchesFilter(TorrentInfo torrent, String? filter)
+    {
+        if (String.IsNullOrWhiteSpace(filter) || filter.Equals("all", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return filter.ToLowerInvariant() switch
+        {
+            "downloading" => torrent.Progress < 1f && !String.Equals(torrent.State, "error", StringComparison.OrdinalIgnoreCase),
+            "completed" => torrent.Progress >= 1f || torrent.CompletionOn.HasValue,
+            "paused" => torrent.State?.StartsWith("paused", StringComparison.OrdinalIgnoreCase) == true,
+            "active" => (torrent.Dlspeed ?? 0) > 0 || (torrent.Upspeed ?? 0) > 0,
+            "inactive" => (torrent.Dlspeed ?? 0) <= 0 && (torrent.Upspeed ?? 0) <= 0,
+            "resumed" => torrent.State?.StartsWith("paused", StringComparison.OrdinalIgnoreCase) != true &&
+                         !String.Equals(torrent.State, "error", StringComparison.OrdinalIgnoreCase),
+            "stalled" => String.Equals(torrent.State, "stalledDL", StringComparison.OrdinalIgnoreCase) ||
+                         String.Equals(torrent.State, "stalledUP", StringComparison.OrdinalIgnoreCase),
+            "stalled_uploading" => String.Equals(torrent.State, "stalledUP", StringComparison.OrdinalIgnoreCase),
+            "stalled_downloading" => String.Equals(torrent.State, "stalledDL", StringComparison.OrdinalIgnoreCase),
+            "errored" => String.Equals(torrent.State, "error", StringComparison.OrdinalIgnoreCase),
+            _ => String.Equals(torrent.State, filter, StringComparison.OrdinalIgnoreCase)
+        };
+    }
 }
 
 public class QBAuthLoginRequest
@@ -650,6 +695,13 @@ public class QBTorrentsCountRequest
 public class QBTorrentsHashRequest
 {
     public String? Hash { get; set; }
+}
+
+public class QBTorrentsFilePrioRequest
+{
+    public String? Hash { get; set; }
+    public String? Id { get; set; }
+    public Int32? Priority { get; set; }
 }
 
 public class QBTorrentsDeleteRequest

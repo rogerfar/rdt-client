@@ -843,6 +843,43 @@ public class Torrents(
         await torrentData.UpdateFilesSelected(torrentId, datetime);
     }
 
+    public async Task<Boolean> UpdateFileSelection(String hash, IReadOnlyCollection<Int32> fileIds, Boolean selected)
+    {
+        if (fileIds.Count == 0)
+        {
+            return false;
+        }
+
+        var torrent = await torrentData.GetByHash(hash);
+
+        if (torrent == null)
+        {
+            return false;
+        }
+
+        var files = torrent.Files.ToList();
+
+        if (files.Count == 0)
+        {
+            return false;
+        }
+
+        foreach (var fileId in fileIds)
+        {
+            if (fileId < 0 || fileId >= files.Count)
+            {
+                continue;
+            }
+
+            files[fileId].Selected = selected;
+        }
+
+        torrent.RdFiles = JsonSerializer.Serialize(files, JsonSerializerOptions);
+        await torrentData.UpdateRdData(torrent);
+
+        return true;
+    }
+
     public async Task UpdatePriority(String hash, Int32 priority)
     {
         var torrent = await torrentData.GetByHash(hash);

@@ -2,7 +2,9 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
+using RdtClient.Data.Models.DebridClient;
 using RdtClient.Service.Services;
+using System.Text.Json;
 
 namespace RdtClient.Service.Test.Services;
 
@@ -135,5 +137,75 @@ public class QBittorrentTest
 
         // Current behavior is (1.0 + 0.8) / 2 = 0.9
         Assert.Equal(0.9f, result[0].Progress);
+    }
+
+    [Fact]
+    public async Task TorrentFileContents_ShouldReturnAllFiles_WithIndexesAndPriority()
+    {
+        // Arrange
+        var torrent = new Torrent
+        {
+            Hash = "hash1",
+            Type = DownloadType.Torrent,
+            RdFiles = JsonSerializer.Serialize(new List<DebridClientFile>
+            {
+                new()
+                {
+                    Id = 1,
+                    Path = "good.mkv",
+                    Bytes = 1000,
+                    Selected = true
+                },
+                new()
+                {
+                    Id = 2,
+                    Path = "dangerous.exe",
+                    Bytes = 10,
+                    Selected = false
+                }
+            })
+        };
+
+        _torrentsMock.Setup(m => m.GetByHash("hash1")).ReturnsAsync(torrent);
+
+        // Act
+        var result = await _qBittorrent.TorrentFileContents("hash1");
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Collection(result!,
+            first =>
+            {
+                Assert.Equal(0, first.Index);
+                Assert.Equal("good.mkv", first.Name);
+                Assert.Equal(1, first.Priority);
+            },
+            second =>
+            {
+                Assert.Equal(1, second.Index);
+                Assert.Equal("dangerous.exe", second.Name);
+                Assert.Equal(0, second.Priority);
+            });
+    }
+
+    [Fact]
+    public async Task TorrentProperties_ShouldExposePublicTorrentFlag()
+    {
+        // Arrange
+        var torrent = new Torrent
+        {
+            Hash = "hash1",
+            Type = DownloadType.Torrent,
+            Added = DateTimeOffset.UtcNow
+        };
+
+        _torrentsMock.Setup(m => m.GetByHash("hash1")).ReturnsAsync(torrent);
+
+        // Act
+        var result = await _qBittorrent.TorrentProperties("hash1");
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result!.IsPrivate);
     }
 }
