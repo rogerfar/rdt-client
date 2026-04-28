@@ -457,12 +457,23 @@ public class Torrents(
 
         foreach (var downloadInfo in downloadInfos)
         {
-            // Make sure downloads don't get added multiple times
-            var downloadExists = await downloads.Get(torrent.TorrentId, downloadInfo.RestrictedLink);
+            var addResult = await downloads.TryAddForTorrent(torrent.TorrentId, downloadInfo);
 
-            if (downloadExists == null && !String.IsNullOrWhiteSpace(downloadInfo.RestrictedLink))
+            switch (addResult)
             {
-                await downloads.Add(torrent.TorrentId, downloadInfo);
+                case DownloadAddResult.Added:
+                case DownloadAddResult.AlreadyExists:
+                    continue;
+                case DownloadAddResult.TorrentMissing:
+                    logger.LogDebug("Stopping download creation because the torrent was deleted concurrently. TorrentId: {torrentId}", torrent.TorrentId);
+
+                    return;
+                case DownloadAddResult.InvalidInput:
+                    logger.LogDebug("Skipping download creation because the provider returned an invalid download link. TorrentId: {torrentId}", torrent.TorrentId);
+
+                    continue;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(addResult), addResult, null);
             }
         }
     }
@@ -539,7 +550,6 @@ public class Torrents(
         {
             Log($"Deleting RdtClient data", torrent);
 
-            await downloads.DeleteForTorrent(torrent.TorrentId);
             await torrentData.Delete(torrentId);
         }
 
@@ -1070,7 +1080,7 @@ public class Torrents(
                 await torrentData.UpdateRdData(torrent);
             }
         }
-        catch
+        catch (Exception ex)
         {
             // ignored
         }

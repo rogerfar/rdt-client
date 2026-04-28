@@ -21,9 +21,9 @@ public class Downloads(DownloadData downloadData) : IDownloads
         return await downloadData.Get(torrentId, path);
     }
 
-    public async Task<Download> Add(Guid torrentId, DownloadInfo downloadInfo)
+    public async Task<DownloadAddResult> TryAddForTorrent(Guid torrentId, DownloadInfo downloadInfo)
     {
-        return await downloadData.Add(torrentId, downloadInfo);
+        return await downloadData.TryAddForTorrent(torrentId, downloadInfo);
     }
 
     public async Task UpdateUnrestrictedLink(Guid downloadId, String unrestrictedLink)

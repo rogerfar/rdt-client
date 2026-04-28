@@ -16,15 +16,19 @@ public class TaskRunner(ILogger<TaskRunner> logger, IServiceProvider serviceProv
             await Task.Delay(1000, stoppingToken);
         }
 
-        using var scope = serviceProvider.CreateScope();
-        var torrentRunner = scope.ServiceProvider.GetRequiredService<TorrentRunner>();
-
         logger.LogInformation("TaskRunner started.");
 
-        await torrentRunner.Initialize();
+        using (var startupScope = serviceProvider.CreateScope())
+        {
+            var startupRunner = startupScope.ServiceProvider.GetRequiredService<TorrentRunner>();
+            await startupRunner.Initialize();
+        }
 
         while (!stoppingToken.IsCancellationRequested)
         {
+            using var scope = serviceProvider.CreateScope();
+            var torrentRunner = scope.ServiceProvider.GetRequiredService<TorrentRunner>();
+
             try
             {
                 await torrentRunner.Tick();
