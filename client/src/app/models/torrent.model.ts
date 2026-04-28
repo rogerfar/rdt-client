@@ -44,9 +44,12 @@ export class Torrent {
   public rdSpeed: number;
   public rdSeeders: number;
   public rdFiles: string;
+  public statusText?: string;
+  public filesCount?: number;
+  public downloadsCount?: number;
 
-  public files: TorrentFile[];
-  public downloads: Download[];
+  public files?: TorrentFile[];
+  public downloads?: Download[];
 }
 
 export class TorrentFile {

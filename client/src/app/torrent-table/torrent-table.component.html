@@ -47,14 +47,10 @@
         </tr>
       </thead>
       <tbody>
-        @for (torrent of torrents | sort: sortProperty : sortDirection; track torrent.torrentId) {
+        @for (torrent of sortedTorrents; track torrent.torrentId) {
           <tr>
             <td>
-              <input
-                type="checkbox"
-                (click)="toggleSelect(torrent.torrentId)"
-                [checked]="selectedTorrents.includes(torrent.torrentId)"
-              />
+              <input type="checkbox" (click)="toggleSelect(torrent.torrentId)" [checked]="isSelected(torrent.torrentId)" />
             </td>
             <td (click)="openTorrent(torrent.torrentId)" class="break-all">
               {{ torrent.rdName }}
@@ -69,10 +65,10 @@
               {{ torrent.rdSeeders }}
             </td>
             <td>
-              {{ torrent.files.length | number }}
+              {{ (torrent.filesCount ?? torrent.files?.length ?? 0) | number }}
             </td>
             <td>
-              {{ torrent.downloads.length | number }}
+              {{ (torrent.downloadsCount ?? torrent.downloads?.length ?? 0) | number }}
             </td>
             <td>
               {{ torrent.rdSize | filesize }}
@@ -81,7 +77,7 @@
               {{ torrent.added | date: "medium" }}
             </td>
             <td>
-              {{ torrent | status }}
+              {{ torrent.statusText ?? (torrent | status) }}
             </td>
           </tr>
         }
@@ -89,19 +85,19 @@
     </table>
   } @else {
     <div class="mobile-cards">
-      @for (torrent of torrents | sort: sortProperty : sortDirection; track torrent.torrentId) {
-        <div class="box mobile-card" [class.is-selected]="selectedTorrents.includes(torrent.torrentId)">
+      @for (torrent of sortedTorrents; track torrent.torrentId) {
+        <div class="box mobile-card" [class.is-selected]="isSelected(torrent.torrentId)">
           <div class="mobile-card-checkbox">
             <input
               type="checkbox"
               (click)="toggleSelect(torrent.torrentId)"
-              [checked]="selectedTorrents.includes(torrent.torrentId)"
+              [checked]="isSelected(torrent.torrentId)"
             />
           </div>
           <div class="mobile-card-body" (click)="openTorrent(torrent.torrentId)">
             <p class="mobile-card-name">{{ torrent.rdName }}</p>
             <div class="tags mb-2">
-              <span class="tag is-info is-light">{{ torrent | status }}</span>
+              <span class="tag is-info is-light">{{ torrent.statusText ?? (torrent | status) }}</span>
               @if (torrent.category) {
                 <span class="tag is-light">{{ torrent.category }}</span>
               }
@@ -112,10 +108,10 @@
               >
               <span class="mobile-card-detail"><span class="detail-label">Seeders</span> {{ torrent.rdSeeders }}</span>
               <span class="mobile-card-detail"
-                ><span class="detail-label">Files</span> {{ torrent.files.length | number }}</span
+                ><span class="detail-label">Files</span> {{ (torrent.filesCount ?? torrent.files?.length ?? 0) | number }}</span
               >
               <span class="mobile-card-detail"
-                ><span class="detail-label">Downloads</span> {{ torrent.downloads.length | number }}</span
+                ><span class="detail-label">Downloads</span> {{ (torrent.downloadsCount ?? torrent.downloads?.length ?? 0) | number }}</span
               >
             </div>
           </div>

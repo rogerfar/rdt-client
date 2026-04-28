@@ -1,99 +1,130 @@
-import { Pipe, PipeTransform, inject } from '@angular/core';
+import { Pipe, PipeTransform } from '@angular/core';
 import { RealDebridStatus, Torrent } from './models/torrent.model';
 import { FileSizePipe } from './filesize.pipe';
 
-@Pipe({ name: 'status' })
-export class TorrentStatusPipe implements PipeTransform {
-  private pipe = inject(FileSizePipe);
+const fileSizePipe = new FileSizePipe();
 
-  transform(torrent: Torrent): string {
-    if (torrent.error) {
-      return torrent.error;
-    }
+export function getTorrentStatus(torrent: Torrent): string {
+  if (torrent.error) {
+    return torrent.error;
+  }
 
-    if (torrent.downloads.length > 0) {
-      const allFinished = torrent.downloads.every((m) => m.completed != null);
+  const downloads = torrent.downloads ?? [];
 
-      if (allFinished) {
-        return 'Finished';
+  if (downloads.length > 0) {
+    let allFinished = true;
+    let downloadingCount = 0;
+    let downloadedCount = 0;
+    let downloadingBytesDone = 0;
+    let downloadingBytesTotal = 0;
+    let downloadingSpeed = 0;
+    let unpackingCount = 0;
+    let unpackedCount = 0;
+    let unpackingBytesDone = 0;
+    let unpackingBytesTotal = 0;
+    let queuedForUnpackingCount = 0;
+    let queuedForDownloadingCount = 0;
+
+    for (const download of downloads) {
+      if (download.completed == null) {
+        allFinished = false;
       }
 
-      const downloading = torrent.downloads.filter((m) => m.downloadStarted && !m.downloadFinished && m.bytesDone > 0);
-      const downloaded = torrent.downloads.filter((m) => m.downloadFinished != null);
-
-      if (downloading.length > 0) {
-        const bytesDone = downloading.reduce((sum, m) => sum + m.bytesDone, 0);
-        const bytesTotal = downloading.reduce((sum, m) => sum + m.bytesTotal, 0);
-        const progress = (bytesDone / bytesTotal || 0) * 100;
-
-        const allSpeeds = downloading.reduce((sum, m) => sum + m.speed, 0);
-
-        const speed: string | string[] = this.pipe.transform(allSpeeds, 'filesize');
-
-        return `Downloading file ${downloading.length + downloaded.length}/${
-          torrent.downloads.length
-        } (${progress.toFixed(2)}% - ${speed}/s)`;
+      if (download.downloadFinished != null) {
+        downloadedCount += 1;
       }
 
-      const unpacking = torrent.downloads.filter((m) => m.unpackingStarted && !m.unpackingFinished && m.bytesDone > 0);
-      const unpacked = torrent.downloads.filter((m) => m.unpackingFinished != null);
-
-      if (unpacking.length > 0) {
-        const bytesDone = unpacking.reduce((sum, m) => sum + m.bytesDone, 0);
-        const bytesTotal = unpacking.reduce((sum, m) => sum + m.bytesTotal, 0);
-        const progress = (bytesDone / bytesTotal || 0) * 100;
-
-        return `Extracting file ${unpacking.length + unpacked.length}/${torrent.downloads.length} (${progress.toFixed(
-          2,
-        )}%)`;
+      if (download.downloadStarted && !download.downloadFinished && download.bytesDone > 0) {
+        downloadingCount += 1;
+        downloadingBytesDone += download.bytesDone;
+        downloadingBytesTotal += download.bytesTotal;
+        downloadingSpeed += download.speed;
       }
 
-      const queuedForUnpacking = torrent.downloads.filter((m) => m.unpackingQueued && !m.unpackingStarted);
-
-      if (queuedForUnpacking.length > 0) {
-        return `Queued for unpacking`;
+      if (download.unpackingFinished != null) {
+        unpackedCount += 1;
       }
 
-      const queuedForDownload = torrent.downloads.filter((m) => !m.downloadStarted && !m.downloadFinished);
-
-      if (queuedForDownload.length > 0) {
-        return `Queued for downloading`;
+      if (download.unpackingStarted && !download.unpackingFinished && download.bytesDone > 0) {
+        unpackingCount += 1;
+        unpackingBytesDone += download.bytesDone;
+        unpackingBytesTotal += download.bytesTotal;
       }
 
-      if (unpacked.length > 0) {
-        return `Files unpacked`;
+      if (download.unpackingQueued && !download.unpackingStarted) {
+        queuedForUnpackingCount += 1;
       }
 
-      if (downloaded.length > 0) {
-        return `Files downloaded to host`;
+      if (!download.downloadStarted && !download.downloadFinished) {
+        queuedForDownloadingCount += 1;
       }
     }
 
-    if (torrent.completed) {
+    if (allFinished) {
       return 'Finished';
     }
 
-    switch (torrent.rdStatus) {
-      case RealDebridStatus.Queued:
-        return 'Not Yet Added to Provider';
-      case RealDebridStatus.Downloading:
-        if (torrent.rdSeeders < 1 && torrent.type !== 1) {
-          return `Torrent stalled`;
-        }
-        const speed = this.pipe.transform(torrent.rdSpeed, 'filesize');
-        return `Torrent downloading (${torrent.rdProgress}% - ${speed}/s)`;
-      case RealDebridStatus.Processing:
-        return `Torrent processing`;
-      case RealDebridStatus.WaitingForFileSelection:
-        return `Torrent waiting for file selection`;
-      case RealDebridStatus.Error:
-        return `Torrent error: ${torrent.rdStatusRaw}`;
-      case RealDebridStatus.Finished:
-        return `Torrent finished, waiting for download links`;
-      case RealDebridStatus.Uploading:
-        return `Torrent uploading`;
-      default:
-        return 'Unknown status';
+    if (downloadingCount > 0) {
+      const progress = ((downloadingBytesDone / downloadingBytesTotal) || 0) * 100;
+      const speed = fileSizePipe.transform(downloadingSpeed, 'filesize') as string;
+
+      return `Downloading file ${downloadingCount + downloadedCount}/${downloads.length} (${progress.toFixed(2)}% - ${speed}/s)`;
     }
+
+    if (unpackingCount > 0) {
+      const progress = ((unpackingBytesDone / unpackingBytesTotal) || 0) * 100;
+
+      return `Extracting file ${unpackingCount + unpackedCount}/${downloads.length} (${progress.toFixed(2)}%)`;
+    }
+
+    if (queuedForUnpackingCount > 0) {
+      return 'Queued for unpacking';
+    }
+
+    if (queuedForDownloadingCount > 0) {
+      return 'Queued for downloading';
+    }
+
+    if (unpackedCount > 0) {
+      return 'Files unpacked';
+    }
+
+    if (downloadedCount > 0) {
+      return 'Files downloaded to host';
+    }
+  }
+
+  if (torrent.completed) {
+    return 'Finished';
+  }
+
+  switch (torrent.rdStatus) {
+    case RealDebridStatus.Queued:
+      return 'Not Yet Added to Provider';
+    case RealDebridStatus.Downloading:
+      if (torrent.rdSeeders < 1 && torrent.type !== 1) {
+        return 'Torrent stalled';
+      }
+
+      return `Torrent downloading (${torrent.rdProgress}% - ${fileSizePipe.transform(torrent.rdSpeed, 'filesize') as string}/s)`;
+    case RealDebridStatus.Processing:
+      return 'Torrent processing';
+    case RealDebridStatus.WaitingForFileSelection:
+      return 'Torrent waiting for file selection';
+    case RealDebridStatus.Error:
+      return `Torrent error: ${torrent.rdStatusRaw}`;
+    case RealDebridStatus.Finished:
+      return 'Torrent finished, waiting for download links';
+    case RealDebridStatus.Uploading:
+      return 'Torrent uploading';
+    default:
+      return 'Unknown status';
+  }
+}
+
+@Pipe({ name: 'status' })
+export class TorrentStatusPipe implements PipeTransform {
+  transform(torrent: Torrent): string {
+    return getTorrentStatus(torrent);
   }
 }

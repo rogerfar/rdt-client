@@ -1,9 +1,8 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.IO.Abstractions;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
@@ -35,11 +34,6 @@ public class Torrents(
     TorBoxDebridClient torBoxDebridClient)
 {
     private static readonly SemaphoreSlim RealDebridUpdateLock = new(1, 1);
-
-    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
-    {
-        ReferenceHandler = ReferenceHandler.IgnoreCycles
-    };
 
     private static readonly SemaphoreSlim TorrentResetLock = new(1, 1);
 
@@ -656,10 +650,12 @@ public class Torrents(
         try
         {
             var rdTorrents = await DebridClient.GetDownloads();
+            var torrentsByRdId = CreateTorrentLookupByRdId(torrents);
+            var providerTorrentsById = CreateProviderTorrentLookupById(rdTorrents);
 
             foreach (var rdTorrent in rdTorrents)
             {
-                var torrent = torrents.FirstOrDefault(m => m.RdId == rdTorrent.Id);
+                torrentsByRdId.TryGetValue(rdTorrent.Id, out var torrent);
 
                 // Auto import torrents only torrents that have their files selected
                 if (torrent == null && Settings.Get.Provider.AutoImport)
@@ -690,6 +686,8 @@ public class Torrents(
                     }
 
                     torrent = await torrentData.Add(rdTorrent.Id, rdTorrent.Hash, null, false, DownloadType.Torrent, Settings.Get.DownloadClient.Client, newTorrent);
+                    torrentsByRdId[rdTorrent.Id] = torrent;
+                    torrents.Add(torrent);
 
                     await UpdateTorrentClientData(torrent, rdTorrent);
                 }
@@ -701,7 +699,7 @@ public class Torrents(
 
             foreach (var torrent in torrents)
             {
-                var rdTorrent = rdTorrents.FirstOrDefault(m => m.Id == torrent.RdId);
+                var rdTorrent = torrent.RdId != null && providerTorrentsById.TryGetValue(torrent.RdId, out var providerTorrent) ? providerTorrent : null;
 
                 if (rdTorrent == null && Settings.Get.Provider.AutoDelete && torrent.RdStatus != TorrentStatus.Queued)
                 {
@@ -1069,11 +1067,11 @@ public class Torrents(
     {
         try
         {
-            var originalTorrent = JsonSerializer.Serialize(torrent, JsonSerializerOptions);
+            var originalTorrent = CaptureRdState(torrent);
 
             await DebridClient.UpdateData(torrent, torrentClientTorrent);
 
-            var newTorrent = JsonSerializer.Serialize(torrent, JsonSerializerOptions);
+            var newTorrent = CaptureRdState(torrent);
 
             if (originalTorrent != newTorrent)
             {
@@ -1085,6 +1083,65 @@ public class Torrents(
             // ignored
         }
     }
+
+    private static Dictionary<String, Torrent> CreateTorrentLookupByRdId(IEnumerable<Torrent> torrents)
+    {
+        var lookup = new Dictionary<String, Torrent>(StringComparer.Ordinal);
+
+        foreach (var torrent in torrents)
+        {
+            if (!String.IsNullOrWhiteSpace(torrent.RdId))
+            {
+                lookup[torrent.RdId] = torrent;
+            }
+        }
+
+        return lookup;
+    }
+
+    private static Dictionary<String, DebridClientTorrent> CreateProviderTorrentLookupById(IEnumerable<DebridClientTorrent> torrents)
+    {
+        var lookup = new Dictionary<String, DebridClientTorrent>(StringComparer.Ordinal);
+
+        foreach (var torrent in torrents)
+        {
+            if (!String.IsNullOrWhiteSpace(torrent.Id))
+            {
+                lookup[torrent.Id] = torrent;
+            }
+        }
+
+        return lookup;
+    }
+
+    private static TorrentRdState CaptureRdState(Torrent torrent)
+    {
+        return new(torrent.RdName,
+                   torrent.RdSize,
+                   torrent.RdHost,
+                   torrent.RdSplit,
+                   torrent.RdProgress,
+                   torrent.RdStatus,
+                   torrent.RdStatusRaw,
+                   torrent.RdAdded,
+                   torrent.RdEnded,
+                   torrent.RdSpeed,
+                   torrent.RdSeeders,
+                   torrent.RdFiles);
+    }
+
+    private readonly record struct TorrentRdState(String? RdName,
+                                                  Int64? RdSize,
+                                                  String? RdHost,
+                                                  Int64? RdSplit,
+                                                  Int64? RdProgress,
+                                                  TorrentStatus? RdStatus,
+                                                  String? RdStatusRaw,
+                                                  DateTimeOffset? RdAdded,
+                                                  DateTimeOffset? RdEnded,
+                                                  Int64? RdSpeed,
+                                                  Int64? RdSeeders,
+                                                  String? RdFiles);
 
     private void Log(String message, Download? download, Torrent? torrent)
     {
