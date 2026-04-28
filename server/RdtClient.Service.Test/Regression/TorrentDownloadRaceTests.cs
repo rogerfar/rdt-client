@@ -132,6 +132,8 @@ public class TorrentDownloadRaceTests : IAsyncLifetime
 
     public Task DisposeAsync()
     {
+        SqliteConnection.ClearAllPools();
+
         if (File.Exists(_databasePath))
         {
             File.Delete(_databasePath);
@@ -160,7 +162,7 @@ public class TorrentDownloadRaceTests : IAsyncLifetime
         var torrentId = Guid.NewGuid();
 
         await using var context = CreateContext();
-        context.Torrents.Add(new Torrent
+        context.Torrents.Add(new()
         {
             TorrentId = torrentId,
             Hash = Guid.NewGuid().ToString("N"),

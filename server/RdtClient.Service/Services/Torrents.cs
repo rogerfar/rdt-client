@@ -3,6 +3,7 @@ using System.IO.Abstractions;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
@@ -36,6 +37,11 @@ public class Torrents(
     private static readonly SemaphoreSlim RealDebridUpdateLock = new(1, 1);
 
     private static readonly SemaphoreSlim TorrentResetLock = new(1, 1);
+
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        ReferenceHandler = ReferenceHandler.IgnoreCycles
+    };
 
     private IDebridClient DebridClient
     {
@@ -609,7 +615,6 @@ public class Torrents(
         return unrestrictedLink;
     }
 
-    /// <inheritdoc />
     public async Task<String> RetrieveFileName(Guid downloadId)
     {
         var download = await downloads.GetById(downloadId) ?? throw new($"Download with ID {downloadId} not found");

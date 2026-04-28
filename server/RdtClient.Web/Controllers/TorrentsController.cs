@@ -388,7 +388,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
     private static async Task<Byte[]> ReadFormFileBytes(IFormFile file)
     {
         await using var fileStream = file.OpenReadStream();
-        await using var memoryStream = file.Length > 0 && file.Length <= Int32.MaxValue ? new MemoryStream((Int32)file.Length) : new MemoryStream();
+        await using var memoryStream = file.Length is > 0 and <= Int32.MaxValue ? new((Int32)file.Length) : new MemoryStream();
 
         await fileStream.CopyToAsync(memoryStream);
 
