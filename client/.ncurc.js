@@ -1,4 +1,4 @@
-const minorOnly = ["eslint"];
+const minorOnly = ["eslint", "typescript"];
 const patchOnly = [];
 
 module.exports = {
