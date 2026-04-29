@@ -204,7 +204,6 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             }
 
             var torrentPath = downloadPath;
-            var contentPathName = GetContentPathName(torrent);
 
             if (!String.IsNullOrWhiteSpace(torrent.RdName))
             {
@@ -215,7 +214,17 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
                 }
                 else
                 {
-                    torrentPath = Path.Combine(downloadPath, contentPathName) + Path.DirectorySeparatorChar;
+                    var existingContentPath = GetExistingContentPath(downloadPath, torrent);
+
+                    if (!String.IsNullOrWhiteSpace(existingContentPath))
+                    {
+                        torrentPath = existingContentPath;
+                    }
+                    else
+                    {
+                        var contentPathName = GetContentPathName(torrent);
+                        torrentPath = Path.Combine(downloadPath, contentPathName) + Path.DirectorySeparatorChar;
+                    }
                 }
             }
 
@@ -358,6 +367,126 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
         }
 
         return torrent.RdName;
+    }
+
+    private static String? GetExistingContentPath(String downloadPath, Torrent torrent)
+    {
+        if (!torrent.Completed.HasValue || !Directory.Exists(downloadPath))
+        {
+            return null;
+        }
+
+        var selectedFilePaths = torrent.Files
+                                       .Where(m => m.Selected && !String.IsNullOrWhiteSpace(m.Path))
+                                       .Select(m => NormalizeRelativePath(m.Path!))
+                                       .Where(m => !String.IsNullOrWhiteSpace(m))
+                                       .Distinct(StringComparer.OrdinalIgnoreCase)
+                                       .ToList();
+
+        var downloadFileNames = torrent.Downloads
+                                       .Select(m => m.FileName)
+                                       .Where(m => !String.IsNullOrWhiteSpace(m))
+                                       .Select(m => Path.GetFileName(m!))
+                                       .Where(m => !String.IsNullOrWhiteSpace(m))
+                                       .Distinct(StringComparer.OrdinalIgnoreCase)
+                                       .ToList();
+
+        if (selectedFilePaths.Count == 0 && downloadFileNames.Count == 0)
+        {
+            return null;
+        }
+
+        foreach (var candidateRoot in GetCandidateContentRoots(downloadPath, torrent, selectedFilePaths, downloadFileNames))
+        {
+            if (IsMatchingContentRoot(candidateRoot, selectedFilePaths, downloadFileNames))
+            {
+                return candidateRoot + Path.DirectorySeparatorChar;
+            }
+        }
+
+        return null;
+    }
+
+    private static IEnumerable<String> GetCandidateContentRoots(String downloadPath,
+                                                                Torrent torrent,
+                                                                IEnumerable<String> selectedFilePaths,
+                                                                IEnumerable<String> downloadFileNames)
+    {
+        var yielded = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
+
+        void AddCandidate(ICollection<String> candidates, String? name)
+        {
+            if (!String.IsNullOrWhiteSpace(name))
+            {
+                candidates.Add(Path.Combine(downloadPath, name));
+            }
+        }
+
+        var directCandidates = new List<String>();
+
+        AddCandidate(directCandidates, torrent.RdName);
+
+        foreach (var fileName in downloadFileNames)
+        {
+            AddCandidate(directCandidates, fileName);
+        }
+
+        foreach (var selectedFilePath in selectedFilePaths)
+        {
+            AddCandidate(directCandidates, Path.GetFileName(selectedFilePath));
+            AddCandidate(directCandidates, GetFirstPathComponent(selectedFilePath));
+        }
+
+        foreach (var candidate in directCandidates)
+        {
+            if (Directory.Exists(candidate) && yielded.Add(candidate))
+            {
+                yield return candidate;
+            }
+        }
+
+        foreach (var directory in Directory.EnumerateDirectories(downloadPath))
+        {
+            if (yielded.Add(directory))
+            {
+                yield return directory;
+            }
+        }
+    }
+
+    private static Boolean IsMatchingContentRoot(String candidateRoot,
+                                                 IEnumerable<String> selectedFilePaths,
+                                                 IEnumerable<String> downloadFileNames)
+    {
+        foreach (var selectedFilePath in selectedFilePaths)
+        {
+            if (File.Exists(Path.Combine(candidateRoot, selectedFilePath)))
+            {
+                return true;
+            }
+        }
+
+        foreach (var fileName in downloadFileNames)
+        {
+            if (File.Exists(Path.Combine(candidateRoot, fileName)))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static String NormalizeRelativePath(String path)
+    {
+        return path.Trim('/').Trim('\\').Replace('\\', Path.DirectorySeparatorChar);
+    }
+
+    private static String GetFirstPathComponent(String path)
+    {
+        var separatorIndex = path.IndexOfAny(['/', '\\']);
+
+        return separatorIndex < 0 ? path : path[..separatorIndex];
     }
 
     public async Task<IList<TorrentFileItem>?> TorrentFileContents(String hash)

@@ -220,7 +220,7 @@ public class QBittorrentTest
 
         try
         {
-            var torrentRootName = "Example.Series.S01E01.1080p.WEB-DL-GROUP";
+            var torrentRootName = "Sample.Show.S01E01.1080p.WEB-DL-GROUP";
             var selectedFileName = $"{torrentRootName}.mkv";
 
             var torrent = new Torrent
@@ -262,6 +262,133 @@ public class QBittorrentTest
         finally
         {
             SettingData.Get.DownloadClient.MappedPath = previousMappedPath;
+        }
+    }
+
+    [Fact]
+    public async Task TorrentInfo_ShouldUseExistingCompletedContentRoot_WhenSingleFileDirectoryDiffersFromRdName()
+    {
+        var previousMappedPath = SettingData.Get.DownloadClient.MappedPath;
+        var mappedPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        SettingData.Get.DownloadClient.MappedPath = mappedPath;
+
+        try
+        {
+            var category = "tv";
+            var selectedFileName = "Sample.Show.S01E02.1080p.WEB-DL-GROUP.mkv";
+            var contentRoot = Path.Combine(mappedPath, category, selectedFileName);
+            Directory.CreateDirectory(contentRoot);
+            await File.WriteAllTextAsync(Path.Combine(contentRoot, selectedFileName), "test");
+
+            var torrent = new Torrent
+            {
+                Hash = "hash1",
+                Category = category,
+                Completed = DateTimeOffset.UtcNow,
+                Downloads = new List<Download>
+                {
+                    new()
+                    {
+                        DownloadId = Guid.NewGuid(),
+                        FileName = selectedFileName,
+                        Link = "https://fake.url/Sample.Show.S01E02.1080p.WEB-DL-GROUP.mkv",
+                        Completed = DateTimeOffset.UtcNow
+                    }
+                },
+                RdName = "tracker.example    -    Sample.Show.S01E02.1080p.WEB-DL-GROUP",
+                RdFiles = JsonSerializer.Serialize(new List<DebridClientFile>
+                {
+                    new()
+                    {
+                        Id = 1,
+                        Path = $"/{selectedFileName}",
+                        Bytes = 1000,
+                        Selected = true
+                    }
+                }),
+                Type = DownloadType.Torrent
+            };
+
+            _torrentsMock.Setup(m => m.Get()).ReturnsAsync(new List<Torrent> { torrent });
+
+            var result = await _qBittorrent.TorrentInfo();
+
+            Assert.Single(result);
+            Assert.Equal(contentRoot + Path.DirectorySeparatorChar, result[0].ContentPath);
+        }
+        finally
+        {
+            SettingData.Get.DownloadClient.MappedPath = previousMappedPath;
+
+            if (Directory.Exists(mappedPath))
+            {
+                Directory.Delete(mappedPath, true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task TorrentInfo_ShouldUseExistingCompletedContentRoot_WhenSelectedFileIsNestedUnderDifferentRoot()
+    {
+        var previousMappedPath = SettingData.Get.DownloadClient.MappedPath;
+        var mappedPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        SettingData.Get.DownloadClient.MappedPath = mappedPath;
+
+        try
+        {
+            var category = "tv";
+            var rootDirectoryName = "tracker.example - Sample.Show.S01E03.1080p.x265-GROUP.mkv";
+            var nestedDirectoryName = "Sample.Show.S01E03.1080p.x265-GROUP";
+            var fileName = "Sample.Show.S01E03.1080p.x265-GROUP.mkv";
+            var contentRoot = Path.Combine(mappedPath, category, rootDirectoryName);
+            var nestedDirectory = Path.Combine(contentRoot, nestedDirectoryName);
+            Directory.CreateDirectory(nestedDirectory);
+            await File.WriteAllTextAsync(Path.Combine(nestedDirectory, fileName), "test");
+
+            var torrent = new Torrent
+            {
+                Hash = "hash1",
+                Category = category,
+                Completed = DateTimeOffset.UtcNow,
+                Downloads = new List<Download>
+                {
+                    new()
+                    {
+                        DownloadId = Guid.NewGuid(),
+                        FileName = fileName,
+                        Link = "https://fake.url/Sample.Show.S01E03.1080p.x265-GROUP.mkv",
+                        Completed = DateTimeOffset.UtcNow
+                    }
+                },
+                RdName = "tracker.example    -    Sample.Show.S01E03.1080p.x265-GROUP",
+                RdFiles = JsonSerializer.Serialize(new List<DebridClientFile>
+                {
+                    new()
+                    {
+                        Id = 1,
+                        Path = $"/{nestedDirectoryName}/{fileName}",
+                        Bytes = 1000,
+                        Selected = true
+                    }
+                }),
+                Type = DownloadType.Torrent
+            };
+
+            _torrentsMock.Setup(m => m.Get()).ReturnsAsync(new List<Torrent> { torrent });
+
+            var result = await _qBittorrent.TorrentInfo();
+
+            Assert.Single(result);
+            Assert.Equal(contentRoot + Path.DirectorySeparatorChar, result[0].ContentPath);
+        }
+        finally
+        {
+            SettingData.Get.DownloadClient.MappedPath = previousMappedPath;
+
+            if (Directory.Exists(mappedPath))
+            {
+                Directory.Delete(mappedPath, true);
+            }
         }
     }
 }
