@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased
 
+## [2.0.130] - 2026-04-28
+### Changed
+- Fixes to unit tests
+- Upgraded .NET and Angular dependencies
+- Added better qBittorrent capabilities for Cleanuparr
+- Performance fixes
+
 ## [2.0.129] - 2026-04-06
 ### Added
 - Optimized mobile views, thanks to @sylvaindd!
