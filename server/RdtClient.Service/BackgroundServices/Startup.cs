@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -39,6 +40,9 @@ public class Startup(IServiceProvider serviceProvider) : IHostedService
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
+        Ready = false;
+        SqliteConnection.ClearAllPools();
+
         return Task.CompletedTask;
     }
 }

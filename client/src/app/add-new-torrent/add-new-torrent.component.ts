@@ -1,12 +1,12 @@
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { TorrentService } from 'src/app/torrent.service';
 import { DownloadType, Torrent, TorrentFileAvailability } from '../models/torrent.model';
 import { SettingsService } from '../settings.service';
 import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NgClass } from '@angular/common';
+import { TorrentService } from '../torrent.service';
 
 @Component({
   selector: 'app-add-new-torrent',
@@ -119,7 +119,8 @@ export class AddNewTorrentComponent implements OnInit {
         this.includeRegex = settings.find((m) => m.key === 'Gui:Default:IncludeRegex')?.value as string;
         this.excludeRegex = settings.find((m) => m.key === 'Gui:Default:ExcludeRegex')?.value as string;
         this.torrentRetryAttempts = settings.find((m) => m.key === 'Gui:Default:TorrentRetryAttempts')?.value as number;
-        this.downloadRetryAttempts = settings.find((m) => m.key === 'Gui:Default:DownloadRetryAttempts')?.value as number;
+        this.downloadRetryAttempts = settings.find((m) => m.key === 'Gui:Default:DownloadRetryAttempts')
+          ?.value as number;
         this.torrentDeleteOnError = settings.find((m) => m.key === 'Gui:Default:DeleteOnError')?.value as number;
         this.torrentLifetime = settings.find((m) => m.key === 'Gui:Default:TorrentLifetime')?.value as number;
         this.priority = settings.find((m) => m.key === 'Gui:Default:Priority')?.value as number;
