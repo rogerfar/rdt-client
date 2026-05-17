@@ -62,17 +62,17 @@ public class TorrentRunnerTest
 
             var torrentRunner = new TorrentRunner(Mock.Of<ILogger<TorrentRunner>>(),
                                                   torrents,
-                                                  new Downloads(null!),
-                                                  new RemoteService(null!, torrents),
+                                                  new(null!),
+                                                  new(null!, torrents),
                                                   Mock.Of<IHttpClientFactory>(),
                                                   new RateLimitCoordinator());
 
             await torrentRunner.Tick();
 
             torrentDataMock.Verify(m => m.UpdateComplete(It.IsAny<Guid>(),
-                                                         It.IsAny<string?>(),
+                                                         It.IsAny<String?>(),
                                                          It.IsAny<DateTimeOffset?>(),
-                                                         It.IsAny<bool>()),
+                                                         It.IsAny<Boolean>()),
                                    Times.Never);
         }
         finally
