@@ -569,7 +569,7 @@ public class Torrents(
 
         if (deleteLocalFiles && !String.IsNullOrWhiteSpace(torrent.RdName))
         {
-            var downloadPath = DownloadPath(torrent);
+            var downloadPath = DownloadPath(torrent, Settings.Get);
             downloadPath = Path.Combine(downloadPath, torrent.RdName);
 
             Log($"Deleting local files in {downloadPath}", torrent);
@@ -828,7 +828,7 @@ public class Torrents(
             await Task.Delay(100);
         }
 
-        var downloadPath = DownloadPath(download.Torrent!);
+        var downloadPath = DownloadPath(download.Torrent!, Settings.Get);
 
         var filePath = DownloadHelper.GetDownloadPath(downloadPath, download.Torrent!, download);
 
@@ -929,9 +929,9 @@ public class Torrents(
         return torrent;
     }
 
-    private static String DownloadPath(Torrent torrent)
+    private static String DownloadPath(Torrent torrent, DbSettings settings)
     {
-        var settingDownloadPath = Settings.Get.DownloadClient.DownloadPath;
+        var settingDownloadPath = settings.DownloadClient.DownloadPath;
 
         if (!String.IsNullOrWhiteSpace(torrent.Category))
         {
@@ -988,7 +988,7 @@ public class Torrents(
 
         Log($"Parsing external program {fileName} with arguments {arguments}", torrent);
 
-        var downloadPath = DownloadPath(torrent);
+        var downloadPath = DownloadPath(torrent, settings);
         var torrentPath = Path.Combine(downloadPath, torrent.RdName ?? "Unknown");
 
         var filePath = torrentPath;
@@ -1083,7 +1083,7 @@ public class Torrents(
                 await torrentData.UpdateRdData(torrent);
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // ignored
         }
