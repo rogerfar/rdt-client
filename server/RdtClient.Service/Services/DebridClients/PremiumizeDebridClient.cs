@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Net;
-using System.Net.Http.Headers;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PremiumizeNET;
@@ -229,7 +228,7 @@ public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHtt
         return apiKey;
     }
 
-    private async Task<String> CreatePremiumizeNetTransfer(Func<Task<PremiumizeNET.TransferCreateResponse>> createTransfer, String description)
+    private async Task<String> CreatePremiumizeNetTransfer(Func<Task<TransferCreateResponse>> createTransfer, String description)
     {
         try
         {
@@ -281,7 +280,7 @@ public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHtt
                     Content = content
                 };
 
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", GetApiKey());
+                request.Headers.Authorization = new("Bearer", GetApiKey());
 
                 using var response = await httpClient.SendAsync(request);
                 var responseBody = await response.Content.ReadAsStringAsync();
