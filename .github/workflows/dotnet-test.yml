@@ -21,4 +21,4 @@ jobs:
       - name: Build
         run: dotnet build --no-restore server
       - name: Test
-        run: dotnet test --no-build --verbosity normal server
+        run: dotnet test --no-build --verbosity normal -maxcpucount:1 server
