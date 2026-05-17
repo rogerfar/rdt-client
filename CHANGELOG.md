@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased
 
+## [2.0.133] - 2026-05-17
+### Added
+- Added NZB support for Premiumize, thanks to @ALenfant!
+
 ## [2.0.132] - 2026-05-17
 ### Changed
 - Fixed for Cleanuparr
