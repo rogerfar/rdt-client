@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Net;
+using System.Net.Http.Headers;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PremiumizeNET;
@@ -13,6 +15,8 @@ namespace RdtClient.Service.Services.DebridClients;
 
 public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter) : IDebridClient
 {
+    private const String TransferCreateUrl = "https://www.premiumize.me/api/transfer/create";
+
     public async Task<IList<DebridClientTorrent>> GetDownloads()
     {
         var results = await GetClient().Transfers.ListAsync();
@@ -33,56 +37,22 @@ public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHtt
 
     public async Task<String> AddTorrentMagnet(String magnetLink)
     {
-        try
-        {
-            var result = await GetClient().Transfers.CreateAsync(magnetLink, "");
-
-            if (result?.Id == null)
-            {
-                throw new("Unable to add magnet link");
-            }
-
-            var resultId = result.Id ?? throw new($"Invalid responseID {result.Id}");
-
-            return resultId;
-        }
-        catch (Exception ex) when (ex.Message.Contains("slow_down", StringComparison.OrdinalIgnoreCase) ||
-                                   ex.Message.Contains("rate limit exceeded", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new RateLimitException(ex.Message, TimeSpan.FromMinutes(2));
-        }
+        return await CreatePremiumizeNetTransfer(() => GetClient().Transfers.CreateAsync(magnetLink, ""), "magnet link");
     }
 
     public async Task<String> AddTorrentFile(Byte[] bytes)
     {
-        try
-        {
-            var result = await GetClient().Transfers.CreateAsync(bytes, "");
-
-            if (result?.Id == null)
-            {
-                throw new("Unable to add torrent file");
-            }
-
-            var resultId = result.Id ?? throw new($"Invalid responseID {result.Id}");
-
-            return resultId;
-        }
-        catch (Exception ex) when (ex.Message.Contains("slow_down", StringComparison.OrdinalIgnoreCase) ||
-                                   ex.Message.Contains("rate limit exceeded", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new RateLimitException(ex.Message, TimeSpan.FromMinutes(2));
-        }
+        return await CreatePremiumizeNetTransfer(() => GetClient().Transfers.CreateAsync(bytes, ""), "torrent file");
     }
 
-    public Task<String> AddNzbLink(String nzbLink)
+    public async Task<String> AddNzbLink(String nzbLink)
     {
-        throw new NotSupportedException();
+        return await CreatePremiumizeNetTransfer(() => GetClient().Transfers.CreateAsync(nzbLink, ""), "NZB link");
     }
 
-    public Task<String> AddNzbFile(Byte[] bytes, String? name)
+    public async Task<String> AddNzbFile(Byte[] bytes, String? name)
     {
-        throw new NotSupportedException();
+        return await CreateTransferFromNzbFile(bytes, GetNzbFileName(name));
     }
 
     public Task<IList<DebridClientAvailableFile>> GetAvailableFiles(String hash)
@@ -225,13 +195,7 @@ public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHtt
     {
         try
         {
-            var apiKey = Settings.Get.Provider.ApiKey;
-
-            if (String.IsNullOrWhiteSpace(apiKey))
-            {
-                throw new("Premiumize API Key not set in the settings");
-            }
-
+            var apiKey = GetApiKey();
             var httpClient = httpClientFactory.CreateClient();
             httpClient.Timeout = TimeSpan.FromSeconds(10);
 
@@ -251,6 +215,146 @@ public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHtt
 
             throw;
         }
+    }
+
+    private static String GetApiKey()
+    {
+        var apiKey = Settings.Get.Provider.ApiKey;
+
+        if (String.IsNullOrWhiteSpace(apiKey))
+        {
+            throw new("Premiumize API Key not set in the settings");
+        }
+
+        return apiKey;
+    }
+
+    private async Task<String> CreatePremiumizeNetTransfer(Func<Task<PremiumizeNET.TransferCreateResponse>> createTransfer, String description)
+    {
+        try
+        {
+            var result = await createTransfer();
+
+            if (String.IsNullOrWhiteSpace(result?.Id))
+            {
+                throw new($"Unable to add {description}");
+            }
+
+            return result.Id;
+        }
+        catch (Exception ex) when (IsRateLimitMessage(ex.Message))
+        {
+            throw new RateLimitException(ex.Message, TimeSpan.FromMinutes(2));
+        }
+    }
+
+    private async Task<String> CreateTransferFromNzbFile(Byte[] bytes, String fileName)
+    {
+        var content = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(bytes);
+        content.Add(fileContent, "src", fileName);
+
+        return await CreateTransfer(content, "NZB file");
+    }
+
+    private static String GetNzbFileName(String? name)
+    {
+        if (String.IsNullOrWhiteSpace(name))
+        {
+            return "upload.nzb";
+        }
+
+        return name.EndsWith(".nzb", StringComparison.OrdinalIgnoreCase) ? name : $"{name}.nzb";
+    }
+
+    private async Task<String> CreateTransfer(HttpContent content, String description)
+    {
+        try
+        {
+            using (content)
+            {
+                var httpClient = httpClientFactory.CreateClient();
+                httpClient.Timeout = TimeSpan.FromSeconds(10);
+
+                using var request = new HttpRequestMessage(HttpMethod.Post, TransferCreateUrl)
+                {
+                    Content = content
+                };
+
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", GetApiKey());
+
+                using var response = await httpClient.SendAsync(request);
+                var responseBody = await response.Content.ReadAsStringAsync();
+
+                if (response.StatusCode == HttpStatusCode.TooManyRequests)
+                {
+                    var retryAfter = response.Headers.RetryAfter?.Delta ?? TimeSpan.FromMinutes(2);
+
+                    throw new RateLimitException($"Unable to add {description}: Premiumize rate limit exceeded", retryAfter);
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new($"Unable to add {description}: Premiumize returned {(Int32)response.StatusCode} {response.ReasonPhrase}. {responseBody}");
+                }
+
+                var result = JsonConvert.DeserializeObject<RawTransferCreateResponse>(responseBody) ?? throw new($"Unable to add {description}: invalid Premiumize response");
+
+                if (!String.Equals(result.Status, "success", StringComparison.OrdinalIgnoreCase))
+                {
+                    var error = FormatPremiumizeError(result);
+
+                    if (IsRateLimitMessage(error))
+                    {
+                        throw new RateLimitException(error, TimeSpan.FromMinutes(2));
+                    }
+
+                    throw new($"Unable to add {description}: {error}");
+                }
+
+                if (String.IsNullOrWhiteSpace(result.Id))
+                {
+                    throw new($"Unable to add {description}: Premiumize did not return a transfer id");
+                }
+
+                return result.Id;
+            }
+        }
+        catch (RateLimitException)
+        {
+            throw;
+        }
+        catch (Exception ex) when (IsRateLimitMessage(ex.Message))
+        {
+            throw new RateLimitException(ex.Message, TimeSpan.FromMinutes(2));
+        }
+    }
+
+    private static String FormatPremiumizeError(RawTransferCreateResponse result)
+    {
+        return String.Join(": ", new[]
+        {
+            result.Code,
+            result.Message
+        }.Where(m => !String.IsNullOrWhiteSpace(m)));
+    }
+
+    private static Boolean IsRateLimitMessage(String message)
+    {
+        return message.Contains("slow_down", StringComparison.OrdinalIgnoreCase) ||
+               message.Contains("rate limit exceeded", StringComparison.OrdinalIgnoreCase) ||
+               message.Contains("rate_limit_reached", StringComparison.OrdinalIgnoreCase) ||
+               message.Contains("account_limit_reached", StringComparison.OrdinalIgnoreCase) ||
+               message.Contains("service_limit_reached", StringComparison.OrdinalIgnoreCase) ||
+               message.Contains("service_down", StringComparison.OrdinalIgnoreCase) ||
+               message.Contains("semi_permanent_error", StringComparison.OrdinalIgnoreCase) ||
+               message.Contains("too many API requests", StringComparison.OrdinalIgnoreCase) ||
+               message.Contains("fair-use points", StringComparison.OrdinalIgnoreCase) ||
+               message.Contains("booster points", StringComparison.OrdinalIgnoreCase) ||
+               message.Contains("active-job count", StringComparison.OrdinalIgnoreCase) ||
+               message.Contains("usage limit for this service", StringComparison.OrdinalIgnoreCase) ||
+               message.Contains("target service is unreachable", StringComparison.OrdinalIgnoreCase) ||
+               message.Contains("retry after a delay", StringComparison.OrdinalIgnoreCase);
     }
 
     private static DebridClientTorrent Map(Transfer transfer)
@@ -362,5 +466,20 @@ public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHtt
         }
 
         logger.LogDebug(message);
+    }
+
+    private class RawTransferCreateResponse
+    {
+        [JsonProperty("status")]
+        public String? Status { get; set; }
+
+        [JsonProperty("id")]
+        public String? Id { get; set; }
+
+        [JsonProperty("message")]
+        public String? Message { get; set; }
+
+        [JsonProperty("code")]
+        public String? Code { get; set; }
     }
 }
