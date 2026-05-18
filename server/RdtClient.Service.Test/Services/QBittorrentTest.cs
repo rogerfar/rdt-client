@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Text.Json;
-using RdtClient.Data.Data;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.DebridClient;
@@ -14,15 +13,19 @@ public class QBittorrentTest
     private readonly Mock<Authentication> _authenticationMock;
     private readonly Mock<ILogger<QBittorrent>> _loggerMock;
     private readonly QBittorrent _qBittorrent;
+    private readonly TestSettings _settings;
+    private readonly TorrentRunnerState _runnerState;
     private readonly Mock<Torrents> _torrentsMock;
 
     public QBittorrentTest()
     {
         _loggerMock = new();
-        _torrentsMock = new(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!);
+        _settings = new();
+        _runnerState = new();
+        _torrentsMock = new(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, _settings, _runnerState);
         _authenticationMock = new(null!, null!, null!);
 
-        _qBittorrent = new(_loggerMock.Object, null!, _authenticationMock.Object, _torrentsMock.Object, null!);
+        _qBittorrent = new(_loggerMock.Object, _settings, _authenticationMock.Object, _torrentsMock.Object, null!, _runnerState);
     }
 
     [Fact]
@@ -214,8 +217,8 @@ public class QBittorrentTest
     public async Task TorrentInfo_ShouldUseSelectedTopLevelFileName_WhenRootFileAddsOnlyTheExtension()
     {
         // Arrange
-        var previousMappedPath = SettingData.Get.DownloadClient.MappedPath;
-        SettingData.Get.DownloadClient.MappedPath = "/data/downloads";
+        var previousMappedPath = _settings.Current.DownloadClient.MappedPath;
+        _settings.Current.DownloadClient.MappedPath = "/data/downloads";
 
         try
         {
@@ -260,16 +263,16 @@ public class QBittorrentTest
         }
         finally
         {
-            SettingData.Get.DownloadClient.MappedPath = previousMappedPath;
+            _settings.Current.DownloadClient.MappedPath = previousMappedPath;
         }
     }
 
     [Fact]
     public async Task TorrentInfo_ShouldUseExistingCompletedContentRoot_WhenSingleFileDirectoryDiffersFromRdName()
     {
-        var previousMappedPath = SettingData.Get.DownloadClient.MappedPath;
+        var previousMappedPath = _settings.Current.DownloadClient.MappedPath;
         var mappedPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
-        SettingData.Get.DownloadClient.MappedPath = mappedPath;
+        _settings.Current.DownloadClient.MappedPath = mappedPath;
 
         try
         {
@@ -317,7 +320,7 @@ public class QBittorrentTest
         }
         finally
         {
-            SettingData.Get.DownloadClient.MappedPath = previousMappedPath;
+            _settings.Current.DownloadClient.MappedPath = previousMappedPath;
 
             if (Directory.Exists(mappedPath))
             {
@@ -329,9 +332,9 @@ public class QBittorrentTest
     [Fact]
     public async Task TorrentInfo_ShouldUseExistingCompletedContentRoot_WhenSelectedFileIsNestedUnderDifferentRoot()
     {
-        var previousMappedPath = SettingData.Get.DownloadClient.MappedPath;
+        var previousMappedPath = _settings.Current.DownloadClient.MappedPath;
         var mappedPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
-        SettingData.Get.DownloadClient.MappedPath = mappedPath;
+        _settings.Current.DownloadClient.MappedPath = mappedPath;
 
         try
         {
@@ -382,7 +385,7 @@ public class QBittorrentTest
         }
         finally
         {
-            SettingData.Get.DownloadClient.MappedPath = previousMappedPath;
+            _settings.Current.DownloadClient.MappedPath = previousMappedPath;
 
             if (Directory.Exists(mappedPath))
             {

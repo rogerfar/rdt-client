@@ -7,7 +7,7 @@ using RdtClient.Service.Helpers;
 
 namespace RdtClient.Service.Services;
 
-public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings appSettings)
+public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings appSettings, ISettings settings)
 {
     public virtual async Task<SabnzbdQueue> GetQueue()
     {
@@ -87,7 +87,7 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
         var allTorrents = await torrents.Get();
         var completedTorrents = allTorrents.Where(t => t.Type == DownloadType.Nzb && t.Completed != null).ToList();
 
-        var savePath = Settings.AppDefaultSavePath;
+        var savePath = settings.DefaultSavePath;
 
         var history = new SabnzbdHistory
         {
@@ -130,19 +130,19 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
         var torrent = new Torrent
         {
             Category = category,
-            DownloadClient = Settings.Get.DownloadClient.Client,
-            HostDownloadAction = Settings.Get.Integrations.Default.HostDownloadAction,
-            FinishedActionDelay = Settings.Get.Integrations.Default.FinishedActionDelay,
-            DownloadAction = Settings.Get.Integrations.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
+            DownloadClient = settings.Current.DownloadClient.Client,
+            HostDownloadAction = settings.Current.Integrations.Default.HostDownloadAction,
+            FinishedActionDelay = settings.Current.Integrations.Default.FinishedActionDelay,
+            DownloadAction = settings.Current.Integrations.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
             FinishedAction = TorrentFinishedAction.None,
-            DownloadMinSize = Settings.Get.Integrations.Default.MinFileSize,
-            IncludeRegex = Settings.Get.Integrations.Default.IncludeRegex,
-            ExcludeRegex = Settings.Get.Integrations.Default.ExcludeRegex,
-            TorrentRetryAttempts = Settings.Get.Integrations.Default.TorrentRetryAttempts,
-            DownloadRetryAttempts = Settings.Get.Integrations.Default.DownloadRetryAttempts,
-            DeleteOnError = Settings.Get.Integrations.Default.DeleteOnError,
-            Lifetime = Settings.Get.Integrations.Default.TorrentLifetime,
-            Priority = (priority ?? Settings.Get.Integrations.Default.Priority) > 0 ? 1 : null
+            DownloadMinSize = settings.Current.Integrations.Default.MinFileSize,
+            IncludeRegex = settings.Current.Integrations.Default.IncludeRegex,
+            ExcludeRegex = settings.Current.Integrations.Default.ExcludeRegex,
+            TorrentRetryAttempts = settings.Current.Integrations.Default.TorrentRetryAttempts,
+            DownloadRetryAttempts = settings.Current.Integrations.Default.DownloadRetryAttempts,
+            DeleteOnError = settings.Current.Integrations.Default.DeleteOnError,
+            Lifetime = settings.Current.Integrations.Default.TorrentLifetime,
+            Priority = (priority ?? settings.Current.Integrations.Default.Priority) > 0 ? 1 : null
         };
 
         var result = await torrents.AddNzbFileToDebridQueue(fileBytes, fileName, torrent);
@@ -157,19 +157,19 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
         var torrent = new Torrent
         {
             Category = category,
-            DownloadClient = Settings.Get.DownloadClient.Client,
-            HostDownloadAction = Settings.Get.Integrations.Default.HostDownloadAction,
-            FinishedActionDelay = Settings.Get.Integrations.Default.FinishedActionDelay,
-            DownloadAction = Settings.Get.Integrations.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
+            DownloadClient = settings.Current.DownloadClient.Client,
+            HostDownloadAction = settings.Current.Integrations.Default.HostDownloadAction,
+            FinishedActionDelay = settings.Current.Integrations.Default.FinishedActionDelay,
+            DownloadAction = settings.Current.Integrations.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
             FinishedAction = TorrentFinishedAction.None,
-            DownloadMinSize = Settings.Get.Integrations.Default.MinFileSize,
-            IncludeRegex = Settings.Get.Integrations.Default.IncludeRegex,
-            ExcludeRegex = Settings.Get.Integrations.Default.ExcludeRegex,
-            TorrentRetryAttempts = Settings.Get.Integrations.Default.TorrentRetryAttempts,
-            DownloadRetryAttempts = Settings.Get.Integrations.Default.DownloadRetryAttempts,
-            DeleteOnError = Settings.Get.Integrations.Default.DeleteOnError,
-            Lifetime = Settings.Get.Integrations.Default.TorrentLifetime,
-            Priority = priority ?? (Settings.Get.Integrations.Default.Priority > 0 ? Settings.Get.Integrations.Default.Priority : null)
+            DownloadMinSize = settings.Current.Integrations.Default.MinFileSize,
+            IncludeRegex = settings.Current.Integrations.Default.IncludeRegex,
+            ExcludeRegex = settings.Current.Integrations.Default.ExcludeRegex,
+            TorrentRetryAttempts = settings.Current.Integrations.Default.TorrentRetryAttempts,
+            DownloadRetryAttempts = settings.Current.Integrations.Default.DownloadRetryAttempts,
+            DeleteOnError = settings.Current.Integrations.Default.DeleteOnError,
+            Lifetime = settings.Current.Integrations.Default.TorrentLifetime,
+            Priority = priority ?? (settings.Current.Integrations.Default.Priority > 0 ? settings.Current.Integrations.Default.Priority : null)
         };
 
         var result = await torrents.AddNzbLinkToDebridQueue(url, torrent);
@@ -186,7 +186,7 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
             return;
         }
 
-        switch (Settings.Get.Integrations.Default.FinishedAction)
+        switch (settings.Current.Integrations.Default.FinishedAction)
         {
             case TorrentFinishedAction.RemoveAllTorrents:
                 logger.LogDebug("Removing nzb from debrid provider and RDT-Client, no files");
@@ -216,7 +216,7 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
 
     public virtual List<String> GetCategories()
     {
-        var categoryList = (Settings.Get.General.Categories ?? "")
+        var categoryList = (settings.Current.General.Categories ?? "")
                            .Split(",", StringSplitOptions.RemoveEmptyEntries)
                            .Select(m => m.Trim())
                            .Where(m => m != "*")
@@ -230,7 +230,7 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
 
     public virtual SabnzbdConfig GetConfig()
     {
-        var savePath = Settings.AppDefaultSavePath;
+        var savePath = settings.DefaultSavePath;
 
         var categoryList = GetCategories();
 

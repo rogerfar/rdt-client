@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
-using RdtClient.Data.Data;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Sabnzbd;
 using RdtClient.Service.Services;
@@ -17,15 +16,17 @@ public class SabnzbdControllerTest
     private readonly Mock<Authentication> _authenticationMock;
     private readonly SabnzbdController _controller;
     private readonly Mock<Sabnzbd> _sabnzbdMock;
+    private readonly TestSettings _settings;
 
     public SabnzbdControllerTest()
     {
-        SettingData.Get.General.AuthenticationType = AuthenticationType.None;
-        SettingData.Get.Provider.ApiKey = "test-api-key";
+        _settings = new();
+        _settings.Current.General.AuthenticationType = AuthenticationType.None;
+        _settings.Current.Provider.ApiKey = "test-api-key";
 
-        var torrentsMock = new Mock<Torrents>(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!);
+        var torrentsMock = new Mock<Torrents>(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, _settings, new TorrentRunnerState());
         var sabnzbdLoggerMock = new Mock<ILogger<Sabnzbd>>();
-        _sabnzbdMock = new(sabnzbdLoggerMock.Object, torrentsMock.Object, null!);
+        _sabnzbdMock = new(sabnzbdLoggerMock.Object, torrentsMock.Object, null!, _settings);
         var loggerMock = new Mock<ILogger<SabnzbdController>>();
         _authenticationMock = new(null!, null!, null!);
 
@@ -64,7 +65,7 @@ public class SabnzbdControllerTest
     public async Task GetQueue_Unauthorized_ReturnsOk_BecauseFilterIsSkippedInUnitTests()
     {
         // Arrange
-        SettingData.Get.General.AuthenticationType = AuthenticationType.UserNamePassword;
+        _settings.Current.General.AuthenticationType = AuthenticationType.UserNamePassword;
 
         var queue = new SabnzbdQueue
         {
@@ -86,7 +87,7 @@ public class SabnzbdControllerTest
     public async Task GetQueue_WithMaAuth_ReturnsOk()
     {
         // Arrange
-        SettingData.Get.General.AuthenticationType = AuthenticationType.UserNamePassword;
+        _settings.Current.General.AuthenticationType = AuthenticationType.UserNamePassword;
         var httpContext = new DefaultHttpContext();
         httpContext.Request.QueryString = new("?ma_username=user&ma_password=pass");
         _controller.ControllerContext.HttpContext = httpContext;
@@ -146,7 +147,7 @@ public class SabnzbdControllerTest
     public void GetVersion_ReturnsOk()
     {
         // Arrange
-        SettingData.Get.General.AuthenticationType = AuthenticationType.UserNamePassword;
+        _settings.Current.General.AuthenticationType = AuthenticationType.UserNamePassword;
 
         // Act
         var result = _controller.Version();

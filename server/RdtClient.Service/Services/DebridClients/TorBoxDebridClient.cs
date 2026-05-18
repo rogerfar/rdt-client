@@ -11,7 +11,7 @@ using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services.DebridClients;
 
-public class TorBoxDebridClient(ILogger<TorBoxDebridClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter, IRateLimitCoordinator coordinator)
+public class TorBoxDebridClient(ILogger<TorBoxDebridClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter, IRateLimitCoordinator coordinator, ISettings settings)
     : IDebridClient
 {
     private const String TorBoxApiHost = "api.torbox.app";
@@ -327,7 +327,7 @@ public class TorBoxDebridClient(ILogger<TorBoxDebridClient> logger, IHttpClientF
 
         var downloadableFiles = torrent.Files.Where(file => fileFilter.IsDownloadable(torrent, file.Path, file.Bytes)).ToList();
 
-        if (downloadableFiles.Count == torrent.Files.Count && torrent.DownloadClient != Data.Enums.DownloadClient.Symlink && Settings.Get.Provider.PreferZippedDownloads)
+        if (downloadableFiles.Count == torrent.Files.Count && torrent.DownloadClient != Data.Enums.DownloadClient.Symlink && settings.Current.Provider.PreferZippedDownloads)
         {
             logger.LogDebug("Downloading files from TorBox as a zip.");
 
@@ -364,7 +364,7 @@ public class TorBoxDebridClient(ILogger<TorBoxDebridClient> logger, IHttpClientF
     {
         try
         {
-            var apiKey = Settings.Get.Provider.ApiKey;
+            var apiKey = settings.Current.Provider.ApiKey;
 
             if (String.IsNullOrWhiteSpace(apiKey))
             {

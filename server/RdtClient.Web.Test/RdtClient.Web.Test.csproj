@@ -5,6 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
         <AssemblyName>RdtClient.Web.Test</AssemblyName>
         <RootNamespace>RdtClient.Web.Test</RootNamespace>
     </PropertyGroup>

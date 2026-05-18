@@ -9,7 +9,7 @@ public class SabnzbdRequirement : IAuthorizationRequirement
 {
 }
 
-public class SabnzbdHandler(Authentication authentication, IHttpContextAccessor httpContextAccessor) : AuthorizationHandler<SabnzbdRequirement>
+public class SabnzbdHandler(Authentication authentication, IHttpContextAccessor httpContextAccessor, ISettings settings) : AuthorizationHandler<SabnzbdRequirement>
 {
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, SabnzbdRequirement requirement)
     {
@@ -22,7 +22,7 @@ public class SabnzbdHandler(Authentication authentication, IHttpContextAccessor 
             return;
         }
 
-        if (Settings.Get.General.AuthenticationType == AuthenticationType.None)
+        if (settings.Current.General.AuthenticationType == AuthenticationType.None)
         {
             context.Succeed(requirement);
 
