@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased
 
+## [2.0.134] - 2026-05-22
+### Changed
+Upgraded torbox.net dependency. 
+
 ## [2.0.133] - 2026-05-17
 ### Added
 - Added NZB support for Premiumize, thanks to @ALenfant!
