@@ -477,7 +477,11 @@ public class TorrentRunner(
             {
                 // Check if there are any downloads that are queued and can be started.
                 var queuedDownloads = torrent.Downloads
-                                             .Where(m => m.Completed == null && m.DownloadQueued != null && m.DownloadStarted == null && m.Error == null)
+                                             .Where(m => m.Completed == null
+                                                         && m.DownloadQueued != null
+                                                         && m.DownloadQueued <= DateTimeOffset.UtcNow
+                                                         && m.DownloadStarted == null
+                                                         && m.Error == null)
                                              .OrderBy(m => m.DownloadQueued)
                                              .ToList();
 
@@ -528,10 +532,24 @@ public class TorrentRunner(
                     {
                         logger.LogError(ex, "Cannot unrestrict link: {ex.Message}", ex.Message);
 
-                        await downloads.UpdateError(download.DownloadId, ex.Message);
-                        await downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
-                        download.Error = ex.Message;
-                        download.Completed = DateTimeOffset.UtcNow;
+                        if (download.RetryCount < torrent.DownloadRetryAttempts)
+                        {
+                            var retryCount = download.RetryCount + 1;
+                            var retryDelay = GetDownloadLinkRetryDelay(retryCount);
+                            var retryAt = DateTimeOffset.UtcNow.Add(retryDelay);
+
+                            Log($"Retrying download link generation {retryCount}/{torrent.DownloadRetryAttempts} at {retryAt:u}", download, torrent);
+
+                            await downloads.Reset(download.DownloadId, retryAt);
+                            await downloads.UpdateRetryCount(download.DownloadId, retryCount);
+                        }
+                        else
+                        {
+                            await downloads.UpdateError(download.DownloadId, ex.Message);
+                            await downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
+                            download.Error = ex.Message;
+                            download.Completed = DateTimeOffset.UtcNow;
+                        }
 
                         return;
                     }
@@ -780,6 +798,19 @@ public class TorrentRunner(
             NextDequeueTime = nextDequeueTime,
             SecondsRemaining = secondsRemaining
         });
+    }
+
+    private static TimeSpan GetDownloadLinkRetryDelay(Int32 retryCount)
+    {
+        var seconds = retryCount switch
+        {
+            <= 1 => 15,
+            2 => 30,
+            3 => 60,
+            _ => 120
+        };
+
+        return TimeSpan.FromSeconds(seconds);
     }
 
     private void Log(String message, Download? download, Torrent? torrent)

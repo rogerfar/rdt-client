@@ -21,5 +21,5 @@ public interface IDownloads
     Task UpdateRetryCount(Guid downloadId, Int32 retryCount);
     Task UpdateRemoteId(Guid downloadId, String remoteId);
     Task DeleteForTorrent(Guid torrentId);
-    Task Reset(Guid downloadId);
+    Task Reset(Guid downloadId, DateTimeOffset? downloadQueued = null);
 }

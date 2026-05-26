@@ -273,7 +273,7 @@ public class DownloadData(DataContext dataContext, ILogger<DownloadData>? logger
         await dataContext.SaveChangesAsync();
     }
 
-    public async Task Reset(Guid downloadId)
+    public async Task Reset(Guid downloadId, DateTimeOffset? downloadQueued = null)
     {
         var dbDownload = await dataContext.Downloads
                                           .FirstOrDefaultAsync(m => m.DownloadId == downloadId)
@@ -282,7 +282,7 @@ public class DownloadData(DataContext dataContext, ILogger<DownloadData>? logger
         dbDownload.RetryCount = 0;
         dbDownload.Link = null;
         dbDownload.Added = DateTimeOffset.UtcNow;
-        dbDownload.DownloadQueued = DateTimeOffset.UtcNow;
+        dbDownload.DownloadQueued = downloadQueued ?? DateTimeOffset.UtcNow;
         dbDownload.DownloadStarted = null;
         dbDownload.DownloadFinished = null;
         dbDownload.UnpackingQueued = null;
