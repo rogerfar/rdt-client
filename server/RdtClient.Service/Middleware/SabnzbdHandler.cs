@@ -65,6 +65,36 @@ public class SabnzbdHandler(Authentication authentication, IHttpContextAccessor 
                 return;
             }
 
+            var apiKey = GetParam("apikey");
+
+            if (!String.IsNullOrWhiteSpace(apiKey))
+            {
+                var separatorIndex = apiKey.IndexOf(':');
+
+                if (separatorIndex <= 0 || separatorIndex == apiKey.Length - 1)
+                {
+                    context.Fail();
+
+                    return;
+                }
+
+                var username = apiKey[..separatorIndex];
+                var password = apiKey[(separatorIndex + 1)..];
+
+                var loginResult = await authentication.Login(username, password);
+
+                if (loginResult.Succeeded)
+                {
+                    context.Succeed(requirement);
+
+                    return;
+                }
+
+                context.Fail();
+
+                return;
+            }
+
             // Authentication required but missing credentials
             context.Fail();
         }

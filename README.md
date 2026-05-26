@@ -196,7 +196,7 @@ RdtClient also emulates part of the SABnzbd API so Sonarr and Radarr can add NZB
 1. Enter `6500` in the `Port` field.
 1. Enable `Use SSL` only if you access RdtClient through HTTPS.
 1. Leave `URL Base` empty unless RdtClient is configured with a `BasePath`, for example `/rdt`.
-1. If RdtClient authentication is enabled, leave `API Key` empty and enter your RdtClient username and password.
+1. If RdtClient authentication is enabled, leave `API Key` empty and enter your RdtClient username and password. If your client only supports an API key, enter `{username}:{password}` in `API Key`.
 1. If RdtClient authentication is disabled, enter any value in `API Key`, for example `rdtclient`, and leave username/password empty.
 1. Set the category to `sonarr` for Sonarr or `radarr` for Radarr.
 1. Hit `Test` and then `Save` if all is well.
