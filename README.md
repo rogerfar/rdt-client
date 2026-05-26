@@ -3,7 +3,7 @@
 This is a web interface to manage your torrents on Real-Debrid, AllDebrid, Premiumize, TorBox or DebridLink. It supports the following features:
 
 - Add new torrents through magnets or files
-- Add usenet downloads through NZB files (TorBox only)
+- Add usenet downloads through NZB files (TorBox and Premiumize only)
 - Download all files from Real-Debrid, AllDebrid, Premiumize or TorBox to your local machine automatically
 - Unpack all files when finished downloading
 - Implements a fake qBittorrent API so you can hook up other applications like Sonarr, Radarr or Couchpotato.
@@ -166,7 +166,9 @@ It has the following options:
 
 ### Connecting Sonarr/Radarr
 
-RdtClient emulates the qBittorrent web protocol and allow applications to use those APIs. This way you can use Sonarr and Radarr to download directly from RealDebrid.
+RdtClient emulates the qBittorrent web protocol and allows applications to use those APIs. This way you can use Sonarr and Radarr to download directly from RealDebrid.
+
+#### Torrents
 
 1. Login to Sonarr or Radarr and click `Settings`.
 1. Go to the `Download Client` tab and click the plus to add.
@@ -182,6 +184,24 @@ RdtClient emulates the qBittorrent web protocol and allow applications to use th
 When downloading files it will append the `category` setting in the Sonarr/Radarr Download Client setting. For example if your Remote Path setting is set to `C:\Downloads` and your Sonarr Download Client setting `category` is set to `sonarr` files will be downloaded to `C:\Downloads\sonarr`.
 
 Notice: the progress and ETA reported in Sonarr's Activity tab will not be accurate, but it will report the torrent as completed so it can be processed after it is done downloading.
+
+#### Usenet/NZB
+
+RdtClient also emulates part of the SABnzbd API so Sonarr and Radarr can add NZB downloads. This requires a provider that supports Usenet/NZB downloads, currently TorBox or Premiumize.
+
+1. Login to Sonarr or Radarr and click `Settings`.
+1. Go to the `Download Client` tab and click the plus to add.
+1. Click `SABnzbd` in the list.
+1. Enter the IP or hostname of RdtClient in the `Host` field.
+1. Enter `6500` in the `Port` field.
+1. Enable `Use SSL` only if you access RdtClient through HTTPS.
+1. Leave `URL Base` empty unless RdtClient is configured with a `BasePath`, for example `/rdt`.
+1. If RdtClient authentication is enabled, leave `API Key` empty and enter your RdtClient username and password.
+1. If RdtClient authentication is disabled, enter any value in `API Key`, for example `rdtclient`, and leave username/password empty.
+1. Set the category to `sonarr` for Sonarr or `radarr` for Radarr.
+1. Hit `Test` and then `Save` if all is well.
+
+When importing completed NZB downloads, Sonarr/Radarr must be able to access the path reported by RdtClient. In Docker setups this may require a Remote Path Mapping from the RdtClient download path to the path mounted inside Sonarr/Radarr.
 
 ### Running within a folder
 
