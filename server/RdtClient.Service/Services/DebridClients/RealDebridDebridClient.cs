@@ -12,7 +12,7 @@ using Torrent = RDNET.Torrent;
 
 namespace RdtClient.Service.Services.DebridClients;
 
-public class RealDebridDebridClient(ILogger<RealDebridDebridClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter) : IDebridClient
+public class RealDebridDebridClient(ILogger<RealDebridDebridClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter, ISettings settings) : IDebridClient
 {
     private TimeSpan? _offset;
 
@@ -53,7 +53,7 @@ public class RealDebridDebridClient(ILogger<RealDebridDebridClient> logger, IHtt
     {
         try
         {
-            var timeoutCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(Settings.Get.Provider.Timeout));
+            var timeoutCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(settings.Current.Provider.Timeout));
 
             var result = await GetClient().Torrents.AddMagnetAsync(magnetLink, timeoutCancellationToken.Token);
 
@@ -70,7 +70,7 @@ public class RealDebridDebridClient(ILogger<RealDebridDebridClient> logger, IHtt
     {
         try
         {
-            var timeoutCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(Settings.Get.Provider.Timeout));
+            var timeoutCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(settings.Current.Provider.Timeout));
 
             var result = await GetClient().Torrents.AddFileAsync(bytes, timeoutCancellationToken.Token);
 
@@ -314,7 +314,7 @@ public class RealDebridDebridClient(ILogger<RealDebridDebridClient> logger, IHtt
     {
         try
         {
-            var apiKey = Settings.Get.Provider.ApiKey;
+            var apiKey = settings.Current.Provider.ApiKey;
 
             if (String.IsNullOrWhiteSpace(apiKey))
             {
@@ -322,9 +322,9 @@ public class RealDebridDebridClient(ILogger<RealDebridDebridClient> logger, IHtt
             }
 
             var httpClient = httpClientFactory.CreateClient(DiConfig.RD_CLIENT);
-            httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
+            httpClient.Timeout = TimeSpan.FromSeconds(settings.Current.Provider.Timeout);
 
-            var rdtNetClient = new RdNetClient(null, httpClient, 5, Settings.Get.Provider.ApiHostname);
+            var rdtNetClient = new RdNetClient(null, httpClient, 5, settings.Current.Provider.ApiHostname);
             rdtNetClient.UseApiAuthentication(apiKey);
 
             // Get the server time to fix up the timezones on results

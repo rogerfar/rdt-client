@@ -8,7 +8,7 @@ public class AuthSettingRequirement : IAuthorizationRequirement
 {
 }
 
-public class AuthSettingHandler : AuthorizationHandler<AuthSettingRequirement>
+public class AuthSettingHandler(ISettings settings) : AuthorizationHandler<AuthSettingRequirement>
 {
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, AuthSettingRequirement requirement)
     {
@@ -17,7 +17,7 @@ public class AuthSettingHandler : AuthorizationHandler<AuthSettingRequirement>
             context.Succeed(requirement);
         }
 
-        if (Settings.Get.General.AuthenticationType == AuthenticationType.None)
+        if (settings.Current.General.AuthenticationType == AuthenticationType.None)
         {
             context.Succeed(requirement);
         }

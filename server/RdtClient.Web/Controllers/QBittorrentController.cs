@@ -14,7 +14,7 @@ namespace RdtClient.Web.Controllers;
 [ApiController]
 [Route("api/v2")]
 [Route("qbittorrent/api/v2")]
-public class QBittorrentController(ILogger<QBittorrentController> logger, QBittorrent qBittorrent, IHttpClientFactory httpClientFactory) : Controller
+public class QBittorrentController(ILogger<QBittorrentController> logger, QBittorrent qBittorrent, IHttpClientFactory httpClientFactory, ISettings settings) : Controller
 {
     [AllowAnonymous]
     [Route("/version/api")]
@@ -33,7 +33,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     {
         logger.LogDebug($"Auth login");
 
-        if (Settings.Get.General.AuthenticationType == AuthenticationType.None)
+        if (settings.Current.General.AuthenticationType == AuthenticationType.None)
         {
             return Content("Ok.", "text/plain");
         }
@@ -146,7 +146,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     [HttpPost]
     public ActionResult<AppPreferences> AppDefaultSavePath()
     {
-        var result = Settings.AppDefaultSavePath;
+        var result = settings.DefaultSavePath;
 
         return Ok(result);
     }
@@ -613,7 +613,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     [HttpGet]
     public ActionResult TransferInfo()
     {
-        return Ok(QBittorrent.TransferInfo());
+        return Ok(qBittorrent.TransferInfo());
     }
 
     [Authorize(Policy = "AuthSetting")]

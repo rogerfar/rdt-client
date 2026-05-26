@@ -12,7 +12,7 @@ using Torrent = DebridLinkFrNET.Models.Torrent;
 
 namespace RdtClient.Service.Services.DebridClients;
 
-public class DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter) : IDebridClient
+public class DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter, ISettings settings) : IDebridClient
 {
     public async Task<IList<DebridClientTorrent>> GetDownloads()
     {
@@ -228,7 +228,7 @@ public class DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFacto
     {
         try
         {
-            var apiKey = Settings.Get.Provider.ApiKey;
+            var apiKey = settings.Current.Provider.ApiKey;
 
             if (String.IsNullOrWhiteSpace(apiKey))
             {
@@ -236,7 +236,7 @@ public class DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFacto
             }
 
             var httpClient = httpClientFactory.CreateClient();
-            httpClient.Timeout = TimeSpan.FromSeconds(Settings.Get.Provider.Timeout);
+            httpClient.Timeout = TimeSpan.FromSeconds(settings.Current.Provider.Timeout);
 
             var debridLinkClient = new DebridLinkFrNETClient(apiKey, httpClient);
 

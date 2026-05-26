@@ -5,6 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
         <AssemblyName>RdtClient.Service.Test</AssemblyName>
         <RootNamespace>RdtClient.Service.Test</RootNamespace>
     </PropertyGroup>

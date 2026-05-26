@@ -8,30 +8,20 @@ using RdtClient.Service.Services.DebridClients;
 
 namespace RdtClient.Service.Test.Services.TorrentClients;
 
-[CollectionDefinition(nameof(PremiumizeSettingsCollection), DisableParallelization = true)]
-public class PremiumizeSettingsCollection;
-
-[Collection(nameof(PremiumizeSettingsCollection))]
-public class PremiumizeDebridClientTest : IDisposable
+public class PremiumizeDebridClientTest
 {
     private readonly Mock<IDownloadableFileFilter> _fileFilterMock;
     private readonly Mock<IHttpClientFactory> _httpClientFactoryMock;
     private readonly Mock<ILogger<PremiumizeDebridClient>> _loggerMock;
-    private readonly String _originalApiKey;
+    private readonly TestSettings _settings;
 
     public PremiumizeDebridClientTest()
     {
         _loggerMock = new();
         _httpClientFactoryMock = new();
         _fileFilterMock = new();
-        _originalApiKey = Settings.Get.Provider.ApiKey ?? String.Empty;
-
-        Settings.Get.Provider.ApiKey = "test-api-key";
-    }
-
-    public void Dispose()
-    {
-        Settings.Get.Provider.ApiKey = _originalApiKey;
+        _settings = new();
+        _settings.Current.Provider.ApiKey = "test-api-key";
     }
 
     [Fact]
@@ -208,7 +198,7 @@ public class PremiumizeDebridClientTest : IDisposable
     {
         _httpClientFactoryMock.Setup(m => m.CreateClient(It.IsAny<String>())).Returns(new HttpClient(handler));
 
-        return new(_loggerMock.Object, _httpClientFactoryMock.Object, _fileFilterMock.Object);
+        return new(_loggerMock.Object, _httpClientFactoryMock.Object, _fileFilterMock.Object, _settings);
     }
 
     private static HttpResponseMessage JsonResponse(String json, HttpStatusCode statusCode = HttpStatusCode.OK)

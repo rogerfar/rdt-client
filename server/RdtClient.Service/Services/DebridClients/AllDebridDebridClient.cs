@@ -17,13 +17,13 @@ public interface IAllDebridNetClientFactory
     public IAllDebridNETClient GetClient();
 }
 
-public class AllDebridNetClientFactory(ILogger<AllDebridNetClientFactory> logger, IHttpClientFactory httpClientFactory) : IAllDebridNetClientFactory
+public class AllDebridNetClientFactory(ILogger<AllDebridNetClientFactory> logger, IHttpClientFactory httpClientFactory, ISettings settings) : IAllDebridNetClientFactory
 {
     public IAllDebridNETClient GetClient()
     {
         try
         {
-            var apiKey = Settings.Get.Provider.ApiKey;
+            var apiKey = settings.Current.Provider.ApiKey;
 
             if (String.IsNullOrWhiteSpace(apiKey))
             {

@@ -120,7 +120,9 @@ public class TorrentsTest
                                            null!,
                                            null!,
                                            null!,
-                                           null!);
+                                           null!,
+                                           new TestSettings(),
+                                           new TorrentRunnerState());
 
         mocks.ProcessMock.Setup(p => p.WaitForExit(It.IsAny<Int32>())).Returns(true);
 
@@ -186,7 +188,9 @@ public class TorrentsTest
                                            null!,
                                            null!,
                                            null!,
-                                           null!);
+                                           null!,
+                                           new TestSettings(),
+                                           new TorrentRunnerState());
 
         //Act
         await torrents.RunTorrentComplete(torrent.TorrentId, settings);
@@ -234,7 +238,9 @@ public class TorrentsTest
                                            null!,
                                            null!,
                                            null!,
-                                           null!);
+                                           null!,
+                                           new TestSettings(),
+                                           new TorrentRunnerState());
 
         mocks.ProcessMock.Setup(p => p.WaitForExit(It.IsAny<Int32>()))
              .Callback(() =>
@@ -301,7 +307,9 @@ public class TorrentsTest
                                            null!,
                                            null!,
                                            null!,
-                                           null!);
+                                           null!,
+                                           new TestSettings(),
+                                           new TorrentRunnerState());
 
         mocks.ProcessMock.Setup(p => p.WaitForExit(It.IsAny<Int32>()))
              .Callback(() =>
@@ -364,7 +372,9 @@ public class TorrentsTest
                                            null!,
                                            null!,
                                            null!,
-                                           null!);
+                                           null!,
+                                           new TestSettings(),
+                                           new TorrentRunnerState());
 
         // Act
         await torrents.AddNzbFileToDebridQueue(bytes, "filename.nzb", torrent);
@@ -412,7 +422,9 @@ public class TorrentsTest
                                            null!,
                                            null!,
                                            null!,
-                                           null!);
+                                           null!,
+                                           new TestSettings(),
+                                           new TorrentRunnerState());
 
         // Act
         await torrents.AddNzbLinkToDebridQueue(link, torrent);

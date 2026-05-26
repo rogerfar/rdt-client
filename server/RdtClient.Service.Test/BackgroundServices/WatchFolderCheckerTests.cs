@@ -2,7 +2,6 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
-using RdtClient.Data.Data;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Service.BackgroundServices;
@@ -17,6 +16,7 @@ public class WatchFolderCheckerTests : IDisposable
     private readonly Mock<IServiceProvider> _serviceProviderMock;
     private readonly Mock<IServiceScope> _serviceScopeMock;
     private readonly String _testPath;
+    private readonly TestSettings _settings;
     private readonly Mock<Torrents> _torrentsServiceMock;
 
     public WatchFolderCheckerTests()
@@ -25,7 +25,16 @@ public class WatchFolderCheckerTests : IDisposable
         _serviceProviderMock = new();
         _serviceScopeMock = new();
         _scopeServiceProviderMock = new();
-        _torrentsServiceMock = new(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!);
+        _settings = new(new DbSettings
+        {
+            Watch = new()
+            {
+                Interval = 0,
+                Default = new()
+            },
+            DownloadClient = new()
+        });
+        _torrentsServiceMock = new(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, _settings, new TorrentRunnerState());
 
         _serviceProviderMock
             .Setup(x => x.GetService(typeof(IServiceScopeFactory)))
@@ -42,10 +51,8 @@ public class WatchFolderCheckerTests : IDisposable
         _testPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(_testPath);
 
-        // Reset Settings and Startup
         SetStartupReady(true);
-        ResetSettings();
-        Settings.Get.Watch.Path = _testPath;
+        _settings.Current.Watch.Path = _testPath;
     }
 
     public void Dispose()
@@ -62,22 +69,6 @@ public class WatchFolderCheckerTests : IDisposable
         property?.SetValue(null, ready);
     }
 
-    private static void ResetSettings()
-    {
-        var settings = new DbSettings
-        {
-            Watch = new()
-            {
-                Interval = 0,
-                Default = new()
-            },
-            DownloadClient = new()
-        };
-
-        var property = typeof(SettingData).GetProperty("Get", BindingFlags.Public | BindingFlags.Static);
-        property?.SetValue(null, settings);
-    }
-
     private static void ResetPrevCheck(WatchFolderChecker checker)
     {
         var field = typeof(WatchFolderChecker).GetField("_prevCheck", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -92,7 +83,7 @@ public class WatchFolderCheckerTests : IDisposable
         var content = "torrent content"u8.ToArray();
         await File.WriteAllBytesAsync(filePath, content);
 
-        var checker = new WatchFolderChecker(_loggerMock.Object, _serviceProviderMock.Object);
+        var checker = new WatchFolderChecker(_loggerMock.Object, _serviceProviderMock.Object, _settings);
         ResetPrevCheck(checker);
 
         var cts = new CancellationTokenSource();
@@ -131,7 +122,7 @@ public class WatchFolderCheckerTests : IDisposable
         var content = "magnet:?xt=urn:btih:123";
         await File.WriteAllTextAsync(filePath, content);
 
-        var checker = new WatchFolderChecker(_loggerMock.Object, _serviceProviderMock.Object);
+        var checker = new WatchFolderChecker(_loggerMock.Object, _serviceProviderMock.Object, _settings);
         ResetPrevCheck(checker);
 
         var cts = new CancellationTokenSource();
@@ -170,7 +161,7 @@ public class WatchFolderCheckerTests : IDisposable
         var content = "nzb content"u8.ToArray();
         await File.WriteAllBytesAsync(filePath, content);
 
-        var checker = new WatchFolderChecker(_loggerMock.Object, _serviceProviderMock.Object);
+        var checker = new WatchFolderChecker(_loggerMock.Object, _serviceProviderMock.Object, _settings);
         ResetPrevCheck(checker);
 
         var cts = new CancellationTokenSource();
@@ -209,7 +200,7 @@ public class WatchFolderCheckerTests : IDisposable
         var filePath = Path.Combine(_testPath, "test.txt");
         await File.WriteAllTextAsync(filePath, "ignore me");
 
-        var checker = new WatchFolderChecker(_loggerMock.Object, _serviceProviderMock.Object);
+        var checker = new WatchFolderChecker(_loggerMock.Object, _serviceProviderMock.Object, _settings);
         ResetPrevCheck(checker);
 
         var cts = new CancellationTokenSource();
