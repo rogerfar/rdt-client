@@ -12,16 +12,14 @@ public class QBittorrentControllerTest
 {
     private readonly QBittorrentController _controller;
     private readonly Mock<QBittorrent> _qBittorrentMock;
+    private readonly Mock<Torrents> _torrentsMock;
 
     public QBittorrentControllerTest()
     {
         _qBittorrentMock = new(new Mock<ILogger<QBittorrent>>().Object, null!, null!, null!, null!);
+        _torrentsMock = new(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!);
 
-        _controller = new(
-            new Mock<ILogger<QBittorrentController>>().Object,
-            _qBittorrentMock.Object,
-            new Mock<IHttpClientFactory>().Object);
-
+        _controller = new(new Mock<ILogger<QBittorrentController>>().Object, _qBittorrentMock.Object, new Mock<IHttpClientFactory>().Object, _torrentsMock.Object);
         _controller.ControllerContext = new()
         {
             HttpContext = new DefaultHttpContext()

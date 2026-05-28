@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.QBittorrent;
 using RdtClient.Service.Services;
-using RealDebridException = RDNET.RealDebridException;
+using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Web.Controllers;
 
@@ -14,7 +14,7 @@ namespace RdtClient.Web.Controllers;
 [ApiController]
 [Route("api/v2")]
 [Route("qbittorrent/api/v2")]
-public class QBittorrentController(ILogger<QBittorrentController> logger, QBittorrent qBittorrent, IHttpClientFactory httpClientFactory) : Controller
+public class QBittorrentController(ILogger<QBittorrentController> logger, QBittorrent qBittorrent, IHttpClientFactory httpClientFactory, Torrents torrents) : Controller
 {
     [AllowAnonymous]
     [Route("/version/api")]
@@ -368,36 +368,33 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
 
         foreach (var url in urls)
         {
-            try
+            Torrent? torrent;
+            if (url.StartsWith("magnet"))
             {
-                if (url.StartsWith("magnet"))
-                {
-                    await qBittorrent.TorrentsAddMagnet(url.Trim(), request.Category, null);
-                }
-                else if (url.StartsWith("http"))
-                {
-                    var httpClient = httpClientFactory.CreateClient();
-                    var result = await httpClient.GetByteArrayAsync(url);
-                    await qBittorrent.TorrentsAddFile(result, request.Category, null);
-                }
-                else
-                {
-                    return BadRequest($"Invalid torrent link format {url}");
-                }
+                torrent = await qBittorrent.TorrentsAddMagnet(url.Trim(), request.Category, null);
             }
-            catch (RealDebridException ex)
+            else if (url.StartsWith("http"))
             {
-                // Infringing file.
-                if (ex.ErrorCode == 35)
-                {
-                    return Ok("Fails.");
-                }
+                var httpClient = httpClientFactory.CreateClient();
+                var result = await httpClient.GetByteArrayAsync(url);
+                torrent = await qBittorrent.TorrentsAddFile(result, request.Category, null);
+            }
+            else
+            {
+                return BadRequest($"Invalid torrent link format {url}");
+            }
+
+            var addResult = await WaitForTorrent(torrent.TorrentId);
+
+            if (!addResult)
+            {
+                return Ok("Fails.");
             }
         }
 
         return Ok();
     }
-
+    
     [Authorize(Policy = "AuthSetting")]
     [Route("torrents/add")]
     [HttpPost]
@@ -412,7 +409,14 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
                 await file.CopyToAsync(target);
                 var fileBytes = target.ToArray();
 
-                await qBittorrent.TorrentsAddFile(fileBytes, request.Category, request.Priority);
+                var torrent = await qBittorrent.TorrentsAddFile(fileBytes, request.Category, request.Priority);
+
+                var addResult = await WaitForTorrent(torrent.TorrentId);
+
+                if (!addResult)
+                {
+                    return Ok("Fails.");
+                }
             }
         }
 
@@ -670,6 +674,31 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
             "errored" => String.Equals(torrent.State, "error", StringComparison.OrdinalIgnoreCase),
             _ => String.Equals(torrent.State, filter, StringComparison.OrdinalIgnoreCase)
         };
+    }
+    
+    private async Task<Boolean> WaitForTorrent(Guid torrentId)
+    {
+        while (true)
+        {
+            var torrent = await torrents.GetById(torrentId);
+
+            if (torrent == null)
+            {
+                throw new($"Failed to add torrent: Not Found");
+            }
+
+            if (torrent.RdStatus == TorrentStatus.Error || torrent.Error != null)
+            {
+                return false;
+            }
+
+            if (torrent.RdStatus != TorrentStatus.Queued)
+            {
+                return true;
+            }
+
+            await Task.Delay(1000);
+        }
     }
 }
 
