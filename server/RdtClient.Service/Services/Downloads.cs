@@ -86,8 +86,8 @@ public class Downloads(DownloadData downloadData) : IDownloads
         await downloadData.DeleteForTorrent(torrentId);
     }
 
-    public async Task Reset(Guid downloadId)
+    public async Task Reset(Guid downloadId, DateTimeOffset? downloadQueued = null)
     {
-        await downloadData.Reset(downloadId);
+        await downloadData.Reset(downloadId, downloadQueued);
     }
 }

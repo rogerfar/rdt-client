@@ -98,6 +98,8 @@ export function getTorrentStatus(torrent: Torrent): string {
     return 'Finished';
   }
 
+  const prefix = torrent.type === 1 ? 'NZB' : 'Torrent';
+
   switch (torrent.rdStatus) {
     case RealDebridStatus.Queued:
       return 'Not Yet Added to Provider';
@@ -106,17 +108,17 @@ export function getTorrentStatus(torrent: Torrent): string {
         return 'Torrent stalled';
       }
 
-      return `Torrent downloading (${torrent.rdProgress}% - ${fileSizePipe.transform(torrent.rdSpeed, 'filesize') as string}/s)`;
+      return `${prefix} downloading (${torrent.rdProgress}% - ${fileSizePipe.transform(torrent.rdSpeed, 'filesize') as string}/s)`;
     case RealDebridStatus.Processing:
-      return 'Torrent processing';
+      return `${prefix} processing`;
     case RealDebridStatus.WaitingForFileSelection:
-      return 'Torrent waiting for file selection';
+      return `${prefix} waiting for file selection`;
     case RealDebridStatus.Error:
-      return `Torrent error: ${torrent.rdStatusRaw}`;
+      return `${prefix} error: ${torrent.rdStatusRaw}`;
     case RealDebridStatus.Finished:
-      return 'Torrent finished, waiting for download links';
+      return `${prefix} finished, waiting for download links`;
     case RealDebridStatus.Uploading:
-      return 'Torrent uploading';
+      return `${prefix} uploading`;
     default:
       return 'Unknown status';
   }

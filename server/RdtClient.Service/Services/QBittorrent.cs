@@ -5,7 +5,7 @@ using RdtClient.Data.Models.QBittorrent;
 
 namespace RdtClient.Service.Services;
 
-public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authentication authentication, Torrents torrents, Downloads downloads)
+public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authentication authentication, Torrents torrents, Downloads downloads, ITorrentRunnerState runnerState)
 {
     public async Task<Boolean> AuthLogin(String userName, String password)
     {
@@ -168,7 +168,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             WebUiUsername = ""
         };
 
-        var savePath = Settings.AppDefaultSavePath;
+        var savePath = settings.DefaultSavePath;
 
         preferences.SavePath = savePath;
         preferences.TempPath = $"{savePath}temp{Path.DirectorySeparatorChar}";
@@ -185,7 +185,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
 
     public virtual async Task<IList<TorrentInfo>> TorrentInfo()
     {
-        var savePath = Settings.AppDefaultSavePath;
+        var savePath = settings.DefaultSavePath;
 
         var results = new List<TorrentInfo>();
 
@@ -515,7 +515,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
 
     public async Task<TorrentProperties?> TorrentProperties(String hash)
     {
-        var savePath = Settings.AppDefaultSavePath;
+        var savePath = settings.DefaultSavePath;
 
         var torrent = await torrents.GetByHash(hash);
 
@@ -605,7 +605,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
             return;
         }
 
-        switch (Settings.Get.Integrations.Default.FinishedAction)
+        switch (settings.Current.Integrations.Default.FinishedAction)
         {
             case TorrentFinishedAction.RemoveAllTorrents:
                 logger.LogDebug("Removing torrents from debrid provider and RDT-Client, no files");
@@ -640,19 +640,19 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
         var torrent = new Torrent
         {
             Category = category,
-            DownloadClient = Settings.Get.DownloadClient.Client,
-            HostDownloadAction = Settings.Get.Integrations.Default.HostDownloadAction,
-            FinishedActionDelay = Settings.Get.Integrations.Default.FinishedActionDelay,
-            DownloadAction = Settings.Get.Integrations.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
+            DownloadClient = settings.Current.DownloadClient.Client,
+            HostDownloadAction = settings.Current.Integrations.Default.HostDownloadAction,
+            FinishedActionDelay = settings.Current.Integrations.Default.FinishedActionDelay,
+            DownloadAction = settings.Current.Integrations.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
             FinishedAction = TorrentFinishedAction.None,
-            DownloadMinSize = Settings.Get.Integrations.Default.MinFileSize,
-            IncludeRegex = Settings.Get.Integrations.Default.IncludeRegex,
-            ExcludeRegex = Settings.Get.Integrations.Default.ExcludeRegex,
-            TorrentRetryAttempts = Settings.Get.Integrations.Default.TorrentRetryAttempts,
-            DownloadRetryAttempts = Settings.Get.Integrations.Default.DownloadRetryAttempts,
-            DeleteOnError = Settings.Get.Integrations.Default.DeleteOnError,
-            Lifetime = Settings.Get.Integrations.Default.TorrentLifetime,
-            Priority = priority ?? (Settings.Get.Integrations.Default.Priority > 0 ? Settings.Get.Integrations.Default.Priority : null)
+            DownloadMinSize = settings.Current.Integrations.Default.MinFileSize,
+            IncludeRegex = settings.Current.Integrations.Default.IncludeRegex,
+            ExcludeRegex = settings.Current.Integrations.Default.ExcludeRegex,
+            TorrentRetryAttempts = settings.Current.Integrations.Default.TorrentRetryAttempts,
+            DownloadRetryAttempts = settings.Current.Integrations.Default.DownloadRetryAttempts,
+            DeleteOnError = settings.Current.Integrations.Default.DeleteOnError,
+            Lifetime = settings.Current.Integrations.Default.TorrentLifetime,
+            Priority = priority ?? (settings.Current.Integrations.Default.Priority > 0 ? settings.Current.Integrations.Default.Priority : null)
         };
 
         return await torrents.AddMagnetToDebridQueue(magnetLink, torrent);
@@ -665,19 +665,19 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
         var torrent = new Torrent
         {
             Category = category,
-            DownloadClient = Settings.Get.DownloadClient.Client,
-            HostDownloadAction = Settings.Get.Integrations.Default.HostDownloadAction,
-            FinishedActionDelay = Settings.Get.Integrations.Default.FinishedActionDelay,
-            DownloadAction = Settings.Get.Integrations.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
+            DownloadClient = settings.Current.DownloadClient.Client,
+            HostDownloadAction = settings.Current.Integrations.Default.HostDownloadAction,
+            FinishedActionDelay = settings.Current.Integrations.Default.FinishedActionDelay,
+            DownloadAction = settings.Current.Integrations.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
             FinishedAction = TorrentFinishedAction.None,
-            DownloadMinSize = Settings.Get.Integrations.Default.MinFileSize,
-            IncludeRegex = Settings.Get.Integrations.Default.IncludeRegex,
-            ExcludeRegex = Settings.Get.Integrations.Default.ExcludeRegex,
-            TorrentRetryAttempts = Settings.Get.Integrations.Default.TorrentRetryAttempts,
-            DownloadRetryAttempts = Settings.Get.Integrations.Default.DownloadRetryAttempts,
-            DeleteOnError = Settings.Get.Integrations.Default.DeleteOnError,
-            Lifetime = Settings.Get.Integrations.Default.TorrentLifetime,
-            Priority = priority ?? (Settings.Get.Integrations.Default.Priority > 0 ? Settings.Get.Integrations.Default.Priority : null)
+            DownloadMinSize = settings.Current.Integrations.Default.MinFileSize,
+            IncludeRegex = settings.Current.Integrations.Default.IncludeRegex,
+            ExcludeRegex = settings.Current.Integrations.Default.ExcludeRegex,
+            TorrentRetryAttempts = settings.Current.Integrations.Default.TorrentRetryAttempts,
+            DownloadRetryAttempts = settings.Current.Integrations.Default.DownloadRetryAttempts,
+            DeleteOnError = settings.Current.Integrations.Default.DeleteOnError,
+            Lifetime = settings.Current.Integrations.Default.TorrentLifetime,
+            Priority = priority ?? (settings.Current.Integrations.Default.Priority > 0 ? settings.Current.Integrations.Default.Priority : null)
         };
 
         return await torrents.AddFileToDebridQueue(fileBytes, torrent);
@@ -696,7 +696,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
                                          .Select(m => m.Category!.ToLower())
                                          .ToList();
 
-        var categoryList = (Settings.Get.General.Categories ?? "")
+        var categoryList = (settings.Current.General.Categories ?? "")
                            .Split(",", StringSplitOptions.RemoveEmptyEntries)
                            .Distinct(StringComparer.CurrentCultureIgnoreCase)
                            .Select(m => m.Trim())
@@ -713,7 +713,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
                                                    m => new TorrentCategory
                                                    {
                                                        Name = m,
-                                                       SavePath = Path.Combine(Settings.AppDefaultSavePath, m)
+                                                       SavePath = Path.Combine(settings.DefaultSavePath, m)
                                                    });
         }
 
@@ -729,7 +729,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
 
         category = category.Trim();
 
-        var categoriesSetting = Settings.Get.General.Categories;
+        var categoriesSetting = settings.Current.General.Categories;
 
         var categoryList = (categoriesSetting ?? "")
                            .Split(",", StringSplitOptions.RemoveEmptyEntries)
@@ -756,7 +756,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
 
         category = category.Trim();
 
-        var categoriesSetting = Settings.Get.General.Categories;
+        var categoriesSetting = settings.Current.General.Categories;
 
         var categoryList = (categoriesSetting ?? "")
                            .Split(",", StringSplitOptions.RemoveEmptyEntries)
@@ -796,7 +796,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
 
         foreach (var download in downloadsForTorrent)
         {
-            if (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
+            if (runnerState.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
             {
                 await downloadClient.Pause();
             }
@@ -816,7 +816,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
 
         foreach (var download in downloadsForTorrent)
         {
-            if (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
+            if (runnerState.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
             {
                 await downloadClient.Resume();
             }
@@ -829,7 +829,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
 
         var categories = await TorrentsCategories();
 
-        var activeDownloads = TorrentRunner.ActiveDownloadClients.Sum(m => m.Value.Speed);
+        var activeDownloads = runnerState.ActiveDownloadClients.Sum(m => m.Value.Speed);
 
         return new()
         {
@@ -847,16 +847,16 @@ public class QBittorrent(ILogger<QBittorrent> logger, Settings settings, Authent
         };
     }
 
-    public static TransferInfo TransferInfo()
+    public virtual TransferInfo TransferInfo()
     {
-        var activeDownloads = TorrentRunner.ActiveDownloadClients.Sum(m => m.Value.Speed);
+        var activeDownloads = runnerState.ActiveDownloadClients.Sum(m => m.Value.Speed);
 
         return new()
         {
             ConnectionStatus = "connected",
             DlInfoData = DownloadClient.GetTotalBytesDownloadedThisSession(),
             DlInfoSpeed = activeDownloads,
-            DlRateLimit = Settings.Get.DownloadClient.MaxSpeed
+            DlRateLimit = settings.Current.DownloadClient.MaxSpeed
         };
     }
 

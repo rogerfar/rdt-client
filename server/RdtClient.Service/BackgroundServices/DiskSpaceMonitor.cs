@@ -8,7 +8,7 @@ using DownloadClient = RdtClient.Data.Enums.DownloadClient;
 
 namespace RdtClient.Service.BackgroundServices;
 
-public class DiskSpaceMonitor(ILogger<DiskSpaceMonitor> logger, IServiceProvider serviceProvider) : BackgroundService
+public class DiskSpaceMonitor(ILogger<DiskSpaceMonitor> logger, IServiceProvider serviceProvider, ISettings settings, ITorrentRunnerState runnerState) : BackgroundService
 {
     private static DiskSpaceStatus? _lastStatus;
     private Boolean _isPausedForLowDiskSpace;
@@ -34,7 +34,7 @@ public class DiskSpaceMonitor(ILogger<DiskSpaceMonitor> logger, IServiceProvider
         {
             try
             {
-                var minimumFreeSpaceGB = Settings.Get.DownloadClient.MinimumFreeSpaceGB;
+                var minimumFreeSpaceGB = settings.Current.DownloadClient.MinimumFreeSpaceGB;
 
                 if (minimumFreeSpaceGB <= 0)
                 {
@@ -43,14 +43,14 @@ public class DiskSpaceMonitor(ILogger<DiskSpaceMonitor> logger, IServiceProvider
                     continue;
                 }
 
-                var intervalMinutes = Settings.Get.DownloadClient.DiskSpaceCheckIntervalMinutes;
+                var intervalMinutes = settings.Current.DownloadClient.DiskSpaceCheckIntervalMinutes;
 
                 if (intervalMinutes < 1)
                 {
                     intervalMinutes = 1;
                 }
 
-                var downloadPath = Settings.Get.DownloadClient.DownloadPath;
+                var downloadPath = settings.Current.DownloadClient.DownloadPath;
                 logger.LogDebug($"Checking disk space for path: {downloadPath}");
 
                 if (!Directory.Exists(downloadPath))
@@ -78,7 +78,7 @@ public class DiskSpaceMonitor(ILogger<DiskSpaceMonitor> logger, IServiceProvider
 
                     var pausedCount = 0;
 
-                    foreach (var download in TorrentRunner.ActiveDownloadClients)
+                    foreach (var download in runnerState.ActiveDownloadClients)
                     {
                         if (download.Value.Type == DownloadClient.Bezzad)
                         {
@@ -90,7 +90,7 @@ public class DiskSpaceMonitor(ILogger<DiskSpaceMonitor> logger, IServiceProvider
 
                     logger.LogInformation($"Paused {pausedCount} active Bezzad downloads");
 
-                    TorrentRunner.IsPausedForLowDiskSpace = true;
+                    runnerState.IsPausedForLowDiskSpace = true;
                     _isPausedForLowDiskSpace = true;
 
                     var status = new DiskSpaceStatus
@@ -125,7 +125,7 @@ public class DiskSpaceMonitor(ILogger<DiskSpaceMonitor> logger, IServiceProvider
 
                     var resumedCount = 0;
 
-                    foreach (var download in TorrentRunner.ActiveDownloadClients)
+                    foreach (var download in runnerState.ActiveDownloadClients)
                     {
                         if (download.Value.Type == DownloadClient.Bezzad)
                         {
@@ -137,7 +137,7 @@ public class DiskSpaceMonitor(ILogger<DiskSpaceMonitor> logger, IServiceProvider
 
                     logger.LogInformation($"Resumed {resumedCount} Bezzad downloads");
 
-                    TorrentRunner.IsPausedForLowDiskSpace = false;
+                    runnerState.IsPausedForLowDiskSpace = false;
                     _isPausedForLowDiskSpace = false;
 
                     var status = new DiskSpaceStatus

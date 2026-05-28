@@ -12,7 +12,7 @@ using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services.DebridClients;
 
-public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter) : IDebridClient
+public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter, ISettings settings) : IDebridClient
 {
     private const String TransferCreateUrl = "https://www.premiumize.me/api/transfer/create";
 
@@ -216,9 +216,9 @@ public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHtt
         }
     }
 
-    private static String GetApiKey()
+    private String GetApiKey()
     {
-        var apiKey = Settings.Get.Provider.ApiKey;
+        var apiKey = settings.Current.Provider.ApiKey;
 
         if (String.IsNullOrWhiteSpace(apiKey))
         {

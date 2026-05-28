@@ -214,16 +214,18 @@ public static class TorrentDtoMapper
             return "Finished";
         }
 
+        var prefix = torrent.Type == DownloadType.Nzb ? "NZB" : "Torrent";
+
         return torrent.RdStatus switch
         {
             TorrentStatus.Queued => "Not Yet Added to Provider",
             TorrentStatus.Downloading when torrent.RdSeeders < 1 && torrent.Type != DownloadType.Nzb => "Torrent stalled",
-            TorrentStatus.Downloading => $"Torrent downloading ({torrent.RdProgress}% - {FileSizeHelper.FormatSize(torrent.RdSpeed)}/s)",
-            TorrentStatus.Processing => "Torrent processing",
-            TorrentStatus.WaitingForFileSelection => "Torrent waiting for file selection",
-            TorrentStatus.Error => $"Torrent error: {torrent.RdStatusRaw}",
-            TorrentStatus.Finished => "Torrent finished, waiting for download links",
-            TorrentStatus.Uploading => "Torrent uploading",
+            TorrentStatus.Downloading => $"{prefix} downloading ({torrent.RdProgress}% - {FileSizeHelper.FormatSize(torrent.RdSpeed)}/s)",
+            TorrentStatus.Processing => $"{prefix} processing",
+            TorrentStatus.WaitingForFileSelection => $"{prefix} waiting for file selection",
+            TorrentStatus.Error => $"{prefix} error: {torrent.RdStatusRaw}",
+            TorrentStatus.Finished => $"{prefix} finished, waiting for download links",
+            TorrentStatus.Uploading => $"{prefix} uploading",
             _ => "Unknown status"
         };
     }

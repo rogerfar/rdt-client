@@ -6,14 +6,14 @@ using RdtClient.Service.Services;
 namespace RdtClient.Web.Controllers;
 
 [Route("Api/Authentication")]
-public class AuthController(Authentication authentication, Settings settings) : Controller
+public class AuthController(Authentication authentication, ISettings settings) : Controller
 {
     [AllowAnonymous]
     [Route("IsLoggedIn")]
     [HttpGet]
     public async Task<ActionResult> IsLoggedIn()
     {
-        if (Settings.Get.General.AuthenticationType == AuthenticationType.None)
+        if (settings.Current.General.AuthenticationType == AuthenticationType.None)
         {
             return Ok();
         }
@@ -77,7 +77,7 @@ public class AuthController(Authentication authentication, Settings settings) : 
             return BadRequest();
         }
 
-        if (!String.IsNullOrEmpty(Settings.Get.Provider.ApiKey))
+        if (!String.IsNullOrEmpty(settings.Current.Provider.ApiKey))
         {
             return StatusCode(401);
         }

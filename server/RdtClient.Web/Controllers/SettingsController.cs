@@ -15,13 +15,13 @@ namespace RdtClient.Web.Controllers;
 
 [Authorize(Policy = "AuthSetting")]
 [Route("Api/Settings")]
-public class SettingsController(Settings settings, Torrents torrents) : Controller
+public class SettingsController(ISettings settings, Torrents torrents) : Controller
 {
     [HttpGet]
     [Route("")]
     public ActionResult Get()
     {
-        var result = SettingData.GetAll();
+        var result = settings.GetAll();
 
         return Ok(result);
     }
@@ -95,7 +95,7 @@ public class SettingsController(Settings settings, Torrents torrents) : Controll
     [Route("TestDownloadSpeed")]
     public async Task<ActionResult> TestDownloadSpeed(CancellationToken cancellationToken)
     {
-        var downloadPath = Settings.Get.DownloadClient.DownloadPath;
+        var downloadPath = settings.Current.DownloadClient.DownloadPath;
 
         var testFilePath = Path.Combine(downloadPath, "testDefault.rar");
 
@@ -106,7 +106,7 @@ public class SettingsController(Settings settings, Torrents torrents) : Controll
             Link = "https://34.download.real-debrid.com/speedtest/testDefault.rar",
             Torrent = new()
             {
-                DownloadClient = Settings.Get.DownloadClient.Client == DownloadClient.Symlink ? DownloadClient.Bezzad : Settings.Get.DownloadClient.Client,
+                DownloadClient = settings.Current.DownloadClient.Client == DownloadClient.Symlink ? DownloadClient.Bezzad : settings.Current.DownloadClient.Client,
                 RdName = "testDefault.rar"
             }
         };
@@ -131,7 +131,7 @@ public class SettingsController(Settings settings, Torrents torrents) : Controll
 
             if (downloadClient.Downloader is Aria2cDownloader aria2Downloader)
             {
-                var aria2NetClient = new Aria2NetClient(Settings.Get.DownloadClient.Aria2cUrl, Settings.Get.DownloadClient.Aria2cSecret, httpClient, 1);
+                var aria2NetClient = new Aria2NetClient(settings.Current.DownloadClient.Aria2cUrl, settings.Current.DownloadClient.Aria2cSecret, httpClient, 1);
 
                 var allDownloads = await aria2NetClient.TellAllAsync(cancellationToken);
 
@@ -155,7 +155,7 @@ public class SettingsController(Settings settings, Torrents torrents) : Controll
     [Route("TestWriteSpeed")]
     public async Task<ActionResult> TestWriteSpeed()
     {
-        var downloadPath = Settings.Get.DownloadClient.DownloadPath;
+        var downloadPath = settings.Current.DownloadClient.DownloadPath;
 
         var testFilePath = Path.Combine(downloadPath, "test.tmp");
 

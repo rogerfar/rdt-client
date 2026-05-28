@@ -12,6 +12,7 @@ public class QBittorrentControllerTest
 {
     private readonly QBittorrentController _controller;
     private readonly Mock<QBittorrent> _qBittorrentMock;
+<<<<<<< .merge_file_2jl9Ws
     private readonly Mock<Torrents> _torrentsMock;
 
     public QBittorrentControllerTest()
@@ -20,6 +21,21 @@ public class QBittorrentControllerTest
         _torrentsMock = new(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!);
 
         _controller = new(new Mock<ILogger<QBittorrentController>>().Object, _qBittorrentMock.Object, new Mock<IHttpClientFactory>().Object, _torrentsMock.Object);
+=======
+    private readonly TestSettings _settings;
+
+    public QBittorrentControllerTest()
+    {
+        _settings = new();
+        _qBittorrentMock = new(new Mock<ILogger<QBittorrent>>().Object, _settings, null!, null!, null!, new TorrentRunnerState());
+
+        _controller = new(
+            new Mock<ILogger<QBittorrentController>>().Object,
+            _qBittorrentMock.Object,
+            new Mock<IHttpClientFactory>().Object,
+            _settings);
+
+>>>>>>> .merge_file_I8bokE
         _controller.ControllerContext = new()
         {
             HttpContext = new DefaultHttpContext()

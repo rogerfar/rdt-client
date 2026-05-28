@@ -5,6 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
         <AssemblyName>RdtClient.Service.Test</AssemblyName>
         <RootNamespace>RdtClient.Service.Test</RootNamespace>
     </PropertyGroup>
@@ -35,12 +36,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\RdtClient.Service\RdtClient.Service.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="TorBoxNET">
-        <HintPath>..\..\..\torbox-net\TorBoxNET\bin\Release\netstandard2.0\TorBoxNET.dll</HintPath>
-      </Reference>
     </ItemGroup>
 
 </Project>

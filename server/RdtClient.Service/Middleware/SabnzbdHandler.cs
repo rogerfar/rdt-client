@@ -9,7 +9,7 @@ public class SabnzbdRequirement : IAuthorizationRequirement
 {
 }
 
-public class SabnzbdHandler(Authentication authentication, IHttpContextAccessor httpContextAccessor) : AuthorizationHandler<SabnzbdRequirement>
+public class SabnzbdHandler(Authentication authentication, IHttpContextAccessor httpContextAccessor, ISettings settings) : AuthorizationHandler<SabnzbdRequirement>
 {
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, SabnzbdRequirement requirement)
     {
@@ -22,7 +22,7 @@ public class SabnzbdHandler(Authentication authentication, IHttpContextAccessor 
             return;
         }
 
-        if (Settings.Get.General.AuthenticationType == AuthenticationType.None)
+        if (settings.Current.General.AuthenticationType == AuthenticationType.None)
         {
             context.Succeed(requirement);
 
@@ -60,6 +60,36 @@ public class SabnzbdHandler(Authentication authentication, IHttpContextAccessor 
                 }
 
                 // Invalid credentials provided
+                context.Fail();
+
+                return;
+            }
+
+            var apiKey = GetParam("apikey");
+
+            if (!String.IsNullOrWhiteSpace(apiKey))
+            {
+                var separatorIndex = apiKey.IndexOf(':');
+
+                if (separatorIndex <= 0 || separatorIndex == apiKey.Length - 1)
+                {
+                    context.Fail();
+
+                    return;
+                }
+
+                var username = apiKey[..separatorIndex];
+                var password = apiKey[(separatorIndex + 1)..];
+
+                var loginResult = await authentication.Login(username, password);
+
+                if (loginResult.Succeeded)
+                {
+                    context.Succeed(requirement);
+
+                    return;
+                }
+
                 context.Fail();
 
                 return;

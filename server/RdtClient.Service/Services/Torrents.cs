@@ -32,7 +32,9 @@ public class Torrents(
     PremiumizeDebridClient premiumizeDebridClient,
     RealDebridDebridClient realDebridDebridClient,
     DebridLinkClient debridLinkClient,
-    TorBoxDebridClient torBoxDebridClient)
+    TorBoxDebridClient torBoxDebridClient,
+    ISettings settings,
+    ITorrentRunnerState runnerState)
 {
     private static readonly SemaphoreSlim RealDebridUpdateLock = new(1, 1);
 
@@ -47,7 +49,7 @@ public class Torrents(
     {
         get
         {
-            return Settings.Get.Provider.Provider switch
+            return settings.Current.Provider.Provider switch
             {
                 Provider.Premiumize => premiumizeDebridClient,
                 Provider.RealDebrid => realDebridDebridClient,
@@ -61,7 +63,7 @@ public class Torrents(
 
     public virtual (Int64 Speed, Int64 BytesTotal, Int64 BytesDone) GetDownloadStats(Guid downloadId)
     {
-        return TorrentRunner.GetStats(downloadId);
+        return runnerState.GetStats(downloadId);
     }
 
     public virtual async Task<IList<Torrent>> Get()
@@ -197,9 +199,9 @@ public class Torrents(
             throw new($"{ex.Message}, trying to parse {magnetLink}");
         }
 
-        if (!String.IsNullOrWhiteSpace(Settings.Get.General.BannedTrackers))
+        if (!String.IsNullOrWhiteSpace(settings.Current.General.BannedTrackers))
         {
-            var bannedTrackers = Settings.Get.General.BannedTrackers.Split(',');
+            var bannedTrackers = settings.Current.General.BannedTrackers.Split(',');
 
             foreach (var bannedTracker in bannedTrackers)
             {
@@ -264,9 +266,9 @@ public class Torrents(
             throw new($"{ex.Message}, trying to parse {fileAsBase64}");
         }
 
-        if (!String.IsNullOrWhiteSpace(Settings.Get.General.BannedTrackers))
+        if (!String.IsNullOrWhiteSpace(settings.Current.General.BannedTrackers))
         {
-            var bannedTrackers = Settings.Get.General.BannedTrackers.Split(',');
+            var bannedTrackers = settings.Current.General.BannedTrackers.Split(',');
 
             foreach (var bannedTracker in bannedTrackers)
             {
@@ -312,16 +314,16 @@ public class Torrents(
 
     private async Task CopyAddedTorrent(Torrent torrent)
     {
-        if (String.IsNullOrWhiteSpace(Settings.Get.General.CopyAddedTorrents) || String.IsNullOrWhiteSpace(torrent.FileOrMagnet) || String.IsNullOrWhiteSpace(torrent.RdName))
+        if (String.IsNullOrWhiteSpace(settings.Current.General.CopyAddedTorrents) || String.IsNullOrWhiteSpace(torrent.FileOrMagnet) || String.IsNullOrWhiteSpace(torrent.RdName))
         {
             return;
         }
 
         try
         {
-            if (!fileSystem.Directory.Exists(Settings.Get.General.CopyAddedTorrents))
+            if (!fileSystem.Directory.Exists(settings.Current.General.CopyAddedTorrents))
             {
-                fileSystem.Directory.CreateDirectory(Settings.Get.General.CopyAddedTorrents);
+                fileSystem.Directory.CreateDirectory(settings.Current.General.CopyAddedTorrents);
             }
 
             var extension = torrent.Type switch
@@ -331,7 +333,7 @@ public class Torrents(
                 _ => throw new ArgumentException("Unexpected DownloadType")
             };
 
-            var copyFileName = Path.Combine(Settings.Get.General.CopyAddedTorrents, FileHelper.RemoveInvalidFileNameChars(torrent.RdName));
+            var copyFileName = Path.Combine(settings.Current.General.CopyAddedTorrents, FileHelper.RemoveInvalidFileNameChars(torrent.RdName));
 
             if (!copyFileName.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
             {
@@ -355,7 +357,7 @@ public class Torrents(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, $"Unable to create torrent blackhole directory: {Settings.Get.General.CopyAddedTorrents}: {ex.Message}");
+            logger.LogError(ex, $"Unable to create torrent blackhole directory: {settings.Current.General.CopyAddedTorrents}: {ex.Message}");
         }
     }
 
@@ -511,7 +513,7 @@ public class Torrents(
         {
             var retry = 10;
 
-            while (TorrentRunner.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
+            while (runnerState.ActiveDownloadClients.TryGetValue(download.DownloadId, out var downloadClient))
             {
                 Log($"Cancelling download", download, torrent);
 
@@ -529,7 +531,7 @@ public class Torrents(
 
             retry = 10;
 
-            while (TorrentRunner.ActiveUnpackClients.TryGetValue(download.DownloadId, out var unpackClient))
+            while (runnerState.ActiveUnpackClients.TryGetValue(download.DownloadId, out var unpackClient))
             {
                 Log($"Cancelling unpack", download, torrent);
 
@@ -569,7 +571,7 @@ public class Torrents(
 
         if (deleteLocalFiles && !String.IsNullOrWhiteSpace(torrent.RdName))
         {
-            var downloadPath = DownloadPath(torrent, Settings.Get);
+            var downloadPath = DownloadPath(torrent, settings.Current);
             downloadPath = Path.Combine(downloadPath, torrent.RdName);
 
             Log($"Deleting local files in {downloadPath}", torrent);
@@ -634,13 +636,13 @@ public class Torrents(
 
         var profile = new Profile
         {
-            Provider = Enum.GetName(Settings.Get.Provider.Provider),
+            Provider = Enum.GetName(settings.Current.Provider.Provider),
             UserName = user.Username,
             Expiration = user.Expiration,
             CurrentVersion = UpdateChecker.CurrentVersion,
             LatestVersion = UpdateChecker.LatestVersion,
             IsInsecure = UpdateChecker.IsInsecure,
-            DisableUpdateNotification = Settings.Get.General.DisableUpdateNotifications
+            DisableUpdateNotification = settings.Current.General.DisableUpdateNotifications
         };
 
         return profile;
@@ -663,25 +665,25 @@ public class Torrents(
                 torrentsByRdId.TryGetValue(rdTorrent.Id, out var torrent);
 
                 // Auto import torrents only torrents that have their files selected
-                if (torrent == null && Settings.Get.Provider.AutoImport)
+                if (torrent == null && settings.Current.Provider.AutoImport)
                 {
                     var newTorrent = new Torrent
                     {
-                        Category = Settings.Get.Provider.Default.Category,
-                        DownloadClient = Settings.Get.DownloadClient.Client,
+                        Category = settings.Current.Provider.Default.Category,
+                        DownloadClient = settings.Current.DownloadClient.Client,
                         DownloadAction =
-                            Settings.Get.Provider.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
-                        HostDownloadAction = Settings.Get.Provider.Default.HostDownloadAction,
-                        FinishedActionDelay = Settings.Get.Provider.Default.FinishedActionDelay,
-                        FinishedAction = Settings.Get.Provider.Default.FinishedAction,
-                        DownloadMinSize = Settings.Get.Provider.Default.MinFileSize,
-                        IncludeRegex = Settings.Get.Provider.Default.IncludeRegex,
-                        ExcludeRegex = Settings.Get.Provider.Default.ExcludeRegex,
-                        TorrentRetryAttempts = Settings.Get.Provider.Default.TorrentRetryAttempts,
-                        DownloadRetryAttempts = Settings.Get.Provider.Default.DownloadRetryAttempts,
-                        DeleteOnError = Settings.Get.Provider.Default.DeleteOnError,
-                        Lifetime = Settings.Get.Provider.Default.TorrentLifetime,
-                        Priority = Settings.Get.Provider.Default.Priority > 0 ? Settings.Get.Provider.Default.Priority : null,
+                            settings.Current.Provider.Default.OnlyDownloadAvailableFiles ? TorrentDownloadAction.DownloadAvailableFiles : TorrentDownloadAction.DownloadAll,
+                        HostDownloadAction = settings.Current.Provider.Default.HostDownloadAction,
+                        FinishedActionDelay = settings.Current.Provider.Default.FinishedActionDelay,
+                        FinishedAction = settings.Current.Provider.Default.FinishedAction,
+                        DownloadMinSize = settings.Current.Provider.Default.MinFileSize,
+                        IncludeRegex = settings.Current.Provider.Default.IncludeRegex,
+                        ExcludeRegex = settings.Current.Provider.Default.ExcludeRegex,
+                        TorrentRetryAttempts = settings.Current.Provider.Default.TorrentRetryAttempts,
+                        DownloadRetryAttempts = settings.Current.Provider.Default.DownloadRetryAttempts,
+                        DeleteOnError = settings.Current.Provider.Default.DeleteOnError,
+                        Lifetime = settings.Current.Provider.Default.TorrentLifetime,
+                        Priority = settings.Current.Provider.Default.Priority > 0 ? settings.Current.Provider.Default.Priority : null,
                         RdId = rdTorrent.Id
                     };
 
@@ -690,7 +692,7 @@ public class Torrents(
                         continue;
                     }
 
-                    torrent = await torrentData.Add(rdTorrent.Id, rdTorrent.Hash, null, false, DownloadType.Torrent, Settings.Get.DownloadClient.Client, newTorrent);
+                    torrent = await torrentData.Add(rdTorrent.Id, rdTorrent.Hash, null, false, DownloadType.Torrent, settings.Current.DownloadClient.Client, newTorrent);
                     torrentsByRdId[rdTorrent.Id] = torrent;
                     torrents.Add(torrent);
 
@@ -706,7 +708,7 @@ public class Torrents(
             {
                 var rdTorrent = torrent.RdId != null && providerTorrentsById.TryGetValue(torrent.RdId, out var providerTorrent) ? providerTorrent : null;
 
-                if (rdTorrent == null && Settings.Get.Provider.AutoDelete && torrent.RdStatus != TorrentStatus.Queued)
+                if (rdTorrent == null && settings.Current.Provider.AutoDelete && torrent.RdStatus != TorrentStatus.Queued)
                 {
                     await Delete(torrent.TorrentId, true, false, true);
                 }
@@ -744,14 +746,14 @@ public class Torrents(
 
             foreach (var download in torrent.Downloads)
             {
-                while (TorrentRunner.ActiveDownloadClients.TryRemove(download.DownloadId, out var downloadClient))
+                while (runnerState.ActiveDownloadClients.TryRemove(download.DownloadId, out var downloadClient))
                 {
                     await downloadClient.Cancel();
 
                     await Task.Delay(100);
                 }
 
-                while (TorrentRunner.ActiveUnpackClients.TryRemove(download.DownloadId, out var unpackClient))
+                while (runnerState.ActiveUnpackClients.TryRemove(download.DownloadId, out var unpackClient))
                 {
                     unpackClient.Cancel();
 
@@ -814,21 +816,21 @@ public class Torrents(
 
         Log($"Retrying Download", download, download.Torrent);
 
-        while (TorrentRunner.ActiveDownloadClients.TryRemove(download.DownloadId, out var downloadClient))
+        while (runnerState.ActiveDownloadClients.TryRemove(download.DownloadId, out var downloadClient))
         {
             await downloadClient.Cancel();
 
             await Task.Delay(100);
         }
 
-        while (TorrentRunner.ActiveUnpackClients.TryRemove(download.DownloadId, out var unpackClient))
+        while (runnerState.ActiveUnpackClients.TryRemove(download.DownloadId, out var unpackClient))
         {
             unpackClient.Cancel();
 
             await Task.Delay(100);
         }
 
-        var downloadPath = DownloadPath(download.Torrent!, Settings.Get);
+        var downloadPath = DownloadPath(download.Torrent!, settings.Current);
 
         var filePath = DownloadHelper.GetDownloadPath(downloadPath, download.Torrent!, download);
 
@@ -970,11 +972,11 @@ public class Torrents(
         await torrentData.Update(torrent);
     }
 
-    public async Task RunTorrentComplete(Guid torrentId, DbSettings? settings = null)
+    public async Task RunTorrentComplete(Guid torrentId, DbSettings? runSettings = null)
     {
-        settings ??= Settings.Get;
+        runSettings ??= settings.Current;
 
-        if (String.IsNullOrWhiteSpace(settings.General.RunOnTorrentCompleteFileName))
+        if (String.IsNullOrWhiteSpace(runSettings.General.RunOnTorrentCompleteFileName))
         {
             return;
         }
@@ -983,12 +985,12 @@ public class Torrents(
 
         var downloadsForTorrent = await downloads.GetForTorrent(torrentId);
 
-        var fileName = settings.General.RunOnTorrentCompleteFileName;
-        var arguments = settings.General.RunOnTorrentCompleteArguments ?? "";
+        var fileName = runSettings.General.RunOnTorrentCompleteFileName;
+        var arguments = runSettings.General.RunOnTorrentCompleteArguments ?? "";
 
         Log($"Parsing external program {fileName} with arguments {arguments}", torrent);
 
-        var downloadPath = DownloadPath(torrent, settings);
+        var downloadPath = DownloadPath(torrent, runSettings);
         var torrentPath = Path.Combine(downloadPath, torrent.RdName ?? "Unknown");
 
         var filePath = torrentPath;
