@@ -65,6 +65,110 @@ public class SabnzbdHandlerTest
     }
 
     [Fact]
+    public async Task HandleAsync_ValidApiKeyCredentials_Succeeds()
+    {
+        // Arrange
+        _settings.Current.General.AuthenticationType = AuthenticationType.UserNamePassword;
+        var httpContext = new DefaultHttpContext
+        {
+            Request =
+            {
+                QueryString = new("?apikey=user:pass")
+            }
+        };
+
+        _httpContextAccessorMock.Setup(a => a.HttpContext).Returns(httpContext);
+
+        var context = CreateContext(httpContext);
+        _authenticationMock.Setup(a => a.Login("user", "pass")).ReturnsAsync(SignInResult.Success);
+
+        // Act
+        await _handler.HandleAsync(context);
+
+        // Assert
+        Assert.True(context.HasSucceeded, "HasSucceeded should be true for valid api key credentials");
+    }
+
+    [Fact]
+    public async Task HandleAsync_ValidApiKeyCredentialsFromForm_Succeeds()
+    {
+        // Arrange
+        _settings.Current.General.AuthenticationType = AuthenticationType.UserNamePassword;
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.ContentType = "application/x-www-form-urlencoded";
+        httpContext.Request.Form = new FormCollection(new()
+        {
+            {
+                "apikey", "user:pass"
+            }
+        });
+
+        _httpContextAccessorMock.Setup(a => a.HttpContext).Returns(httpContext);
+
+        var context = CreateContext(httpContext);
+        _authenticationMock.Setup(a => a.Login("user", "pass")).ReturnsAsync(SignInResult.Success);
+
+        // Act
+        await _handler.HandleAsync(context);
+
+        // Assert
+        Assert.True(context.HasSucceeded, "HasSucceeded should be true for valid form api key credentials");
+    }
+
+    [Fact]
+    public async Task HandleAsync_ApiKeyPasswordContainingColon_Succeeds()
+    {
+        // Arrange
+        _settings.Current.General.AuthenticationType = AuthenticationType.UserNamePassword;
+        var httpContext = new DefaultHttpContext
+        {
+            Request =
+            {
+                QueryString = new("?apikey=user:pass:with:colons")
+            }
+        };
+
+        _httpContextAccessorMock.Setup(a => a.HttpContext).Returns(httpContext);
+
+        var context = CreateContext(httpContext);
+        _authenticationMock.Setup(a => a.Login("user", "pass:with:colons")).ReturnsAsync(SignInResult.Success);
+
+        // Act
+        await _handler.HandleAsync(context);
+
+        // Assert
+        Assert.True(context.HasSucceeded, "HasSucceeded should be true when the password contains colons");
+    }
+
+    [Fact]
+    public async Task HandleAsync_MaCredentialsTakePrecedenceOverApiKey()
+    {
+        // Arrange
+        _settings.Current.General.AuthenticationType = AuthenticationType.UserNamePassword;
+        var httpContext = new DefaultHttpContext
+        {
+            Request =
+            {
+                QueryString = new("?ma_username=user&ma_password=wrong&apikey=user:pass")
+            }
+        };
+
+        _httpContextAccessorMock.Setup(a => a.HttpContext).Returns(httpContext);
+
+        var context = CreateContext(httpContext);
+        _authenticationMock.Setup(a => a.Login("user", "wrong")).ReturnsAsync(SignInResult.Failed);
+        _authenticationMock.Setup(a => a.Login("user", "pass")).ReturnsAsync(SignInResult.Success);
+
+        // Act
+        await _handler.HandleAsync(context);
+
+        // Assert
+        Assert.False(context.HasSucceeded, "HasSucceeded should be false because ma_username/ma_password take precedence");
+        _authenticationMock.Verify(a => a.Login("user", "wrong"), Times.Once);
+        _authenticationMock.Verify(a => a.Login("user", "pass"), Times.Never);
+    }
+
+    [Fact]
     public async Task HandleAsync_AlreadyAuthenticated_Succeeds()
     {
         // Arrange
@@ -106,6 +210,59 @@ public class SabnzbdHandlerTest
 
         // Assert
         Assert.False(context.HasSucceeded, "HasSucceeded should be false for invalid credentials");
+    }
+
+    [Fact]
+    public async Task HandleAsync_InvalidApiKeyCredentials_DoesNotSucceed()
+    {
+        // Arrange
+        _settings.Current.General.AuthenticationType = AuthenticationType.UserNamePassword;
+        var httpContext = new DefaultHttpContext
+        {
+            Request =
+            {
+                QueryString = new("?apikey=user:wrong")
+            }
+        };
+
+        _httpContextAccessorMock.Setup(a => a.HttpContext).Returns(httpContext);
+
+        var context = CreateContext(httpContext);
+        _authenticationMock.Setup(a => a.Login("user", "wrong")).ReturnsAsync(SignInResult.Failed);
+
+        // Act
+        await _handler.HandleAsync(context);
+
+        // Assert
+        Assert.False(context.HasSucceeded, "HasSucceeded should be false for invalid api key credentials");
+    }
+
+    [Theory]
+    [InlineData("missingdelimiter")]
+    [InlineData(":pass")]
+    [InlineData("user:")]
+    public async Task HandleAsync_MalformedApiKey_DoesNotSucceed(String apiKey)
+    {
+        // Arrange
+        _settings.Current.General.AuthenticationType = AuthenticationType.UserNamePassword;
+        var httpContext = new DefaultHttpContext
+        {
+            Request =
+            {
+                QueryString = new($"?apikey={apiKey}")
+            }
+        };
+
+        _httpContextAccessorMock.Setup(a => a.HttpContext).Returns(httpContext);
+
+        var context = CreateContext(httpContext);
+
+        // Act
+        await _handler.HandleAsync(context);
+
+        // Assert
+        Assert.False(context.HasSucceeded, "HasSucceeded should be false for malformed api keys");
+        _authenticationMock.Verify(a => a.Login(It.IsAny<String>(), It.IsAny<String>()), Times.Never);
     }
 
     [Fact]
