@@ -8,3 +8,4 @@ server/RdtClient.Web/appsettings.Development.json
 data
 Dockerfile.dev
 test.bat
+.DS_Store

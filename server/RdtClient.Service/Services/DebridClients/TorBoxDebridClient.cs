@@ -69,7 +69,10 @@ public class TorBoxDebridClient(ILogger<TorBoxDebridClient> logger, IHttpClientF
         return await HandleAddTorrentErrors(async asQueued =>
         {
             var user = await GetClient().User.GetAsync(true);
-            var result = await GetClient(DiConfig.TORBOX_CLIENT_SLOW).Torrents.AddMagnetAsync(magnetLink, user.Data?.Settings?.SeedTorrents ?? 3, as_queued: asQueued);
+            var result = await GetClient(DiConfig.TORBOX_CLIENT_SLOW).Torrents.AddMagnetAsync(magnetLink,
+                                                                                               user.Data?.Settings?.SeedTorrents ?? 3,
+                                                                                               allowZip: Settings.Get.Provider.PreferZippedDownloads,
+                                                                                               as_queued: asQueued);
 
             return result.Data!.Hash!;
         });
@@ -80,7 +83,10 @@ public class TorBoxDebridClient(ILogger<TorBoxDebridClient> logger, IHttpClientF
         return await HandleAddTorrentErrors(async asQueued =>
         {
             var user = await GetClient().User.GetAsync(true);
-            var result = await GetClient(DiConfig.TORBOX_CLIENT_SLOW).Torrents.AddFileAsync(bytes, user.Data?.Settings?.SeedTorrents ?? 3, as_queued: asQueued);
+            var result = await GetClient(DiConfig.TORBOX_CLIENT_SLOW).Torrents.AddFileAsync(bytes,
+                                                                                             user.Data?.Settings?.SeedTorrents ?? 3,
+                                                                                             allowZip: Settings.Get.Provider.PreferZippedDownloads,
+                                                                                             as_queued: asQueued);
 
             return result.Data!.Hash!;
         });
@@ -372,7 +378,7 @@ public class TorBoxDebridClient(ILogger<TorBoxDebridClient> logger, IHttpClientF
             }
 
             var httpClient = httpClientFactory.CreateClient(clientId);
-            var torBoxNetClient = new TorBoxNetClient(null, httpClient);
+            var torBoxNetClient = new TorBoxNetClient(null, httpClient, retryCount: 5);
             torBoxNetClient.UseApiAuthentication(apiKey);
 
             // Get the server time to fix up the timezones on results
@@ -513,7 +519,7 @@ public class TorBoxDebridClient(ILogger<TorBoxDebridClient> logger, IHttpClientF
         {
             throw rateLimitException;
         }
-        catch (TorBoxException ex) when ("active_limit".Equals(ex.Error, StringComparison.OrdinalIgnoreCase))
+        catch (TorBoxException ex) when (IsRateLimit(ex))
         {
             coordinator.UpdateCooldown(TorBoxApiHost, TimeSpan.FromMinutes(2));
 
@@ -541,7 +547,7 @@ public class TorBoxDebridClient(ILogger<TorBoxDebridClient> logger, IHttpClientF
         {
             throw rateLimitException;
         }
-        catch (TorBoxException ex) when ("active_limit".Equals(ex.Error, StringComparison.OrdinalIgnoreCase))
+        catch (TorBoxException ex) when (IsRateLimit(ex))
         {
             coordinator.UpdateCooldown(TorBoxApiHost, TimeSpan.FromMinutes(2));
 
@@ -558,6 +564,12 @@ public class TorBoxDebridClient(ILogger<TorBoxDebridClient> logger, IHttpClientF
     private async Task<String> HandleAddTorrentErrors(Func<Boolean, Task<String>> action)
     {
         return await HandleErrors(() => action(false));
+    }
+
+    private static Boolean IsRateLimit(TorBoxException exception)
+    {
+        return exception.Error.Equals("RATE_LIMIT", StringComparison.OrdinalIgnoreCase)
+               || exception.Error.Equals("ACTIVE_LIMIT", StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task<String> HandleAddUsenetErrors(Func<Boolean, Task<String>> action)
