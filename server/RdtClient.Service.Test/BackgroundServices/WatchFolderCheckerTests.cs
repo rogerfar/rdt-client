@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using RdtClient.Data.Models.Data;
-using RdtClient.Data.Models.Internal;
 using RdtClient.Service.BackgroundServices;
 using RdtClient.Service.Services;
 
@@ -25,7 +24,7 @@ public class WatchFolderCheckerTests : IDisposable
         _serviceProviderMock = new();
         _serviceScopeMock = new();
         _scopeServiceProviderMock = new();
-        _settings = new(new DbSettings
+        _settings = new(new()
         {
             Watch = new()
             {

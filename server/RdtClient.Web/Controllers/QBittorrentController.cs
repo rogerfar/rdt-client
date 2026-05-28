@@ -14,11 +14,7 @@ namespace RdtClient.Web.Controllers;
 [ApiController]
 [Route("api/v2")]
 [Route("qbittorrent/api/v2")]
-<<<<<<< .merge_file_3yoKAx
-public class QBittorrentController(ILogger<QBittorrentController> logger, QBittorrent qBittorrent, IHttpClientFactory httpClientFactory, Torrents torrents) : Controller
-=======
-public class QBittorrentController(ILogger<QBittorrentController> logger, QBittorrent qBittorrent, IHttpClientFactory httpClientFactory, ISettings settings) : Controller
->>>>>>> .merge_file_cLOJCF
+public class QBittorrentController(ILogger<QBittorrentController> logger, QBittorrent qBittorrent, IHttpClientFactory httpClientFactory, ISettings settings, Torrents torrents) : Controller
 {
     [AllowAnonymous]
     [Route("/version/api")]

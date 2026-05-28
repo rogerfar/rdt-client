@@ -30,7 +30,7 @@ public static class DiConfig
         services.AddScoped<AllDebridDebridClient>();
 
         services.AddSingleton<IRateLimitCoordinator, RateLimitCoordinator>();
-        services.AddSingleton<ITorrentRunnerState>(TorrentRunner.SharedState);
+        services.AddSingleton(TorrentRunner.SharedState);
         services.AddSingleton<IProcessFactory, ProcessFactory>();
         services.AddSingleton<IFileSystem, FileSystem>();
 

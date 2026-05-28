@@ -1,6 +1,7 @@
 using RdtClient.Data.Models.Internal;
+using RdtClient.Service.Services;
 
-namespace RdtClient.Service.Services;
+namespace RdtClient.Service.Test;
 
 internal sealed class TestSettings(DbSettings? settings = null) : ISettings
 {
