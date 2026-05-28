@@ -44,6 +44,7 @@ public class TorBoxDebridClientTest
         {
             new()
             {
+                Id = 12345,
                 Hash = "hash1",
                 Name = "torrent1",
                 Size = 1000,
@@ -76,7 +77,7 @@ public class TorBoxDebridClientTest
         // Assert
         Assert.Equal(2, result.Count);
 
-        var torrentResult = result.FirstOrDefault(r => r.Id == "hash1");
+        var torrentResult = result.FirstOrDefault(r => r.Id == "12345");
         Assert.NotNull(torrentResult);
         Assert.Equal(DownloadType.Torrent, torrentResult.Type);
 
@@ -198,12 +199,12 @@ public class TorBoxDebridClientTest
     }
 
     [Fact]
-    public async Task Delete_CallsTorrentsControl_WhenTypeIsTorrent()
+    public async Task Delete_CallsTorrentsControlById_WhenTypeIsTorrent()
     {
         // Arrange
         var torrent = new Torrent
         {
-            RdId = "torrent-id",
+            RdId = "12345",
             Type = DownloadType.Torrent
         };
 
@@ -218,7 +219,7 @@ public class TorBoxDebridClientTest
         await clientMock.Object.Delete(torrent);
 
         // Assert
-        torrentsApiMock.Verify(m => m.ControlAsync("torrent-id", "delete", It.IsAny<CancellationToken>()), Times.Once);
+        torrentsApiMock.Verify(m => m.ControlByIdAsync(12345, "delete", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -373,6 +374,7 @@ public class TorBoxDebridClientTest
         var torrent = new Torrent
         {
             Hash = "test-hash",
+            RdId = "12345",
             RdFiles = JsonConvert.SerializeObject(files)
         };
 
@@ -382,12 +384,6 @@ public class TorBoxDebridClientTest
 
         torBoxClientMock.Setup(m => m.Torrents).Returns(torrentsApiMock.Object);
         clientMock.Protected().Setup<ITorBoxNetClient>("GetClient", ItExpr.IsAny<String>()).Returns(torBoxClientMock.Object);
-
-        torrentsApiMock.Setup(m => m.GetHashInfoAsync("test-hash", true, 1000, It.IsAny<CancellationToken>()))
-                       .ReturnsAsync(new TorrentInfoResult
-                       {
-                           Id = 12345
-                       });
 
         _fileFilterMock.Setup(m => m.IsDownloadable(torrent, It.IsAny<String>(), It.IsAny<Int64>())).Returns(true);
 
@@ -420,6 +416,7 @@ public class TorBoxDebridClientTest
         var torrent = new Torrent
         {
             Hash = "test-hash",
+            RdId = "12345",
             RdName = "TestTorrent",
             RdFiles = JsonConvert.SerializeObject(files),
             DownloadClient = DownloadClient.Aria2c
@@ -433,12 +430,6 @@ public class TorBoxDebridClientTest
 
         torBoxClientMock.Setup(m => m.Torrents).Returns(torrentsApiMock.Object);
         clientMock.Protected().Setup<ITorBoxNetClient>("GetClient", ItExpr.IsAny<String>()).Returns(torBoxClientMock.Object);
-
-        torrentsApiMock.Setup(m => m.GetHashInfoAsync("test-hash", true, 1000, It.IsAny<CancellationToken>()))
-                       .ReturnsAsync(new TorrentInfoResult
-                       {
-                           Id = 12345
-                       });
 
         _fileFilterMock.Setup(m => m.IsDownloadable(torrent, It.IsAny<String>(), It.IsAny<Int64>())).Returns(true);
 
