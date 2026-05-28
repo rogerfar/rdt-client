@@ -1,0 +1,51 @@
+{
+  "name": "rdt-client",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "NODE_MAJOR": "22"
+    }
+  },
+  "remoteUser": "vscode",
+  "runArgs": ["--init"],
+  "containerEnv": {
+    "ASPNETCORE_ENVIRONMENT": "Development",
+    "BASE_PATH": "",
+    "DOTNET_USE_POLLING_FILE_WATCHER": "1",
+    "CHOKIDAR_USEPOLLING": "true"
+  },
+  "forwardPorts": [4200, 6500],
+  "portsAttributes": {
+    "4200": {
+      "label": "Angular client",
+      "onAutoForward": "notify"
+    },
+    "6500": {
+      "label": "RdtClient backend",
+      "onAutoForward": "silent"
+    }
+  },
+  "mounts": [
+    "source=rdtclient-data-db,target=/data/db,type=volume",
+    "source=rdtclient-data-downloads,target=/data/downloads,type=volume",
+    "source=rdtclient-nuget,target=/home/vscode/.nuget,type=volume",
+    "source=rdtclient-npm-cache,target=/home/vscode/.npm,type=volume"
+  ],
+  "postCreateCommand": "/bin/bash .devcontainer/post-create.sh",
+  "postStartCommand": "/bin/bash .devcontainer/post-start.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.csdevkit",
+        "Angular.ng-template",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ],
+      "settings": {
+        "dotnet.defaultSolution": "server/RdtClient.sln",
+        "terminal.integrated.defaultProfile.linux": "zsh"
+      }
+    }
+  }
+}
