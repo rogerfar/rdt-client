@@ -74,6 +74,7 @@ public class DownloadData(DataContext dataContext, ILogger<DownloadData>? logger
 
             return DownloadAddResult.Added;
         }
+
         // These shouldn't be possible any longer, but added for safety and until confirmed.
         catch (DbUpdateException ex)
         {
@@ -88,7 +89,9 @@ public class DownloadData(DataContext dataContext, ILogger<DownloadData>? logger
 
             if (IsForeignKeyViolation(ex) && !await dataContext.Torrents.AsNoTracking().AnyAsync(m => m.TorrentId == torrentId))
             {
-                logger?.LogDebug("Skipped download creation after the torrent was deleted concurrently. TorrentId: {torrentId}, Path: {path}", torrentId, downloadInfo.RestrictedLink);
+                logger?.LogDebug("Skipped download creation after the torrent was deleted concurrently. TorrentId: {torrentId}, Path: {path}",
+                                 torrentId,
+                                 downloadInfo.RestrictedLink);
 
                 return DownloadAddResult.TorrentMissing;
             }

@@ -21,12 +21,11 @@ public class QBittorrentControllerTest
         _qBittorrentMock = new(new Mock<ILogger<QBittorrent>>().Object, _settings, null!, null!, null!, new TorrentRunnerState());
         _torrentsMock = new(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, _settings, new TorrentRunnerState());
 
-        _controller = new(
-            new Mock<ILogger<QBittorrentController>>().Object,
-            _qBittorrentMock.Object,
-            new Mock<IHttpClientFactory>().Object,
-            _settings,
-            _torrentsMock.Object);
+        _controller = new(new Mock<ILogger<QBittorrentController>>().Object,
+                          _qBittorrentMock.Object,
+                          new Mock<IHttpClientFactory>().Object,
+                          _settings,
+                          _torrentsMock.Object);
 
         _controller.ControllerContext = new()
         {
@@ -38,15 +37,16 @@ public class QBittorrentControllerTest
     public async Task TorrentsInfo_FilterAll_DoesNotFilterOutResults()
     {
         // Arrange
-        _qBittorrentMock.Setup(q => q.TorrentInfo()).ReturnsAsync(new List<TorrentInfo>
-        {
-            new()
-            {
-                Hash = "hash1",
-                State = "pausedUP",
-                Progress = 1f
-            }
-        });
+        _qBittorrentMock.Setup(q => q.TorrentInfo())
+                        .ReturnsAsync(new List<TorrentInfo>
+                        {
+                            new()
+                            {
+                                Hash = "hash1",
+                                State = "pausedUP",
+                                Progress = 1f
+                            }
+                        });
 
         // Act
         var result = await _controller.TorrentsInfo(new()
@@ -66,21 +66,22 @@ public class QBittorrentControllerTest
     public async Task TorrentsInfo_FilterCompleted_MatchesPausedUploadTorrents()
     {
         // Arrange
-        _qBittorrentMock.Setup(q => q.TorrentInfo()).ReturnsAsync(new List<TorrentInfo>
-        {
-            new()
-            {
-                Hash = "hash1",
-                State = "pausedUP",
-                Progress = 1f
-            },
-            new()
-            {
-                Hash = "hash2",
-                State = "downloading",
-                Progress = 0.4f
-            }
-        });
+        _qBittorrentMock.Setup(q => q.TorrentInfo())
+                        .ReturnsAsync(new List<TorrentInfo>
+                        {
+                            new()
+                            {
+                                Hash = "hash1",
+                                State = "pausedUP",
+                                Progress = 1f
+                            },
+                            new()
+                            {
+                                Hash = "hash2",
+                                State = "downloading",
+                                Progress = 0.4f
+                            }
+                        });
 
         // Act
         var result = await _controller.TorrentsInfo(new()

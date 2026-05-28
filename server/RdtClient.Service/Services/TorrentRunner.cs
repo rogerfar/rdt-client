@@ -367,8 +367,10 @@ public class TorrentRunner(
         }
 
         // Process torrents in DebridQueue
-        var torrentsToAddToProvider = allTorrents.Where(m => m.Completed == null && m.Error == null && m.RdId == null && m.RdAdded == null && m.FileOrMagnet != null && m.RdStatus == TorrentStatus.Queued)
-                                                 .ToList();
+        var torrentsToAddToProvider = allTorrents
+                                      .Where(m => m.Completed == null && m.Error == null && m.RdId == null && m.RdAdded == null && m.FileOrMagnet != null &&
+                                                  m.RdStatus == TorrentStatus.Queued)
+                                      .ToList();
 
         if (torrentsToAddToProvider.Count != 0)
         {

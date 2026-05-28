@@ -162,6 +162,7 @@ public class TorrentDownloadRaceTests : IAsyncLifetime
         var torrentId = Guid.NewGuid();
 
         await using var context = CreateContext();
+
         context.Torrents.Add(new()
         {
             TorrentId = torrentId,

@@ -12,7 +12,8 @@ using Torrent = RDNET.Torrent;
 
 namespace RdtClient.Service.Services.DebridClients;
 
-public class RealDebridDebridClient(ILogger<RealDebridDebridClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter, ISettings settings) : IDebridClient
+public class RealDebridDebridClient(ILogger<RealDebridDebridClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter, ISettings settings)
+    : IDebridClient
 {
     private TimeSpan? _offset;
 

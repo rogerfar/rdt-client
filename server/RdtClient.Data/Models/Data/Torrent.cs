@@ -63,6 +63,7 @@ public class Torrent
     public DateTimeOffset? RdEnded { get; set; }
     public Int64? RdSpeed { get; set; }
     public Int64? RdSeeders { get; set; }
+
     public String? RdFiles
     {
         get => _rdFiles;

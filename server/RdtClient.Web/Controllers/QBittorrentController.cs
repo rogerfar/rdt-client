@@ -14,7 +14,8 @@ namespace RdtClient.Web.Controllers;
 [ApiController]
 [Route("api/v2")]
 [Route("qbittorrent/api/v2")]
-public class QBittorrentController(ILogger<QBittorrentController> logger, QBittorrent qBittorrent, IHttpClientFactory httpClientFactory, ISettings settings, Torrents torrents) : Controller
+public class QBittorrentController(ILogger<QBittorrentController> logger, QBittorrent qBittorrent, IHttpClientFactory httpClientFactory, ISettings settings, Torrents torrents)
+    : Controller
 {
     [AllowAnonymous]
     [Route("/version/api")]
@@ -369,6 +370,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
         foreach (var url in urls)
         {
             Torrent? torrent;
+
             if (url.StartsWith("magnet"))
             {
                 torrent = await qBittorrent.TorrentsAddMagnet(url.Trim(), request.Category, null);
@@ -394,7 +396,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
 
         return Ok();
     }
-    
+
     [Authorize(Policy = "AuthSetting")]
     [Route("torrents/add")]
     [HttpPost]
@@ -439,11 +441,11 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
         }
 
         var fileIds = request.Id
-            .Split('|', StringSplitOptions.RemoveEmptyEntries)
-            .Select(value => Int32.TryParse(value, out var parsedValue) ? parsedValue : (Int32?)null)
-            .Where(value => value.HasValue)
-            .Select(value => value!.Value)
-            .ToList();
+                             .Split('|', StringSplitOptions.RemoveEmptyEntries)
+                             .Select(value => Int32.TryParse(value, out var parsedValue) ? parsedValue : (Int32?)null)
+                             .Where(value => value.HasValue)
+                             .Select(value => value!.Value)
+                             .ToList();
 
         if (fileIds.Count == 0)
         {
@@ -675,7 +677,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
             _ => String.Equals(torrent.State, filter, StringComparison.OrdinalIgnoreCase)
         };
     }
-    
+
     private async Task<Boolean> WaitForTorrent(Guid torrentId)
     {
         while (true)
@@ -714,7 +716,6 @@ public class QBTorrentsInfoRequest
     public String? Category { get; set; }
     public String? Hashes { get; set; }
 }
-
 
 public class QBTorrentsCountRequest
 {

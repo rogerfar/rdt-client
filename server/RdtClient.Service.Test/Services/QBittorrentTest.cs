@@ -177,19 +177,20 @@ public class QBittorrentTest
 
         // Assert
         Assert.NotNull(result);
+
         Assert.Collection(result!,
-            first =>
-            {
-                Assert.Equal(0, first.Index);
-                Assert.Equal("good.mkv", first.Name);
-                Assert.Equal(1, first.Priority);
-            },
-            second =>
-            {
-                Assert.Equal(1, second.Index);
-                Assert.Equal("dangerous.exe", second.Name);
-                Assert.Equal(0, second.Priority);
-            });
+                          first =>
+                          {
+                              Assert.Equal(0, first.Index);
+                              Assert.Equal("good.mkv", first.Name);
+                              Assert.Equal(1, first.Priority);
+                          },
+                          second =>
+                          {
+                              Assert.Equal(1, second.Index);
+                              Assert.Equal("dangerous.exe", second.Name);
+                              Assert.Equal(0, second.Priority);
+                          });
     }
 
     [Fact]
@@ -251,7 +252,11 @@ public class QBittorrentTest
                 Type = DownloadType.Torrent
             };
 
-            _torrentsMock.Setup(m => m.Get()).ReturnsAsync(new List<Torrent> { torrent });
+            _torrentsMock.Setup(m => m.Get())
+                         .ReturnsAsync(new List<Torrent>
+                         {
+                             torrent
+                         });
 
             // Act
             var result = await _qBittorrent.TorrentInfo();
@@ -311,7 +316,11 @@ public class QBittorrentTest
                 Type = DownloadType.Torrent
             };
 
-            _torrentsMock.Setup(m => m.Get()).ReturnsAsync(new List<Torrent> { torrent });
+            _torrentsMock.Setup(m => m.Get())
+                         .ReturnsAsync(new List<Torrent>
+                         {
+                             torrent
+                         });
 
             var result = await _qBittorrent.TorrentInfo();
 
@@ -376,7 +385,11 @@ public class QBittorrentTest
                 Type = DownloadType.Torrent
             };
 
-            _torrentsMock.Setup(m => m.Get()).ReturnsAsync(new List<Torrent> { torrent });
+            _torrentsMock.Setup(m => m.Get())
+                         .ReturnsAsync(new List<Torrent>
+                         {
+                             torrent
+                         });
 
             var result = await _qBittorrent.TorrentInfo();
 

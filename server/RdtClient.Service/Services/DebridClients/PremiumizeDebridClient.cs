@@ -12,7 +12,8 @@ using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services.DebridClients;
 
-public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter, ISettings settings) : IDebridClient
+public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter, ISettings settings)
+    : IDebridClient
 {
     private const String TransferCreateUrl = "https://www.premiumize.me/api/transfer/create";
 
@@ -331,11 +332,11 @@ public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHtt
 
     private static String FormatPremiumizeError(RawTransferCreateResponse result)
     {
-        return String.Join(": ", new[]
-        {
-            result.Code,
-            result.Message
-        }.Where(m => !String.IsNullOrWhiteSpace(m)));
+        return String.Join(": ",
+                           new[]
+                           {
+                               result.Code, result.Message
+                           }.Where(m => !String.IsNullOrWhiteSpace(m)));
     }
 
     private static Boolean IsRateLimitMessage(String message)

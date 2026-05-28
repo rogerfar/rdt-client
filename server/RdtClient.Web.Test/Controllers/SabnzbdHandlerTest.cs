@@ -44,6 +44,7 @@ public class SabnzbdHandlerTest
     {
         // Arrange
         _settings.Current.General.AuthenticationType = AuthenticationType.UserNamePassword;
+
         var httpContext = new DefaultHttpContext
         {
             Request =
@@ -69,6 +70,7 @@ public class SabnzbdHandlerTest
     {
         // Arrange
         _settings.Current.General.AuthenticationType = AuthenticationType.UserNamePassword;
+
         var httpContext = new DefaultHttpContext
         {
             Request =
@@ -96,6 +98,7 @@ public class SabnzbdHandlerTest
         _settings.Current.General.AuthenticationType = AuthenticationType.UserNamePassword;
         var httpContext = new DefaultHttpContext();
         httpContext.Request.ContentType = "application/x-www-form-urlencoded";
+
         httpContext.Request.Form = new FormCollection(new()
         {
             {
@@ -120,6 +123,7 @@ public class SabnzbdHandlerTest
     {
         // Arrange
         _settings.Current.General.AuthenticationType = AuthenticationType.UserNamePassword;
+
         var httpContext = new DefaultHttpContext
         {
             Request =
@@ -145,6 +149,7 @@ public class SabnzbdHandlerTest
     {
         // Arrange
         _settings.Current.General.AuthenticationType = AuthenticationType.UserNamePassword;
+
         var httpContext = new DefaultHttpContext
         {
             Request =
@@ -192,6 +197,7 @@ public class SabnzbdHandlerTest
     {
         // Arrange
         _settings.Current.General.AuthenticationType = AuthenticationType.UserNamePassword;
+
         var httpContext = new DefaultHttpContext
         {
             Request =
@@ -217,6 +223,7 @@ public class SabnzbdHandlerTest
     {
         // Arrange
         _settings.Current.General.AuthenticationType = AuthenticationType.UserNamePassword;
+
         var httpContext = new DefaultHttpContext
         {
             Request =
@@ -245,6 +252,7 @@ public class SabnzbdHandlerTest
     {
         // Arrange
         _settings.Current.General.AuthenticationType = AuthenticationType.UserNamePassword;
+
         var httpContext = new DefaultHttpContext
         {
             Request =

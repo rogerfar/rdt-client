@@ -36,10 +36,12 @@ public class TorrentRunnerTest
         };
 
         var torrentDataMock = new Mock<ITorrentData>(MockBehavior.Strict);
-        torrentDataMock.Setup(m => m.Get()).ReturnsAsync(new List<Torrent>
-        {
-            erroredTorrent
-        });
+
+        torrentDataMock.Setup(m => m.Get())
+                       .ReturnsAsync(new List<Torrent>
+                       {
+                           erroredTorrent
+                       });
 
         var torrents = new Torrents(Mock.Of<ILogger<Torrents>>(),
                                     torrentDataMock.Object,

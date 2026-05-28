@@ -1137,18 +1137,19 @@ public class Torrents(
                    torrent.RdFiles);
     }
 
-    private readonly record struct TorrentRdState(String? RdName,
-                                                  Int64? RdSize,
-                                                  String? RdHost,
-                                                  Int64? RdSplit,
-                                                  Int64? RdProgress,
-                                                  TorrentStatus? RdStatus,
-                                                  String? RdStatusRaw,
-                                                  DateTimeOffset? RdAdded,
-                                                  DateTimeOffset? RdEnded,
-                                                  Int64? RdSpeed,
-                                                  Int64? RdSeeders,
-                                                  String? RdFiles);
+    private readonly record struct TorrentRdState(
+        String? RdName,
+        Int64? RdSize,
+        String? RdHost,
+        Int64? RdSplit,
+        Int64? RdProgress,
+        TorrentStatus? RdStatus,
+        String? RdStatusRaw,
+        DateTimeOffset? RdAdded,
+        DateTimeOffset? RdEnded,
+        Int64? RdSpeed,
+        Int64? RdSeeders,
+        String? RdFiles);
 
     private void Log(String message, Download? download, Torrent? torrent)
     {

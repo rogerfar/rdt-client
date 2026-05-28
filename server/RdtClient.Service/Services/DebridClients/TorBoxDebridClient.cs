@@ -11,7 +11,12 @@ using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services.DebridClients;
 
-public class TorBoxDebridClient(ILogger<TorBoxDebridClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter, IRateLimitCoordinator coordinator, ISettings settings)
+public class TorBoxDebridClient(
+    ILogger<TorBoxDebridClient> logger,
+    IHttpClientFactory httpClientFactory,
+    IDownloadableFileFilter fileFilter,
+    IRateLimitCoordinator coordinator,
+    ISettings settings)
     : IDebridClient
 {
     private const String TorBoxApiHost = "api.torbox.app";
@@ -69,10 +74,12 @@ public class TorBoxDebridClient(ILogger<TorBoxDebridClient> logger, IHttpClientF
         return await HandleAddTorrentErrors(async asQueued =>
         {
             var user = await GetClient().User.GetAsync(true);
-            var result = await GetClient(DiConfig.TORBOX_CLIENT_SLOW).Torrents.AddMagnetAsync(magnetLink,
-                                                                                               user.Data?.Settings?.SeedTorrents ?? 3,
-                                                                                               allowZip: Settings.Get.Provider.PreferZippedDownloads,
-                                                                                               as_queued: asQueued);
+
+            var result = await GetClient(DiConfig.TORBOX_CLIENT_SLOW)
+                               .Torrents.AddMagnetAsync(magnetLink,
+                                                        user.Data?.Settings?.SeedTorrents ?? 3,
+                                                        allowZip: Settings.Get.Provider.PreferZippedDownloads,
+                                                        as_queued: asQueued);
 
             return result.Data!.Hash!;
         });
@@ -83,10 +90,12 @@ public class TorBoxDebridClient(ILogger<TorBoxDebridClient> logger, IHttpClientF
         return await HandleAddTorrentErrors(async asQueued =>
         {
             var user = await GetClient().User.GetAsync(true);
-            var result = await GetClient(DiConfig.TORBOX_CLIENT_SLOW).Torrents.AddFileAsync(bytes,
-                                                                                             user.Data?.Settings?.SeedTorrents ?? 3,
-                                                                                             allowZip: Settings.Get.Provider.PreferZippedDownloads,
-                                                                                             as_queued: asQueued);
+
+            var result = await GetClient(DiConfig.TORBOX_CLIENT_SLOW)
+                               .Torrents.AddFileAsync(bytes,
+                                                      user.Data?.Settings?.SeedTorrents ?? 3,
+                                                      allowZip: Settings.Get.Provider.PreferZippedDownloads,
+                                                      as_queued: asQueued);
 
             return result.Data!.Hash!;
         });

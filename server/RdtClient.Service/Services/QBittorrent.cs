@@ -346,13 +346,13 @@ public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authen
         }
 
         var topLevelSelectedFiles = torrent.Files
-                                          .Where(m => m.Selected && !String.IsNullOrWhiteSpace(m.Path))
-                                          .Select(m => m.Path.Trim('/').Trim('\\'))
-                                          .Where(m => m.IndexOfAny(['/', '\\']) < 0)
-                                          .Select(Path.GetFileName)
-                                          .Where(m => !String.IsNullOrWhiteSpace(m))
-                                          .Distinct(StringComparer.OrdinalIgnoreCase)
-                                          .ToList();
+                                           .Where(m => m.Selected && !String.IsNullOrWhiteSpace(m.Path))
+                                           .Select(m => m.Path.Trim('/').Trim('\\'))
+                                           .Where(m => m.IndexOfAny(['/', '\\']) < 0)
+                                           .Select(Path.GetFileName)
+                                           .Where(m => !String.IsNullOrWhiteSpace(m))
+                                           .Distinct(StringComparer.OrdinalIgnoreCase)
+                                           .ToList();
 
         if (topLevelSelectedFiles.Count == 1)
         {
@@ -501,16 +501,16 @@ public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authen
         var progress = torrent.Completed.HasValue || torrent.RdStatus == TorrentStatus.Finished ? 1f : 0f;
 
         return torrent.Files
-            .Select((file, index) => new TorrentFileItem
-            {
-                Index = index,
-                Name = file.Path,
-                Size = file.Bytes,
-                Progress = file.Selected ? progress : 0f,
-                Priority = file.Selected ? 1 : 0,
-                IsSeed = false
-            })
-            .ToList();
+                      .Select((file, index) => new TorrentFileItem
+                      {
+                          Index = index,
+                          Name = file.Path,
+                          Size = file.Bytes,
+                          Progress = file.Selected ? progress : 0f,
+                          Priority = file.Selected ? 1 : 0,
+                          IsSeed = false
+                      })
+                      .ToList();
     }
 
     public async Task<TorrentProperties?> TorrentProperties(String hash)

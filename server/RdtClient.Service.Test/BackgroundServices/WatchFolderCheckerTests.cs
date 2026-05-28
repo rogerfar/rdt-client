@@ -24,6 +24,7 @@ public class WatchFolderCheckerTests : IDisposable
         _serviceProviderMock = new();
         _serviceScopeMock = new();
         _scopeServiceProviderMock = new();
+
         _settings = new(new()
         {
             Watch = new()
@@ -33,6 +34,7 @@ public class WatchFolderCheckerTests : IDisposable
             },
             DownloadClient = new()
         });
+
         _torrentsServiceMock = new(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, _settings, new TorrentRunnerState());
 
         _serviceProviderMock
