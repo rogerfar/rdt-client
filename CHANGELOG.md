@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased
 
+## [2.0.136] - 2026-05-30
+### Added
+- Added devcontainer development workflow.
+
+### Changed
+- Upgraded torbox.net dependency.
+
 ## [2.0.135] - 2026-05-27
 ### Changed
 - When adding a torrent through the qBittorrent endpoints, it will wait to see if the torrent gets added properly or errors out, resulting in a better experience for infringing files and Sonarr / Radarr.
