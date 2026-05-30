@@ -321,7 +321,7 @@ public class DbSettingsDefaults
     public Int32 DeleteOnError { get; set; } = 0;
 
     [DisplayName("Torrent maximum lifetime")]
-    [Description("The maximum lifetime of a torrent in minutes. When this time has passed, mark the torrent as error. If the torrent is completed and has downloads, the lifetime setting will not apply. 0 to disable.")]
+    [Description("The maximum lifetime of a torrent in minutes. When this time has passed, mark the torrent as error and delete it from the provider. If the torrent is completed and has downloads, the lifetime setting will not apply. 0 to disable.")]
     public Int32 TorrentLifetime { get; set; } = 0;
 
     [DisplayName("Priority")]

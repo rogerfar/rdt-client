@@ -360,10 +360,18 @@ public class TorrentRunner(
                 continue;
             }
 
-            Log($"Torrent has reached its {torrent.Lifetime} minutes lifetime, marking as error", torrent);
+            var error = $"Torrent lifetime of {torrent.Lifetime} minutes reached";
+
+            Log($"{error}, marking as error and deleting from provider", torrent);
 
             await torrents.UpdateRetry(torrent.TorrentId, null, torrent.TorrentRetryAttempts);
-            await torrents.UpdateComplete(torrent.TorrentId, $"Torrent lifetime of {torrent.Lifetime} minutes reached", DateTimeOffset.UtcNow, false);
+            await torrents.Delete(torrent.TorrentId, false, true, false);
+            await torrents.UpdateComplete(torrent.TorrentId, error, DateTimeOffset.UtcNow, false);
+
+            torrent.Retry = null;
+            torrent.RetryCount = torrent.TorrentRetryAttempts;
+            torrent.Completed = DateTimeOffset.UtcNow;
+            torrent.Error = error;
         }
 
         // Process torrents in DebridQueue
@@ -382,7 +390,9 @@ public class TorrentRunner(
             }
             else
             {
-                var downloadingTorrentsCount = allTorrents.Count(m => m.RdStatus is not (TorrentStatus.Queued or TorrentStatus.Finished or TorrentStatus.Error));
+                var downloadingTorrentsCount = allTorrents.Count(m => m.Completed == null
+                                                                      && m.Error == null
+                                                                      && m.RdStatus is not (TorrentStatus.Queued or TorrentStatus.Finished or TorrentStatus.Error));
 
                 var maxParallelDownloads = settings.Current.Provider.MaxParallelDownloads;
 
