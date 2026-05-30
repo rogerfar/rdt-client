@@ -35,7 +35,6 @@ public class Torrent
     public DateTimeOffset? Retry { get; set; }
 
     public DownloadType Type { get; set; }
-    public String? FileOrMagnet { get; set; }
     public Boolean IsFile { get; set; }
 
     public Int32? Priority { get; set; }
@@ -49,6 +48,9 @@ public class Torrent
 
     [InverseProperty("Torrent")]
     public IList<Download> Downloads { get; set; } = [];
+
+    [InverseProperty(nameof(TorrentPayload.Torrent))]
+    public TorrentPayload? Payload { get; set; }
 
     public Provider? ClientKind { get; set; }
     public String? RdId { get; set; }
