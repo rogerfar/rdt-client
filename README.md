@@ -218,6 +218,17 @@ By default the application runs in the root of your hosted address (i.e. https:/
 - Visual Studio 2025
 - (optional) Resharper
 
+### Dev Container
+
+The repository includes a dev container under `.devcontainer/` for the split development workflow used by this project.
+
+It installs .NET 10 and Node 22, forwards ports `4200` and `6500`, and persists `/data/db` and `/data/downloads` in named volumes so the local SQLite database, logs, and downloads survive container rebuilds.
+
+1. Open the repository in the dev container.
+1. In one terminal run `dotnet watch run --project server/RdtClient.Web`.
+1. In another terminal run `cd client && npm start`.
+1. Open `http://localhost:4200`. The Angular dev server proxies `/Api` and `/hub` to the backend running on `6500`.
+
 1. Open the client folder project in VS Code and run `npm install`.
 1. To debug run `ng serve`, to build run `ng build -c production`.
 1. Open the Visual Studio 2025 project `RdtClient.sln` and `Publish` the `RdtClient.Web` to the given `PublishFolder` target.
