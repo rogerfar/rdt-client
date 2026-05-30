@@ -81,7 +81,7 @@ public class TorBoxDebridClient(
                                                         allowZip: Settings.Get.Provider.PreferZippedDownloads,
                                                         as_queued: asQueued);
 
-            return result.Data!.Hash!;
+            return result.Data?.TorrentId?.ToString() ?? throw new InvalidOperationException("TorBox API did not return torrent ID.");
         });
     }
 
@@ -97,7 +97,7 @@ public class TorBoxDebridClient(
                                                       allowZip: Settings.Get.Provider.PreferZippedDownloads,
                                                       as_queued: asQueued);
 
-            return result.Data!.Hash!;
+            return result.Data?.TorrentId?.ToString() ?? throw new InvalidOperationException("TorBox API did not return torrent ID");
         });
     }
 
@@ -171,7 +171,7 @@ public class TorBoxDebridClient(
             }
             else
             {
-                await GetClient().Torrents.ControlAsync(torrent.RdId, "delete");
+                await GetClient().Torrents.ControlByIdAsync(Int32.Parse(torrent.RdId), "delete");
             }
         });
     }
@@ -331,8 +331,12 @@ public class TorBoxDebridClient(
         }
         else
         {
-            var torrentId = await HandleErrors(() => GetClient().Torrents.GetHashInfoAsync(torrent.Hash, true));
-            id = torrentId?.Id;
+            if (torrent.RdId == null)
+            {
+                return null;
+            }
+
+            id = Int32.Parse(torrent.RdId);
         }
 
         if (id == null)
@@ -456,7 +460,7 @@ public class TorBoxDebridClient(
     {
         return new()
         {
-            Id = torrent.Hash,
+            Id = torrent.Id.ToString(),
             Filename = torrent.Name,
             OriginalFilename = torrent.Name,
             Hash = torrent.Hash,
@@ -611,7 +615,7 @@ public class TorBoxDebridClient(
             }
             else
             {
-                var result = await GetClient().Torrents.GetHashInfoAsync(id, true);
+                var result = await GetClient().Torrents.GetIdInfoAsync(Int32.Parse(id), true);
 
                 if (result != null)
                 {

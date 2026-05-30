@@ -664,6 +664,38 @@ public class Torrents(
             {
                 torrentsByRdId.TryGetValue(rdTorrent.Id, out var torrent);
 
+                // TorBox migration from storing torrent hash in RdId to torrent ids.
+                if (torrent == null
+                    && Settings.Get.Provider.Provider == Provider.TorBox
+                    && rdTorrent.Type == DownloadType.Torrent
+                    && !String.IsNullOrWhiteSpace(rdTorrent.Hash)
+                    && !String.IsNullOrWhiteSpace(rdTorrent.Id))
+                {
+                    torrent = torrents.FirstOrDefault(localTorrent => localTorrent is { Type: DownloadType.Torrent, ClientKind: null or Provider.TorBox }
+                                                                      && !String.IsNullOrWhiteSpace(localTorrent.Hash)
+                                                                      && !String.IsNullOrWhiteSpace(localTorrent.RdId)
+                                                                      && localTorrent.RdId.Equals(localTorrent.Hash, StringComparison.OrdinalIgnoreCase)
+                                                                      && localTorrent.Hash.Equals(rdTorrent.Hash, StringComparison.OrdinalIgnoreCase));
+
+                    if (torrent != null)
+                    {
+                        if (!String.IsNullOrWhiteSpace(torrent.RdId))
+                        {
+                            torrentsByRdId.Remove(torrent.RdId);
+                        }
+
+                        await torrentData.UpdateRdId(torrent, rdTorrent.Id);
+                        torrent.RdId = rdTorrent.Id;
+                        torrent.ClientKind = Provider.TorBox;
+                        torrentsByRdId[rdTorrent.Id] = torrent;
+
+                        logger.LogInformation("Migrated TorBox torrent RdId from hash to torrent id for {TorrentName} ({Hash}) -> {RdId}",
+                                              torrent.RdName ?? rdTorrent.Filename,
+                                              rdTorrent.Hash,
+                                              rdTorrent.Id);
+                    }
+                }
+
                 // Auto import torrents only torrents that have their files selected
                 if (torrent == null && settings.Current.Provider.AutoImport)
                 {
