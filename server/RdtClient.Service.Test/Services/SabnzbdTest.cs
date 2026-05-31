@@ -366,6 +366,64 @@ public class SabnzbdTest
         Assert.Equal("Failed", result.Slots[0].Status);
     }
 
+    [Theory]
+    [InlineData(TorrentFinishedAction.RemoveAllTorrents, true, true, true, true)]
+    [InlineData(TorrentFinishedAction.RemoveAllTorrents, false, true, true, false)]
+    [InlineData(TorrentFinishedAction.RemoveRealDebrid, true, false, true, true)]
+    [InlineData(TorrentFinishedAction.RemoveRealDebrid, false, false, true, false)]
+    [InlineData(TorrentFinishedAction.RemoveClient, true, true, false, true)]
+    [InlineData(TorrentFinishedAction.RemoveClient, false, true, false, false)]
+    public async Task Delete_ShouldRespectFinishedActionAndDeleteFiles(
+        TorrentFinishedAction finishedAction,
+        Boolean deleteFiles,
+        Boolean expectedDeleteData,
+        Boolean expectedDeleteRdTorrent,
+        Boolean expectedDeleteLocalFiles)
+    {
+        // Arrange
+        var torrentId = Guid.NewGuid();
+        _settings.Current.Integrations.Default.FinishedAction = finishedAction;
+
+        _torrentsMock.Setup(t => t.GetByHash("hash1"))
+                     .ReturnsAsync(new Torrent
+                     {
+                         TorrentId = torrentId,
+                         Hash = "hash1",
+                         Type = DownloadType.Nzb
+                     });
+
+        var sabnzbd = new Sabnzbd(_loggerMock.Object, _torrentsMock.Object, _appSettings, _settings);
+
+        // Act
+        await sabnzbd.Delete("hash1", deleteFiles);
+
+        // Assert
+        _torrentsMock.Verify(t => t.Delete(torrentId, expectedDeleteData, expectedDeleteRdTorrent, expectedDeleteLocalFiles), Times.Once);
+    }
+
+    [Fact]
+    public async Task Delete_ShouldNotDelete_WhenFinishedActionIsNone()
+    {
+        // Arrange
+        _settings.Current.Integrations.Default.FinishedAction = TorrentFinishedAction.None;
+
+        _torrentsMock.Setup(t => t.GetByHash("hash1"))
+                     .ReturnsAsync(new Torrent
+                     {
+                         TorrentId = Guid.NewGuid(),
+                         Hash = "hash1",
+                         Type = DownloadType.Nzb
+                     });
+
+        var sabnzbd = new Sabnzbd(_loggerMock.Object, _torrentsMock.Object, _appSettings, _settings);
+
+        // Act
+        await sabnzbd.Delete("hash1", true);
+
+        // Assert
+        _torrentsMock.Verify(t => t.Delete(It.IsAny<Guid>(), It.IsAny<Boolean>(), It.IsAny<Boolean>(), It.IsAny<Boolean>()), Times.Never);
+    }
+
     [Fact]
     public void GetConfig_ShouldReturnCorrectConfig()
     {

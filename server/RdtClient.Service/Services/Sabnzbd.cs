@@ -177,7 +177,7 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
         return result.Hash;
     }
 
-    public virtual async Task Delete(String hash)
+    public virtual async Task Delete(String hash, Boolean deleteFiles = false)
     {
         var torrent = await torrents.GetByHash(hash);
 
@@ -189,18 +189,18 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
         switch (settings.Current.Integrations.Default.FinishedAction)
         {
             case TorrentFinishedAction.RemoveAllTorrents:
-                logger.LogDebug("Removing nzb from debrid provider and RDT-Client, no files");
-                await torrents.Delete(torrent.TorrentId, true, true, true);
+                logger.LogDebug("Removing nzb from debrid provider and RDT-Client, {Files}", deleteFiles ? "with files" : "no files");
+                await torrents.Delete(torrent.TorrentId, true, true, deleteFiles);
 
                 break;
             case TorrentFinishedAction.RemoveRealDebrid:
-                logger.LogDebug("Removing nzb from debrid provider, no files");
-                await torrents.Delete(torrent.TorrentId, false, true, true);
+                logger.LogDebug("Removing nzb from debrid provider, {Files}", deleteFiles ? "with files" : "no files");
+                await torrents.Delete(torrent.TorrentId, false, true, deleteFiles);
 
                 break;
             case TorrentFinishedAction.RemoveClient:
-                logger.LogDebug("Removing nzb from client, no files");
-                await torrents.Delete(torrent.TorrentId, true, false, true);
+                logger.LogDebug("Removing nzb from client, {Files}", deleteFiles ? "with files" : "no files");
+                await torrents.Delete(torrent.TorrentId, true, false, deleteFiles);
 
                 break;
             case TorrentFinishedAction.None:
