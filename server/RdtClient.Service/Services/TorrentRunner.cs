@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text.Json;
 using Aria2NET;
@@ -216,9 +216,15 @@ public class TorrentRunner(
 
                     if (download.RetryCount < download.Torrent.DownloadRetryAttempts)
                     {
-                        Log($"Retrying download", download, download.Torrent);
+                        var retryDelay = download.Torrent.DownloadClient == Data.Enums.DownloadClient.Symlink
+                                             ? TimeSpan.FromMinutes(1)
+                                             : TimeSpan.Zero;
 
-                        await downloads.Reset(downloadId);
+                        var retryAt = DateTimeOffset.UtcNow.Add(retryDelay);
+
+                        Log($"Retrying download at {retryAt:u}", download, download.Torrent);
+
+                        await downloads.Reset(downloadId, retryAt);
                         await downloads.UpdateRetryCount(downloadId, download.RetryCount + 1);
                     }
                     else
