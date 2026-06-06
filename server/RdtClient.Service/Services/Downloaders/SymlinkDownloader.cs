@@ -1,4 +1,4 @@
-﻿using RdtClient.Data.Enums;
+using RdtClient.Data.Enums;
 using RdtClient.Service.Helpers;
 using Serilog;
 
@@ -6,8 +6,6 @@ namespace RdtClient.Service.Services.Downloaders;
 
 public class SymlinkDownloader(String uri, String destinationPath, String path, Provider? clientKind) : IDownloader
 {
-    private const Int32 MaxRetries = 10;
-
     private readonly CancellationTokenSource _cancellationToken = new();
 
     private readonly ILogger _logger = Log.ForContext<SymlinkDownloader>();
@@ -108,44 +106,32 @@ public class SymlinkDownloader(String uri, String destinationPath, String path, 
 
                 potentialFilePaths = potentialFilePaths.Distinct().ToList();
 
-                for (var retryCount = 0; retryCount < MaxRetries; retryCount++)
+                _logger.Debug($"Searching {rcloneMountPath} for {fileName}...");
+
+                file = FindFile(rcloneMountPath, potentialFilePaths, fileName);
+
+                if (file == null && searchSubDirectories)
                 {
-                    DownloadProgress?.Invoke(this,
-                                             new()
-                                             {
-                                                 BytesDone = retryCount,
-                                                 BytesTotal = 10,
-                                                 Speed = 1
-                                             });
+                    var subDirectories = Directory.GetDirectories(rcloneMountPath, "*.*", SearchOption.TopDirectoryOnly);
 
-                    _logger.Debug($"Searching {rcloneMountPath} for {fileName} (attempt #{retryCount})...");
-
-                    file = FindFile(rcloneMountPath, potentialFilePaths, fileName);
-
-                    if (file == null && searchSubDirectories)
+                    foreach (var subDirectory in subDirectories)
                     {
-                        var subDirectories = Directory.GetDirectories(rcloneMountPath, "*.*", SearchOption.TopDirectoryOnly);
+                        file = FindFile(Path.Combine(rcloneMountPath, subDirectory), potentialFilePaths, fileName);
 
-                        foreach (var subDirectory in subDirectories)
+                        if (file != null)
                         {
-                            file = FindFile(Path.Combine(rcloneMountPath, subDirectory), potentialFilePaths, fileName);
-
-                            if (file != null)
-                            {
-                                break;
-                            }
+                            break;
                         }
                     }
-
-                    if (file == null)
-                    {
-                        await Task.Delay(1000 * retryCount);
-                    }
-                    else
-                    {
-                        break;
-                    }
                 }
+
+                DownloadProgress?.Invoke(this,
+                                         new()
+                                         {
+                                             BytesDone = 1,
+                                             BytesTotal = 1,
+                                             Speed = 0
+                                         });
             }
 
             if (file == null)
@@ -172,7 +158,7 @@ public class SymlinkDownloader(String uri, String destinationPath, String path, 
 
             if (!result)
             {
-                throw new("Could not find file from rclone mount!");
+                throw new("Could not create symbolic link!");
             }
 
             DownloadComplete?.Invoke(this, new());
@@ -229,6 +215,12 @@ public class SymlinkDownloader(String uri, String destinationPath, String path, 
     {
         try
         {
+            if (File.Exists(symlinkPath)) // Symlink already exists from a prior run.
+            {
+                _logger.Information($"Symbolic link already exists at {symlinkPath}");
+                return true;
+            }
+
             File.CreateSymbolicLink(symlinkPath, sourcePath);
 
             if (File.Exists(symlinkPath)) // Double-check that the link was created
