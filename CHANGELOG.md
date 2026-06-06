@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased
 
+## [2.0.138] - 2026-06-05
+### Fixed
+- SABnzbd fixes.
+
 ## [2.0.137] - 2026-06-05
 ### Fixed
 - Fix torbox save path mapping for single file downloads.
