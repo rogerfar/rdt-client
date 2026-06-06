@@ -41,6 +41,11 @@ public class Settings(IServiceScopeFactory serviceScopeFactory) : ISettings
     {
         var downloadPath = settings.DownloadClient.MappedPath;
 
+        if (String.IsNullOrWhiteSpace(downloadPath))
+        {
+            downloadPath = settings.DownloadClient.DownloadPath;
+        }
+
         downloadPath = downloadPath.TrimEnd('\\')
                                    .TrimEnd('/');
 

@@ -359,6 +359,11 @@ public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authen
             var selectedFileName = topLevelSelectedFiles[0]!;
             var selectedFileBaseName = Path.GetFileNameWithoutExtension(selectedFileName);
 
+            if (torrent.ClientKind == Provider.TorBox)
+            {
+                return selectedFileBaseName;
+            }
+
             if (!String.IsNullOrWhiteSpace(selectedFileBaseName) &&
                 selectedFileBaseName.Equals(torrent.RdName, StringComparison.OrdinalIgnoreCase))
             {
