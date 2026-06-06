@@ -108,6 +108,30 @@ public class SabnzbdControllerTest
         Assert.IsType<OkObjectResult>(result);
     }
 
+    [Theory]
+    [InlineData("?name=delete&value=hash1&del_files=1", true)]
+    [InlineData("?name=delete&value=hash1&del_files=true", true)]
+    [InlineData("?name=delete&value=hash1&del_files=0", false)]
+    [InlineData("?name=delete&value=hash1", false)]
+    public async Task Queue_Delete_PassesDeleteFilesFlag(String queryString, Boolean expectedDeleteFiles)
+    {
+        // Arrange
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.QueryString = new(queryString);
+        _controller.ControllerContext.HttpContext = httpContext;
+
+        _sabnzbdMock.Setup(s => s.Delete("hash1", expectedDeleteFiles)).Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _controller.Queue();
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var response = Assert.IsType<SabnzbdResponse>(okResult.Value);
+        Assert.True(response.Status);
+        _sabnzbdMock.Verify(s => s.Delete("hash1", expectedDeleteFiles), Times.Once);
+    }
+
     [Fact]
     public async Task GetHistory_ReturnsOk()
     {
@@ -127,6 +151,26 @@ public class SabnzbdControllerTest
         var response = Assert.IsType<SabnzbdResponse>(okResult.Value);
         Assert.NotNull(response.History);
         Assert.Equal(1, response.History.NoOfSlots);
+    }
+
+    [Fact]
+    public async Task History_Delete_PassesDeleteFilesFlag()
+    {
+        // Arrange
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.QueryString = new("?name=delete&value=hash1&del_files=1");
+        _controller.ControllerContext.HttpContext = httpContext;
+
+        _sabnzbdMock.Setup(s => s.Delete("hash1", true)).Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _controller.History();
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var response = Assert.IsType<SabnzbdResponse>(okResult.Value);
+        Assert.True(response.Status);
+        _sabnzbdMock.Verify(s => s.Delete("hash1", true), Times.Once);
     }
 
     [Fact]

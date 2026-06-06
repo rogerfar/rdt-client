@@ -56,22 +56,7 @@ public class SabnzbdController(ILogger<SabnzbdController> logger, Sabnzbd sabnzb
 
         if (name == "delete")
         {
-            var value = GetParam("value");
-
-            if (String.IsNullOrWhiteSpace(value))
-            {
-                return BadRequest(new SabnzbdResponse
-                {
-                    Error = "No value specified for delete operation"
-                });
-            }
-
-            await sabnzbd.Delete(value ?? "");
-
-            return Ok(new SabnzbdResponse
-            {
-                Status = true
-            });
+            return await DeleteDownloads();
         }
 
         return Ok(new SabnzbdResponse
@@ -85,6 +70,12 @@ public class SabnzbdController(ILogger<SabnzbdController> logger, Sabnzbd sabnzb
     public async Task<ActionResult> History()
     {
         logger.LogDebug("Sabnzbd mode: history");
+        var name = GetParam("name");
+
+        if (name == "delete")
+        {
+            return await DeleteDownloads();
+        }
 
         return Ok(new SabnzbdResponse
         {
@@ -183,6 +174,31 @@ public class SabnzbdController(ILogger<SabnzbdController> logger, Sabnzbd sabnzb
         });
     }
 
+    private async Task<ActionResult> DeleteDownloads()
+    {
+        var value = GetParam("value");
+
+        if (String.IsNullOrWhiteSpace(value))
+        {
+            return BadRequest(new SabnzbdResponse
+            {
+                Error = "No value specified for delete operation"
+            });
+        }
+
+        var deleteFiles = IsTrue(GetParam("del_files"));
+
+        foreach (var hash in value.Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            await sabnzbd.Delete(hash, deleteFiles);
+        }
+
+        return Ok(new SabnzbdResponse
+        {
+            Status = true
+        });
+    }
+
     private String? GetParam(String name)
     {
         var value = Request.Query[name].ToString();
@@ -193,5 +209,10 @@ public class SabnzbdController(ILogger<SabnzbdController> logger, Sabnzbd sabnzb
         }
 
         return value;
+    }
+
+    private static Boolean IsTrue(String? value)
+    {
+        return value is "1" || Boolean.TryParse(value, out var result) && result;
     }
 }
