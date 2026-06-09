@@ -9,12 +9,9 @@ public class TorrentData(DataContext dataContext, ILogger<TorrentData>? logger =
 {
     public async Task<IList<Torrent>> Get()
     {
-        var torrents = await dataContext.Torrents
-                                        .AsNoTracking()
-                                        .AsSplitQuery()
-                                        .Include(m => m.Downloads)
-                                        .OrderBy(m => m.Priority ?? 9999)
-                                        .ToListAsync();
+        var torrents = await BuildTorrentQuery(includePayload: false)
+                             .OrderBy(m => m.Priority ?? 9999)
+                             .ToListAsync();
 
         return torrents.OrderBy(m => m.Priority ?? 9999)
                        .ThenBy(m => m.Added)
@@ -23,10 +20,8 @@ public class TorrentData(DataContext dataContext, ILogger<TorrentData>? logger =
 
     public async Task<Torrent?> GetById(Guid torrentId)
     {
-        var dbTorrent = await dataContext.Torrents
-                                         .AsNoTracking()
-                                         .Include(m => m.Downloads)
-                                         .FirstOrDefaultAsync(m => m.TorrentId == torrentId);
+        var dbTorrent = await BuildTorrentQuery(includePayload: true)
+                              .FirstOrDefaultAsync(m => m.TorrentId == torrentId);
 
         if (dbTorrent == null)
         {
@@ -45,10 +40,8 @@ public class TorrentData(DataContext dataContext, ILogger<TorrentData>? logger =
     {
         hash = hash.ToLower();
 
-        var dbTorrent = await dataContext.Torrents
-                                         .AsNoTracking()
-                                         .Include(m => m.Downloads)
-                                         .FirstOrDefaultAsync(m => m.Hash == hash);
+        var dbTorrent = await BuildTorrentQuery(includePayload: false)
+                              .FirstOrDefaultAsync(m => m.Hash == hash);
 
         if (dbTorrent == null)
         {
@@ -61,6 +54,15 @@ public class TorrentData(DataContext dataContext, ILogger<TorrentData>? logger =
         }
 
         return dbTorrent;
+    }
+
+    public async Task<String?> GetPayloadContent(Guid torrentId)
+    {
+        return await dataContext.TorrentPayloads
+                                .AsNoTracking()
+                                .Where(m => m.TorrentId == torrentId)
+                                .Select(m => m.Content)
+                                .FirstOrDefaultAsync();
     }
 
     public async Task<Torrent> Add(String? rdId,
@@ -88,7 +90,6 @@ public class TorrentData(DataContext dataContext, ILogger<TorrentData>? logger =
             DownloadManualFiles = torrent.DownloadManualFiles,
             DownloadClient = downloadClient,
             Type = downloadType,
-            FileOrMagnet = fileOrMagnetContents,
             IsFile = isFile,
             Priority = torrent.Priority,
             TorrentRetryAttempts = torrent.TorrentRetryAttempts,
@@ -96,7 +97,13 @@ public class TorrentData(DataContext dataContext, ILogger<TorrentData>? logger =
             DeleteOnError = torrent.DeleteOnError,
             Lifetime = torrent.Lifetime,
             RdStatus = torrent.RdStatus,
-            RdName = torrent.RdName
+            RdName = torrent.RdName,
+            Payload = String.IsNullOrWhiteSpace(fileOrMagnetContents)
+                ? null
+                : new()
+                {
+                    Content = fileOrMagnetContents
+                }
         };
 
         await dataContext.Torrents.AddAsync(newTorrent);
@@ -294,6 +301,10 @@ public class TorrentData(DataContext dataContext, ILogger<TorrentData>? logger =
                          .Where(m => m.TorrentId == torrentId)
                          .ExecuteDeleteAsync();
 
+        await dataContext.TorrentPayloads
+                         .Where(m => m.TorrentId == torrentId)
+                         .ExecuteDeleteAsync();
+
         var deletedTorrents = await dataContext.Torrents
                                                .Where(m => m.TorrentId == torrentId)
                                                .ExecuteDeleteAsync();
@@ -306,5 +317,21 @@ public class TorrentData(DataContext dataContext, ILogger<TorrentData>? logger =
 
             return;
         }
+    }
+
+    private IQueryable<Torrent> BuildTorrentQuery(Boolean includePayload)
+    {
+        var query = dataContext.Torrents
+                               .AsNoTracking()
+                               .AsSplitQuery()
+                               .Include(m => m.Downloads)
+                               .AsQueryable();
+
+        if (includePayload)
+        {
+            query = query.Include(m => m.Payload);
+        }
+
+        return query;
     }
 }
