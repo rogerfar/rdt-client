@@ -116,7 +116,7 @@ public class DownloadStationDownloader : IDownloader
         }
         catch (Exception ex)
         {
-            // The Synology DELETE response can itself fail to deserialize (upstream #792); don't let cleanup throw.
+            // The Synology DELETE response can itself fail to deserialize; don't let cleanup throw.
             _logger.Debug($"Failed to remove DownloadStation task {_gid}: {ex.Message}");
         }
     }
@@ -140,8 +140,8 @@ public class DownloadStationDownloader : IDownloader
             {
                 // A task for this download already exists in DownloadStation; adopt it instead of throwing.
                 // Throwing here permanently bricks every retry that reuses the gid: the caller Cancel()s first,
-                // but the DownloadStation delete response fails to deserialize (upstream #792) so the task is not
-                // actually removed, and the next Download() then errors with "already added" forever.
+                // but the DownloadStation delete response fails to deserialize so the task is not actually
+                // removed, and the next Download() then errors with "already added" forever.
                 _logger.Debug($"Download with ID {_gid} already exists in DownloadStation; reusing it");
 
                 return _gid;
@@ -389,7 +389,7 @@ public class DownloadStationDownloader : IDownloader
         }
         catch (Exception ex)
         {
-            // The task-list response can fail to deserialize when a task carries a non-string error_detail (upstream #723);
+            // The task-list response can fail to deserialize when a task carries a non-string error_detail;
             // treat that as "not found" instead of aborting the whole download.
             _logger.Debug($"Failed to list DownloadStation tasks for {_uri}: {ex.Message}");
 

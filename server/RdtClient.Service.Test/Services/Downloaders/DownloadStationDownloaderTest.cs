@@ -88,7 +88,7 @@ public class DownloadStationDownloaderTest
 
         // Assert: an existing task must be reused (idempotent), not re-created or thrown as "already added".
         // Throwing would brick every retry that reuses the gid because the DownloadStation delete fails to
-        // deserialize its response (upstream #792), so the task is never actually removed.
+        // deserialize its response, so the task is never actually removed.
         Assert.Equal(mocks.Gid, gid);
         mocks.TaskEndpointMock.Verify(t => t.GetInfoAsync(mocks.Gid), Times.Once);
         mocks.TaskEndpointMock.VerifyNoOtherCalls();
