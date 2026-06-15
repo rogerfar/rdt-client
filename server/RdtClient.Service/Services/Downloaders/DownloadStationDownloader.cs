@@ -27,8 +27,12 @@ public class DownloadStationDownloader : IDownloader
     private readonly ILogger _logger;
     private readonly String? _remotePath;
 
-    private readonly ISynologyClient _synologyClient;
     private readonly String _uri;
+
+    // The Synology client is shared across downloads and can be swapped out by WithSessionRetry after a session
+    // expires, so it is not readonly.
+    private ISynologyClient _synologyClient;
+    private readonly Func<Task<ISynologyClient>> _reacquireClient;
 
     private String? _gid;
 
@@ -39,7 +43,8 @@ public class DownloadStationDownloader : IDownloader
                                      String downloadPath,
                                      ISynologyClient synologyClient,
                                      IDelayProvider? delayProvider = null,
-                                     IFileSystem? fileSystem = null)
+                                     IFileSystem? fileSystem = null,
+                                     Func<Task<ISynologyClient>>? reacquireClient = null)
     {
         _logger = Log.ForContext<DownloadStationDownloader>();
         _logger.Debug($"Instantiated new DownloadStation Downloader for URI {uri} to filePath {filePath} (remote {remotePath}) and downloadPath {downloadPath} and GID {gid}");
@@ -51,6 +56,32 @@ public class DownloadStationDownloader : IDownloader
         _synologyClient = synologyClient;
         _delayProvider = delayProvider ?? new DelayProvider();
         _fileSystem = fileSystem ?? new FileSystem();
+
+        // When the caller doesn't supply a way to re-authenticate (e.g. unit tests with a mock client), session
+        // retry just reuses the current client.
+        _reacquireClient = reacquireClient ?? (() => Task.FromResult(_synologyClient));
+    }
+
+    /// <summary>
+    ///     Runs a Synology API call, and if DownloadStation reports a session error (e.g. error 119 "SID not found",
+    ///     106 timeout, 107 duplicate login) drops the shared session, re-authenticates once and retries. With a single
+    ///     shared login these are rare, but a session can still expire between downloads.
+    /// </summary>
+    private async Task<T> WithSessionRetry<T>(Func<ISynologyClient, Task<T>> op)
+    {
+        try
+        {
+            return await op(_synologyClient);
+        }
+        catch (SynologyApiException ex) when (ex.ErrorCode is 119 or 106 or 107)
+        {
+            _logger.Debug($"DownloadStation session error {ex.ErrorCode} ({ex.ErrorDescription}); re-authenticating and retrying once");
+
+            await SynologyClientProvider.InvalidateAsync(_synologyClient);
+            _synologyClient = await _reacquireClient();
+
+            return await op(_synologyClient);
+        }
     }
 
     public event EventHandler<DownloadCompleteEventArgs>? DownloadComplete;
@@ -68,18 +99,20 @@ public class DownloadStationDownloader : IDownloader
 
         _logger.Debug($"Remove download {_uri} {_gid} from Synology DownloadStation");
 
+        var gid = _gid;
+
         try
         {
-            await _synologyClient.DownloadStationApi()
-                                 .TaskEndpoint()
-                                 .DeleteAsync(new()
-                                 {
-                                     Ids =
-                                     [
-                                         _gid
-                                     ],
-                                     ForceComplete = false
-                                 });
+            await WithSessionRetry(c => c.DownloadStationApi()
+                                         .TaskEndpoint()
+                                         .DeleteAsync(new()
+                                         {
+                                             Ids =
+                                             [
+                                                 gid
+                                             ],
+                                             ForceComplete = false
+                                         }));
         }
         catch (Exception ex)
         {
@@ -134,10 +167,9 @@ public class DownloadStationDownloader : IDownloader
                 // `path` is the share-relative destination folder with a leading slash, e.g. /Media/Downloads/Torrents/<name>.
                 await EnsureRemoteFolderExists(path);
 
-                var createResult = await _synologyClient
-                                         .DownloadStationApi()
-                                         .TaskEndpoint()
-                                         .CreateAsync(new(_uri, path[1..]));
+                var createResult = await WithSessionRetry(c => c.DownloadStationApi()
+                                                                .TaskEndpoint()
+                                                                .CreateAsync(new(_uri, path[1..])));
 
                 _gid = createResult.TaskId?.FirstOrDefault();
                 _logger.Debug($"Added download to DownloadStation, received ID {_gid}");
@@ -217,15 +249,21 @@ public class DownloadStationDownloader : IDownloader
             throw new("No username/password specified for Synology download station");
         }
 
-        var synologyClient = new SynologyClient(Settings.Get.DownloadClient.DownloadStationUrl);
+        var url = Settings.Get.DownloadClient.DownloadStationUrl!;
+        var username = Settings.Get.DownloadClient.DownloadStationUsername!;
+        var password = Settings.Get.DownloadClient.DownloadStationPassword!;
+
+        ISynologyClient synologyClient;
 
         try
         {
-            await synologyClient.LoginAsync(Settings.Get.DownloadClient.DownloadStationUsername, Settings.Get.DownloadClient.DownloadStationPassword);
+            // One authenticated client is shared across all downloads. Logging in per download made DSM invalidate
+            // older sessions under high file-count concurrency, surfacing as error 119 "SID not found".
+            synologyClient = await SynologyClientProvider.GetClientAsync(url, username, password);
         }
         catch (Exception ex)
         {
-            throw new($"DownloadStation login failed for user '{Settings.Get.DownloadClient.DownloadStationUsername}': {ex.Message}. " +
+            throw new($"DownloadStation login failed for user '{username}': {ex.Message}. " +
                       $"If 2-step verification is enabled on this Synology account, use a dedicated service account without 2FA.");
         }
 
@@ -258,7 +296,18 @@ public class DownloadStationDownloader : IDownloader
             }
         }
 
-        return new(gid, uri, remotePath, filePath, downloadPath, synologyClient);
+        // Re-acquire reads the credentials fresh from settings (not the values captured above) so that editing and
+        // saving the DownloadStation URL/credentials takes effect live: an in-flight download that has to re-authenticate
+        // converges on the current settings instead of flipping the shared session back to stale credentials.
+        return new(gid,
+                   uri,
+                   remotePath,
+                   filePath,
+                   downloadPath,
+                   synologyClient,
+                   reacquireClient: () => SynologyClientProvider.GetClientAsync(Settings.Get.DownloadClient.DownloadStationUrl!,
+                                                                                Settings.Get.DownloadClient.DownloadStationUsername!,
+                                                                                Settings.Get.DownloadClient.DownloadStationPassword!));
     }
 
     /// <summary>
@@ -312,9 +361,9 @@ public class DownloadStationDownloader : IDownloader
     {
         try
         {
-            await _synologyClient.FileStationApi()
-                                 .CreateFolderEndpoint()
-                                 .CreateAsync([folderPath], true);
+            await WithSessionRetry(c => c.FileStationApi()
+                                         .CreateFolderEndpoint()
+                                         .CreateAsync([folderPath], true));
 
             _logger.Debug($"Ensured DownloadStation destination folder exists: {folderPath}");
         }
@@ -334,7 +383,7 @@ public class DownloadStationDownloader : IDownloader
     {
         try
         {
-            var tasks = await _synologyClient.DownloadStationApi().TaskEndpoint().ListAsync();
+            var tasks = await WithSessionRetry(c => c.DownloadStationApi().TaskEndpoint().ListAsync());
 
             return tasks.Task?.FirstOrDefault(t => t.Additional?.Detail?.Uri == _uri)?.Id;
         }
@@ -456,12 +505,14 @@ public class DownloadStationDownloader : IDownloader
     {
         try
         {
-            if (_gid == null)
+            var gid = _gid;
+
+            if (gid == null)
             {
                 return null;
             }
 
-            return await _synologyClient.DownloadStationApi().TaskEndpoint().GetInfoAsync(_gid);
+            return await WithSessionRetry(c => c.DownloadStationApi().TaskEndpoint().GetInfoAsync(gid));
         }
         catch (Exception ex)
         {

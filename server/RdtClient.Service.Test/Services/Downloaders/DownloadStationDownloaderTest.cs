@@ -3,11 +3,13 @@ using Moq;
 using RdtClient.Service.Helpers;
 using RdtClient.Service.Services.Downloaders;
 using Synology.Api.Client;
+using Synology.Api.Client.ApiDescription;
 using Synology.Api.Client.Apis.DownloadStation;
 using Synology.Api.Client.Apis.DownloadStation.Task.Models;
 using Synology.Api.Client.Apis.FileStation;
 using Synology.Api.Client.Apis.FileStation.CreateFolder;
 using Synology.Api.Client.Apis.FileStation.CreateFolder.Models;
+using Synology.Api.Client.Exceptions;
 
 namespace RdtClient.Service.Test.Services.Downloaders;
 
@@ -160,6 +162,45 @@ public class DownloadStationDownloaderTest
         // Assert
         Assert.Equal(["folder", "task"], calls);
         mocks.CreateFolderEndpointMock.Verify(e => e.CreateAsync(It.Is<String[]>(p => p.Single() == "/Media/Downloads/Torrents/MyTorrent"), true), Times.Once);
+    }
+
+    [Fact]
+    public async Task Download_WhenSynologyReportsSessionError119_ReAuthenticatesAndRetries()
+    {
+        // Arrange
+        var mocks = new Mocks();
+        mocks.TaskEndpointMock.Setup(t => t.GetInfoAsync(mocks.Gid)).ThrowsAsync(new());
+        mocks.TaskEndpointMock.Setup(t => t.ListAsync()).ReturnsAsync(new DownloadStationTaskListResponse { Total = 0, Offset = 0 });
+        mocks.TaskEndpointMock.Setup(t => t.CreateAsync(It.IsAny<DownloadStationTaskCreateRequest>()))
+             .ReturnsAsync(new DownloadStationTaskCreateResponse { TaskId = [mocks.Gid] });
+
+        // The first folder-create fails with DSM error 119 ("SID not found"); after re-auth the retry succeeds.
+        mocks.CreateFolderEndpointMock.SetupSequence(e => e.CreateAsync(It.IsAny<String[]>(), It.IsAny<Boolean>()))
+             .ThrowsAsync(new SynologyApiException(new Mock<IApiInfo>().Object, "FileStation.CreateFolder", 119, "SID not found"))
+             .ReturnsAsync(new FileStationCreateFolderCreateResponse());
+
+        var reacquired = 0;
+
+        var downloadStationDownloader = new DownloadStationDownloader(mocks.Gid,
+                                                                      "https://fake.url/file.txt",
+                                                                      "/Media/Downloads/Torrents/MyTorrent/file.txt",
+                                                                      "/path/to/file.txt",
+                                                                      "download-path",
+                                                                      mocks.SynologyClientMock.Object,
+                                                                      reacquireClient: () =>
+                                                                      {
+                                                                          reacquired++;
+
+                                                                          return Task.FromResult(mocks.SynologyClientMock.Object);
+                                                                      });
+
+        // Act
+        var result = await downloadStationDownloader.Download();
+
+        // Assert
+        Assert.Equal(mocks.Gid, result);
+        Assert.Equal(1, reacquired);
+        mocks.CreateFolderEndpointMock.Verify(e => e.CreateAsync(It.IsAny<String[]>(), It.IsAny<Boolean>()), Times.Exactly(2));
     }
 
     [Fact]
