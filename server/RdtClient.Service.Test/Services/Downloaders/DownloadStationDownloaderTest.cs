@@ -1,14 +1,19 @@
+using System.IO.Abstractions.TestingHelpers;
 using Moq;
 using RdtClient.Service.Helpers;
 using RdtClient.Service.Services.Downloaders;
 using Synology.Api.Client;
 using Synology.Api.Client.Apis.DownloadStation;
 using Synology.Api.Client.Apis.DownloadStation.Task.Models;
+using Synology.Api.Client.Apis.FileStation;
+using Synology.Api.Client.Apis.FileStation.CreateFolder;
+using Synology.Api.Client.Apis.FileStation.CreateFolder.Models;
 
 namespace RdtClient.Service.Test.Services.Downloaders;
 
 internal class Mocks
 {
+    public readonly Mock<IFileStationCreateFolderEndpoint> CreateFolderEndpointMock = new();
     public readonly String Gid;
     public readonly Mock<ISynologyClient> SynologyClientMock = new();
     public readonly Mock<IDownloadStationTaskEndpoint> TaskEndpointMock = new();
@@ -16,9 +21,17 @@ internal class Mocks
     public Mocks(String gid = "123456")
     {
         Gid = gid;
+
         var downloadStationApiMock = new Mock<IDownloadStationApi>();
         downloadStationApiMock.Setup(a => a.TaskEndpoint()).Returns(TaskEndpointMock.Object);
         SynologyClientMock.Setup(c => c.DownloadStationApi()).Returns(downloadStationApiMock.Object);
+
+        var fileStationApiMock = new Mock<IFileStationApi>();
+        fileStationApiMock.Setup(a => a.CreateFolderEndpoint()).Returns(CreateFolderEndpointMock.Object);
+        SynologyClientMock.Setup(c => c.FileStationApi()).Returns(fileStationApiMock.Object);
+
+        CreateFolderEndpointMock.Setup(e => e.CreateAsync(It.IsAny<String[]>(), It.IsAny<Boolean>()))
+                                .ReturnsAsync(new FileStationCreateFolderCreateResponse());
     }
 }
 
@@ -55,7 +68,7 @@ public class DownloadStationDownloaderTest
     }
 
     [Fact]
-    public async Task Download_WhenAlreadyAdded_Throws()
+    public async Task Download_WhenTaskAlreadyExists_AdoptsItAndReturnsGid()
     {
         // Arrange
         var mocks = new Mocks();
@@ -69,10 +82,12 @@ public class DownloadStationDownloaderTest
                                                                       mocks.SynologyClientMock.Object);
 
         // Act
-        var exception = await Assert.ThrowsAsync<Exception>(downloadStationDownloader.Download);
+        var gid = await downloadStationDownloader.Download();
 
-        // Assert
-        Assert.Contains("already been added", exception.Message, StringComparison.OrdinalIgnoreCase);
+        // Assert: an existing task must be reused (idempotent), not re-created or thrown as "already added".
+        // Throwing would brick every retry that reuses the gid because the DownloadStation delete fails to
+        // deserialize its response (upstream #792), so the task is never actually removed.
+        Assert.Equal(mocks.Gid, gid);
         mocks.TaskEndpointMock.Verify(t => t.GetInfoAsync(mocks.Gid), Times.Once);
         mocks.TaskEndpointMock.VerifyNoOtherCalls();
     }
@@ -114,6 +129,37 @@ public class DownloadStationDownloaderTest
         mocks.TaskEndpointMock.Verify(t => t.CreateAsync(It.IsAny<DownloadStationTaskCreateRequest>()), Times.Once);
 
         mocks.TaskEndpointMock.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task Download_CreatesDestinationFolderBeforeCreatingTask()
+    {
+        // Arrange
+        var mocks = new Mocks();
+        mocks.TaskEndpointMock.Setup(t => t.GetInfoAsync(mocks.Gid)).ThrowsAsync(new());
+        mocks.TaskEndpointMock.Setup(t => t.ListAsync()).ReturnsAsync(new DownloadStationTaskListResponse { Total = 0, Offset = 0 });
+
+        var calls = new List<String>();
+        mocks.CreateFolderEndpointMock.Setup(e => e.CreateAsync(It.IsAny<String[]>(), It.IsAny<Boolean>()))
+             .ReturnsAsync(new FileStationCreateFolderCreateResponse())
+             .Callback(() => calls.Add("folder"));
+        mocks.TaskEndpointMock.Setup(t => t.CreateAsync(It.IsAny<DownloadStationTaskCreateRequest>()))
+             .ReturnsAsync(new DownloadStationTaskCreateResponse { TaskId = [mocks.Gid] })
+             .Callback(() => calls.Add("task"));
+
+        var downloadStationDownloader = new DownloadStationDownloader(mocks.Gid,
+                                                                      "https://fake.url/file.txt",
+                                                                      "/Media/Downloads/Torrents/MyTorrent/file.txt",
+                                                                      "/path/to/file.txt",
+                                                                      "download-path",
+                                                                      mocks.SynologyClientMock.Object);
+
+        // Act
+        await downloadStationDownloader.Download();
+
+        // Assert
+        Assert.Equal(["folder", "task"], calls);
+        mocks.CreateFolderEndpointMock.Verify(e => e.CreateAsync(It.Is<String[]>(p => p.Single() == "/Media/Downloads/Torrents/MyTorrent"), true), Times.Once);
     }
 
     [Fact]
@@ -209,5 +255,109 @@ public class DownloadStationDownloaderTest
         mocks.TaskEndpointMock.Verify(t => t.CreateAsync(It.IsAny<DownloadStationTaskCreateRequest>()), Times.Exactly(5));
 
         mocks.TaskEndpointMock.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData(DownloadStationTaskStatus.Finished)]
+    [InlineData(DownloadStationTaskStatus.Downloaded)]
+    [InlineData(DownloadStationTaskStatus.Seeding)]
+    public async Task Update_WhenCompleteAndFileExists_CompletesWithoutError(DownloadStationTaskStatus status)
+    {
+        // Arrange
+        var mocks = new Mocks();
+        const String filePath = "/data/downloads/file.mkv";
+
+        mocks.TaskEndpointMock.Setup(t => t.GetInfoAsync(mocks.Gid)).ReturnsAsync(new DownloadStationTask { Status = status });
+
+        var fileSystem = new MockFileSystem();
+        fileSystem.AddFile(filePath, new MockFileData("content"));
+
+        var downloader = new DownloadStationDownloader(mocks.Gid, "https://fake.url/file.mkv", "/remote/file.mkv", filePath, "download-path",
+                                                       mocks.SynologyClientMock.Object, new FakeDelayProvider(), fileSystem);
+
+        DownloadCompleteEventArgs? completed = null;
+        downloader.DownloadComplete += (_, e) => completed = e;
+
+        // Act
+        await downloader.Update();
+
+        // Assert
+        Assert.NotNull(completed);
+        Assert.Null(completed!.Error);
+    }
+
+    [Fact]
+    public async Task Update_WhenFinishedButFileMissing_CompletesWithError()
+    {
+        // Arrange
+        var mocks = new Mocks();
+        const String filePath = "/data/downloads/file.mkv";
+
+        mocks.TaskEndpointMock.Setup(t => t.GetInfoAsync(mocks.Gid)).ReturnsAsync(new DownloadStationTask { Status = DownloadStationTaskStatus.Finished });
+
+        var downloader = new DownloadStationDownloader(mocks.Gid, "https://fake.url/file.mkv", "/remote/file.mkv", filePath, "download-path",
+                                                       mocks.SynologyClientMock.Object, new FakeDelayProvider(), new MockFileSystem());
+
+        DownloadCompleteEventArgs? completed = null;
+        downloader.DownloadComplete += (_, e) => completed = e;
+
+        // Act
+        await downloader.Update();
+
+        // Assert
+        Assert.NotNull(completed);
+        Assert.NotNull(completed!.Error);
+        Assert.Contains("no file was found", completed.Error!, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Update_WhenErrorDetailSet_CancelsAndReportsError()
+    {
+        // Arrange
+        var mocks = new Mocks();
+        mocks.TaskEndpointMock.Setup(t => t.GetInfoAsync(mocks.Gid))
+             .ReturnsAsync(new DownloadStationTask
+             {
+                 Status = DownloadStationTaskStatus.Downloading,
+                 StatusExtra = new DownloadStationTaskStatusExtra { ErrorDetail = "torrent_duplicate" }
+             });
+        mocks.TaskEndpointMock.Setup(t => t.DeleteAsync(It.IsAny<DownloadStationTaskDeleteRequest>()))
+             .ReturnsAsync(new DownloadStationTaskDeleteResponse());
+
+        var downloader = new DownloadStationDownloader(mocks.Gid, "https://fake.url/file.mkv", "/remote/file.mkv", "/data/downloads/file.mkv", "download-path",
+                                                       mocks.SynologyClientMock.Object, new FakeDelayProvider(), new MockFileSystem());
+
+        DownloadCompleteEventArgs? completed = null;
+        downloader.DownloadComplete += (_, e) => completed = e;
+
+        // Act
+        await downloader.Update();
+
+        // Assert
+        Assert.NotNull(completed);
+        Assert.Contains("torrent_duplicate", completed!.Error!, StringComparison.OrdinalIgnoreCase);
+        mocks.TaskEndpointMock.Verify(t => t.DeleteAsync(It.IsAny<DownloadStationTaskDeleteRequest>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Update_WhenCaptchaNeeded_ReportsError()
+    {
+        // Arrange
+        var mocks = new Mocks();
+        mocks.TaskEndpointMock.Setup(t => t.GetInfoAsync(mocks.Gid)).ReturnsAsync(new DownloadStationTask { Status = DownloadStationTaskStatus.CaptchaNeeded });
+        mocks.TaskEndpointMock.Setup(t => t.DeleteAsync(It.IsAny<DownloadStationTaskDeleteRequest>())).ReturnsAsync(new DownloadStationTaskDeleteResponse());
+
+        var downloader = new DownloadStationDownloader(mocks.Gid, "https://fake.url/file.mkv", "/remote/file.mkv", "/data/downloads/file.mkv", "download-path",
+                                                       mocks.SynologyClientMock.Object, new FakeDelayProvider(), new MockFileSystem());
+
+        DownloadCompleteEventArgs? completed = null;
+        downloader.DownloadComplete += (_, e) => completed = e;
+
+        // Act
+        await downloader.Update();
+
+        // Assert
+        Assert.NotNull(completed);
+        Assert.Contains("captcha", completed!.Error!, StringComparison.OrdinalIgnoreCase);
     }
 }

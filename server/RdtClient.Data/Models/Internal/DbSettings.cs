@@ -162,7 +162,7 @@ http://127.0.0.1:6800/jsonrpc.")]
     public String? DownloadStationPassword { get; set; } = null;
 
     [DisplayName("Synology Download Station Download Path")]
-    [Description("The root path to doawnload the file on the Synology DownloadStation host, if empty use the default DownloadStation path.")]
+    [Description("The root path on the Synology to download to, relative to a shared folder (e.g. \"Media/Downloads/Torrents\"), NOT an absolute path like \"/volume1/Media/...\". If empty, the default Download Station destination is used. The account also needs File Station permission so the per-download destination folder can be created.")]
     public String? DownloadStationDownloadPath { get; set; } = null;
 
     [DisplayName("Minimum free disk space (GB) (Bezzad only)")]

@@ -150,14 +150,44 @@ Suggested configuration:
 
 #### Synology Download Station
 
-The Synology Download Station downloader uses an external Download Station server. You will need to set this up yourself.
+The Synology Download Station downloader hands each file to your NAS's Download Station, which downloads it and writes it to disk. The bytes never pass through rdt-client, so its memory stays flat regardless of file size.
+
+To set it up:
+
+1. Complete the Synology prerequisites below.
+2. In rdt-client, go to **Settings** and set **Download client** to **Synology Download Station**.
+3. Fill in the Download Station options below (URL, username, password, download path).
+4. Make sure the path mapping lines up (see below), then **Save**.
+
+Prerequisites on the Synology:
+
+- Install and start the **Download Station** package.
+- Use a DSM account that has **both Download Station and File Station permission** (File Station is required so rdt-client can create the per-download destination folder — Download Station will not create it itself). Disable 2-step verification on this account (the API login is username/password only), or use a dedicated service account.
+- Download Station's **Default destination** is **per-user**. When you set a Download Path (below), rdt-client sets this account's default destination for you **only if it doesn't already have one** (an existing default is left untouched), so you normally don't need to do anything. If that automatic set fails (e.g. the account isn't allowed to change Download Station settings), sign into Download Station *as that account* and set it under **Settings → BT/HTTP/FTP/NZB → Location → Default destination** — otherwise every task that account creates stays stuck in **"Waiting"** (DSM logs `Failed to get default download destination of user [<account>]`). A default set for your admin account does **not** apply to a dedicated download account.
 
 It has the following options:
 
-- Url: The URL to the Synology DownloadStation. A common URL is `http://127.0.0.1:5000`
+- Url: The URL to the Synology DownloadStation. A common URL is `http://127.0.0.1:5000`. From inside a Docker container `127.0.0.1` is the container itself — use the NAS's LAN IP (e.g. `http://192.168.1.50:5000`) and the DSM web port (HTTP `5000` by default).
 - Username: The username to use when connecting to the Synology DownloadStation.
 - Password: The password to use when connecting to the Synology DownloadStation.
-- Download Path: The root path to download the file on the Synology DownloadStation host. If left empty, the default path configured on your Download Station server will be used.
+- Download Path: The destination on the Synology, **relative to a shared folder** (e.g. `Media/Downloads/Torrents`) — **not** an absolute path like `/volume1/Media/Downloads/Torrents` (Download Station would treat `volume1` as a share name and fail with "Destination does not exist"). **This must resolve to the exact same physical folder as the general Download path** — see Path mapping below. If left empty, the default Download Station destination is used.
+
+**Path mapping (important).** Download Station runs on the NAS; rdt-client runs in its container. They see the same folder through different mounts, so:
+
+> **The Synology *Download Path* (above) and rdt-client's general *Download path* must resolve to the exact same physical folder on the NAS.**
+
+This is the single most common failure. If the two don't line up, Download Station saves the file somewhere rdt-client can't see, the download "finishes", and the import never happens. The two settings look different only because each names that one folder in a different dialect, with the **container bind mount as the bridge** between them:
+
+- **Download Path** (this setting) is NAS share-relative: `Media/Downloads/Torrents` → physically `/volume1/Media/Downloads/Torrents`.
+- **Download path** (the general rdt-client setting) is the container path: `/data/downloads`, bind-mounted so that exact path *is* the share folder above — `-v /volume1/Media/Downloads/Torrents:/data/downloads`.
+
+The match must cover the **full** general Download path, including any subfolder. If your general Download path is `/data/downloads/Completed`, then *that* (not `/data/downloads`) is what must equal the NAS folder — so either bind-mount the share there, or set this Download Path to the matching subfolder (`Media/Downloads/Torrents/Completed`). Note that, unlike the in-process Bezzad downloader, Download Station writes the file straight into this folder *as it downloads*, so a folder named `Completed` will briefly hold in-progress files — that is normal with Download Station.
+
+A working example: bind-mount `/volume1/Media/Downloads/Torrents` to `/data/downloads`, set the general Download path to `/data/downloads`, and set this Download Path to `Media/Downloads/Torrents` — all three name the same folder.
+
+Separately, the **Mapped Path** must point at that same folder as Sonarr/Radarr see it (through *their* mount), or the download completes but never imports.
+
+If you see `DownloadStation reported the download finished, but no file was found at <container path> (DownloadStation saved to <NAS path>)` in the log, the two Download paths are not the same folder — line them up.
 
 ### Troubleshooting
 
