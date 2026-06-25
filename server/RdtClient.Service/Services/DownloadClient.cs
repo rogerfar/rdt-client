@@ -72,10 +72,19 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
                 _ => throw new($"Unknown download client {Type}")
             };
 
+            var expectedFileSize = Type == Data.Enums.DownloadClient.Bezzad
+                ? DownloadHelper.GetExpectedFileSize(torrent, download)
+                : null;
+
             Downloader.DownloadComplete += (_, args) =>
             {
                 Finished = true;
                 Error ??= args.Error;
+
+                if (Error == null && expectedFileSize is > 0)
+                {
+                    Error = ValidateDownloadedFileSize(filePath, expectedFileSize.Value);
+                }
             };
 
             Downloader.DownloadProgress += (_, args) =>
@@ -107,6 +116,38 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
 
             throw new($"An unexpected error occurred preparing download {download.Link} for torrent {torrent.RdName}: {ex.Message}");
         }
+    }
+
+    private static String? ValidateDownloadedFileSize(String? filePath, Int64 expectedFileSize)
+    {
+        if (String.IsNullOrWhiteSpace(filePath))
+        {
+            return null;
+        }
+
+        try
+        {
+            var fileInfo = new FileInfo(filePath);
+
+            if (!fileInfo.Exists)
+            {
+                return $"Downloaded file was not found at {filePath} after the download reported success.";
+            }
+
+            var tolerance = Math.Max(64 * 1024, (Int64)(expectedFileSize * 0.01));
+
+            if (Math.Abs(fileInfo.Length - expectedFileSize) > tolerance)
+            {
+                return $"Downloaded file size ({fileInfo.Length:N0} bytes) is outside the expected range " +
+                       $"({expectedFileSize:N0} bytes ±{tolerance:N0}).";
+            }
+        }
+        catch (Exception ex)
+        {
+            return $"Failed to verify the size of the downloaded file at {filePath}: {ex.Message}";
+        }
+
+        return null;
     }
 
     public async Task Cancel()
