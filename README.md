@@ -150,14 +150,24 @@ Suggested configuration:
 
 #### Synology Download Station
 
-The Synology Download Station downloader uses an external Download Station server. You will need to set this up yourself.
+The Synology Download Station downloader hands each file to your NAS's Download Station, which downloads it and writes it to disk. The bytes never pass through rdt-client, so its memory stays flat regardless of file size.
+
+Prerequisites on the Synology:
+
+- Install and start the **Download Station** package.
+- Use a DSM account that has **both Download Station and File Station permission** (File Station is required so rdt-client can create the per-download destination folder). Disable 2-step verification on this account (the API login is username/password only), or use a dedicated service account.
+- Download Station's **Default destination** needs to be set for the new user. Rdt-client sets this account's default destination for you if it doesn't already have one, so you normally don't need to do anything. If that automatic set fails, sign into Download Station *as that account* and set it under **Settings → BT/HTTP/FTP/NZB → Location → Default destination** — otherwise every task that account creates stays stuck in **"Waiting"** (DSM logs `Failed to get default download destination of user [<account>]`).
 
 It has the following options:
 
-- Url: The URL to the Synology DownloadStation. A common URL is `http://127.0.0.1:5000`
+- Url: The URL to the Synology DownloadStation. A common URL is `http://127.0.0.1:5000`. From inside a Docker container `127.0.0.1` is the container itself — use the NAS's LAN IP (e.g. `http://192.168.1.50:5000`) and the DSM web port (HTTP `5000` by default).
 - Username: The username to use when connecting to the Synology DownloadStation.
 - Password: The password to use when connecting to the Synology DownloadStation.
-- Download Path: The root path to download the file on the Synology DownloadStation host. If left empty, the default path configured on your Download Station server will be used.
+- Download Path: The destination on the Synology, **relative to a shared folder** (e.g. `Media/Downloads/Torrents`) — **not** an absolute path like `/volume1/Media/Downloads/Torrents`. **This must resolve to the exact same physical folder as the general Download path** — see Path mapping below. If left empty, the default Download Station destination is used.
+
+**Path mapping (important).** Download Station runs on the NAS; rdt-client runs in its container. They see the same folder through different mounts, so:
+
+> **The Synology *Download Path* (above) and rdt-client's general *Download path* must resolve to the exact same physical folder on the NAS.**
 
 ### Troubleshooting
 

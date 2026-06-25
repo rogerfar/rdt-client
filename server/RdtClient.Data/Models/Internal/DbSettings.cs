@@ -154,7 +154,7 @@ http://127.0.0.1:6800/jsonrpc.")]
     public String DownloadStationUrl { get; set; } = "http://127.0.0.1:5000";
 
     [DisplayName("Synology DownloadStation Username")]
-    [Description("The username to use when connecting to the Synology DownloadStation.")]
+    [Description("The username to use when connecting to the Synology DownloadStation. The account needs Download Station and File Station permissions (so the per-download destination folder can be created).")]
     public String? DownloadStationUsername { get; set; } = null;
 
     [DisplayName("Synology DownloadStation Password")]
@@ -162,7 +162,7 @@ http://127.0.0.1:6800/jsonrpc.")]
     public String? DownloadStationPassword { get; set; } = null;
 
     [DisplayName("Synology Download Station Download Path")]
-    [Description("The root path to doawnload the file on the Synology DownloadStation host, if empty use the default DownloadStation path.")]
+    [Description("The root path to download the file on the Synology DownloadStation host, if empty the default DownloadStation path is used.")]
     public String? DownloadStationDownloadPath { get; set; } = null;
 
     [DisplayName("Minimum free disk space (GB) (Bezzad only)")]
