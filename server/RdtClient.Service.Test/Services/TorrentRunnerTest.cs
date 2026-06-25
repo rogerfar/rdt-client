@@ -26,7 +26,10 @@ public class TorrentRunnerTest
             TorrentId = Guid.NewGuid(),
             Hash = "hash-1",
             RdName = "Torrent 1",
-            FileOrMagnet = "magnet:?xt=urn:btih:hash-1",
+            Payload = new()
+            {
+                Content = "magnet:?xt=urn:btih:hash-1"
+            },
             Type = DownloadType.Torrent,
             RdStatus = TorrentStatus.Queued,
             DeleteOnError = 10,

@@ -47,7 +47,7 @@ public static class TorrentDtoMapper
             FilesSelected = torrent.FilesSelected,
             Completed = torrent.Completed,
             Type = torrent.Type,
-            FileOrMagnet = includeFileOrMagnet ? torrent.FileOrMagnet : null,
+            FileOrMagnet = includeFileOrMagnet ? torrent.Payload?.Content : null,
             IsFile = torrent.IsFile,
             Priority = torrent.Priority,
             RetryCount = torrent.RetryCount,

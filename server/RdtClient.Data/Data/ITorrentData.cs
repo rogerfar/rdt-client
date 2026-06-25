@@ -8,6 +8,7 @@ public interface ITorrentData
     Task<IList<Torrent>> Get();
     Task<Torrent?> GetById(Guid torrentId);
     Task<Torrent?> GetByHash(String hash);
+    Task<String?> GetPayloadContent(Guid torrentId);
 
     Task<Torrent> Add(String? rdId,
                       String hash,

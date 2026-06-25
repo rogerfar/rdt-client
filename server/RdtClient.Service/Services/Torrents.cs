@@ -314,7 +314,7 @@ public class Torrents(
 
     private async Task CopyAddedTorrent(Torrent torrent)
     {
-        if (String.IsNullOrWhiteSpace(settings.Current.General.CopyAddedTorrents) || String.IsNullOrWhiteSpace(torrent.FileOrMagnet) || String.IsNullOrWhiteSpace(torrent.RdName))
+        if (String.IsNullOrWhiteSpace(settings.Current.General.CopyAddedTorrents) || String.IsNullOrWhiteSpace(torrent.RdName))
         {
             return;
         }
@@ -345,14 +345,21 @@ public class Torrents(
                 fileSystem.File.Delete(copyFileName);
             }
 
+            var payloadContent = await GetPayloadContent(torrent);
+
+            if (String.IsNullOrWhiteSpace(payloadContent))
+            {
+                return;
+            }
+
             if (torrent.IsFile)
             {
-                var bytes = Convert.FromBase64String(torrent.FileOrMagnet);
+                var bytes = Convert.FromBase64String(payloadContent);
                 await fileSystem.File.WriteAllBytesAsync(copyFileName, bytes);
             }
             else
             {
-                await fileSystem.File.WriteAllTextAsync(copyFileName, torrent.FileOrMagnet);
+                await fileSystem.File.WriteAllTextAsync(copyFileName, payloadContent);
             }
         }
         catch (Exception ex)
@@ -366,7 +373,7 @@ public class Torrents(
     /// </summary>
     /// <param name="torrent">The torrent from the database to upload to the debrid provider</param>
     /// <returns>Updated torrent</returns>
-    /// <exception cref="Exception">When RdId is not null or FileOrMagnet is null.</exception>
+    /// <exception cref="Exception">When RdId is not null or the stored source payload is missing.</exception>
     public async Task DequeueFromDebridQueue(Torrent torrent)
     {
         if (torrent.RdId != null)
@@ -374,7 +381,9 @@ public class Torrents(
             throw new("Torrent already added to debrid provider, cannot dequeue");
         }
 
-        if (torrent.FileOrMagnet == null)
+        var payloadContent = await GetPayloadContent(torrent);
+
+        if (payloadContent == null)
         {
             throw new("Torrent has no torrent file or magnet link");
         }
@@ -390,14 +399,14 @@ public class Torrents(
             if (torrent.Type == DownloadType.Nzb)
             {
                 id = torrent.IsFile
-                    ? await DebridClient.AddNzbFile(Convert.FromBase64String(torrent.FileOrMagnet), torrent.RdName)
-                    : await DebridClient.AddNzbLink(torrent.FileOrMagnet);
+                    ? await DebridClient.AddNzbFile(Convert.FromBase64String(payloadContent), torrent.RdName)
+                    : await DebridClient.AddNzbLink(payloadContent);
             }
             else
             {
                 id = torrent.IsFile
-                    ? await DebridClient.AddTorrentFile(Convert.FromBase64String(torrent.FileOrMagnet))
-                    : await DebridClient.AddTorrentMagnet(torrent.FileOrMagnet);
+                    ? await DebridClient.AddTorrentFile(Convert.FromBase64String(payloadContent))
+                    : await DebridClient.AddTorrentMagnet(payloadContent);
             }
 
             await torrentData.UpdateRdId(torrent, id);
@@ -795,7 +804,9 @@ public class Torrents(
 
             await Delete(torrentId, true, true, true);
 
-            if (String.IsNullOrWhiteSpace(torrent.FileOrMagnet))
+            var payloadContent = await GetPayloadContent(torrent);
+
+            if (String.IsNullOrWhiteSpace(payloadContent))
             {
                 throw new($"Cannot re-add this torrent, original magnet or file not found");
             }
@@ -806,26 +817,26 @@ public class Torrents(
             {
                 if (torrent.IsFile)
                 {
-                    var bytes = Convert.FromBase64String(torrent.FileOrMagnet!);
+                    var bytes = Convert.FromBase64String(payloadContent);
 
                     newTorrent = await AddNzbFileToDebridQueue(bytes, torrent.RdName, torrent);
                 }
                 else
                 {
-                    newTorrent = await AddNzbLinkToDebridQueue(torrent.FileOrMagnet!, torrent);
+                    newTorrent = await AddNzbLinkToDebridQueue(payloadContent, torrent);
                 }
             }
             else
             {
                 if (torrent.IsFile)
                 {
-                    var bytes = Convert.FromBase64String(torrent.FileOrMagnet!);
+                    var bytes = Convert.FromBase64String(payloadContent);
 
                     newTorrent = await AddFileToDebridQueue(bytes, torrent);
                 }
                 else
                 {
-                    newTorrent = await AddMagnetToDebridQueue(torrent.FileOrMagnet!, torrent);
+                    newTorrent = await AddMagnetToDebridQueue(payloadContent, torrent);
                 }
             }
 
@@ -973,6 +984,16 @@ public class Torrents(
         }
 
         return settingDownloadPath;
+    }
+
+    private async Task<String?> GetPayloadContent(Torrent torrent)
+    {
+        if (!String.IsNullOrWhiteSpace(torrent.Payload?.Content))
+        {
+            return torrent.Payload.Content;
+        }
+
+        return await torrentData.GetPayloadContent(torrent.TorrentId);
     }
 
     private async Task<Torrent> AddQueued(String infoHash,

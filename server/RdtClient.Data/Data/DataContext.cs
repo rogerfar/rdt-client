@@ -11,6 +11,7 @@ public class DataContext(DbContextOptions options) : IdentityDbContext(options)
     public DbSet<Download> Downloads { get; set; }
     public DbSet<Setting> Settings { get; set; }
     public DbSet<Torrent> Torrents { get; set; }
+    public DbSet<TorrentPayload> TorrentPayloads { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -23,6 +24,12 @@ public class DataContext(DbContextOptions options) : IdentityDbContext(options)
                    m.Path
                })
                .IsUnique();
+
+        builder.Entity<Torrent>()
+               .HasOne(m => m.Payload)
+               .WithOne(m => m.Torrent)
+               .HasForeignKey<TorrentPayload>(m => m.TorrentId)
+               .IsRequired(false);
 
         var cascadeFKs = builder.Model.GetEntityTypes()
                                 .SelectMany(t => t.GetForeignKeys())
