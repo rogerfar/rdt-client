@@ -122,6 +122,8 @@ It has the following options:
 - Parallel connections per download: This number indicates how many parallel it will use per download. This can increase speed, recommended is no more than 8.
 - Parallel chunks per download: This number indicates in how many chunks each download is split, recommended is no more than 8.
 - Connection Timeout: This number indicates the timeout in milliseconds before a download chunk times out. It will retry each chunk 5 times before completely failing.
+- Bind to specific IP: When enabled, the downloader binds outbound connections to the configured local IP address. Useful on hosts with multiple network interfaces.
+- Bind IP address: The local IP address to bind to. Must be an IP assigned to an active network adapter on this host.
 
 #### Aria2c downloader
 
