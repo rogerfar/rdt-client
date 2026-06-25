@@ -132,6 +132,14 @@ public class DbSettingsDownloadClient
     [Description("Address of a proxy server to download through (only used for the Bezzad Downloader).")]
     public String? ProxyServer { get; set; } = null;
 
+    [DisplayName("Bind to specific IP (Bezzad only)")]
+    [Description("When enabled, Bezzad will bind outbound connections to the IP address below.")]
+    public Boolean BindToSpecificIp { get; set; } = false;
+
+    [DisplayName("Bind IP address (Bezzad only)")]
+    [Description("Local IP address to bind Bezzad downloads to. Must be assigned to an active network adapter on this host.")]
+    public String? BindIpAddress { get; set; } = null;
+
     [DisplayName("Aria2c URL (only used for the Aria2c Downloader)")]
     [Description(@"This is the URL to your Aria2c instance. It must end in /jsonrpc. A common URL is
 http://127.0.0.1:6800/jsonrpc.")]
