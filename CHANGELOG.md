@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased
 
+## [2.0.139] - 2026-06-24
+### Added
+- Add IP binding for the Bezzad downloader.
+### Changed
+- Check file sizes when downloading as a workaround to Torbox download glitch.
+- Download Station improvements.
+- Changed SQLite DB locking to improve DB performance.
+
 ## [2.0.138] - 2026-06-05
 ### Fixed
 - SABnzbd fixes.
