@@ -373,12 +373,11 @@ public class SabnzbdTest
     [InlineData(TorrentFinishedAction.RemoveRealDebrid, false, false, true, false)]
     [InlineData(TorrentFinishedAction.RemoveClient, true, true, false, true)]
     [InlineData(TorrentFinishedAction.RemoveClient, false, true, false, false)]
-    public async Task Delete_ShouldRespectFinishedActionAndDeleteFiles(
-        TorrentFinishedAction finishedAction,
-        Boolean deleteFiles,
-        Boolean expectedDeleteData,
-        Boolean expectedDeleteRdTorrent,
-        Boolean expectedDeleteLocalFiles)
+    public async Task Delete_ShouldRespectFinishedActionAndDeleteFiles(TorrentFinishedAction finishedAction,
+                                                                       Boolean deleteFiles,
+                                                                       Boolean expectedDeleteData,
+                                                                       Boolean expectedDeleteRdTorrent,
+                                                                       Boolean expectedDeleteLocalFiles)
     {
         // Arrange
         var torrentId = Guid.NewGuid();

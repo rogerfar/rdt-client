@@ -165,6 +165,7 @@ public class BezzadDownloader : IDownloader
             {
                 _logger.Warning("Bezzad bind-to-IP is enabled but the configured IP address is invalid or empty. Retrying.");
                 await _delayProvider.Delay(BindRetryDelayMilliseconds);
+
                 continue;
             }
 
@@ -194,7 +195,7 @@ public class BezzadDownloader : IDownloader
             return null;
         }
 
-        return new WebProxy(new Uri(settingProxyServer), false);
+        return new(new Uri(settingProxyServer), false);
     }
 
     private async Task RunDownloadAsync()
@@ -271,6 +272,7 @@ public class BezzadDownloader : IDownloader
         catch
         {
             socket.Dispose();
+
             throw;
         }
     }

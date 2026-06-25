@@ -463,9 +463,9 @@ public class DownloadStationDownloader : IDownloader
     private static Boolean IsComplete(DownloadStationTask task)
     {
         if (task.Status is DownloadStationTaskStatus.Finished
-                        or DownloadStationTaskStatus.Downloaded
-                        or DownloadStationTaskStatus.Seeding
-                        or DownloadStationTaskStatus.PreSeeding)
+            or DownloadStationTaskStatus.Downloaded
+            or DownloadStationTaskStatus.Seeding
+            or DownloadStationTaskStatus.PreSeeding)
         {
             return true;
         }
