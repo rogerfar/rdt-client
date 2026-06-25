@@ -123,6 +123,29 @@ public static class DownloadHelper
         return FileHelper.RemoveInvalidFileNameChars(fileName);
     }
 
+    public static Int64? GetExpectedFileSize(Torrent torrent, Download download)
+    {
+        var fileName = GetFileName(download);
+
+        if (String.IsNullOrWhiteSpace(fileName))
+        {
+            return null;
+        }
+
+        var matchingTorrentFiles = torrent.Files
+                                          .Where(m => !String.IsNullOrWhiteSpace(m.Path) && m.Path.EndsWith(fileName))
+                                          .ToList();
+
+        if (matchingTorrentFiles.Count != 1)
+        {
+            return null;
+        }
+
+        var size = matchingTorrentFiles[0].Bytes;
+
+        return size > 0 ? size : null;
+    }
+
     public static String RemoveInvalidPathChars(String path)
     {
         return String.Concat(path.Split(Path.GetInvalidPathChars()));
