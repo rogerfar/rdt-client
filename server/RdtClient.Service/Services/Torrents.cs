@@ -610,11 +610,57 @@ public class Torrents(
 
         Log("Unrestricting link", download, download.Torrent);
 
+        if (download.RetryCount > 0)
+        {
+            var refreshedPath = await TryRefreshDownloadPath(download);
+
+            if (refreshedPath != null)
+            {
+                await downloads.UpdatePath(downloadId, refreshedPath);
+                download.Path = refreshedPath;
+            }
+        }
+
         var unrestrictedLink = await DebridClient.Unrestrict(download.Torrent!, download.Path);
 
         await downloads.UpdateUnrestrictedLink(downloadId, unrestrictedLink);
 
         return unrestrictedLink;
+    }
+
+    private async Task<String?> TryRefreshDownloadPath(Download download)
+    {
+        if (download.Torrent == null)
+        {
+            return null;
+        }
+
+        var downloadInfos = await DebridClient.GetDownloadInfos(download.Torrent);
+
+        if (downloadInfos == null || downloadInfos.Count == 0)
+        {
+            Log("No download infos returned while refreshing path", download, download.Torrent);
+
+            return null;
+        }
+
+        var matched = DownloadLinkMatcher.Match(downloadInfos, download);
+
+        if (matched == null)
+        {
+            Log("Could not match download to refreshed provider link", download, download.Torrent);
+
+            return null;
+        }
+
+        if (String.Equals(matched.RestrictedLink, download.Path, StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        Log("Refreshed download path from provider", download, download.Torrent);
+
+        return matched.RestrictedLink;
     }
 
     public async Task<String> RetrieveFileName(Guid downloadId)
