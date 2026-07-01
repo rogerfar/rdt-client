@@ -130,6 +130,21 @@ public class DownloadData(DataContext dataContext, ILogger<DownloadData>? logger
         await dataContext.SaveChangesAsync();
     }
 
+    public async Task UpdatePath(Guid downloadId, String path)
+    {
+        var dbDownload = await dataContext.Downloads
+                                          .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+        if (dbDownload == null)
+        {
+            return;
+        }
+
+        dbDownload.Path = path;
+
+        await dataContext.SaveChangesAsync();
+    }
+
     public async Task UpdateDownloadStarted(Guid downloadId, DateTimeOffset? dateTime)
     {
         var dbDownload = await dataContext.Downloads
