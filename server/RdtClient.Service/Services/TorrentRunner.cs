@@ -349,7 +349,11 @@ public class TorrentRunner(
 
             Log($"Removing torrent because it has been {torrent.DeleteOnError} minutes in the error state", torrent);
 
-            await torrents.Delete(torrent.TorrentId, true, true, true);
+            // Only delete local files for torrents that ever reached the provider: a
+            // pre-provider error row (e.g. an OnlyDownloadCached rejection) never
+            // downloaded anything, and a recursive name-match delete could hit
+            // unrelated content in the download folder.
+            await torrents.Delete(torrent.TorrentId, true, true, torrent.RdId != null);
         }
 
         // Process torrent lifetime

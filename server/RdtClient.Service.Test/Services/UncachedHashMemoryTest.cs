@@ -90,4 +90,33 @@ public class UncachedHashMemoryTest
 
         Assert.Equal(1, memory.RecordSighting("d7a46713eaee18c746b3254b7d1492a50fd9d6ce"));
     }
+
+    [Fact]
+    public void Forget_ForcesARealRecheck()
+    {
+        // A human retry must reach the provider, not the memory.
+        var memory = new UncachedHashMemory(TimeSpan.FromMinutes(30));
+
+        memory.RecordUncached("d7a46713eaee18c746b3254b7d1492a50fd9d6ce", T0);
+        memory.Forget("D7A46713EAEE18C746B3254B7D1492A50FD9D6CE");
+
+        Assert.True(memory.NeedsCheck("d7a46713eaee18c746b3254b7d1492a50fd9d6ce", T0.AddMinutes(1)));
+    }
+
+    [Fact]
+    public void RecordUncached_AboveThreshold_PrunesLongExpiredEntries()
+    {
+        // The memory lives in a static for the process lifetime; without pruning every
+        // distinct uncached hash ever seen accumulates forever.
+        var memory = new UncachedHashMemory(TimeSpan.FromMinutes(30), pruneThreshold: 2);
+
+        memory.RecordUncached("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", T0);
+        memory.RecordUncached("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", T0.AddMinutes(90));
+        memory.RecordUncached("cccccccccccccccccccccccccccccccccccccccc", T0.AddMinutes(96));
+
+        // 'a' is 96 min old (>= 2x interval) -> pruned; 'b' is 6 min old -> kept.
+        Assert.Equal(2, memory.Count);
+        Assert.True(memory.NeedsCheck("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", T0.AddMinutes(96)));
+        Assert.False(memory.NeedsCheck("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", T0.AddMinutes(96)));
+    }
 }

@@ -121,6 +121,8 @@ public class TorBoxDebridClient(
         });
     }
 
+    public Boolean SupportsAvailabilityCheck => true;
+
     public async Task<IList<DebridClientAvailableFile>> GetAvailableFiles(String hash)
     {
         var availability = await GetTorrentAvailability(hash);

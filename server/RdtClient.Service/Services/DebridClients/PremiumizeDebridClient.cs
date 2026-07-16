@@ -16,6 +16,7 @@ public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHtt
     : IDebridClient
 {
     private const String TransferCreateUrl = "https://www.premiumize.me/api/transfer/create";
+    private const String CacheCheckUrl = "https://www.premiumize.me/api/cache/check";
 
     public async Task<IList<DebridClientTorrent>> GetDownloads()
     {
@@ -55,48 +56,84 @@ public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHtt
         return await CreateTransferFromNzbFile(bytes, GetNzbFileName(name));
     }
 
+    public Boolean SupportsAvailabilityCheck => true;
+
     public async Task<IList<DebridClientAvailableFile>> GetAvailableFiles(String hash)
     {
-        try
+        // Raw HTTP instead of the Premiumize.NET library: the library never inspects
+        // HTTP status codes, so a 429 whose body matches no documented phrase would be
+        // mis-classified. Only a well-formed success answer may say "not cached" - every
+        // other outcome throws, and the OnlyDownloadCached gate fails OPEN on exceptions.
+        var httpClient = httpClientFactory.CreateClient();
+        httpClient.Timeout = TimeSpan.FromSeconds(10);
+
+        var url = $"{CacheCheckUrl}?apikey={Uri.EscapeDataString(GetApiKey())}&items%5B%5D={Uri.EscapeDataString(hash)}";
+
+        using var response = await httpClient.GetAsync(url);
+        var body = await response.Content.ReadAsStringAsync();
+
+        if (response.StatusCode == HttpStatusCode.TooManyRequests)
         {
-            var result = await GetClient().Cache.Check([hash], CancellationToken.None);
+            var retryAfter = response.Headers.RetryAfter?.Delta ?? TimeSpan.FromMinutes(2);
 
-            if (result?.Response == null || result.Response.Count == 0 || !result.Response[0])
+            throw new RateLimitException("Premiumize cache/check rate limit exceeded", retryAfter);
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new($"Premiumize cache/check returned {(Int32)response.StatusCode} {response.ReasonPhrase}. {body}");
+        }
+
+        var result = JsonConvert.DeserializeObject<RawCacheCheckResponse>(body) ?? throw new("Premiumize cache/check returned an invalid response");
+
+        if (!String.Equals(result.Status, "success", StringComparison.OrdinalIgnoreCase))
+        {
+            var error = String.IsNullOrWhiteSpace(result.Message) ? body : result.Message;
+
+            if (IsRateLimitMessage(error))
             {
-                return [];
+                throw new RateLimitException(error, TimeSpan.FromMinutes(2));
             }
 
-            // Premiumize reports cache status per torrent, not per file: a hit carries a
-            // single name + total size, so availability is a single entry.
-            var filename = result.Filename is { Count: > 0 } ? result.Filename[0] : null;
-            var filesize = result.Filesize is { Count: > 0 } ? result.Filesize[0] : 0;
+            throw new($"Premiumize cache/check failed: {error}");
+        }
 
-            if (String.IsNullOrWhiteSpace(filename))
-            {
-                // Cached but no filename detail - still report availability with a placeholder.
-                return
-                [
-                    new()
-                    {
-                        Filename = hash,
-                        Filesize = filesize
-                    }
-                ];
-            }
+        if (result.Response == null || result.Response.Count == 0)
+        {
+            throw new("Premiumize cache/check returned success without a response array");
+        }
 
+        if (result.Response[0] != true)
+        {
+            return [];
+        }
+
+        // Premiumize reports cache status per torrent, not per file: a hit carries a
+        // single name + total size, so availability is a single entry.
+        var filename = result.Filename is { Count: > 0 } ? result.Filename[0] : null;
+        var filesize = result.Filesize is { Count: > 0 } ? result.Filesize[0] : 0;
+
+        if (String.IsNullOrWhiteSpace(filename))
+        {
+            // Cached but no filename detail - still report availability with a placeholder.
             return
             [
                 new()
                 {
-                    Filename = filename,
+                    Filename = hash,
                     Filesize = filesize
                 }
             ];
         }
-        catch (Exception ex) when (IsRateLimitMessage(ex.Message))
-        {
-            throw new RateLimitException(ex.Message, TimeSpan.FromMinutes(2));
-        }
+
+        return
+        [
+            new()
+            {
+                Filename = filename,
+                Filesize = filesize
+            }
+        ];
     }
 
     /// <inheritdoc />
@@ -520,5 +557,25 @@ public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHtt
 
         [JsonProperty("code")]
         public String? Code { get; set; }
+    }
+
+    private class RawCacheCheckResponse
+    {
+        [JsonProperty("status")]
+        public String? Status { get; set; }
+
+        [JsonProperty("message")]
+        public String? Message { get; set; }
+
+        [JsonProperty("response")]
+        public List<Boolean>? Response { get; set; }
+
+        [JsonProperty("filename")]
+        public List<String?>? Filename { get; set; }
+
+        // Verified live: a JSON *string* of bytes on hits ("276445467"), the number 0 on
+        // misses. Newtonsoft coerces both to Int64; do not port this call to System.Text.Json.
+        [JsonProperty("filesize")]
+        public List<Int64>? Filesize { get; set; }
     }
 }

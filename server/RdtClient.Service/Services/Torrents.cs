@@ -394,6 +394,35 @@ public class Torrents(
 
         logger.LogDebug("Adding {hash} to debrid provider {torrentInfo}", torrent.Hash, torrent.ToLog());
 
+        // The cache gate runs BEFORE the provider lock: it is a read-only availability
+        // probe (up to a 10s HTTP timeout) and must not extend the lock hold for every
+        // other queued torrent.
+        if (torrent.Type != DownloadType.Nzb && settings.Current.Provider.OnlyDownloadCached && !String.IsNullOrWhiteSpace(torrent.Hash))
+        {
+            if (!DebridClient.SupportsAvailabilityCheck)
+            {
+                logger.LogWarning("OnlyDownloadCached is enabled but {provider} has no availability check; the cache gate is INACTIVE and torrents are added normally",
+                                  settings.Current.Provider.Provider);
+            }
+            else if (!await IsCachedOnProvider(torrent))
+            {
+                if (torrent.DeleteOnError == 0)
+                {
+                    logger.LogWarning("Rejected torrents are only cleaned up when 'Delete download when in error' is above 0; rejected entries will accumulate until it is set {torrentInfo}",
+                                      torrent.ToLog());
+                }
+
+                // Marking the torrent completed-with-error (never retried) makes the
+                // qBittorrent torrents/add endpoint answer "Fails." while it waits for
+                // the add - a download manager then falls through to the next release
+                // in the same search pass. Completed is required for the error-cleanup
+                // loop to collect the rejected torrent.
+                await torrentData.UpdateComplete(torrent.TorrentId, "Rejected: release not cached on debrid provider (OnlyDownloadCached)", DateTimeOffset.UtcNow, false);
+
+                return;
+            }
+        }
+
         await RealDebridUpdateLock.WaitAsync();
 
         try
@@ -408,18 +437,6 @@ public class Torrents(
             }
             else
             {
-                if (settings.Current.Provider.Default.OnlyDownloadCached && !String.IsNullOrWhiteSpace(torrent.Hash) && !await IsCachedOnProvider(torrent))
-                {
-                    // Marking the torrent completed-with-error (never retried) makes the
-                    // qBittorrent torrents/add endpoint answer "Fails." while it waits for
-                    // the add - a download manager then falls through to the next release
-                    // in the same search pass. Completed is required for the error-cleanup
-                    // loop to collect the rejected torrent (needs DeleteOnError > 0).
-                    await torrentData.UpdateComplete(torrent.TorrentId, "Rejected: release not cached on debrid provider (OnlyDownloadCached)", DateTimeOffset.UtcNow, false);
-
-                    return;
-                }
-
                 id = torrent.IsFile
                     ? await DebridClient.AddTorrentFile(Convert.FromBase64String(payloadContent))
                     : await DebridClient.AddTorrentMagnet(payloadContent);
@@ -451,14 +468,24 @@ public class Torrents(
     ///     toward its fallback indexers/protocols for releases that are actually cached.
     ///     Rate limits propagate so the runner pauses the whole dequeue instead.
     /// </summary>
+    /// <summary>
+    ///     Memory entries are provider-scoped: an "uncached" verdict from one provider
+    ///     must not carry over a provider switch inside the re-check window.
+    /// </summary>
+    private String UncachedMemoryKey(String hash)
+    {
+        return $"{settings.Current.Provider.Provider}:{hash}";
+    }
+
     private async Task<Boolean> IsCachedOnProvider(Torrent torrent)
     {
         var hash = torrent.Hash!;
+        var memoryKey = UncachedMemoryKey(hash);
         var now = DateTimeOffset.UtcNow;
 
-        if (!UncachedHashes.NeedsCheck(hash, now))
+        if (!UncachedHashes.NeedsCheck(memoryKey, now))
         {
-            var timesSeen = UncachedHashes.RecordSighting(hash);
+            var timesSeen = UncachedHashes.RecordSighting(memoryKey);
 
             logger.LogInformation("Rejecting {hash}: not cached on debrid provider, seen {timesSeen} times, still uncached (answered from memory) {torrentInfo}",
                                   hash,
@@ -487,12 +514,12 @@ public class Torrents(
 
         if (availableFiles.Count > 0)
         {
-            UncachedHashes.RecordCached(hash);
+            UncachedHashes.RecordCached(memoryKey);
 
             return true;
         }
 
-        var seen = UncachedHashes.RecordUncached(hash, now);
+        var seen = UncachedHashes.RecordUncached(memoryKey, now);
 
         logger.LogInformation("Rejecting {hash}: not cached on debrid provider (seen {timesSeen} times) {torrentInfo}", hash, seen, torrent.ToLog());
 
@@ -904,6 +931,13 @@ public class Torrents(
 
             Log($"Retrying Torrent", torrent);
 
+            // A human retry must reach the provider: drop any OnlyDownloadCached memory
+            // of this hash so the re-add gets a real availability check.
+            if (!String.IsNullOrWhiteSpace(torrent.Hash))
+            {
+                UncachedHashes.Forget(UncachedMemoryKey(torrent.Hash));
+            }
+
             await UpdateComplete(torrent.TorrentId, "Retrying Torrent", DateTimeOffset.UtcNow, false);
             await UpdateRetry(torrent.TorrentId, null, 0);
 
@@ -1134,7 +1168,18 @@ public class Torrents(
 
         if (existingTorrent != null)
         {
-            return existingTorrent;
+            // A dead pre-provider row (completed-with-error, never added - e.g. an
+            // OnlyDownloadCached rejection or an exhausted add-retry) must not shadow a
+            // fresh add forever: replace it so a re-offered release gets a real
+            // re-evaluation instead of answering "Fails." from the stale row.
+            if (existingTorrent is { RdId: null, Completed: not null, Error: not null })
+            {
+                await Delete(existingTorrent.TorrentId, true, false, false);
+            }
+            else
+            {
+                return existingTorrent;
+            }
         }
 
         var newTorrent = await torrentData.Add(null,

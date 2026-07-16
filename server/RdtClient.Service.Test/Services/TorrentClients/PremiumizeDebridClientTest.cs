@@ -230,6 +230,36 @@ public class PremiumizeDebridClientTest
     }
 
     [Fact]
+    public async Task GetAvailableFiles_WhenRateLimited_ThrowsRateLimitException()
+    {
+        // Arrange - a 429 whose body matches none of the documented rate-limit phrases
+        // (e.g. a proxy page). Status-code classification must catch it regardless: the
+        // OnlyDownloadCached gate fails open on generic errors, and a mis-classified
+        // rate limit would let uncached torrents through during exactly a throttle storm.
+        var handler = new RecordingHttpMessageHandler(_ => new((HttpStatusCode)429)
+        {
+            Content = new StringContent("Too Many Requests", Encoding.UTF8, "text/html")
+        });
+        var client = CreateClient(handler);
+
+        // Act + Assert
+        await Assert.ThrowsAsync<RateLimitException>(() => client.GetAvailableFiles("d7a46713eaee18c746b3254b7d1492a50fd9d6ce"));
+    }
+
+    [Fact]
+    public async Task GetAvailableFiles_WhenPremiumizeReturnsErrorStatus_Throws()
+    {
+        // Arrange - an error answer must THROW, never read as "not cached": the gate
+        // fails open on exceptions, but an empty-list return would reject the torrent.
+        var handler = new RecordingHttpMessageHandler(_ => JsonResponse(
+            """{"status":"error","message":"internal error"}"""));
+        var client = CreateClient(handler);
+
+        // Act + Assert
+        await Assert.ThrowsAsync<Exception>(() => client.GetAvailableFiles("d7a46713eaee18c746b3254b7d1492a50fd9d6ce"));
+    }
+
+    [Fact]
     public async Task GetAvailableFiles_WhenCachedWithoutFilename_ReturnsPlaceholderEntry()
     {
         // Arrange

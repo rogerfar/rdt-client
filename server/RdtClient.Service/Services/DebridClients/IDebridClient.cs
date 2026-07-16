@@ -14,6 +14,15 @@ public interface IDebridClient
     Task<IList<DebridClientAvailableFile>> GetAvailableFiles(String hash);
 
     /// <summary>
+    ///     Whether <see cref="GetAvailableFiles" /> is a real availability check on this
+    ///     provider. Several providers stub it to an empty list, which callers must not
+    ///     mistake for "not cached" - the OnlyDownloadCached gate only runs when this is
+    ///     true, otherwise enabling the setting would reject every torrent on a provider
+    ///     that simply cannot answer.
+    /// </summary>
+    Boolean SupportsAvailabilityCheck => false;
+
+    /// <summary>
     ///     Tell the debrid provider which files to download.
     /// </summary>
     /// <remark>

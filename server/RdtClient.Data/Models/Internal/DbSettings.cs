@@ -211,6 +211,10 @@ or
 <a href=""https://debrid-link.com/webapp/apikey"" target=""_blank"" rel=""noopener"">https://debrid-link.com/webapp/apikey</a>")]
     public String ApiKey { get; set; } = "";
 
+    [DisplayName("Only download cached torrents")]
+    [Description("When enabled, a torrent that is not cached on the debrid provider is rejected when it is added, so download managers such as Sonarr or Radarr can fall through to the next release in the same search. Uncached torrents are never leeched. Does not affect usenet/NZB downloads. Only supported on providers with an availability check (currently Premiumize and TorBox) - on other providers this setting has no effect. Rejected torrents are cleaned up by the \"Delete download when in error\" setting, which should be set above 0 when this is enabled.")]
+    public Boolean OnlyDownloadCached { get; set; } = false;
+
     /// <summary>
     ///     API hostname to use <b>for Real Debrid only</b>
     /// </summary>
@@ -303,10 +307,6 @@ public class DbSettingsDefaults
     [DisplayName("Only download available files on debrid provider")]
     [Description("When selected, it will only download files in the torrent that have been download by Real-Debrid. You can use this in combination with the Min File size setting above.")]
     public Boolean OnlyDownloadAvailableFiles { get; set; } = true;
-
-    [DisplayName("Only download cached torrents")]
-    [Description("When enabled, a torrent that is not cached on the debrid provider is rejected when it is added, so download managers such as Sonarr or Radarr can fall through to the next release in the same search. Uncached torrents are never leeched. Does not affect usenet/NZB downloads.")]
-    public Boolean OnlyDownloadCached { get; set; } = false;
 
     [DisplayName("Minimum file size to download")]
     [Description("Files that are smaller than this setting are skipped and not downloaded. When set to 0 all files are downloaded. When downloading from Radarr or Sonarr it's recommended to keep this setting at atleast a few MB to avoid the debrid provider having to re-download the torrent.")]
