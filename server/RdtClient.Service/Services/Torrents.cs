@@ -40,6 +40,10 @@ public class Torrents(
 
     private static readonly SemaphoreSlim TorrentResetLock = new(1, 1);
 
+    // Shared across the scoped Torrents instances: rejected hashes are re-offered by
+    // download managers on every RSS/search pass and must be answered from memory.
+    private static readonly UncachedHashMemory UncachedHashes = new(TimeSpan.FromMinutes(30));
+
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         ReferenceHandler = ReferenceHandler.IgnoreCycles
@@ -404,6 +408,18 @@ public class Torrents(
             }
             else
             {
+                if (settings.Current.Provider.Default.OnlyDownloadCached && !String.IsNullOrWhiteSpace(torrent.Hash) && !await IsCachedOnProvider(torrent))
+                {
+                    // Marking the torrent completed-with-error (never retried) makes the
+                    // qBittorrent torrents/add endpoint answer "Fails." while it waits for
+                    // the add - a download manager then falls through to the next release
+                    // in the same search pass. Completed is required for the error-cleanup
+                    // loop to collect the rejected torrent (needs DeleteOnError > 0).
+                    await torrentData.UpdateComplete(torrent.TorrentId, "Rejected: release not cached on debrid provider (OnlyDownloadCached)", DateTimeOffset.UtcNow, false);
+
+                    return;
+                }
+
                 id = torrent.IsFile
                     ? await DebridClient.AddTorrentFile(Convert.FromBase64String(payloadContent))
                     : await DebridClient.AddTorrentMagnet(payloadContent);
@@ -424,6 +440,63 @@ public class Torrents(
         var result = await DebridClient.GetAvailableFiles(hash);
 
         return result;
+    }
+
+    /// <summary>
+    ///     The OnlyDownloadCached gate: is this torrent cached on the debrid provider?
+    ///     Recently-rejected hashes are answered from memory (download managers re-offer
+    ///     the same release every RSS/search pass). A provider error fails OPEN - the add
+    ///     proceeds and fails on its own if the provider is really down; failing closed
+    ///     would reject every torrent during an outage and push the download manager
+    ///     toward its fallback indexers/protocols for releases that are actually cached.
+    ///     Rate limits propagate so the runner pauses the whole dequeue instead.
+    /// </summary>
+    private async Task<Boolean> IsCachedOnProvider(Torrent torrent)
+    {
+        var hash = torrent.Hash!;
+        var now = DateTimeOffset.UtcNow;
+
+        if (!UncachedHashes.NeedsCheck(hash, now))
+        {
+            var timesSeen = UncachedHashes.RecordSighting(hash);
+
+            logger.LogInformation("Rejecting {hash}: not cached on debrid provider, seen {timesSeen} times, still uncached (answered from memory) {torrentInfo}",
+                                  hash,
+                                  timesSeen,
+                                  torrent.ToLog());
+
+            return false;
+        }
+
+        IList<DebridClientAvailableFile> availableFiles;
+
+        try
+        {
+            availableFiles = await DebridClient.GetAvailableFiles(hash);
+        }
+        catch (RateLimitException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Cache check failed for {hash}; allowing the add to proceed {torrentInfo}", hash, torrent.ToLog());
+
+            return true;
+        }
+
+        if (availableFiles.Count > 0)
+        {
+            UncachedHashes.RecordCached(hash);
+
+            return true;
+        }
+
+        var seen = UncachedHashes.RecordUncached(hash, now);
+
+        logger.LogInformation("Rejecting {hash}: not cached on debrid provider (seen {timesSeen} times) {torrentInfo}", hash, seen, torrent.ToLog());
+
+        return false;
     }
 
     public async Task<Boolean> SelectFiles(Guid torrentId)
