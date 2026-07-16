@@ -55,9 +55,48 @@ public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHtt
         return await CreateTransferFromNzbFile(bytes, GetNzbFileName(name));
     }
 
-    public Task<IList<DebridClientAvailableFile>> GetAvailableFiles(String hash)
+    public async Task<IList<DebridClientAvailableFile>> GetAvailableFiles(String hash)
     {
-        return Task.FromResult<IList<DebridClientAvailableFile>>([]);
+        try
+        {
+            var result = await GetClient().Cache.Check([hash], CancellationToken.None);
+
+            if (result?.Response == null || result.Response.Count == 0 || !result.Response[0])
+            {
+                return [];
+            }
+
+            // Premiumize reports cache status per torrent, not per file: a hit carries a
+            // single name + total size, so availability is a single entry.
+            var filename = result.Filename is { Count: > 0 } ? result.Filename[0] : null;
+            var filesize = result.Filesize is { Count: > 0 } ? result.Filesize[0] : 0;
+
+            if (String.IsNullOrWhiteSpace(filename))
+            {
+                // Cached but no filename detail - still report availability with a placeholder.
+                return
+                [
+                    new()
+                    {
+                        Filename = hash,
+                        Filesize = filesize
+                    }
+                ];
+            }
+
+            return
+            [
+                new()
+                {
+                    Filename = filename,
+                    Filesize = filesize
+                }
+            ];
+        }
+        catch (Exception ex) when (IsRateLimitMessage(ex.Message))
+        {
+            throw new RateLimitException(ex.Message, TimeSpan.FromMinutes(2));
+        }
     }
 
     /// <inheritdoc />

@@ -194,6 +194,57 @@ public class PremiumizeDebridClientTest
         Assert.Contains("torrent body", handler.RequestBody);
     }
 
+    [Fact]
+    public async Task GetAvailableFiles_WhenHashCached_ReturnsTorrentLevelEntry()
+    {
+        // Arrange - response shape verified live 2026-07-16: filesize is a JSON *string* on hits
+        var handler = new RecordingHttpMessageHandler(_ => JsonResponse(
+            """{"status":"success","response":[true],"transcoded":[true],"filename":["The Matrix (1999) [1080p]"],"filesize":["276445467"]}"""));
+        var client = CreateClient(handler);
+
+        // Act
+        var result = await client.GetAvailableFiles("d7a46713eaee18c746b3254b7d1492a50fd9d6ce");
+
+        // Assert - premiumize reports cache status per torrent, not per file: one entry on a hit
+        Assert.Single(result);
+        Assert.Equal("The Matrix (1999) [1080p]", result[0].Filename);
+        Assert.Equal(276445467, result[0].Filesize);
+        Assert.Contains("cache/check", handler.Request!.RequestUri!.ToString());
+        var requestText = handler.Request.RequestUri.ToString() + handler.RequestBody;
+        Assert.Contains("d7a46713eaee18c746b3254b7d1492a50fd9d6ce", requestText);
+    }
+
+    [Fact]
+    public async Task GetAvailableFiles_WhenHashNotCached_ReturnsEmpty()
+    {
+        // Arrange - on a miss filesize is the *number* 0 (verified live)
+        var handler = new RecordingHttpMessageHandler(_ => JsonResponse(
+            """{"status":"success","response":[false],"transcoded":[null],"filename":[null],"filesize":[0]}"""));
+        var client = CreateClient(handler);
+
+        // Act
+        var result = await client.GetAvailableFiles("0000000000000000000000000000000000000000");
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetAvailableFiles_WhenCachedWithoutFilename_ReturnsPlaceholderEntry()
+    {
+        // Arrange
+        var handler = new RecordingHttpMessageHandler(_ => JsonResponse(
+            """{"status":"success","response":[true],"transcoded":[true],"filename":[""],"filesize":[0]}"""));
+        var client = CreateClient(handler);
+
+        // Act
+        var result = await client.GetAvailableFiles("d7a46713eaee18c746b3254b7d1492a50fd9d6ce");
+
+        // Assert - cached is cached even without detail; report availability under the hash
+        Assert.Single(result);
+        Assert.Equal("d7a46713eaee18c746b3254b7d1492a50fd9d6ce", result[0].Filename);
+    }
+
     private PremiumizeDebridClient CreateClient(RecordingHttpMessageHandler handler)
     {
         _httpClientFactoryMock.Setup(m => m.CreateClient(It.IsAny<String>())).Returns(new HttpClient(handler));
