@@ -63,7 +63,7 @@ public class TorrentRunnerTest
         var torrentRunner = new TorrentRunner(Mock.Of<ILogger<TorrentRunner>>(),
                                               torrents,
                                               new(null!),
-                                              new(null!, torrents),
+                                              new(null!, torrents, new PremiumizeProgressTracker()),
                                               Mock.Of<IHttpClientFactory>(),
                                               new RateLimitCoordinator(),
                                               testSettings,

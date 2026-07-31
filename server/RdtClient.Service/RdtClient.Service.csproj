@@ -33,4 +33,8 @@
     <ProjectReference Include="..\RdtClient.Data\RdtClient.Data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="RdtClient.Service.Test" />
+  </ItemGroup>
+
 </Project>

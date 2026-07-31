@@ -12,6 +12,7 @@ public class QBittorrentTest
 {
     private readonly Mock<Authentication> _authenticationMock;
     private readonly Mock<ILogger<QBittorrent>> _loggerMock;
+    private readonly PremiumizeProgressTracker _premiumizeProgressTracker;
     private readonly QBittorrent _qBittorrent;
     private readonly TestSettings _settings;
     private readonly TorrentRunnerState _runnerState;
@@ -22,10 +23,11 @@ public class QBittorrentTest
         _loggerMock = new();
         _settings = new();
         _runnerState = new();
+        _premiumizeProgressTracker = new();
         _torrentsMock = new(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, _settings, _runnerState);
         _authenticationMock = new(null!, null!, null!);
 
-        _qBittorrent = new(_loggerMock.Object, _settings, _authenticationMock.Object, _torrentsMock.Object, null!, _runnerState);
+        _qBittorrent = new(_loggerMock.Object, _settings, _authenticationMock.Object, _torrentsMock.Object, null!, _runnerState, _premiumizeProgressTracker);
     }
 
     [Fact]
@@ -405,5 +407,75 @@ public class QBittorrentTest
                 Directory.Delete(mappedPath, true);
             }
         }
+    }
+
+    [Fact]
+    public async Task TorrentInfo_PremiumizeWithMovingProgress_ReportsDownloadingWithSyntheticSize()
+    {
+        // Arrange
+        var torrentId = Guid.NewGuid();
+
+        _premiumizeProgressTracker.Update(torrentId, 0.5);
+        _premiumizeProgressTracker.Update(torrentId, 0.6);
+
+        var torrent = new Torrent
+        {
+            TorrentId = torrentId,
+            Hash = "hash1",
+            RdName = "Premiumize Torrent",
+            ClientKind = Provider.Premiumize,
+            RdProgress = 60,
+            RdStatus = TorrentStatus.Downloading,
+            RdSeeders = null,
+            Type = DownloadType.Torrent,
+            Added = DateTimeOffset.UtcNow
+        };
+
+        _torrentsMock.Setup(m => m.Get()).ReturnsAsync([torrent]);
+
+        // Act
+        var result = await _qBittorrent.TorrentInfo();
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("downloading", result[0].State);
+        Assert.Equal(PremiumizeProgressTracker.SyntheticSizeBytes, result[0].Size);
+        Assert.Equal((Int64)(PremiumizeProgressTracker.SyntheticSizeBytes * 0.6), result[0].Downloaded);
+        Assert.True(result[0].Downloaded > 0);
+    }
+
+    [Fact]
+    public async Task TorrentInfo_PremiumizeWhenTrackerStalled_ReportsStalledDownloadState()
+    {
+        // Arrange
+        var torrentId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+
+        _premiumizeProgressTracker.UtcNowOverride = () => now;
+        _premiumizeProgressTracker.Update(torrentId, 0.5);
+        now = now.Add(PremiumizeProgressTracker.StallThreshold);
+        _premiumizeProgressTracker.Update(torrentId, 0.5);
+
+        var torrent = new Torrent
+        {
+            TorrentId = torrentId,
+            Hash = "hash1",
+            RdName = "Premiumize Torrent",
+            ClientKind = Provider.Premiumize,
+            RdProgress = 50,
+            RdStatus = TorrentStatus.Downloading,
+            RdSeeders = null,
+            Type = DownloadType.Torrent,
+            Added = DateTimeOffset.UtcNow
+        };
+
+        _torrentsMock.Setup(m => m.Get()).ReturnsAsync([torrent]);
+
+        // Act
+        var result = await _qBittorrent.TorrentInfo();
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("stalledDL", result[0].State);
     }
 }

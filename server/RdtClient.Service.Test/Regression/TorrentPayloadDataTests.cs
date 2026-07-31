@@ -107,6 +107,46 @@ public class TorrentPayloadDataTests : IAsyncLifetime
         Assert.False(await verifyContext.TorrentPayloads.AnyAsync(m => m.TorrentId == torrentId));
     }
 
+    [Fact]
+    public async Task UpdateRdData_ShouldPersistClientKind()
+    {
+        var torrentId = Guid.NewGuid();
+
+        await using (var context = CreateContext())
+        {
+            await context.Database.EnsureCreatedAsync();
+
+            context.Torrents.Add(new()
+            {
+                TorrentId = torrentId,
+                Hash = "hash-client-kind",
+                Added = DateTimeOffset.UtcNow,
+                Type = DownloadType.Torrent
+            });
+
+            await context.SaveChangesAsync();
+        }
+
+        await using (var updateContext = CreateContext())
+        {
+            var torrentData = new TorrentData(updateContext);
+
+            await torrentData.UpdateRdData(new()
+            {
+                TorrentId = torrentId,
+                ClientKind = Provider.Premiumize,
+                RdProgress = 42,
+                RdStatus = TorrentStatus.Downloading
+            });
+        }
+
+        await using var verifyContext = CreateContext();
+        var torrent = await verifyContext.Torrents.SingleAsync(m => m.TorrentId == torrentId);
+
+        Assert.Equal(Provider.Premiumize, torrent.ClientKind);
+        Assert.Equal(42, torrent.RdProgress);
+    }
+
     public Task InitializeAsync()
     {
         return Task.CompletedTask;

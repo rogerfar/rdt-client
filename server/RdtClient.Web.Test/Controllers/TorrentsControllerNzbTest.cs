@@ -20,7 +20,7 @@ public class TorrentsControllerNzbTest
         _torrentsMock = new(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, new TestSettings(), new TorrentRunnerState());
         _loggerMock = new();
         _coordinatorMock = new();
-        _controller = new(_loggerMock.Object, _torrentsMock.Object, null!, _coordinatorMock.Object);
+        _controller = new(_loggerMock.Object, _torrentsMock.Object, null!, _coordinatorMock.Object, new PremiumizeProgressTracker());
     }
 
     [Fact]

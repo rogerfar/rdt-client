@@ -12,8 +12,12 @@ using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Services.DebridClients;
 
-public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHttpClientFactory httpClientFactory, IDownloadableFileFilter fileFilter, ISettings settings)
-    : IDebridClient
+public class PremiumizeDebridClient(
+    ILogger<PremiumizeDebridClient> logger,
+    IHttpClientFactory httpClientFactory,
+    IDownloadableFileFilter fileFilter,
+    ISettings settings,
+    IPremiumizeProgressTracker premiumizeProgressTracker) : IDebridClient
 {
     private const String TransferCreateUrl = "https://www.premiumize.me/api/transfer/create";
 
@@ -121,8 +125,19 @@ public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHtt
                 "running" => TorrentStatus.Downloading,
                 "seeding" => TorrentStatus.Finished,
                 "finished" => TorrentStatus.Finished,
+                "error" => TorrentStatus.Error,
                 _ => TorrentStatus.Error
             };
+
+            if (torrent.RdStatus == TorrentStatus.Downloading)
+            {
+                premiumizeProgressTracker.Update(torrent.TorrentId, torrentClientTorrent.ProgressFraction);
+                torrent.RdSpeed = premiumizeProgressTracker.GetSpeedBytesPerSec(torrent.TorrentId) ?? 0;
+            }
+            else if (torrent.RdStatus is TorrentStatus.Finished or TorrentStatus.Error)
+            {
+                premiumizeProgressTracker.Remove(torrent.TorrentId);
+            }
         }
         catch (PremiumizeException ex)
         {
@@ -370,6 +385,7 @@ public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHtt
             Host = null,
             Split = 0,
             Progress = (Int64)((transfer.Progress ?? 1.0) * 100.0),
+            ProgressFraction = transfer.Progress ?? 0.0,
             Status = transfer.Status,
             Message = transfer.Message,
             StatusCode = 0,
@@ -381,7 +397,7 @@ public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHtt
             ],
             Ended = null,
             Speed = 0,
-            Seeders = 0
+            Seeders = null
         };
     }
 

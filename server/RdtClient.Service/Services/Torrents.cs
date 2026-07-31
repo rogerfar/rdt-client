@@ -1242,7 +1242,8 @@ public class Torrents(
                    torrent.RdEnded,
                    torrent.RdSpeed,
                    torrent.RdSeeders,
-                   torrent.RdFiles);
+                   torrent.RdFiles,
+                   torrent.ClientKind);
     }
 
     private readonly record struct TorrentRdState(
@@ -1257,7 +1258,8 @@ public class Torrents(
         DateTimeOffset? RdEnded,
         Int64? RdSpeed,
         Int64? RdSeeders,
-        String? RdFiles);
+        String? RdFiles,
+        Provider? ClientKind);
 
     private void Log(String message, Download? download, Torrent? torrent)
     {

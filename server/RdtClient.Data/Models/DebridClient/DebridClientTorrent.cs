@@ -13,6 +13,7 @@ public class DebridClientTorrent
     public String? Host { get; set; }
     public Int64 Split { get; set; }
     public Int64 Progress { get; set; }
+    public Double ProgressFraction { get; set; }
     public String? Status { get; set; }
     public String? Message { get; set; }
     public Int64 StatusCode { get; set; }

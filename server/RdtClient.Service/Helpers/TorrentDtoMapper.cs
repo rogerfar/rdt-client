@@ -1,31 +1,39 @@
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.Internal;
+using RdtClient.Service.Services;
 
 namespace RdtClient.Service.Helpers;
 
 public static class TorrentDtoMapper
 {
-    public static TorrentDto ToListDto(Torrent torrent, Func<Guid, (Int64 Speed, Int64 BytesTotal, Int64 BytesDone)> getDownloadStats)
+    public static TorrentDto ToListDto(Torrent torrent,
+                                       Func<Guid, (Int64 Speed, Int64 BytesTotal, Int64 BytesDone)> getDownloadStats,
+                                       IPremiumizeProgressTracker? premiumizeProgressTracker = null)
     {
-        return ToDto(torrent, getDownloadStats, includeDownloads: false, includeFiles: false, includeFileOrMagnet: false);
+        return ToDto(torrent, getDownloadStats, includeDownloads: false, includeFiles: false, includeFileOrMagnet: false, premiumizeProgressTracker);
     }
 
-    public static TorrentDto ToUpdateDto(Torrent torrent, Func<Guid, (Int64 Speed, Int64 BytesTotal, Int64 BytesDone)> getDownloadStats)
+    public static TorrentDto ToUpdateDto(Torrent torrent,
+                                         Func<Guid, (Int64 Speed, Int64 BytesTotal, Int64 BytesDone)> getDownloadStats,
+                                         IPremiumizeProgressTracker? premiumizeProgressTracker = null)
     {
-        return ToDto(torrent, getDownloadStats, includeDownloads: true, includeFiles: false, includeFileOrMagnet: false);
+        return ToDto(torrent, getDownloadStats, includeDownloads: true, includeFiles: false, includeFileOrMagnet: false, premiumizeProgressTracker);
     }
 
-    public static TorrentDto ToDetailDto(Torrent torrent, Func<Guid, (Int64 Speed, Int64 BytesTotal, Int64 BytesDone)> getDownloadStats)
+    public static TorrentDto ToDetailDto(Torrent torrent,
+                                         Func<Guid, (Int64 Speed, Int64 BytesTotal, Int64 BytesDone)> getDownloadStats,
+                                         IPremiumizeProgressTracker? premiumizeProgressTracker = null)
     {
-        return ToDto(torrent, getDownloadStats, includeDownloads: true, includeFiles: true, includeFileOrMagnet: true);
+        return ToDto(torrent, getDownloadStats, includeDownloads: true, includeFiles: true, includeFileOrMagnet: true, premiumizeProgressTracker);
     }
 
     private static TorrentDto ToDto(Torrent torrent,
                                     Func<Guid, (Int64 Speed, Int64 BytesTotal, Int64 BytesDone)> getDownloadStats,
                                     Boolean includeDownloads,
                                     Boolean includeFiles,
-                                    Boolean includeFileOrMagnet)
+                                    Boolean includeFileOrMagnet,
+                                    IPremiumizeProgressTracker? premiumizeProgressTracker)
     {
         var downloads = includeDownloads ? torrent.Downloads.Select(download => ToDto(download, getDownloadStats)).ToList() : [];
 
@@ -68,7 +76,7 @@ public static class TorrentDtoMapper
             RdEnded = torrent.RdEnded,
             RdSpeed = torrent.RdSpeed,
             RdSeeders = torrent.RdSeeders,
-            StatusText = GetStatusText(torrent, getDownloadStats),
+            StatusText = GetStatusText(torrent, getDownloadStats, premiumizeProgressTracker),
             FilesCount = torrent.Files.Count,
             DownloadsCount = torrent.Downloads.Count,
             Files = includeFiles ? torrent.Files : [],
@@ -102,7 +110,9 @@ public static class TorrentDtoMapper
         };
     }
 
-    private static String GetStatusText(Torrent torrent, Func<Guid, (Int64 Speed, Int64 BytesTotal, Int64 BytesDone)> getDownloadStats)
+    private static String GetStatusText(Torrent torrent,
+                                          Func<Guid, (Int64 Speed, Int64 BytesTotal, Int64 BytesDone)> getDownloadStats,
+                                          IPremiumizeProgressTracker? premiumizeProgressTracker)
     {
         if (!String.IsNullOrWhiteSpace(torrent.Error))
         {
@@ -219,6 +229,8 @@ public static class TorrentDtoMapper
         return torrent.RdStatus switch
         {
             TorrentStatus.Queued => "Not Yet Added to Provider",
+            TorrentStatus.Downloading when torrent.ClientKind == Provider.Premiumize && torrent.Type != DownloadType.Nzb && premiumizeProgressTracker != null =>
+                GetPremiumizeDownloadingStatus(torrent, premiumizeProgressTracker),
             TorrentStatus.Downloading when torrent.RdSeeders < 1 && torrent.Type != DownloadType.Nzb => "Torrent stalled",
             TorrentStatus.Downloading => $"{prefix} downloading ({torrent.RdProgress}% - {FileSizeHelper.FormatSize(torrent.RdSpeed)}/s)",
             TorrentStatus.Processing => $"{prefix} processing",
@@ -228,5 +240,22 @@ public static class TorrentDtoMapper
             TorrentStatus.Uploading => $"{prefix} uploading",
             _ => "Unknown status"
         };
+    }
+
+    private static String GetPremiumizeDownloadingStatus(Torrent torrent, IPremiumizeProgressTracker premiumizeProgressTracker)
+    {
+        if (premiumizeProgressTracker.IsStalled(torrent.TorrentId))
+        {
+            return $"Torrent stalled ({torrent.RdProgress}%)";
+        }
+
+        var progressPerMin = premiumizeProgressTracker.GetProgressPerMin(torrent.TorrentId);
+
+        if (progressPerMin.HasValue)
+        {
+            return $"Torrent downloading ({torrent.RdProgress}% - ~{progressPerMin.Value:0.0}%/min)";
+        }
+
+        return $"Torrent downloading ({torrent.RdProgress}%)";
     }
 }

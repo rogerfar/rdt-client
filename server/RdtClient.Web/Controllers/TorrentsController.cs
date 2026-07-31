@@ -13,7 +13,7 @@ namespace RdtClient.Web.Controllers;
 
 [Authorize(Policy = "AuthSetting")]
 [Route("Api/Torrents")]
-public class TorrentsController(ILogger<TorrentsController> logger, Torrents torrents, TorrentRunner torrentRunner, IRateLimitCoordinator coordinator) : Controller
+public class TorrentsController(ILogger<TorrentsController> logger, Torrents torrents, TorrentRunner torrentRunner, IRateLimitCoordinator coordinator, IPremiumizeProgressTracker premiumizeProgressTracker) : Controller
 {
     [HttpGet]
     [Route("")]
@@ -21,7 +21,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
     {
         var results = await torrents.Get();
 
-        var torrentDtos = results.Select(torrent => TorrentDtoMapper.ToListDto(torrent, torrents.GetDownloadStats))
+        var torrentDtos = results.Select(torrent => TorrentDtoMapper.ToListDto(torrent, torrents.GetDownloadStats, premiumizeProgressTracker))
                                  .ToList();
 
         return Ok(torrentDtos);
@@ -43,7 +43,7 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
             file.Torrent = null;
         }
 
-        var torrentDto = TorrentDtoMapper.ToDetailDto(torrent, torrents.GetDownloadStats);
+        var torrentDto = TorrentDtoMapper.ToDetailDto(torrent, torrents.GetDownloadStats, premiumizeProgressTracker);
 
         return Ok(torrentDto);
     }

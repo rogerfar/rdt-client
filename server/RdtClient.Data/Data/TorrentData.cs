@@ -135,6 +135,7 @@ public class TorrentData(DataContext dataContext, ILogger<TorrentData>? logger =
         dbTorrent.RdSpeed = torrent.RdSpeed;
         dbTorrent.RdSeeders = torrent.RdSeeders;
         dbTorrent.RdFiles = torrent.RdFiles;
+        dbTorrent.ClientKind = torrent.ClientKind;
 
         await dataContext.SaveChangesAsync();
     }

@@ -4,13 +4,13 @@ using RdtClient.Service.Helpers;
 
 namespace RdtClient.Service.Services;
 
-public class RemoteService(IHubContext<RdtHub> hub, Torrents torrents)
+public class RemoteService(IHubContext<RdtHub> hub, Torrents torrents, IPremiumizeProgressTracker premiumizeProgressTracker)
 {
     public async Task Update()
     {
         var allTorrents = await torrents.Get();
 
-        var torrentDtos = allTorrents.Select(torrent => TorrentDtoMapper.ToUpdateDto(torrent, torrents.GetDownloadStats))
+        var torrentDtos = allTorrents.Select(torrent => TorrentDtoMapper.ToUpdateDto(torrent, torrents.GetDownloadStats, premiumizeProgressTracker))
                                      .ToList();
 
         await hub.Clients.All.SendCoreAsync("update",

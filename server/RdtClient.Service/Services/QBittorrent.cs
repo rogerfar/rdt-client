@@ -5,7 +5,7 @@ using RdtClient.Data.Models.QBittorrent;
 
 namespace RdtClient.Service.Services;
 
-public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authentication authentication, Torrents torrents, Downloads downloads, ITorrentRunnerState runnerState)
+public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authentication authentication, Torrents torrents, Downloads downloads, ITorrentRunnerState runnerState, IPremiumizeProgressTracker premiumizeProgressTracker)
 {
     public async Task<Boolean> AuthLogin(String userName, String password)
     {
@@ -233,6 +233,12 @@ public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authen
             var speed = torrent.RdSpeed ?? 0;
             var bytesDone = (Int64)(bytesTotal * rdProgress);
 
+            if (torrent.ClientKind == Provider.Premiumize && bytesTotal == 0)
+            {
+                bytesTotal = PremiumizeProgressTracker.SyntheticSizeBytes;
+                bytesDone = (Int64)(bytesTotal * rdProgress);
+            }
+
             Double progress;
 
             if (torrent.Completed != null)
@@ -327,7 +333,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authen
             {
                 result.State = "pausedUP";
             }
-            else if (torrent.RdStatus == TorrentStatus.Downloading && torrent.RdSeeders < 1)
+            else if (torrent.RdStatus == TorrentStatus.Downloading && IsProviderStalled(torrent))
             {
                 result.State = "stalledDL";
             }
@@ -885,4 +891,9 @@ public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authen
             }
         ];
     }
+
+    private Boolean IsProviderStalled(Torrent torrent) =>
+        torrent.ClientKind == Provider.Premiumize
+            ? premiumizeProgressTracker.IsStalled(torrent.TorrentId)
+            : torrent.RdSeeders < 1 && torrent.Type != DownloadType.Nzb;
 }

@@ -2,9 +2,13 @@ using System.Net;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using Moq;
+using RdtClient.Data.Enums;
+using RdtClient.Data.Models.Data;
+using RdtClient.Data.Models.DebridClient;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Services;
 using RdtClient.Service.Services.DebridClients;
+using Torrent = RdtClient.Data.Models.Data.Torrent;
 
 namespace RdtClient.Service.Test.Services.TorrentClients;
 
@@ -13,6 +17,7 @@ public class PremiumizeDebridClientTest
     private readonly Mock<IDownloadableFileFilter> _fileFilterMock;
     private readonly Mock<IHttpClientFactory> _httpClientFactoryMock;
     private readonly Mock<ILogger<PremiumizeDebridClient>> _loggerMock;
+    private readonly PremiumizeProgressTracker _premiumizeProgressTracker;
     private readonly TestSettings _settings;
 
     public PremiumizeDebridClientTest()
@@ -20,6 +25,7 @@ public class PremiumizeDebridClientTest
         _loggerMock = new();
         _httpClientFactoryMock = new();
         _fileFilterMock = new();
+        _premiumizeProgressTracker = new();
         _settings = new();
         _settings.Current.Provider.ApiKey = "test-api-key";
     }
@@ -194,11 +200,80 @@ public class PremiumizeDebridClientTest
         Assert.Contains("torrent body", handler.RequestBody);
     }
 
+    [Fact]
+    public async Task UpdateData_WhenRunning_UpdatesTrackerAndSetsDerivedSpeed()
+    {
+        // Arrange
+        var torrentId = Guid.NewGuid();
+        var client = CreateClient(new RecordingHttpMessageHandler(_ => JsonResponse("""[]""")));
+        var torrent = new Torrent
+        {
+            TorrentId = torrentId,
+            RdId = "transfer-1"
+        };
+        var transfer = new DebridClientTorrent
+        {
+            Id = "transfer-1",
+            Filename = "test.mkv",
+            Hash = "hash",
+            Progress = 60,
+            ProgressFraction = 0.6,
+            Status = "running",
+            Speed = 0,
+            Seeders = null
+        };
+
+        // Act
+        var result = await client.UpdateData(torrent, transfer);
+
+        // Assert
+        Assert.Equal(TorrentStatus.Downloading, result.RdStatus);
+        Assert.Null(result.RdSeeders);
+        Assert.False(_premiumizeProgressTracker.IsStalled(torrentId));
+    }
+
+    [Fact]
+    public async Task UpdateData_WhenFinished_RemovesTrackerEntry()
+    {
+        // Arrange
+        var torrentId = Guid.NewGuid();
+        var client = CreateClient(new RecordingHttpMessageHandler(_ => JsonResponse("""[]""")));
+        var torrent = new Torrent
+        {
+            TorrentId = torrentId,
+            RdId = "transfer-1"
+        };
+
+        await client.UpdateData(torrent, new DebridClientTorrent
+        {
+            Id = "transfer-1",
+            Filename = "test.mkv",
+            Hash = "hash",
+            Progress = 60,
+            ProgressFraction = 0.6,
+            Status = "running"
+        });
+
+        // Act
+        await client.UpdateData(torrent, new DebridClientTorrent
+        {
+            Id = "transfer-1",
+            Filename = "test.mkv",
+            Hash = "hash",
+            Progress = 100,
+            ProgressFraction = 1.0,
+            Status = "finished"
+        });
+
+        // Assert
+        Assert.Null(_premiumizeProgressTracker.GetSpeedBytesPerSec(torrentId));
+    }
+
     private PremiumizeDebridClient CreateClient(RecordingHttpMessageHandler handler)
     {
         _httpClientFactoryMock.Setup(m => m.CreateClient(It.IsAny<String>())).Returns(new HttpClient(handler));
 
-        return new(_loggerMock.Object, _httpClientFactoryMock.Object, _fileFilterMock.Object, _settings);
+        return new(_loggerMock.Object, _httpClientFactoryMock.Object, _fileFilterMock.Object, _settings, _premiumizeProgressTracker);
     }
 
     private static HttpResponseMessage JsonResponse(String json, HttpStatusCode statusCode = HttpStatusCode.OK)
