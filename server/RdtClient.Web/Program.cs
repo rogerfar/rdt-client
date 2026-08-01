@@ -1,6 +1,8 @@
 using System.Diagnostics;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using RdtClient.Data.Data;
 using RdtClient.Data.Models.Internal;
@@ -89,14 +91,37 @@ builder.Services.AddAuthorizationBuilder()
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
        {
            options.User.RequireUniqueEmail = false;
-           options.Password.RequiredLength = 5;
+           options.Password.RequiredLength = 8;
            options.Password.RequireUppercase = false;
            options.Password.RequireLowercase = false;
            options.Password.RequireNonAlphanumeric = false;
            options.Password.RequiredUniqueChars = 3;
+
+           // Caps brute-force attempts across every authentication surface. Note this is account-wide: a client
+           // configured with a stale password will lock the account out for other clients too.
+           options.Lockout.AllowedForNewUsers = true;
+           options.Lockout.MaxFailedAccessAttempts = 5;
+           options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
        })
        .AddEntityFrameworkStores<DataContext>()
        .AddDefaultTokenProviders();
+
+// Speed brake in front of the lockout, applied per source address. Behind a reverse proxy every client shares the
+// proxy's address, so the limit is deliberately generous enough not to disrupt legitimate *arr traffic.
+builder.Services.AddRateLimiter(rateLimiterOptions =>
+{
+    rateLimiterOptions.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    rateLimiterOptions.AddPolicy(RateLimitPolicies.Authentication,
+                                 httpContext => RateLimitPartition.GetFixedWindowLimiter(
+                                     httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                                     _ => new FixedWindowRateLimiterOptions
+                                     {
+                                         PermitLimit = 30,
+                                         Window = TimeSpan.FromMinutes(1),
+                                         QueueLimit = 0
+                                     }));
+});
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
@@ -160,6 +185,18 @@ try
 
     app.ConfigureExceptionHandler();
 
+    if (appSettings.Security?.UseHsts == true)
+    {
+        app.UseHsts();
+    }
+
+    if (appSettings.Security?.UseHttpsRedirection == true)
+    {
+        app.UseHttpsRedirection();
+    }
+
+    app.UseMiddleware<SecurityHeadersMiddleware>();
+
     app.UseMiddleware<AuthorizeMiddleware>();
 
     app.Use(async (context, next) =>
@@ -184,6 +221,9 @@ try
     app.UseMiddleware<RequestLoggingMiddleware>();
 
     app.UseRouting();
+
+    // Must run after UseRouting so the endpoint's rate limit policy is known.
+    app.UseRateLimiter();
 
     app.UseAuthentication();
 

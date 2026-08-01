@@ -94,6 +94,8 @@ public class Torrents(
             return;
         }
 
+        category = PathHelper.SanitizeCategory(category);
+
         Log($"Update category to {category}", torrent);
 
         await torrentData.UpdateCategory(torrent.TorrentId, category);
@@ -1031,14 +1033,9 @@ public class Torrents(
 
     private static String DownloadPath(Torrent torrent, DbSettings settings)
     {
-        var settingDownloadPath = settings.DownloadClient.DownloadPath;
-
-        if (!String.IsNullOrWhiteSpace(torrent.Category))
-        {
-            settingDownloadPath = Path.Combine(settingDownloadPath, torrent.Category);
-        }
-
-        return settingDownloadPath;
+        // This path feeds recursive directory deletion when a torrent is removed with its local files, so an unsanitized
+        // category here means deleting outside the download root.
+        return PathHelper.CombineWithCategory(settings.DownloadClient.DownloadPath, torrent.Category);
     }
 
     private async Task<String?> GetPayloadContent(Torrent torrent)
@@ -1064,6 +1061,9 @@ public class Torrents(
             return existingTorrent;
         }
 
+        // Store the category already sanitized so it is safe for every consumer, not just the path-building ones.
+        torrent.Category = PathHelper.SanitizeCategory(torrent.Category);
+
         var newTorrent = await torrentData.Add(null,
                                                infoHash,
                                                fileOrMagnetContents,
@@ -1077,6 +1077,8 @@ public class Torrents(
 
     public async Task Update(Torrent torrent)
     {
+        torrent.Category = PathHelper.SanitizeCategory(torrent.Category);
+
         await torrentData.Update(torrent);
     }
 

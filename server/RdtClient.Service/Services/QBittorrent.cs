@@ -2,6 +2,7 @@
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.QBittorrent;
+using RdtClient.Service.Helpers;
 
 namespace RdtClient.Service.Services;
 
@@ -196,12 +197,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authen
 
         foreach (var torrent in allTorrents)
         {
-            var downloadPath = savePath;
-
-            if (!String.IsNullOrWhiteSpace(torrent.Category))
-            {
-                downloadPath = Path.Combine(downloadPath, torrent.Category);
-            }
+            var downloadPath = PathHelper.CombineWithCategory(savePath, torrent.Category);
 
             var torrentPath = downloadPath;
 
@@ -529,10 +525,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authen
             return null;
         }
 
-        if (!String.IsNullOrWhiteSpace(torrent.Category))
-        {
-            savePath = Path.Combine(savePath, torrent.Category);
-        }
+        savePath = PathHelper.CombineWithCategory(savePath, torrent.Category);
 
         var bytesDone = torrent.RdProgress;
         var bytesTotal = torrent.RdSize;

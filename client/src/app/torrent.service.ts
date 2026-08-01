@@ -20,6 +20,10 @@ export class TorrentService {
 
   private connection: signalR.HubConnection;
 
+  /** Backoff for the initial connection, which SignalR does not retry on its own. */
+  private reconnectDelayMs = 2000;
+  private static readonly MAX_RECONNECT_DELAY_MS = 30000;
+
   constructor() {
     this.connect();
   }
@@ -47,6 +51,8 @@ export class TorrentService {
     });
 
     this.connection.onreconnected(() => {
+      this.reconnectDelayMs = 2000;
+
       this.getDiskSpaceStatus().subscribe({
         next: (status) => {
           if (status) {
@@ -56,7 +62,27 @@ export class TorrentService {
       });
     });
 
-    this.connection.start().catch((err) => console.error(err));
+    // The hub requires authentication, so a start can legitimately fail (not logged in yet, expired session).
+    // SignalR's automatic reconnect only covers a connection that was established once, so retry the initial
+    // start ourselves and restart once automatic reconnection has given up.
+    this.connection.onclose(() => this.startWithRetry());
+
+    this.startWithRetry();
+  }
+
+  private startWithRetry(): void {
+    this.connection
+      .start()
+      .then(() => {
+        this.reconnectDelayMs = 2000;
+      })
+      .catch((err) => {
+        console.error(err);
+
+        setTimeout(() => this.startWithRetry(), this.reconnectDelayMs);
+
+        this.reconnectDelayMs = Math.min(this.reconnectDelayMs * 2, TorrentService.MAX_RECONNECT_DELAY_MS);
+      });
   }
 
   public getList(): Observable<Torrent[]> {

@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using RdtClient.Data.Enums;
+using RdtClient.Service.Middleware;
 using RdtClient.Service.Services;
 
 namespace RdtClient.Web.Controllers;
@@ -34,6 +36,7 @@ public class AuthController(Authentication authentication, ISettings settings) :
     }
 
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicies.Authentication)]
     [Route("Create")]
     [HttpPost]
     public async Task<ActionResult> Create([FromBody] AuthControllerLoginRequest? request)
@@ -89,6 +92,7 @@ public class AuthController(Authentication authentication, ISettings settings) :
     }
 
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicies.Authentication)]
     [Route("Login")]
     [HttpPost]
     public async Task<ActionResult> Login([FromBody] AuthControllerLoginRequest? request)
@@ -111,6 +115,11 @@ public class AuthController(Authentication authentication, ISettings settings) :
         }
 
         var result = await authentication.Login(request.UserName, request.Password);
+
+        if (result.IsLockedOut)
+        {
+            return BadRequest("Too many failed login attempts, this account is temporarily locked. Please try again in a few minutes.");
+        }
 
         if (!result.Succeeded)
         {

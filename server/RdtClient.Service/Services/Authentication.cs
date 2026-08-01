@@ -21,7 +21,9 @@ public class Authentication(SignInManager<IdentityUser> signInManager, UserManag
             return SignInResult.Failed;
         }
 
-        var result = await signInManager.PasswordSignInAsync(userName, password, true, false);
+        // lockoutOnFailure must stay true: every authentication surface (web UI, qBittorrent API, SabNZBd API) funnels
+        // through here, so this single flag is what caps brute-force attempts across all of them.
+        var result = await signInManager.PasswordSignInAsync(userName, password, true, true);
 
         return result;
     }

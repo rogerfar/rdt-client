@@ -5,6 +5,7 @@ using RdtClient.Service.Services.DebridClients;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.Zip;
+using SharpCompress.Common;
 
 namespace RdtClient.Service.Services;
 
@@ -78,7 +79,7 @@ public class UnpackClient(Download download, String destinationPath)
 
             if (extractPathTemp != null)
             {
-                Extract(filePath, extractPathTemp, cancellationToken);
+                await Extract(filePath, extractPathTemp, cancellationToken);
 
                 await FileHelper.Delete(filePath);
 
@@ -90,7 +91,7 @@ public class UnpackClient(Download download, String destinationPath)
 
                     if (File.Exists(mainRarFile))
                     {
-                        Extract(mainRarFile, extractPath, cancellationToken);
+                        await Extract(mainRarFile, extractPath, cancellationToken);
                     }
 
                     await FileHelper.DeleteDirectory(extractPathTemp);
@@ -98,7 +99,7 @@ public class UnpackClient(Download download, String destinationPath)
             }
             else
             {
-                Extract(filePath, extractPath, cancellationToken);
+                await Extract(filePath, extractPath, cancellationToken);
 
                 await FileHelper.Delete(filePath);
             }
@@ -128,11 +129,11 @@ public class UnpackClient(Download download, String destinationPath)
 
         if (extension == ".zip")
         {
-            archive = ZipArchive.Open(stream);
+            archive = ZipArchive.OpenArchive(stream);
         }
         else
         {
-            archive = RarArchive.Open(stream);
+            archive = RarArchive.OpenArchive(stream);
         }
 
         var entries = archive.Entries
@@ -145,33 +146,51 @@ public class UnpackClient(Download download, String destinationPath)
         return entries;
     }
 
-    private void Extract(String filePath, String extractPath, CancellationToken cancellationToken)
+    private async Task Extract(String filePath, String extractPath, CancellationToken cancellationToken)
     {
         var parts = ArchiveFactory.GetFileParts(filePath);
 
-        var fi = parts.Select(m => new FileInfo(m));
+        var fi = parts.Select(m => new FileInfo(m)).ToList();
 
         var extension = Path.GetExtension(filePath);
 
-        IArchive archive;
+        // The async archive is used purely to keep honouring the cancellation token: the synchronous
+        // WriteToDirectory has no overload that accepts one.
+        IAsyncArchive archive;
 
         if (extension == ".zip")
         {
-            archive = ZipArchive.Open(fi);
+            archive = await ZipArchive.OpenAsyncArchive(fi, cancellationToken: cancellationToken);
         }
         else
         {
-            archive = RarArchive.Open(fi);
+            archive = await RarArchive.OpenAsyncArchive(fi, cancellationToken: cancellationToken);
         }
 
-        archive.ExtractToDirectory(extractPath,
-                                   d =>
-                                   {
-                                       Progess = (Int32)Math.Round(d);
-                                   },
-                                   cancellationToken);
+        // A malicious entry makes WriteToDirectoryAsync throw, so dispose through await using to release the archive
+        // file handles on that path too.
+        await using (archive)
+        {
+            var progress = new Progress<ProgressReport>(report =>
+            {
+                if (report.PercentComplete.HasValue)
+                {
+                    Progess = (Int32)Math.Round(report.PercentComplete.Value);
+                }
+            });
 
-        archive.Dispose();
+            // ExtractFullPath recreates the directory structure held in the entry keys, matching the previous behaviour.
+            // SharpCompress refuses entries that resolve outside extractPath since 0.48.0 and throws instead, which the
+            // caller turns into a download error.
+            await archive.WriteToDirectoryAsync(extractPath,
+                                                new()
+                                                {
+                                                    Overwrite = true,
+                                                    ExtractFullPath = true
+                                                },
+                                                progress,
+                                                cancellationToken);
+        }
 
         GC.Collect();
     }

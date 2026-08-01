@@ -113,12 +113,7 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
             TotalSlots = completedTorrents.Count,
             Slots = completedTorrents.Select(t =>
                                      {
-                                         var path = savePath;
-
-                                         if (!String.IsNullOrWhiteSpace(t.Category))
-                                         {
-                                             path = Path.Combine(path, t.Category);
-                                         }
+                                         var path = PathHelper.CombineWithCategory(savePath, t.Category);
 
                                          if (!String.IsNullOrWhiteSpace(t.RdName))
                                          {

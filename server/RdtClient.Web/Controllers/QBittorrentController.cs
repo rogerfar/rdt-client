@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.QBittorrent;
+using RdtClient.Service.Middleware;
 using RdtClient.Service.Services;
 using Torrent = RdtClient.Data.Models.Data.Torrent;
 
@@ -28,6 +30,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     }
 
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicies.Authentication)]
     [Route("auth/login")]
     [HttpGet]
     public async Task<ActionResult> AuthLogin([FromQuery] QBAuthLoginRequest request)
@@ -55,6 +58,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
     }
 
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicies.Authentication)]
     [Route("auth/login")]
     [HttpPost]
     public async Task<ActionResult> AuthLoginPost([FromForm] QBAuthLoginRequest request)

@@ -559,12 +559,7 @@ public class TorrentRunner(
                     download.DownloadStarted = DateTime.UtcNow;
                     await downloads.UpdateDownloadStarted(download.DownloadId, download.DownloadStarted);
 
-                    var downloadPath = settingDownloadPath;
-
-                    if (!String.IsNullOrWhiteSpace(torrent.Category))
-                    {
-                        downloadPath = Path.Combine(downloadPath, torrent.Category);
-                    }
+                    var downloadPath = PathHelper.CombineWithCategory(settingDownloadPath, torrent.Category);
 
                     Log($"Setting download path to {downloadPath}", download, torrent);
 
@@ -668,12 +663,7 @@ public class TorrentRunner(
                     download.UnpackingStarted = DateTimeOffset.UtcNow;
                     await downloads.UpdateUnpackingStarted(download.DownloadId, download.UnpackingStarted);
 
-                    var downloadPath = settingDownloadPath;
-
-                    if (!String.IsNullOrWhiteSpace(torrent.Category))
-                    {
-                        downloadPath = Path.Combine(downloadPath, torrent.Category);
-                    }
+                    var downloadPath = PathHelper.CombineWithCategory(settingDownloadPath, torrent.Category);
 
                     Log($"Setting unpack path to {downloadPath}", download, torrent);
 

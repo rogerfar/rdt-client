@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using RdtClient.Service.Helpers;
 
 namespace RdtClient.Service.Middleware;
 
@@ -21,17 +22,17 @@ public class RequestLoggingMiddleware(RequestDelegate next, ILoggerFactory logge
 
         if (context.Request.QueryString.HasValue)
         {
-            requestLog += $", QueryString: {context.Request.QueryString}";
+            requestLog += $", QueryString: {LogRedactor.RedactQueryString(context.Request.QueryString.Value)}";
         }
 
         if (context.Request.HasFormContentType && context.Request.Form.Count > 0)
         {
-            requestLog += $", Form: {String.Join(", ", context.Request.Form.Select(f => $"{f.Key}: {f.Value}"))}";
+            requestLog += $", Form: {LogRedactor.RedactFormValues(context.Request.Form)}";
         }
         else if (context.Request.ContentType?.Contains("application/json", StringComparison.CurrentCultureIgnoreCase) == true)
         {
             var body = await ReadRequestBodyAsync(context.Request);
-            requestLog += $", Body: {body}";
+            requestLog += $", Body: {LogRedactor.RedactJson(body)}";
         }
 
         _logger.LogDebug(requestLog);

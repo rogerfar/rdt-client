@@ -17,6 +17,10 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Serilog" Version="4.4.0" />
+    <!-- Microsoft.Data.Sqlite 10.0.10 still resolves SQLitePCLRaw 2.1.11, whose native e_sqlite3 build is affected by
+         CVE-2025-6965 (memory corruption in SQLite < 3.50.2). 2.1.12 is a maintenance release that only bumps the
+         native library to 3.53.3. Remove this pin once the transitive version is 2.1.12 or newer. -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.12" />
   </ItemGroup>
 
 </Project>

@@ -11,6 +11,9 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <!-- Explicit rather than relying on the transitive reference from RdtClient.Service: the tests use
+             Microsoft.Extensions.Primitives and Microsoft.AspNetCore.Authorization directly. -->
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
         <PackageReference Include="AllDebrid.NET" Version="1.0.18" />
         <PackageReference Include="coverlet.collector" Version="10.0.1">
           <PrivateAssets>all</PrivateAssets>
@@ -18,7 +21,7 @@
         </PackageReference>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
         <PackageReference Include="Moq" Version="4.20.72" />
-        <PackageReference Include="SharpCompress" Version="[0.42.1]" />
+        <PackageReference Include="SharpCompress" Version="[0.48.0]" />
         <PackageReference Include="TestableIO.System.IO.Abstractions" Version="22.2.0" />
         <PackageReference Include="TestableIO.System.IO.Abstractions.TestingHelpers" Version="22.2.0" />
         <PackageReference Include="TestableIO.System.IO.Abstractions.Wrappers" Version="22.2.0" />
