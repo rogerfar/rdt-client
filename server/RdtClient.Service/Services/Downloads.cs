@@ -31,9 +31,9 @@ public class Downloads(DownloadData downloadData) : IDownloads
         await downloadData.UpdateUnrestrictedLink(downloadId, unrestrictedLink);
     }
 
-    public async Task UpdatePath(Guid downloadId, String path)
+    public async Task<Boolean> UpdatePath(Guid downloadId, String path)
     {
-        await downloadData.UpdatePath(downloadId, path);
+        return await downloadData.UpdatePath(downloadId, path);
     }
 
     public async Task UpdateFileName(Guid downloadId, String fileName)

@@ -24,6 +24,8 @@ public class TaskRunner(ILogger<TaskRunner> logger, IServiceProvider serviceProv
             await startupRunner.Initialize();
         }
 
+        var consecutiveFailures = 0;
+
         while (!stoppingToken.IsCancellationRequested)
         {
             using var scope = serviceProvider.CreateScope();
@@ -32,6 +34,8 @@ public class TaskRunner(ILogger<TaskRunner> logger, IServiceProvider serviceProv
             try
             {
                 await torrentRunner.Tick();
+
+                consecutiveFailures = 0;
             }
             catch (DbUpdateConcurrencyException ex)
             {
@@ -56,12 +60,33 @@ public class TaskRunner(ILogger<TaskRunner> logger, IServiceProvider serviceProv
             }
             catch (Exception ex)
             {
+                consecutiveFailures++;
+
                 logger.LogError(ex, $"Unexpected error occurred in TaskRunner: {ex.Message}");
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
+            var delay = GetTickDelay(consecutiveFailures);
+
+            if (delay > TimeSpan.FromSeconds(1))
+            {
+                logger.LogWarning("TorrentRunner tick failed {consecutiveFailures} times in a row, backing off for {delay}", consecutiveFailures, delay);
+            }
+
+            await Task.Delay(delay, stoppingToken);
         }
 
         logger.LogInformation("TaskRunner stopped.");
+    }
+
+    private static TimeSpan GetTickDelay(Int32 consecutiveFailures)
+    {
+        if (consecutiveFailures <= 1)
+        {
+            return TimeSpan.FromSeconds(1);
+        }
+
+        var seconds = Math.Min(300d, 5d * Math.Pow(2, Math.Min(consecutiveFailures - 2, 6)));
+
+        return TimeSpan.FromSeconds(seconds);
     }
 }

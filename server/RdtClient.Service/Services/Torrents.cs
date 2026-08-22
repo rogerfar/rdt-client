@@ -634,8 +634,12 @@ public class Torrents(
 
             if (refreshedPath != null)
             {
-                await downloads.UpdatePath(downloadId, refreshedPath);
-                download.Path = refreshedPath;
+                var updated = await downloads.UpdatePath(downloadId, refreshedPath);
+
+                if (updated)
+                {
+                    download.Path = refreshedPath;
+                }
             }
         }
 

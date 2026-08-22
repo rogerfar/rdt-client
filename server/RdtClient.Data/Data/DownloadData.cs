@@ -130,19 +130,58 @@ public class DownloadData(DataContext dataContext, ILogger<DownloadData>? logger
         await dataContext.SaveChangesAsync();
     }
 
-    public async Task UpdatePath(Guid downloadId, String path)
+    public async Task<Boolean> UpdatePath(Guid downloadId, String path)
     {
         var dbDownload = await dataContext.Downloads
                                           .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
 
         if (dbDownload == null)
         {
-            return;
+            return false;
+        }
+
+        if (String.Equals(dbDownload.Path, path, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        var pathAlreadyTaken = await dataContext.Downloads
+                                                .AsNoTracking()
+                                                .AnyAsync(m => m.TorrentId == dbDownload.TorrentId
+                                                            && m.DownloadId != downloadId
+                                                            && m.Path == path);
+
+        if (pathAlreadyTaken)
+        {
+            logger?.LogWarning("Skipped updating path because another download of the same torrent already uses it. DownloadId: {downloadId}, TorrentId: {torrentId}, Path: {path}",
+                               downloadId,
+                               dbDownload.TorrentId,
+                               path);
+
+            return false;
         }
 
         dbDownload.Path = path;
 
-        await dataContext.SaveChangesAsync();
+        try
+        {
+            await dataContext.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            dataContext.Entry(dbDownload).State = EntityState.Detached;
+
+            if (IsDuplicateDownloadViolation(ex))
+            {
+                logger?.LogWarning("Skipped updating path after a concurrent duplicate path write. DownloadId: {downloadId}, Path: {path}", downloadId, path);
+
+                return false;
+            }
+
+            throw;
+        }
+
+        return true;
     }
 
     public async Task UpdateDownloadStarted(Guid downloadId, DateTimeOffset? dateTime)

@@ -532,23 +532,30 @@ public class TorrentRunner(
                     {
                         logger.LogError(ex, "Cannot unrestrict link: {ex.Message}", ex.Message);
 
-                        if (download.RetryCount < torrent.DownloadRetryAttempts)
+                        try
                         {
-                            var retryCount = download.RetryCount + 1;
-                            var retryDelay = GetDownloadLinkRetryDelay(retryCount);
-                            var retryAt = DateTimeOffset.UtcNow.Add(retryDelay);
+                            if (download.RetryCount < torrent.DownloadRetryAttempts)
+                            {
+                                var retryCount = download.RetryCount + 1;
+                                var retryDelay = GetDownloadLinkRetryDelay(retryCount);
+                                var retryAt = DateTimeOffset.UtcNow.Add(retryDelay);
 
-                            Log($"Retrying download link generation {retryCount}/{torrent.DownloadRetryAttempts} at {retryAt:u}", download, torrent);
+                                Log($"Retrying download link generation {retryCount}/{torrent.DownloadRetryAttempts} at {retryAt:u}", download, torrent);
 
-                            await downloads.Reset(download.DownloadId, retryAt);
-                            await downloads.UpdateRetryCount(download.DownloadId, retryCount);
+                                await downloads.Reset(download.DownloadId, retryAt);
+                                await downloads.UpdateRetryCount(download.DownloadId, retryCount);
+                            }
+                            else
+                            {
+                                await downloads.UpdateError(download.DownloadId, ex.Message);
+                                await downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
+                                download.Error = ex.Message;
+                                download.Completed = DateTimeOffset.UtcNow;
+                            }
                         }
-                        else
+                        catch (Exception updateEx)
                         {
-                            await downloads.UpdateError(download.DownloadId, ex.Message);
-                            await downloads.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
-                            download.Error = ex.Message;
-                            download.Completed = DateTimeOffset.UtcNow;
+                            logger.LogError(updateEx, "Could not record the unrestrict failure for download: {updateEx.Message} {downloadInfo}", updateEx.Message, download.ToLog());
                         }
 
                         return;
@@ -773,7 +780,15 @@ public class TorrentRunner(
             catch (Exception ex)
             {
                 logger.LogError(ex.Message, "Torrent processing result in an unexpected exception: {Message}", ex.Message);
-                await torrents.UpdateComplete(torrent.TorrentId, $"Runner error: {ex.Message}", DateTimeOffset.UtcNow, true);
+
+                try
+                {
+                    await torrents.UpdateComplete(torrent.TorrentId, $"Runner error: {ex.Message}", DateTimeOffset.UtcNow, true);
+                }
+                catch (Exception updateEx)
+                {
+                    logger.LogError(updateEx, "Could not mark torrent as errored: {updateEx.Message} {torrentInfo}", updateEx.Message, torrent.ToLog());
+                }
             }
         }
 
