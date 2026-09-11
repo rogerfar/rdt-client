@@ -200,19 +200,25 @@
           <div class="field">
             <label class="label">Real-Debrid Status</label>
             @switch (torrent.rdStatus) {
-              @case (0) {
+              @case (RealDebridStatus.Queued) {
+                Queued
+              }
+              @case (RealDebridStatus.Processing) {
                 Processing
               }
-              @case (1) {
+              @case (RealDebridStatus.WaitingForFileSelection) {
                 Waiting For File Selection
               }
-              @case (2) {
+              @case (RealDebridStatus.Downloading) {
                 Downloading
               }
-              @case (3) {
+              @case (RealDebridStatus.Finished) {
                 Finished
               }
-              @case (99) {
+              @case (RealDebridStatus.Uploading) {
+                Uploading
+              }
+              @case (RealDebridStatus.Error) {
                 Error
               }
             }

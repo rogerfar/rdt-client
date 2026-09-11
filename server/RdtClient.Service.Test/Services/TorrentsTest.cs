@@ -121,6 +121,7 @@ public class TorrentsTest
                                            null!,
                                            null!,
                                            null!,
+                                           null!,
                                            new TestSettings(),
                                            new TorrentRunnerState());
 
@@ -189,6 +190,7 @@ public class TorrentsTest
                                            null!,
                                            null!,
                                            null!,
+                                           null!,
                                            new TestSettings(),
                                            new TorrentRunnerState());
 
@@ -235,6 +237,7 @@ public class TorrentsTest
                                            fileSystemMock,
                                            mocks.EnricherMock.Object,
                                            null!, // Torrent Clients are not used by `RunTorrentComplete`, this is fine
+                                           null!,
                                            null!,
                                            null!,
                                            null!,
@@ -308,6 +311,7 @@ public class TorrentsTest
                                            null!,
                                            null!,
                                            null!,
+                                           null!,
                                            new TestSettings(),
                                            new TorrentRunnerState());
 
@@ -373,6 +377,7 @@ public class TorrentsTest
                                            null!,
                                            null!,
                                            null!,
+                                           null!,
                                            new TestSettings(),
                                            new TorrentRunnerState());
 
@@ -418,6 +423,7 @@ public class TorrentsTest
                                            mocks.ProcessFactoryMock.Object,
                                            new MockFileSystem(),
                                            mocks.EnricherMock.Object,
+                                           null!,
                                            null!,
                                            null!,
                                            null!,
@@ -504,6 +510,7 @@ public class TorrentsTest
                                            mocks.ProcessFactoryMock.Object,
                                            new MockFileSystem(),
                                            mocks.EnricherMock.Object,
+                                           null!,
                                            null!,
                                            null!,
                                            null!,

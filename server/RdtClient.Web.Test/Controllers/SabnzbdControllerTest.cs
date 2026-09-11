@@ -24,7 +24,7 @@ public class SabnzbdControllerTest
         _settings.Current.General.AuthenticationType = AuthenticationType.None;
         _settings.Current.Provider.ApiKey = "test-api-key";
 
-        var torrentsMock = new Mock<Torrents>(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, _settings, new TorrentRunnerState());
+        var torrentsMock = new Mock<Torrents>(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, _settings, new TorrentRunnerState());
         var sabnzbdLoggerMock = new Mock<ILogger<Sabnzbd>>();
         _sabnzbdMock = new(sabnzbdLoggerMock.Object, torrentsMock.Object, null!, _settings);
         var loggerMock = new Mock<ILogger<SabnzbdController>>();

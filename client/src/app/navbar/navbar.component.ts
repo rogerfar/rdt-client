@@ -60,6 +60,9 @@ export class NavbarComponent implements OnInit {
           case 'DebridLink':
             this.providerLink = 'https://debrid-link.com/';
             break;
+          case 'HIGHWAY':
+            this.providerLink = 'https://high-way.me/';
+            break;
         }
       });
 

@@ -57,6 +57,7 @@ public class TorrentRunnerTest
                                     null!,
                                     null!,
                                     null!,
+                                    null!,
                                     testSettings,
                                     runnerState);
 

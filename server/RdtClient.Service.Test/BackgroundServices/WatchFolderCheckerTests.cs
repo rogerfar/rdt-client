@@ -35,7 +35,7 @@ public class WatchFolderCheckerTests : IDisposable
             DownloadClient = new()
         });
 
-        _torrentsServiceMock = new(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, _settings, new TorrentRunnerState());
+        _torrentsServiceMock = new(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, _settings, new TorrentRunnerState());
 
         _serviceProviderMock
             .Setup(x => x.GetService(typeof(IServiceScopeFactory)))
