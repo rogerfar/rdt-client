@@ -53,6 +53,11 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
                 downloadPath = DebridLinkClient.GetSymlinkPath(torrent, download);
             }
 
+            if (torrent.ClientKind == Provider.HIGHWAY && Type == Data.Enums.DownloadClient.Symlink)
+            {
+                downloadPath = HighwayDebridClient.GetSymlinkPath(torrent, download);
+            }
+
             if (filePath == null || downloadPath == null)
             {
                 throw new("Invalid download path");
@@ -76,6 +81,12 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
                 ? DownloadHelper.GetExpectedFileSize(torrent, download)
                 : null;
 
+            // Some providers hand back a dynamically generated, streamed download (e.g. HIGHWAY's on-the-fly
+            // folder ZIP) without a Content-Length header, so the downloader can never report a real total and
+            // progress gets stuck at 0%. When this is the torrent's only download it represents the whole
+            // transfer, so the provider's own reported total size is a good stand-in.
+            var fallbackBytesTotal = torrent.Downloads.Count == 1 ? torrent.RdSize ?? 0 : 0;
+
             Downloader.DownloadComplete += (_, args) =>
             {
                 Finished = true;
@@ -91,7 +102,7 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
             {
                 Speed = args.Speed;
                 BytesDone = args.BytesDone;
-                BytesTotal = args.BytesTotal;
+                BytesTotal = args.BytesTotal > 0 ? args.BytesTotal : fallbackBytesTotal;
 
                 var bytesAdded = BytesDone - LastBytesDone;
 
