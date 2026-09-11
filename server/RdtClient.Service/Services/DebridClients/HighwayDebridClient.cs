@@ -16,7 +16,7 @@ namespace RdtClient.Service.Services.DebridClients;
 
 /// <summary>
 ///     Client for HIGHWAY (<c>high-way.me</c>), a self-hosted "cloud download center" that downloads
-///     torrents and usenet server-side. See <c>HIGHWAY_PROVIDER_SPEC.md</c> in the repo root.
+///     torrents and usenet server-side.
 /// </summary>
 public class HighwayDebridClient(
     ILogger<HighwayDebridClient> logger,
@@ -173,10 +173,6 @@ public class HighwayDebridClient(
 
     public Task<Int32?> SelectFiles(Torrent torrent)
     {
-        // HIGHWAY always downloads the whole transfer; nothing to actually "select". The `files[]` list
-        // (spec §5) can lag behind state:"completed" - it's populated from HIGHWAY's cloud_files index,
-        // which may not have caught up yet, especially for usenet (spec §8).
-        //
         // Symlink mode needs named files[] entries to symlink out of the rclone mount, so wait/retry while
         // it's empty. Every other download client always fetches the whole transfer as one ZIP
         // (GetDownloadInfos below) regardless of files[], so don't block those on it.
@@ -359,7 +355,7 @@ public class HighwayDebridClient(
             return [];
         }
 
-        // Each file's own signed download_url (spec §4.3/§5) lets us fetch it directly, respecting the usual
+        // Each file's own signed download_url lets us fetch it directly, respecting the usual
         // filters, with no ZIP/unzip step. Only fall back to the whole-folder ZIP when signed per-file URLs
         // aren't available server-side (same condition that leaves the top-level download_url null too).
         if (downloadableFiles.All(file => !String.IsNullOrWhiteSpace(file.DownloadLink)))
@@ -721,7 +717,7 @@ public class HighwayDebridClient(
         public Boolean Removed { get; set; }
     }
 
-    /// <summary>Response of <c>?stats=1</c> (§4.5). Only the bits rdt-client surfaces are modelled.</summary>
+    /// <summary>Response of <c>?stats=1</c>. Only the bits rdt-client surfaces are modelled.</summary>
     public sealed class HighwayStats
     {
         [JsonPropertyName("username")]
@@ -755,7 +751,7 @@ public class HighwayDebridClient(
         public Int64 Available { get; set; }
     }
 
-    /// <summary>Response of <c>?check=&lt;hash&gt;</c> (§4.6).</summary>
+    /// <summary>Response of <c>?check=&lt;hash&gt;</c>.</summary>
     public sealed class HighwayCheckResponse
     {
         [JsonPropertyName("service")]
