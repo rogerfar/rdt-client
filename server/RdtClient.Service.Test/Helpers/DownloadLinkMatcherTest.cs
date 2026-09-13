@@ -106,4 +106,88 @@ public class DownloadLinkMatcherTest
 
         Assert.Null(result);
     }
+
+    [Fact]
+    public void Match_DuplicateFileNames_LinkUnchanged_ReturnsOwnLink()
+    {
+        var download = new Download
+        {
+            FileName = "eboot.bin",
+            Path = "https://alldebrid.com/f/second"
+        };
+
+        var infos = new List<DownloadInfo>
+        {
+            new()
+            {
+                FileName = "eboot.bin",
+                RestrictedLink = "https://alldebrid.com/f/first"
+            },
+            new()
+            {
+                FileName = "eboot.bin",
+                RestrictedLink = "https://alldebrid.com/f/second"
+            }
+        };
+
+        var result = DownloadLinkMatcher.Match(infos, download);
+
+        Assert.NotNull(result);
+        Assert.Equal("https://alldebrid.com/f/second", result.RestrictedLink);
+    }
+
+    [Fact]
+    public void Match_DuplicateFileNames_LinksRefreshed_ReturnsNull()
+    {
+        var download = new Download
+        {
+            FileName = "eboot.bin",
+            Path = "https://alldebrid.com/f/old-second"
+        };
+
+        var infos = new List<DownloadInfo>
+        {
+            new()
+            {
+                FileName = "eboot.bin",
+                RestrictedLink = "https://alldebrid.com/f/new-first"
+            },
+            new()
+            {
+                FileName = "eboot.bin",
+                RestrictedLink = "https://alldebrid.com/f/new-second"
+            }
+        };
+
+        var result = DownloadLinkMatcher.Match(infos, download);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void Match_DuplicateUrlSegments_WhenFileNameMissing_ReturnsNull()
+    {
+        var download = new Download
+        {
+            Path = "https://cdn.example.com/old-token/sub/eboot.bin"
+        };
+
+        var infos = new List<DownloadInfo>
+        {
+            new()
+            {
+                FileName = null,
+                RestrictedLink = "https://cdn.example.com/new-token/eboot.bin"
+            },
+            new()
+            {
+                FileName = null,
+                RestrictedLink = "https://cdn.example.com/new-token/sub/eboot.bin"
+            }
+        };
+
+        var result = DownloadLinkMatcher.Match(infos, download);
+
+        Assert.Null(result);
+    }
 }
