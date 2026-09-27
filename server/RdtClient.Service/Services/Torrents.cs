@@ -836,7 +836,11 @@ public class Torrents(
             {
                 var rdTorrent = torrent.RdId != null && providerTorrentsById.TryGetValue(torrent.RdId, out var providerTorrent) ? providerTorrent : null;
 
-                if (rdTorrent == null && settings.Current.Provider.AutoDelete && torrent.RdStatus != TorrentStatus.Queued && torrent.RdStatus != TorrentStatus.Finished)
+                if (rdTorrent == null
+                    && settings.Current.Provider.AutoDelete
+                    && torrent.RdStatus != TorrentStatus.Queued
+                    && torrent.RdStatus != TorrentStatus.Finished
+                    && !IsTrackedByTorBoxHash(torrent))
                 {
                     await Delete(torrent.TorrentId, true, false, true);
                 }
@@ -1229,6 +1233,18 @@ public class Torrents(
         {
             // ignored
         }
+    }
+
+    /// <summary>
+    ///     A TorBox torrent tracked by hash has not been matched to a TorBox torrent id yet. TorBox's list endpoints can lag behind
+    ///     adds and starts by minutes, so it being absent from both lists does not mean it was deleted.
+    /// </summary>
+    private Boolean IsTrackedByTorBoxHash(Torrent torrent)
+    {
+        return settings.Current.Provider.Provider == Provider.TorBox
+               && torrent.Type == DownloadType.Torrent
+               && !String.IsNullOrWhiteSpace(torrent.RdId)
+               && torrent.RdId.Equals(torrent.Hash, StringComparison.OrdinalIgnoreCase);
     }
 
     private static Dictionary<String, Torrent> CreateTorrentLookupByRdId(IEnumerable<Torrent> torrents)

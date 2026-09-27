@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RdtClient.Data.Enums;
@@ -21,6 +22,8 @@ public class TorBoxDebridClient(
 {
     private const String TorBoxApiHost = "api.torbox.app";
 
+    private readonly Dictionary<String, Int32> _queuedIds = new(StringComparer.OrdinalIgnoreCase);
+
     private TimeSpan? _offset;
 
     public async Task<IList<DebridClientTorrent>> GetDownloads()
@@ -38,7 +41,7 @@ public class TorBoxDebridClient(
 
         if (queuedTorrents != null)
         {
-            results.AddRange(queuedTorrents.Select(Map));
+            results.AddRange(queuedTorrents.Select(MapQueued));
         }
 
         var currentNzbs = await GetCurrentUsenet();
@@ -81,8 +84,9 @@ public class TorBoxDebridClient(
                                                         Settings.Get.Provider.PreferZippedDownloads,
                                                         as_queued: asQueued);
 
-            return result.Data?.TorrentId?.ToString() ?? throw new InvalidOperationException("TorBox API did not return torrent ID.");
-        });
+            return GetAddedTorrentId(result.Data) ?? throw new InvalidOperationException("TorBox API did not return torrent ID.");
+        },
+        () => MonoTorrent.MagnetLink.Parse(magnetLink).InfoHashes.V1OrV2.ToHex());
     }
 
     public async Task<String> AddTorrentFile(Byte[] bytes)
@@ -97,8 +101,9 @@ public class TorBoxDebridClient(
                                                       Settings.Get.Provider.PreferZippedDownloads,
                                                       as_queued: asQueued);
 
-            return result.Data?.TorrentId?.ToString() ?? throw new InvalidOperationException("TorBox API did not return torrent ID");
-        });
+            return GetAddedTorrentId(result.Data) ?? throw new InvalidOperationException("TorBox API did not return torrent ID");
+        },
+        () => MonoTorrent.Torrent.Load(bytes).InfoHashes.V1OrV2.ToHex());
     }
 
     public async Task<String> AddNzbLink(String nzbLink)
@@ -174,9 +179,32 @@ public class TorBoxDebridClient(
             {
                 await GetClient().Usenet.ControlAsync(torrent.RdId, "delete");
             }
+            else if (Int32.TryParse(torrent.RdId, out var torrentId))
+            {
+                await GetClient().Torrents.ControlByIdAsync(torrentId, "delete");
+            }
             else
             {
-                await GetClient().Torrents.ControlByIdAsync(Int32.Parse(torrent.RdId), "delete");
+                var info = await GetClient().Torrents.GetHashInfoAsync(torrent.RdId, true);
+
+                if (info == null)
+                {
+                    return;
+                }
+
+                if (info.DownloadState == "queued")
+                {
+                    var response = await ControlQueued(info.Id, "delete");
+
+                    if (response.Success != true)
+                    {
+                        throw new TorBoxException(response.Error, response.Detail);
+                    }
+                }
+                else
+                {
+                    await GetClient().Torrents.ControlByIdAsync(info.Id, "delete");
+                }
             }
         });
     }
@@ -302,6 +330,11 @@ public class TorBoxDebridClient(
                     _ when rdTorrent.Status != null && rdTorrent.Status.StartsWith("failed", StringComparison.OrdinalIgnoreCase) => TorrentStatus.Error,
                     _ => LogUnmappedStatus(rdTorrent.Status, torrent)
                 };
+
+                if (rdTorrent.Status == "queued" && torrent.Type == DownloadType.Torrent)
+                {
+                    await TryStartQueued(rdTorrent.Id, torrent);
+                }
             }
         }
         catch (Exception ex)
@@ -336,12 +369,12 @@ public class TorBoxDebridClient(
         }
         else
         {
-            if (torrent.RdId == null)
+            if (!Int32.TryParse(torrent.RdId, out var torrentId))
             {
                 return null;
             }
 
-            id = Int32.Parse(torrent.RdId);
+            id = torrentId;
         }
 
         if (id == null)
@@ -459,6 +492,84 @@ public class TorBoxDebridClient(
     protected virtual async Task<Response<List<AvailableUsenet?>>> GetUsenetAvailability(String hash)
     {
         return await HandleErrors(() => GetClient().Usenet.GetAvailabilityAsync(hash, true));
+    }
+
+    /// <summary>
+    ///     Sends a delete or start operation for a queued TorBox download.
+    /// </summary>
+    /// <returns>The TorBox response, whose Error is set when TorBox refused the operation.</returns>
+    protected virtual async Task<Response> ControlQueued(Int32 queuedId, String operation)
+    {
+        var httpClient = httpClientFactory.CreateClient(DiConfig.TORBOX_CLIENT);
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"https://{TorBoxApiHost}/v1/api/queued/controlqueued");
+
+        request.Headers.Authorization = new("Bearer", settings.Current.Provider.ApiKey);
+
+        request.Content = new StringContent(JsonConvert.SerializeObject(new
+                                            {
+                                                queued_id = queuedId,
+                                                operation
+                                            }),
+                                            Encoding.UTF8,
+                                            "application/json");
+
+        using var response = await httpClient.SendAsync(request);
+
+        var body = await response.Content.ReadAsStringAsync();
+
+        return JsonConvert.DeserializeObject<Response>(body) ?? throw new($"TorBox returned HTTP {(Int32)response.StatusCode} for queued/controlqueued");
+    }
+
+    /// <summary>
+    ///     Queued TorBox downloads have a queued_id that is replaced by a new torrent_id once TorBox starts them, so they are
+    ///     identified by hash until then.
+    /// </summary>
+    private DebridClientTorrent MapQueued(TorrentInfoResult torrent)
+    {
+        var hash = torrent.Hash.ToLowerInvariant();
+
+        _queuedIds[hash] = torrent.Id;
+
+        var result = Map(torrent);
+        result.Id = hash;
+
+        return result;
+    }
+
+    /// <summary>
+    ///     TorBox does not start queued downloads by itself, so ask it to start one; it refuses while all active slots are in use.
+    /// </summary>
+    private async Task TryStartQueued(String hash, Torrent torrent)
+    {
+        if (!_queuedIds.TryGetValue(hash, out var queuedId))
+        {
+            return;
+        }
+
+        try
+        {
+            var response = await ControlQueued(queuedId, "start");
+
+            if (response.Success == true)
+            {
+                _queuedIds.Remove(hash);
+                logger.LogInformation("Started queued TorBox download {TorrentName} ({Hash})", torrent.RdName, hash);
+            }
+            else
+            {
+                logger.LogDebug("TorBox did not start queued download {Hash}: {Error} {Detail}", hash, response.Error, response.Detail);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogDebug(ex, "Could not start queued TorBox download {Hash}", hash);
+        }
+    }
+
+    private static String? GetAddedTorrentId(TorrentAddResult? result)
+    {
+        return result?.TorrentId?.ToString() ?? result?.Hash?.ToLowerInvariant();
     }
 
     private DebridClientTorrent Map(TorrentInfoResult torrent)
@@ -579,9 +690,26 @@ public class TorBoxDebridClient(
         }
     }
 
-    private async Task<String> HandleAddTorrentErrors(Func<Boolean, Task<String>> action)
+    private async Task<String> HandleAddTorrentErrors(Func<Boolean, Task<String>> action, Func<String> getHash)
     {
-        return await HandleErrors(() => action(false));
+        try
+        {
+            return await HandleErrors(() => action(false));
+        }
+        catch (TorBoxException ex) when (IsAlreadyQueued(ex))
+        {
+            var hash = getHash().ToLowerInvariant();
+
+            logger.LogInformation("Torrent {Hash} is already queued on TorBox, tracking the queued download", hash);
+
+            return hash;
+        }
+    }
+
+    private static Boolean IsAlreadyQueued(TorBoxException exception)
+    {
+        return exception.Error.Equals("DIFF_ISSUE", StringComparison.OrdinalIgnoreCase)
+               && exception.ErrorDetail?.Contains("already queued", StringComparison.OrdinalIgnoreCase) == true;
     }
 
     private static Boolean IsRateLimit(TorBoxException exception)
@@ -618,13 +746,22 @@ public class TorBoxDebridClient(
                     return Map(usenet);
                 }
             }
-            else
+            else if (Int32.TryParse(id, out var torrentId))
             {
-                var result = await GetClient().Torrents.GetIdInfoAsync(Int32.Parse(id), true);
+                var result = await GetClient().Torrents.GetIdInfoAsync(torrentId, true);
 
                 if (result != null)
                 {
                     return Map(result);
+                }
+            }
+            else
+            {
+                var result = await GetClient().Torrents.GetHashInfoAsync(id, true);
+
+                if (result != null)
+                {
+                    return result.DownloadState == "queued" ? MapQueued(result) : Map(result);
                 }
             }
 
