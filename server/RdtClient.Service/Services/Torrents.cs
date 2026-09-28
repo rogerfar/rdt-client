@@ -41,6 +41,8 @@ public class Torrents(
 
     private static readonly SemaphoreSlim TorrentResetLock = new(1, 1);
 
+    private static readonly TimeSpan TorBoxListingGracePeriod = TimeSpan.FromMinutes(15);
+
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         ReferenceHandler = ReferenceHandler.IgnoreCycles
@@ -840,7 +842,7 @@ public class Torrents(
                     && settings.Current.Provider.AutoDelete
                     && torrent.RdStatus != TorrentStatus.Queued
                     && torrent.RdStatus != TorrentStatus.Finished
-                    && !IsTrackedByTorBoxHash(torrent))
+                    && !IsAwaitingTorBoxListing(torrent))
                 {
                     await Delete(torrent.TorrentId, true, false, true);
                 }
@@ -1236,15 +1238,22 @@ public class Torrents(
     }
 
     /// <summary>
-    ///     A TorBox torrent tracked by hash has not been matched to a TorBox torrent id yet. TorBox's list endpoints can lag behind
-    ///     adds and starts by minutes, so it being absent from both lists does not mean it was deleted.
+    ///     TorBox's list endpoints can lag behind adds and starts by minutes, so a TorBox torrent that is still tracked by hash, or
+    ///     was created on TorBox recently, being absent from the lists does not mean it was deleted.
     /// </summary>
-    private Boolean IsTrackedByTorBoxHash(Torrent torrent)
+    private Boolean IsAwaitingTorBoxListing(Torrent torrent)
     {
-        return settings.Current.Provider.Provider == Provider.TorBox
-               && torrent.Type == DownloadType.Torrent
-               && !String.IsNullOrWhiteSpace(torrent.RdId)
-               && torrent.RdId.Equals(torrent.Hash, StringComparison.OrdinalIgnoreCase);
+        if (settings.Current.Provider.Provider != Provider.TorBox || torrent.Type != DownloadType.Torrent || String.IsNullOrWhiteSpace(torrent.RdId))
+        {
+            return false;
+        }
+
+        if (torrent.RdId.Equals(torrent.Hash, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return torrent.RdAdded == null || torrent.RdAdded > DateTimeOffset.UtcNow - TorBoxListingGracePeriod;
     }
 
     private static Dictionary<String, Torrent> CreateTorrentLookupByRdId(IEnumerable<Torrent> torrents)
