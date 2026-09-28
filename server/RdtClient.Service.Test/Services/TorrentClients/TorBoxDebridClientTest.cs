@@ -1299,4 +1299,62 @@ public class TorBoxDebridClientTest
         Assert.Equal(TorrentStatus.Processing, result.RdStatus);
         Assert.Equal("queued", result.RdStatusRaw);
     }
+
+    [Fact]
+    public async Task UpdateData_KeepsHashTrackedTorrentProcessing_WhenTorBoxListsDoNotShowItYet()
+    {
+        // Arrange
+        var torrent = new Torrent
+        {
+            RdId = QueuedHash,
+            RdStatus = TorrentStatus.Queued,
+            Type = DownloadType.Torrent
+        };
+
+        var torrentsApiMock = new Mock<ITorrentsApi>();
+        var clientMock = new Mock<TorBoxDebridClient>(_loggerMock.Object, _httpClientFactoryMock.Object, _fileFilterMock.Object, _coordinatorMock.Object, _settings);
+        var torBoxClientMock = new Mock<ITorBoxNetClient>();
+
+        torBoxClientMock.Setup(m => m.Torrents).Returns(torrentsApiMock.Object);
+        clientMock.Protected().Setup<ITorBoxNetClient>("GetClient", ItExpr.IsAny<String>()).Returns(torBoxClientMock.Object);
+
+        torrentsApiMock.Setup(m => m.GetHashInfoAsync(QueuedHash, true, It.IsAny<Int32>(), It.IsAny<CancellationToken>()))
+                       .ReturnsAsync((TorrentInfoResult?)null);
+
+        // Act
+        var result = await clientMock.Object.UpdateData(torrent, null);
+
+        // Assert
+        Assert.Equal(TorrentStatus.Processing, result.RdStatus);
+        Assert.Equal("queued", result.RdStatusRaw);
+    }
+
+    [Fact]
+    public async Task UpdateData_MarksTorrentDeleted_WhenTorrentIdIsNotFound()
+    {
+        // Arrange
+        var torrent = new Torrent
+        {
+            RdId = "12345",
+            RdStatus = TorrentStatus.Downloading,
+            Type = DownloadType.Torrent
+        };
+
+        var torrentsApiMock = new Mock<ITorrentsApi>();
+        var clientMock = new Mock<TorBoxDebridClient>(_loggerMock.Object, _httpClientFactoryMock.Object, _fileFilterMock.Object, _coordinatorMock.Object, _settings);
+        var torBoxClientMock = new Mock<ITorBoxNetClient>();
+
+        torBoxClientMock.Setup(m => m.Torrents).Returns(torrentsApiMock.Object);
+        clientMock.Protected().Setup<ITorBoxNetClient>("GetClient", ItExpr.IsAny<String>()).Returns(torBoxClientMock.Object);
+
+        torrentsApiMock.Setup(m => m.GetIdInfoAsync(12345, true, It.IsAny<Int32>(), It.IsAny<CancellationToken>()))
+                       .ReturnsAsync((TorrentInfoResult?)null);
+
+        // Act
+        var result = await clientMock.Object.UpdateData(torrent, null);
+
+        // Assert
+        Assert.Equal(TorrentStatus.Downloading, result.RdStatus);
+        Assert.Equal("deleted", result.RdStatusRaw);
+    }
 }

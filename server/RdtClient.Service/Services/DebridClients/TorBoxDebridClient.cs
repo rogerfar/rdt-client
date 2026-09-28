@@ -339,7 +339,13 @@ public class TorBoxDebridClient(
         }
         catch (Exception ex)
         {
-            if (ex.Message == "Resource not found")
+            if (ex.Message == "Resource not found" && torrent.Type == DownloadType.Torrent && !Int32.TryParse(torrent.RdId, out _))
+            {
+                // Tracked by hash because TorBox queued it; its lists can lag behind that, so it is still queued.
+                torrent.RdStatus = TorrentStatus.Processing;
+                torrent.RdStatusRaw = "queued";
+            }
+            else if (ex.Message == "Resource not found")
             {
                 torrent.RdStatusRaw = "deleted";
             }
