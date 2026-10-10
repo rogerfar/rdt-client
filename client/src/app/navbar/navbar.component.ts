@@ -1,17 +1,18 @@
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, ElementRef, HostListener, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { Profile } from '../models/profile.model';
 import { SettingsService } from '../settings.service';
 import { NgClass, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss'],
-  imports: [RouterLink, NgClass, DatePipe],
+  imports: [RouterLink, NgClass, DatePipe, FormsModule],
   standalone: true,
 })
 export class NavbarComponent implements OnInit {
@@ -19,12 +20,20 @@ export class NavbarComponent implements OnInit {
   private settingsService = inject(SettingsService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private elementRef = inject(ElementRef);
 
   public showMobileMenu = false;
 
   public profile: Profile;
   public providerLink: string;
   public version: string;
+
+  public speedLimitVisible = false;
+  public speedLimitOpen = false;
+  public speedLimit = 0;
+  public speedLimitMax = 100;
+  public speedLimitSaving = false;
+  public speedLimitError: string;
 
   constructor() {
     this.router.events
@@ -34,10 +43,28 @@ export class NavbarComponent implements OnInit {
       )
       .subscribe(() => {
         this.showMobileMenu = false;
+        this.speedLimitOpen = false;
+        // Pick up downloader / speed changes made on the settings page
+        this.loadSpeedLimit();
       });
   }
 
+  @HostListener('document:click', ['$event'])
+  public onDocumentClick(event: MouseEvent): void {
+    if (!this.speedLimitOpen) {
+      return;
+    }
+
+    const speedLimitElement = this.elementRef.nativeElement.querySelector('.speed-limit');
+
+    if (speedLimitElement && !speedLimitElement.contains(event.target as Node)) {
+      this.speedLimitOpen = false;
+    }
+  }
+
   ngOnInit(): void {
+    this.loadSpeedLimit();
+
     this.settingsService
       .getProfile()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -71,7 +98,58 @@ export class NavbarComponent implements OnInit {
       });
   }
 
+  public toggleSpeedLimit(): void {
+    this.speedLimitOpen = !this.speedLimitOpen;
+
+    if (this.speedLimitOpen) {
+      this.loadSpeedLimit();
+    }
+  }
+
+  public saveSpeedLimit(): void {
+    const value = Math.round(Number(this.speedLimit));
+    this.speedLimit = Number.isFinite(value) && value > 0 ? Math.min(value, this.speedLimitMax) : 0;
+
+    this.speedLimitSaving = true;
+    this.speedLimitError = null;
+
+    this.settingsService
+      .updateValue('DownloadClient:MaxSpeed', this.speedLimit)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.speedLimitSaving = false;
+        },
+        error: (err) => {
+          this.speedLimitSaving = false;
+          this.speedLimitError = err.error ?? 'Unable to save speed limit';
+        },
+      });
+  }
+
   public logout(): void {
     this.authService.logout().subscribe({ next: () => this.router.navigate(['/login']), error: console.error });
+  }
+
+  private loadSpeedLimit(): void {
+    if (this.speedLimitSaving) {
+      return;
+    }
+
+    this.settingsService
+      .get()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (settings) => {
+          const value = (key: string) => settings.find((m) => m.key === key)?.value;
+
+          // DownloadClient enum: 0 = Bezzad
+          this.speedLimitVisible = Number(value('DownloadClient:Client')) === 0;
+          this.speedLimit = Math.max(Number(value('DownloadClient:MaxSpeed')) || 0, 0);
+
+          const sliderMax = Number(value('DownloadClient:MaxSpeedSliderMax')) || 100;
+          this.speedLimitMax = Math.max(sliderMax, this.speedLimit, 1);
+        },
+      });
   }
 }

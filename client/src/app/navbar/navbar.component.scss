@@ -5,3 +5,47 @@
 .notification {
   margin-top: 52px;
 }
+
+.speed-limit {
+  .speed-limit-label {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .speed-limit-dropdown {
+    width: 16rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .speed-limit-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .speed-limit-slider {
+    display: block;
+    width: 100%;
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+  }
+
+  .speed-limit-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .speed-limit-input {
+    width: 5rem;
+  }
+
+  .speed-limit-hint {
+    font-size: 0.75rem;
+    opacity: 0.7;
+  }
+}

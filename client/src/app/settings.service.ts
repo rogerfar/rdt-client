@@ -21,6 +21,10 @@ export class SettingsService {
     return this.http.put<void>(`${this.baseHref}Api/Settings`, settings);
   }
 
+  public updateValue(key: string, value: Setting['value']): Observable<void> {
+    return this.http.put<void>(`${this.baseHref}Api/Settings`, [{ key, value }]);
+  }
+
   public getProfile(): Observable<Profile> {
     return this.http.get<Profile>(`${this.baseHref}Api/Settings/Profile`);
   }
