@@ -55,6 +55,64 @@
     </div>
 
     <div class="navbar-end">
+      @if (speedLimitVisible) {
+        <div class="navbar-item has-dropdown speed-limit" [class.is-active]="speedLimitOpen">
+          <a class="navbar-link" (click)="toggleSpeedLimit()" title="Download speed limit (per download)">
+            <span class="icon">
+              <i class="fas fa-tachometer-alt" aria-hidden="true"></i>
+            </span>
+            <span class="speed-limit-label">
+              @if (speedLimit > 0) {
+                {{ speedLimit }} MB/s
+              } @else {
+                Unlimited
+              }
+            </span>
+          </a>
+
+          <div class="navbar-dropdown is-right speed-limit-dropdown">
+            <div class="speed-limit-title">
+              <span>Speed limit per download</span>
+              @if (speedLimitSaving) {
+                <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+              }
+            </div>
+            <input
+              class="speed-limit-slider"
+              type="range"
+              min="0"
+              [max]="speedLimitMax"
+              step="1"
+              aria-label="Speed limit in MB/s"
+              [(ngModel)]="speedLimit"
+              (change)="saveSpeedLimit()"
+            />
+            <div class="speed-limit-row">
+              <div class="field has-addons mb-0">
+                <div class="control">
+                  <input
+                    class="input is-small speed-limit-input"
+                    type="number"
+                    min="0"
+                    [max]="speedLimitMax"
+                    step="1"
+                    aria-label="Speed limit in MB/s"
+                    [(ngModel)]="speedLimit"
+                    (change)="saveSpeedLimit()"
+                  />
+                </div>
+                <div class="control">
+                  <span class="button is-small is-static">MB/s</span>
+                </div>
+              </div>
+              <span class="speed-limit-hint">0 = unlimited</span>
+            </div>
+            @if (speedLimitError) {
+              <p class="help is-danger">{{ speedLimitError }}</p>
+            }
+          </div>
+        </div>
+      }
       <div class="navbar-item has-dropdown is-hoverable">
         <span class="navbar-link"> Account </span>
 

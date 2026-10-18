@@ -112,6 +112,10 @@ public class DbSettingsDownloadClient
     [Description("Maximum download speed in MB/s, applied per concurrent download (not a global limit). The effective total ceiling is this value multiplied by the 'Maximum parallel downloads' setting. For example, 40 with 2 parallel downloads is roughly 80 MB/s total, and 40 with 4 parallel downloads is roughly 160 MB/s total, so overall throughput can appear to exceed the value set here. When set to 0 unlimited speed is used.")]
     public Int32 MaxSpeed { get; set; } = 0;
 
+    [DisplayName("Download speed slider maximum (in MB/s) (only used for the Bezzad Downloader)")]
+    [Description("Upper bound of the download speed slider shown on the Torrents page when the Bezzad Downloader is selected. Set this to roughly your line speed.")]
+    public Int32 MaxSpeedSliderMax { get; set; } = 100;
+
     [DisplayName("Parallel connections per download (only used for the Bezzad Downloader)")]
     [Description("Maximum amount of parallel threads that are used to download a single file to your host. If set to 0 no parallel downloading will be done.")]
     public Int32 ParallelCount { get; set; } = 8;
