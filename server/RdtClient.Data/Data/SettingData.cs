@@ -135,7 +135,7 @@ public class SettingData(DataContext dataContext, ILogger<SettingData> logger)
                         var enumMember = property.PropertyType.GetMember(e.ToString()).First();
                         var enumDescriptionAttribute = enumMember.GetCustomAttribute<DescriptionAttribute>();
                         var enumName = enumDescriptionAttribute?.Description ?? Enum.GetName(property.PropertyType, e) ?? "Unknown value";
-                        settingProperty.EnumValues.Add((Int32)(Object)e, enumName);
+                        settingProperty.EnumValues.Add((Int32) (Object) e, enumName);
                     }
                 }
 

@@ -231,7 +231,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authen
             var rdProgress = Math.Clamp(torrent.RdProgress ?? 0.0, 0.0, 100.0) / 100.0;
             var bytesTotal = torrent.RdSize ?? 0;
             var speed = torrent.RdSpeed ?? 0;
-            var bytesDone = (Int64)(bytesTotal * rdProgress);
+            var bytesDone = (Int64) (bytesTotal * rdProgress);
 
             Double progress;
 
@@ -239,13 +239,13 @@ public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authen
             {
                 progress = 1.0;
             }
-            else if (torrent.Downloads is { Count: > 0 })
+            else if (torrent.Downloads is {Count: > 0})
             {
                 var dlStats = torrent.Downloads.Select(m => torrents.GetDownloadStats(m.DownloadId)).ToList();
                 var dlBytesDone = dlStats.Sum(m => m.BytesDone);
                 var dlBytesTotal = dlStats.Sum(m => m.BytesTotal);
-                speed = (Int32)(dlStats.Any() ? dlStats.Average(m => m.Speed) : 0);
-                var downloadProgress = dlBytesTotal > 0 ? Math.Clamp((Double)dlBytesDone / dlBytesTotal, 0.0, 1.0) : 0;
+                speed = (Int32) (dlStats.Any() ? dlStats.Average(m => m.Speed) : 0);
+                var downloadProgress = dlBytesTotal > 0 ? Math.Clamp((Double) dlBytesDone / dlBytesTotal, 0.0, 1.0) : 0;
 
                 if (rdProgress >= 1.0 && downloadProgress >= 1.0)
                 {
@@ -267,7 +267,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authen
             {
                 var startTime = torrent.Retry > torrent.Added ? torrent.Retry.Value : torrent.Added;
                 var elapsed = DateTimeOffset.UtcNow - startTime;
-                var totalEstimatedTime = TimeSpan.FromTicks((Int64)(elapsed.Ticks / progress));
+                var totalEstimatedTime = TimeSpan.FromTicks((Int64) (elapsed.Ticks / progress));
                 remaining = totalEstimatedTime - elapsed;
             }
 
@@ -285,7 +285,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authen
                 Dlspeed = speed,
                 Downloaded = bytesDone,
                 DownloadedSession = bytesDone,
-                Eta = (Int64)remaining.TotalSeconds,
+                Eta = (Int64) remaining.TotalSeconds,
                 FlPiecePrio = false,
                 ForceStart = false,
                 Hash = torrent.Hash,
@@ -299,7 +299,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authen
                 NumLeechs = 1,
                 NumSeeds = torrent.RdSeeders ?? 1,
                 Priority = ++prio,
-                Progress = (Single)progress,
+                Progress = (Single) progress,
                 Ratio = 1,
                 RatioLimit = 1,
                 SavePath = downloadPath,
@@ -310,7 +310,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authen
                 State = "downloading",
                 SuperSeeding = false,
                 Tags = "",
-                TimeActive = (Int64)(DateTimeOffset.UtcNow - torrent.Added).TotalSeconds,
+                TimeActive = (Int64) (DateTimeOffset.UtcNow - torrent.Added).TotalSeconds,
                 TotalSize = bytesTotal,
                 Tracker = "udp://tracker.opentrackr.org:1337",
                 UpLimit = -1,
@@ -543,7 +543,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authen
             var dlStats = torrent.Downloads.Select(m => torrents.GetDownloadStats(m.DownloadId)).ToList();
             bytesDone = dlStats.Sum(m => m.BytesDone);
             bytesTotal = dlStats.Sum(m => m.BytesTotal);
-            speed = (Int32)(dlStats.Any() ? dlStats.Average(m => m.Speed) : 0);
+            speed = (Int32) (dlStats.Any() ? dlStats.Average(m => m.Speed) : 0);
         }
 
         var result = new TorrentProperties
@@ -572,7 +572,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authen
             Seeds = 100,
             SeedsTotal = 100,
             ShareRatio = 9999,
-            TimeElapsed = (Int64)(DateTimeOffset.UtcNow - torrent.Added).TotalSeconds,
+            TimeElapsed = (Int64) (DateTimeOffset.UtcNow - torrent.Added).TotalSeconds,
             TotalDownloaded = bytesDone,
             TotalDownloadedSession = bytesDone,
             TotalSize = bytesTotal,

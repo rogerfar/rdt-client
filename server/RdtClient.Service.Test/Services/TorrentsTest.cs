@@ -490,7 +490,7 @@ public class TorrentsTest
              .Returns(Task.CompletedTask);
 
         mocks.TorrentDataMock.Setup(t => t.GetByHash(It.IsAny<String>()))
-             .ReturnsAsync((Torrent?)null);
+             .ReturnsAsync((Torrent?) null);
 
         mocks.TorrentDataMock.Setup(t => t.Add(null,
                                                It.IsAny<String>(),

@@ -738,7 +738,7 @@ public class Torrents(
                     && !String.IsNullOrWhiteSpace(rdTorrent.Hash)
                     && !String.IsNullOrWhiteSpace(rdTorrent.Id))
                 {
-                    torrent = torrents.FirstOrDefault(localTorrent => localTorrent is { Type: DownloadType.Torrent, ClientKind: null or Provider.TorBox }
+                    torrent = torrents.FirstOrDefault(localTorrent => localTorrent is {Type: DownloadType.Torrent, ClientKind: null or Provider.TorBox}
                                                                       && !String.IsNullOrWhiteSpace(localTorrent.Hash)
                                                                       && !String.IsNullOrWhiteSpace(localTorrent.RdId)
                                                                       && localTorrent.RdId.Equals(localTorrent.Hash, StringComparison.OrdinalIgnoreCase)
@@ -1277,20 +1277,6 @@ public class Torrents(
                    torrent.RdFiles);
     }
 
-    private readonly record struct TorrentRdState(
-        String? RdName,
-        Int64? RdSize,
-        String? RdHost,
-        Int64? RdSplit,
-        Int64? RdProgress,
-        TorrentStatus? RdStatus,
-        String? RdStatusRaw,
-        DateTimeOffset? RdAdded,
-        DateTimeOffset? RdEnded,
-        Int64? RdSpeed,
-        Int64? RdSeeders,
-        String? RdFiles);
-
     private void Log(String message, Download? download, Torrent? torrent)
     {
         if (download != null)
@@ -1341,4 +1327,18 @@ public class Torrents(
 
         return BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
     }
+
+    private readonly record struct TorrentRdState(
+        String? RdName,
+        Int64? RdSize,
+        String? RdHost,
+        Int64? RdSplit,
+        Int64? RdProgress,
+        TorrentStatus? RdStatus,
+        String? RdStatusRaw,
+        DateTimeOffset? RdAdded,
+        DateTimeOffset? RdEnded,
+        Int64? RdSpeed,
+        Int64? RdSeeders,
+        String? RdFiles);
 }

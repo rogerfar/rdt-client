@@ -14,9 +14,9 @@ public class AuthorizeMiddleware(RequestDelegate next)
     {
         await next(context);
 
-        if (context.Response.StatusCode == (Int32)HttpStatusCode.Unauthorized)
+        if (context.Response.StatusCode == (Int32) HttpStatusCode.Unauthorized)
         {
-            context.Response.StatusCode = (Int32)HttpStatusCode.Forbidden;
+            context.Response.StatusCode = (Int32) HttpStatusCode.Forbidden;
         }
     }
 }

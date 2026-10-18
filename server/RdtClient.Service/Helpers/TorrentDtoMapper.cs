@@ -8,17 +8,17 @@ public static class TorrentDtoMapper
 {
     public static TorrentDto ToListDto(Torrent torrent, Func<Guid, (Int64 Speed, Int64 BytesTotal, Int64 BytesDone)> getDownloadStats)
     {
-        return ToDto(torrent, getDownloadStats, includeDownloads: false, includeFiles: false, includeFileOrMagnet: false);
+        return ToDto(torrent, getDownloadStats, false, false, false);
     }
 
     public static TorrentDto ToUpdateDto(Torrent torrent, Func<Guid, (Int64 Speed, Int64 BytesTotal, Int64 BytesDone)> getDownloadStats)
     {
-        return ToDto(torrent, getDownloadStats, includeDownloads: true, includeFiles: false, includeFileOrMagnet: false);
+        return ToDto(torrent, getDownloadStats, true, false, false);
     }
 
     public static TorrentDto ToDetailDto(Torrent torrent, Func<Guid, (Int64 Speed, Int64 BytesTotal, Int64 BytesDone)> getDownloadStats)
     {
-        return ToDto(torrent, getDownloadStats, includeDownloads: true, includeFiles: true, includeFileOrMagnet: true);
+        return ToDto(torrent, getDownloadStats, true, true, true);
     }
 
     private static TorrentDto ToDto(Torrent torrent,
@@ -176,14 +176,14 @@ public static class TorrentDtoMapper
 
             if (downloadingCount > 0)
             {
-                var progress = downloadingBytesTotal == 0 ? 0 : (Double)downloadingBytesDone / downloadingBytesTotal * 100;
+                var progress = downloadingBytesTotal == 0 ? 0 : ((Double) downloadingBytesDone / downloadingBytesTotal) * 100;
 
                 return $"Downloading file {downloadingCount + downloadedCount}/{torrent.Downloads.Count} ({progress:0.00}% - {FileSizeHelper.FormatSize(downloadingSpeed)}/s)";
             }
 
             if (unpackingCount > 0)
             {
-                var progress = unpackingBytesTotal == 0 ? 0 : (Double)unpackingBytesDone / unpackingBytesTotal * 100;
+                var progress = unpackingBytesTotal == 0 ? 0 : ((Double) unpackingBytesDone / unpackingBytesTotal) * 100;
 
                 return $"Extracting file {unpackingCount + unpackedCount}/{torrent.Downloads.Count} ({progress:0.00}%)";
             }

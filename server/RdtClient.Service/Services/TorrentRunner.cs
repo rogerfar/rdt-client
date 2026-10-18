@@ -23,11 +23,11 @@ public class TorrentRunner(
 {
     public static readonly ITorrentRunnerState SharedState = new TorrentRunnerState();
 
+    private DateTimeOffset? _lastNextAllowedAt;
+
     public static ConcurrentDictionary<Guid, DownloadClient> ActiveDownloadClients => SharedState.ActiveDownloadClients;
 
     public static ConcurrentDictionary<Guid, UnpackClient> ActiveUnpackClients => SharedState.ActiveUnpackClients;
-
-    private DateTimeOffset? _lastNextAllowedAt;
 
     public static Boolean IsPausedForLowDiskSpace
     {
@@ -746,7 +746,7 @@ public class TorrentRunner(
 
                     if (totalDownloadBytes > 0)
                     {
-                        completePerc = (Int32)(((Double)totalDoneBytes / totalDownloadBytes) * 100);
+                        completePerc = (Int32) (((Double) totalDoneBytes / totalDownloadBytes) * 100);
                     }
 
                     if (completeCount == torrent.Downloads.Count)

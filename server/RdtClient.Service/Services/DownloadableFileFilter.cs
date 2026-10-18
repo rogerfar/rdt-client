@@ -27,7 +27,7 @@ public class DownloadableFileFilter(ILogger<DownloadableFileFilter> logger) : ID
 
     private Boolean PassesSizeFilter(Torrent torrent, String filePath, Int64 fileSize)
     {
-        if (torrent is { ClientKind: Provider.RealDebrid, DownloadAction: TorrentDownloadAction.DownloadManual })
+        if (torrent is {ClientKind: Provider.RealDebrid, DownloadAction: TorrentDownloadAction.DownloadManual})
         {
             return true;
         }

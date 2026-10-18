@@ -9,7 +9,7 @@ public class TorrentData(DataContext dataContext, ILogger<TorrentData>? logger =
 {
     public async Task<IList<Torrent>> Get()
     {
-        var torrents = await BuildTorrentQuery(includePayload: false)
+        var torrents = await BuildTorrentQuery(false)
                              .OrderBy(m => m.Priority ?? 9999)
                              .ToListAsync();
 
@@ -20,7 +20,7 @@ public class TorrentData(DataContext dataContext, ILogger<TorrentData>? logger =
 
     public async Task<Torrent?> GetById(Guid torrentId)
     {
-        var dbTorrent = await BuildTorrentQuery(includePayload: true)
+        var dbTorrent = await BuildTorrentQuery(true)
             .FirstOrDefaultAsync(m => m.TorrentId == torrentId);
 
         if (dbTorrent == null)
@@ -40,7 +40,7 @@ public class TorrentData(DataContext dataContext, ILogger<TorrentData>? logger =
     {
         hash = hash.ToLower();
 
-        var dbTorrent = await BuildTorrentQuery(includePayload: false)
+        var dbTorrent = await BuildTorrentQuery(false)
             .FirstOrDefaultAsync(m => m.Hash == hash);
 
         if (dbTorrent == null)
@@ -315,8 +315,6 @@ public class TorrentData(DataContext dataContext, ILogger<TorrentData>? logger =
         if (deletedTorrents == 0)
         {
             logger?.LogDebug("Skipped torrent graph deletion because the torrent was not found. TorrentId: {torrentId}", torrentId);
-
-            return;
         }
     }
 

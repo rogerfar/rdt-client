@@ -145,7 +145,7 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
                 return $"Downloaded file was not found at {filePath} after the download reported success.";
             }
 
-            var tolerance = Math.Max(64 * 1024, (Int64)(expectedFileSize * 0.01));
+            var tolerance = Math.Max(64 * 1024, (Int64) (expectedFileSize * 0.01));
 
             if (Math.Abs(fileInfo.Length - expectedFileSize) > tolerance)
             {

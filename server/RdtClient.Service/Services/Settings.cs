@@ -1,7 +1,7 @@
-﻿using RdtClient.Data.Data;
+﻿using Microsoft.Extensions.DependencyInjection;
+using RdtClient.Data.Data;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Internal;
-using Microsoft.Extensions.DependencyInjection;
 using Serilog.Core;
 using Serilog.Events;
 
@@ -26,15 +26,31 @@ public class Settings(IServiceScopeFactory serviceScopeFactory) : ISettings
 
     public static DbSettings Get => SettingData.Get;
 
-    public DbSettings Current => Get;
-
     public static String AppDefaultSavePath => GetDefaultSavePath(Get);
+
+    public DbSettings Current => Get;
 
     public String DefaultSavePath => GetDefaultSavePath(Current);
 
     public IList<SettingProperty> GetAll()
     {
         return SettingData.GetAll();
+    }
+
+    public async Task Update(IList<SettingProperty> settings)
+    {
+        using var scope = serviceScopeFactory.CreateScope();
+        var settingData = scope.ServiceProvider.GetRequiredService<SettingData>();
+
+        await settingData.Update(settings);
+    }
+
+    public async Task Update(String settingId, Object? value)
+    {
+        using var scope = serviceScopeFactory.CreateScope();
+        var settingData = scope.ServiceProvider.GetRequiredService<SettingData>();
+
+        await settingData.Update(settingId, value);
     }
 
     private static String GetDefaultSavePath(DbSettings settings)
@@ -52,22 +68,6 @@ public class Settings(IServiceScopeFactory serviceScopeFactory) : ISettings
         downloadPath += Path.DirectorySeparatorChar;
 
         return downloadPath;
-    }
-
-    public async Task Update(IList<SettingProperty> settings)
-    {
-        using var scope = serviceScopeFactory.CreateScope();
-        var settingData = scope.ServiceProvider.GetRequiredService<SettingData>();
-
-        await settingData.Update(settings);
-    }
-
-    public async Task Update(String settingId, Object? value)
-    {
-        using var scope = serviceScopeFactory.CreateScope();
-        var settingData = scope.ServiceProvider.GetRequiredService<SettingData>();
-
-        await settingData.Update(settingId, value);
     }
 
     public async Task Seed()

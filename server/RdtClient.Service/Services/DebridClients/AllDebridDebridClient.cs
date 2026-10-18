@@ -295,7 +295,7 @@ public class AllDebridDebridClient(ILogger<AllDebridDebridClient> logger, IAllDe
             OriginalBytes = torrent.Size ?? 0,
             Host = null,
             Split = 0,
-            Progress = (Int64)Math.Round(((torrent.Downloaded ?? 0) * 100.0) / (torrent.Size ?? 1)),
+            Progress = (Int64) Math.Round(((torrent.Downloaded ?? 0) * 100.0) / (torrent.Size ?? 1)),
             Status = torrent.Status,
             StatusCode = torrent.StatusCode ?? 0,
             Added = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(torrent.UploadDate ?? 0),

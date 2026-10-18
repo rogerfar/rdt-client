@@ -295,7 +295,7 @@ public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHtt
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    throw new($"Unable to add {description}: Premiumize returned {(Int32)response.StatusCode} {response.ReasonPhrase}. {responseBody}");
+                    throw new($"Unable to add {description}: Premiumize returned {(Int32) response.StatusCode} {response.ReasonPhrase}. {responseBody}");
                 }
 
                 var result = JsonConvert.DeserializeObject<RawTransferCreateResponse>(responseBody) ?? throw new($"Unable to add {description}: invalid Premiumize response");
@@ -369,7 +369,7 @@ public class PremiumizeDebridClient(ILogger<PremiumizeDebridClient> logger, IHtt
             OriginalBytes = 0,
             Host = null,
             Split = 0,
-            Progress = (Int64)((transfer.Progress ?? 1.0) * 100.0),
+            Progress = (Int64) ((transfer.Progress ?? 1.0) * 100.0),
             Status = transfer.Status,
             Message = transfer.Message,
             StatusCode = 0,

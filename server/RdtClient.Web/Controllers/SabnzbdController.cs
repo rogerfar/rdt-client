@@ -213,6 +213,6 @@ public class SabnzbdController(ILogger<SabnzbdController> logger, Sabnzbd sabnzb
 
     private static Boolean IsTrue(String? value)
     {
-        return value is "1" || Boolean.TryParse(value, out var result) && result;
+        return value is "1" || (Boolean.TryParse(value, out var result) && result);
     }
 }

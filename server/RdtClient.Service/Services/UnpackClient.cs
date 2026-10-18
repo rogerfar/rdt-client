@@ -167,7 +167,7 @@ public class UnpackClient(Download download, String destinationPath)
         archive.ExtractToDirectory(extractPath,
                                    d =>
                                    {
-                                       Progess = (Int32)Math.Round(d);
+                                       Progess = (Int32) Math.Round(d);
                                    },
                                    cancellationToken);
 

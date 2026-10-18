@@ -21,20 +21,20 @@ public class DownloadStationDownloader : IDownloader
     private const Int32 RetryCount = 5;
 
     private readonly IDelayProvider _delayProvider;
-    private readonly IFileSystem _fileSystem;
     private readonly String _filePath;
+    private readonly IFileSystem _fileSystem;
 
     private readonly ILogger _logger;
+    private readonly Func<Task<ISynologyClient>> _reacquireClient;
     private readonly String? _remotePath;
 
     private readonly String _uri;
 
+    private String? _gid;
+
     // The Synology client is shared across downloads and can be swapped out by WithSessionRetry after a session
     // expires, so it is not readonly.
     private ISynologyClient _synologyClient;
-    private readonly Func<Task<ISynologyClient>> _reacquireClient;
-
-    private String? _gid;
 
     public DownloadStationDownloader(String? gid,
                                      String uri,
@@ -60,28 +60,6 @@ public class DownloadStationDownloader : IDownloader
         // When the caller doesn't supply a way to re-authenticate (e.g. unit tests with a mock client), session
         // retry just reuses the current client.
         _reacquireClient = reacquireClient ?? (() => Task.FromResult(_synologyClient));
-    }
-
-    /// <summary>
-    ///     Runs a Synology API call, and if DownloadStation reports a session error (e.g. error 119 "SID not found",
-    ///     106 timeout, 107 duplicate login) drops the shared session, re-authenticates once and retries. With a single
-    ///     shared login these are rare, but a session can still expire between downloads.
-    /// </summary>
-    private async Task<T> WithSessionRetry<T>(Func<ISynologyClient, Task<T>> op)
-    {
-        try
-        {
-            return await op(_synologyClient);
-        }
-        catch (SynologyApiException ex) when (ex.ErrorCode is 119 or 106 or 107)
-        {
-            _logger.Debug($"DownloadStation session error {ex.ErrorCode} ({ex.ErrorDescription}); re-authenticating and retrying once");
-
-            await SynologyClientProvider.InvalidateAsync(_synologyClient);
-            _synologyClient = await _reacquireClient();
-
-            return await op(_synologyClient);
-        }
     }
 
     public event EventHandler<DownloadCompleteEventArgs>? DownloadComplete;
@@ -234,6 +212,28 @@ public class DownloadStationDownloader : IDownloader
         catch (Exception ex)
         {
             _logger.Debug($"Failed to resume DownloadStation task {_gid}: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    ///     Runs a Synology API call, and if DownloadStation reports a session error (e.g. error 119 "SID not found",
+    ///     106 timeout, 107 duplicate login) drops the shared session, re-authenticates once and retries. With a single
+    ///     shared login these are rare, but a session can still expire between downloads.
+    /// </summary>
+    private async Task<T> WithSessionRetry<T>(Func<ISynologyClient, Task<T>> op)
+    {
+        try
+        {
+            return await op(_synologyClient);
+        }
+        catch (SynologyApiException ex) when (ex.ErrorCode is 119 or 106 or 107)
+        {
+            _logger.Debug($"DownloadStation session error {ex.ErrorCode} ({ex.ErrorDescription}); re-authenticating and retrying once");
+
+            await SynologyClientProvider.InvalidateAsync(_synologyClient);
+            _synologyClient = await _reacquireClient();
+
+            return await op(_synologyClient);
         }
     }
 

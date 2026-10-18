@@ -8,9 +8,9 @@ namespace RdtClient.Data.Models.Data;
 
 public class Torrent
 {
-    private String? _rdFiles;
     private IList<DebridClientFile> _filesCache = [];
     private Boolean _filesCacheInitialized;
+    private String? _rdFiles;
 
     [Key]
     public Guid TorrentId { get; set; }

@@ -47,7 +47,7 @@ public class TrackerListGrabber(IHttpClientFactory httpClientFactory, IMemoryCac
 
             _lastExpirationMinutes = currentExpiration;
 
-            if (memoryCache.TryGetValue(CacheKey, out String[]? cachedTrackers) && cachedTrackers is { Length: > 0 })
+            if (memoryCache.TryGetValue(CacheKey, out String[]? cachedTrackers) && cachedTrackers is {Length: > 0})
             {
                 logger.LogDebug("Using cached tracker list.");
 
@@ -61,7 +61,7 @@ public class TrackerListGrabber(IHttpClientFactory httpClientFactory, IMemoryCac
         {
             if (useCache)
             {
-                if (memoryCache.TryGetValue(CacheKey, out String[]? cachedTrackers) && cachedTrackers is { Length: > 0 })
+                if (memoryCache.TryGetValue(CacheKey, out String[]? cachedTrackers) && cachedTrackers is {Length: > 0})
                 {
                     logger.LogDebug("Using cached tracker list (after lock).");
 

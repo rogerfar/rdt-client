@@ -442,7 +442,7 @@ public class QBittorrentController(ILogger<QBittorrentController> logger, QBitto
 
         var fileIds = request.Id
                              .Split('|', StringSplitOptions.RemoveEmptyEntries)
-                             .Select(value => Int32.TryParse(value, out var parsedValue) ? parsedValue : (Int32?)null)
+                             .Select(value => Int32.TryParse(value, out var parsedValue) ? parsedValue : (Int32?) null)
                              .Where(value => value.HasValue)
                              .Select(value => value!.Value)
                              .ToList();

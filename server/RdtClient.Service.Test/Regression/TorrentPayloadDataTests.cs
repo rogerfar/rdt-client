@@ -10,6 +10,23 @@ public class TorrentPayloadDataTests : IAsyncLifetime
 {
     private readonly String _databasePath = Path.Combine(Path.GetTempPath(), $"rdt-client-payload-data-{Guid.NewGuid():N}.sqlite");
 
+    public Task InitializeAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task DisposeAsync()
+    {
+        SqliteConnection.ClearAllPools();
+
+        if (File.Exists(_databasePath))
+        {
+            File.Delete(_databasePath);
+        }
+
+        return Task.CompletedTask;
+    }
+
     [Fact]
     public async Task Add_ShouldCreatePayloadRow_AndDetailReadShouldIncludePayload()
     {
@@ -105,23 +122,6 @@ public class TorrentPayloadDataTests : IAsyncLifetime
         await using var verifyContext = CreateContext();
         Assert.False(await verifyContext.Torrents.AnyAsync(m => m.TorrentId == torrentId));
         Assert.False(await verifyContext.TorrentPayloads.AnyAsync(m => m.TorrentId == torrentId));
-    }
-
-    public Task InitializeAsync()
-    {
-        return Task.CompletedTask;
-    }
-
-    public Task DisposeAsync()
-    {
-        SqliteConnection.ClearAllPools();
-
-        if (File.Exists(_databasePath))
-        {
-            File.Delete(_databasePath);
-        }
-
-        return Task.CompletedTask;
     }
 
     private DataContext CreateContext()

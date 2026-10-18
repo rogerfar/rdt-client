@@ -14,8 +14,8 @@ public class WatchFolderCheckerTests : IDisposable
     private readonly Mock<IServiceProvider> _scopeServiceProviderMock;
     private readonly Mock<IServiceProvider> _serviceProviderMock;
     private readonly Mock<IServiceScope> _serviceScopeMock;
-    private readonly String _testPath;
     private readonly TestSettings _settings;
+    private readonly String _testPath;
     private readonly Mock<Torrents> _torrentsServiceMock;
 
     public WatchFolderCheckerTests()

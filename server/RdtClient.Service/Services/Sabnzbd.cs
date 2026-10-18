@@ -29,7 +29,7 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
 
                                       if (dlStats.Count > 0)
                                       {
-                                          var downloadProgress = dlBytesTotal > 0 ? Math.Clamp((Double)dlBytesDone / dlBytesTotal, 0.0, 1.0) : 0;
+                                          var downloadProgress = dlBytesTotal > 0 ? Math.Clamp((Double) dlBytesDone / dlBytesTotal, 0.0, 1.0) : 0;
                                           progress = (rdProgress + downloadProgress) / 2.0;
                                       }
                                       else
@@ -43,22 +43,22 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
 
                                       if (progress is > 0 and < 1.0)
                                       {
-                                          var totalEstimatedTime = TimeSpan.FromTicks((Int64)(elapsed.Ticks / progress));
+                                          var totalEstimatedTime = TimeSpan.FromTicks((Int64) (elapsed.Ticks / progress));
                                           var remaining = totalEstimatedTime - elapsed;
 
                                           if (remaining.TotalSeconds > 0)
                                           {
-                                              timeLeft = $"{(Int32)remaining.TotalHours}:{remaining.Minutes:D2}:{remaining.Seconds:D2}";
+                                              timeLeft = $"{(Int32) remaining.TotalHours}:{remaining.Minutes:D2}:{remaining.Seconds:D2}";
                                           }
                                       }
 
-                                      var mbBytes = dlBytesTotal > 0 ? dlBytesTotal : (t.RdSize ?? 0);
+                                      var mbBytes = dlBytesTotal > 0 ? dlBytesTotal : t.RdSize ?? 0;
 
                                       var mbLeftBytes = dlBytesTotal > 0
                                           ? dlBytesTotal - dlBytesDone
-                                          : (t.RdSize.HasValue
-                                              ? (Int64)(t.RdSize.Value * (1.0 - rdProgress))
-                                              : 0);
+                                          : t.RdSize.HasValue
+                                              ? (Int64) (t.RdSize.Value * (1.0 - rdProgress))
+                                              : 0;
 
                                       return new SabnzbdQueueSlot
                                       {
@@ -70,7 +70,7 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
                                               : FileSizeHelper.FormatSize(t.RdSize),
                                           SizeLeft = dlBytesTotal > 0
                                               ? FileSizeHelper.FormatSize(dlBytesTotal - dlBytesDone)
-                                              : FileSizeHelper.FormatSize(t.RdSize.HasValue ? (Int64)(t.RdSize.Value * (1.0 - rdProgress)) : null),
+                                              : FileSizeHelper.FormatSize(t.RdSize.HasValue ? (Int64) (t.RdSize.Value * (1.0 - rdProgress)) : null),
                                           Mb = (mbBytes / 1048576.0).ToString("0.00"),
                                           MbLeft = (Math.Max(mbLeftBytes, 0) / 1048576.0).ToString("0.00"),
                                           Percentage = (progress * 100.0).ToString("0"),
@@ -126,7 +126,7 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
                                          }
 
                                          var historyBytesTotal = t.Downloads.Sum(d => d.BytesTotal);
-                                         var totalBytes = historyBytesTotal > 0 ? historyBytesTotal : (t.RdSize ?? 0);
+                                         var totalBytes = historyBytesTotal > 0 ? historyBytesTotal : t.RdSize ?? 0;
 
                                          return new SabnzbdHistorySlot
                                          {

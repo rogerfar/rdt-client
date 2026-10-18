@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -12,6 +13,23 @@ namespace RdtClient.Service.Test.Regression;
 public class TorrentPayloadMigrationTests : IAsyncLifetime
 {
     private readonly String _databasePath = Path.Combine(Path.GetTempPath(), $"rdt-client-payload-migration-{Guid.NewGuid():N}.sqlite");
+
+    public Task InitializeAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task DisposeAsync()
+    {
+        SqliteConnection.ClearAllPools();
+
+        if (File.Exists(_databasePath))
+        {
+            File.Delete(_databasePath);
+        }
+
+        return Task.CompletedTask;
+    }
 
     [Fact]
     public async Task Migrate_ShouldBackfillPayloadTable_AndDropLegacyColumn()
@@ -73,14 +91,14 @@ public class TorrentPayloadMigrationTests : IAsyncLifetime
                                                            """,
                                                            torrentId,
                                                            "legacy-hash",
-                                                           (Int32)TorrentDownloadAction.DownloadAll,
-                                                           (Int32)TorrentFinishedAction.None,
+                                                           (Int32) TorrentDownloadAction.DownloadAll,
+                                                           (Int32) TorrentFinishedAction.None,
                                                            0,
-                                                           (Int32)TorrentHostDownloadAction.DownloadAll,
+                                                           (Int32) TorrentHostDownloadAction.DownloadAll,
                                                            0,
-                                                           (Int32)DownloadClient.Bezzad,
+                                                           (Int32) DownloadClient.Bezzad,
                                                            DateTimeOffset.UtcNow,
-                                                           (Int32)DownloadType.Torrent,
+                                                           (Int32) DownloadType.Torrent,
                                                            payload,
                                                            false,
                                                            0,
@@ -124,7 +142,7 @@ public class TorrentPayloadMigrationTests : IAsyncLifetime
         await using var command = verificationContext.Database.GetDbConnection().CreateCommand();
         command.CommandText = "PRAGMA table_info('Torrents');";
 
-        if (command.Connection!.State != System.Data.ConnectionState.Open)
+        if (command.Connection!.State != ConnectionState.Open)
         {
             await command.Connection.OpenAsync();
         }
@@ -139,23 +157,6 @@ public class TorrentPayloadMigrationTests : IAsyncLifetime
         }
 
         Assert.DoesNotContain("FileOrMagnet", columns);
-    }
-
-    public Task InitializeAsync()
-    {
-        return Task.CompletedTask;
-    }
-
-    public Task DisposeAsync()
-    {
-        SqliteConnection.ClearAllPools();
-
-        if (File.Exists(_databasePath))
-        {
-            File.Delete(_databasePath);
-        }
-
-        return Task.CompletedTask;
     }
 
     private DataContext CreateContext()

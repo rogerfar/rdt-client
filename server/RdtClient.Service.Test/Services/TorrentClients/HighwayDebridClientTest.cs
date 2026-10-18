@@ -9,10 +9,8 @@ using RdtClient.Service.Services;
 using RdtClient.Service.Services.DebridClients;
 using DownloadClient = RdtClient.Data.Enums.DownloadClient;
 using Transfer = RdtClient.Service.Services.DebridClients.HighwayDebridClient.HighwayTransfer;
-using TransferFile = RdtClient.Service.Services.DebridClients.HighwayDebridClient.HighwayFile;
 using Stats = RdtClient.Service.Services.DebridClients.HighwayDebridClient.HighwayStats;
 using CheckResponse = RdtClient.Service.Services.DebridClients.HighwayDebridClient.HighwayCheckResponse;
-using CheckEntry = RdtClient.Service.Services.DebridClients.HighwayDebridClient.HighwayCheckEntry;
 
 namespace RdtClient.Service.Test.Services.TorrentClients;
 
@@ -39,8 +37,22 @@ public class HighwayDebridClientTest
     {
         var transfers = new List<Transfer>
         {
-            new() { Id = "4213", Service = "torrent", Name = "Torrent.Release", State = "downloading", Progress = 62, Size = 100 },
-            new() { Id = "3f9a1c2b4d5e6f708192a3b4c5d6e7f8", Service = "usenet", Name = "Usenet.Release", State = "queued" }
+            new()
+            {
+                Id = "4213",
+                Service = "torrent",
+                Name = "Torrent.Release",
+                State = "downloading",
+                Progress = 62,
+                Size = 100
+            },
+            new()
+            {
+                Id = "3f9a1c2b4d5e6f708192a3b4c5d6e7f8",
+                Service = "usenet",
+                Name = "Usenet.Release",
+                State = "queued"
+            }
         };
 
         var clientMock = CreateClient();
@@ -59,9 +71,15 @@ public class HighwayDebridClientTest
     public async Task AddTorrentMagnet_ReturnsTransferId(String id)
     {
         var clientMock = CreateClient();
+
         clientMock.Protected()
                   .Setup<Task<Transfer?>>("PostTransfer", ItExpr.IsAny<HttpContent>())
-                  .ReturnsAsync(new Transfer { Id = id, Service = "torrent", State = "queued" });
+                  .ReturnsAsync(new Transfer
+                  {
+                      Id = id,
+                      Service = "torrent",
+                      State = "queued"
+                  });
 
         var result = await clientMock.Object.AddTorrentMagnet("magnet:?xt=urn:btih:0123");
 
@@ -72,7 +90,7 @@ public class HighwayDebridClientTest
     public async Task AddTorrentMagnet_Throws_WhenNoIdReturned()
     {
         var clientMock = CreateClient();
-        clientMock.Protected().Setup<Task<Transfer?>>("PostTransfer", ItExpr.IsAny<HttpContent>()).ReturnsAsync((Transfer?)null);
+        clientMock.Protected().Setup<Task<Transfer?>>("PostTransfer", ItExpr.IsAny<HttpContent>()).ReturnsAsync((Transfer?) null);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => clientMock.Object.AddTorrentMagnet("magnet:?xt=urn:btih:0123"));
     }
@@ -84,7 +102,11 @@ public class HighwayDebridClientTest
     [InlineData("error", TorrentStatus.Error)]
     public async Task UpdateData_MapsState(String state, TorrentStatus expected)
     {
-        var torrent = new Torrent { RdId = "4213", Type = DownloadType.Torrent };
+        var torrent = new Torrent
+        {
+            RdId = "4213",
+            Type = DownloadType.Torrent
+        };
 
         var cached = new DebridClientTorrent
         {
@@ -109,7 +131,11 @@ public class HighwayDebridClientTest
     [Fact]
     public async Task UpdateData_StoresContentPathInRdHost()
     {
-        var torrent = new Torrent { RdId = "4213", Type = DownloadType.Torrent };
+        var torrent = new Torrent
+        {
+            RdId = "4213",
+            Type = DownloadType.Torrent
+        };
 
         var cached = new DebridClientTorrent
         {
@@ -128,12 +154,17 @@ public class HighwayDebridClientTest
     [Fact]
     public async Task UpdateData_MarksDeleted_WhenTransferNotFound()
     {
-        var torrent = new Torrent { RdId = "4213", Type = DownloadType.Torrent };
+        var torrent = new Torrent
+        {
+            RdId = "4213",
+            Type = DownloadType.Torrent
+        };
 
         var clientMock = CreateClient();
+
         clientMock.Protected()
                   .Setup<Task<Transfer?>>("GetTransfer", ItExpr.IsAny<String>(), ItExpr.IsAny<String>())
-                  .ReturnsAsync((Transfer?)null);
+                  .ReturnsAsync((Transfer?) null);
 
         var result = await clientMock.Object.UpdateData(torrent, null);
 
@@ -145,7 +176,10 @@ public class HighwayDebridClientTest
     {
         // HIGHWAY can report state:"completed" with files:[] (cloud_files index lag, esp. usenet, spec §8).
         // Symlink mode needs named files to symlink, so it must keep waiting.
-        var torrent = new Torrent { DownloadClient = DownloadClient.Symlink };
+        var torrent = new Torrent
+        {
+            DownloadClient = DownloadClient.Symlink
+        };
 
         var result = await CreateClient().Object.SelectFiles(torrent);
 
@@ -160,7 +194,10 @@ public class HighwayDebridClientTest
     {
         // Non-symlink clients always fetch the whole transfer as one ZIP (GetDownloadInfos), so a missing
         // files[] index must not stall CreateDownloads for them.
-        var torrent = new Torrent { DownloadClient = downloadClient };
+        var torrent = new Torrent
+        {
+            DownloadClient = downloadClient
+        };
 
         var result = await CreateClient().Object.SelectFiles(torrent);
 
@@ -175,8 +212,18 @@ public class HighwayDebridClientTest
             DownloadClient = DownloadClient.Symlink,
             RdFiles = JsonSerializer.Serialize(new List<DebridClientFile>
             {
-                new() { Id = 0, Path = "a.mkv", Selected = true },
-                new() { Id = 1, Path = "b.nfo", Selected = true }
+                new()
+                {
+                    Id = 0,
+                    Path = "a.mkv",
+                    Selected = true
+                },
+                new()
+                {
+                    Id = 1,
+                    Path = "b.nfo",
+                    Selected = true
+                }
             })
         };
 
@@ -190,8 +237,20 @@ public class HighwayDebridClientTest
     {
         var files = new List<DebridClientFile>
         {
-            new() { Id = 0, Path = "Some.Release.mkv", Bytes = 8120, Selected = true },
-            new() { Id = 1, Path = "Some.Release.part", Bytes = 10, Selected = false }
+            new()
+            {
+                Id = 0,
+                Path = "Some.Release.mkv",
+                Bytes = 8120,
+                Selected = true
+            },
+            new()
+            {
+                Id = 1,
+                Path = "Some.Release.part",
+                Bytes = 10,
+                Selected = false
+            }
         };
 
         var torrent = new Torrent
@@ -217,8 +276,22 @@ public class HighwayDebridClientTest
     {
         var files = new List<DebridClientFile>
         {
-            new() { Id = 0, Path = "a.mkv", Bytes = 8120, Selected = true, DownloadLink = "https://nl.dwld.link/dav/TORRENT/Some.Release/a.mkv?sig=1" },
-            new() { Id = 1, Path = "b.nfo", Bytes = 42, Selected = true, DownloadLink = "https://nl.dwld.link/dav/TORRENT/Some.Release/b.nfo?sig=2" }
+            new()
+            {
+                Id = 0,
+                Path = "a.mkv",
+                Bytes = 8120,
+                Selected = true,
+                DownloadLink = "https://nl.dwld.link/dav/TORRENT/Some.Release/a.mkv?sig=1"
+            },
+            new()
+            {
+                Id = 1,
+                Path = "b.nfo",
+                Bytes = 42,
+                Selected = true,
+                DownloadLink = "https://nl.dwld.link/dav/TORRENT/Some.Release/b.nfo?sig=2"
+            }
         };
 
         var torrent = new Torrent
@@ -251,7 +324,15 @@ public class HighwayDebridClientTest
             RdName = "Some.Release",
             Type = DownloadType.Torrent,
             DownloadClient = DownloadClient.Bezzad,
-            RdFiles = JsonSerializer.Serialize(new List<DebridClientFile> { new() { Id = 0, Path = "a.mkv", Selected = true } })
+            RdFiles = JsonSerializer.Serialize(new List<DebridClientFile>
+            {
+                new()
+                {
+                    Id = 0,
+                    Path = "a.mkv",
+                    Selected = true
+                }
+            })
         };
 
         _fileFilterMock.Setup(m => m.IsDownloadable(torrent, It.IsAny<String>(), It.IsAny<Int64>())).Returns(true);
@@ -269,8 +350,20 @@ public class HighwayDebridClientTest
     {
         var files = new List<DebridClientFile>
         {
-            new() { Id = 0, Path = "a.mkv", Selected = true, DownloadLink = "https://nl.dwld.link/dav/TORRENT/Some.Release/a.mkv?sig=1" },
-            new() { Id = 1, Path = "b.nfo", Selected = true, DownloadLink = null }
+            new()
+            {
+                Id = 0,
+                Path = "a.mkv",
+                Selected = true,
+                DownloadLink = "https://nl.dwld.link/dav/TORRENT/Some.Release/a.mkv?sig=1"
+            },
+            new()
+            {
+                Id = 1,
+                Path = "b.nfo",
+                Selected = true,
+                DownloadLink = null
+            }
         };
 
         var torrent = new Torrent
@@ -300,7 +393,15 @@ public class HighwayDebridClientTest
             RdName = "Some.Release",
             Type = DownloadType.Torrent,
             DownloadClient = DownloadClient.Bezzad,
-            RdFiles = JsonSerializer.Serialize(new List<DebridClientFile> { new() { Id = 0, Path = "sample.mkv", Selected = true } })
+            RdFiles = JsonSerializer.Serialize(new List<DebridClientFile>
+            {
+                new()
+                {
+                    Id = 0,
+                    Path = "sample.mkv",
+                    Selected = true
+                }
+            })
         };
 
         _fileFilterMock.Setup(m => m.IsDownloadable(torrent, It.IsAny<String>(), It.IsAny<Int64>())).Returns(false);
@@ -346,12 +447,21 @@ public class HighwayDebridClientTest
     [Fact]
     public async Task Unrestrict_ReturnsFreshSignedDownloadUrl()
     {
-        var torrent = new Torrent { RdId = "4213", Type = DownloadType.Torrent };
+        var torrent = new Torrent
+        {
+            RdId = "4213",
+            Type = DownloadType.Torrent
+        };
 
         var clientMock = CreateClient();
+
         clientMock.Protected()
                   .Setup<Task<Transfer?>>("GetTransfer", ItExpr.Is<String>(s => s == "4213"), ItExpr.Is<String>(s => s == "torrent"))
-                  .ReturnsAsync(new Transfer { Id = "4213", DownloadUrl = "https://nl.dwld.link/dav/TORRENT/Some.Release/?download=zip" });
+                  .ReturnsAsync(new Transfer
+                  {
+                      Id = "4213",
+                      DownloadUrl = "https://nl.dwld.link/dav/TORRENT/Some.Release/?download=zip"
+                  });
 
         var result = await clientMock.Object.Unrestrict(torrent, "highway://4213/torrent/zip");
 
@@ -361,7 +471,11 @@ public class HighwayDebridClientTest
     [Fact]
     public async Task Unrestrict_ReturnsSentinelUnchanged_ForPerFileSymlinkRef()
     {
-        var torrent = new Torrent { RdId = "4213", Type = DownloadType.Torrent };
+        var torrent = new Torrent
+        {
+            RdId = "4213",
+            Type = DownloadType.Torrent
+        };
 
         var result = await CreateClient().Object.Unrestrict(torrent, "highway://4213/torrent/2");
 
@@ -373,7 +487,12 @@ public class HighwayDebridClientTest
     {
         // Non-symlink per-file downloads embed the real, already-signed download_url directly
         // (see GetDownloadInfos) - nothing to resolve here, mirrors DebridLinkClient.
-        var torrent = new Torrent { RdId = "4213", Type = DownloadType.Torrent };
+        var torrent = new Torrent
+        {
+            RdId = "4213",
+            Type = DownloadType.Torrent
+        };
+
         const String realUrl = "https://nl.dwld.link/dav/TORRENT/Some.Release/a.mkv?zip_user_id=1&zip_expires=1&zip_signature=abc";
 
         var result = await CreateClient().Object.Unrestrict(torrent, realUrl);
@@ -384,12 +503,21 @@ public class HighwayDebridClientTest
     [Fact]
     public async Task Unrestrict_Throws_WhenNoDownloadUrl()
     {
-        var torrent = new Torrent { RdId = "4213", Type = DownloadType.Torrent };
+        var torrent = new Torrent
+        {
+            RdId = "4213",
+            Type = DownloadType.Torrent
+        };
 
         var clientMock = CreateClient();
+
         clientMock.Protected()
                   .Setup<Task<Transfer?>>("GetTransfer", ItExpr.IsAny<String>(), ItExpr.IsAny<String>())
-                  .ReturnsAsync(new Transfer { Id = "4213", DownloadUrl = null });
+                  .ReturnsAsync(new Transfer
+                  {
+                      Id = "4213",
+                      DownloadUrl = null
+                  });
 
         await Assert.ThrowsAsync<Exception>(() => clientMock.Object.Unrestrict(torrent, "highway://4213/torrent/zip"));
     }
@@ -397,12 +525,17 @@ public class HighwayDebridClientTest
     [Fact]
     public async Task Unrestrict_ThrowsNotFoundMessage_WhenTransferIsGone()
     {
-        var torrent = new Torrent { RdId = "4213", Type = DownloadType.Torrent };
+        var torrent = new Torrent
+        {
+            RdId = "4213",
+            Type = DownloadType.Torrent
+        };
 
         var clientMock = CreateClient();
+
         clientMock.Protected()
                   .Setup<Task<Transfer?>>("GetTransfer", ItExpr.IsAny<String>(), ItExpr.IsAny<String>())
-                  .ReturnsAsync((Transfer?)null);
+                  .ReturnsAsync((Transfer?) null);
 
         var ex = await Assert.ThrowsAsync<Exception>(() => clientMock.Object.Unrestrict(torrent, "highway://4213/torrent/zip"));
         Assert.Contains("was not found", ex.Message);
@@ -411,9 +544,14 @@ public class HighwayDebridClientTest
     [Fact]
     public async Task Delete_OmitsService_ForSpoolId()
     {
-        var torrent = new Torrent { RdId = "3f9a1c2b4d5e6f708192a3b4c5d6e7f8", Type = DownloadType.Torrent };
+        var torrent = new Torrent
+        {
+            RdId = "3f9a1c2b4d5e6f708192a3b4c5d6e7f8",
+            Type = DownloadType.Torrent
+        };
 
         var clientMock = CreateClient();
+
         clientMock.Protected()
                   .Setup<Task<Boolean>>("DeleteTransfer", ItExpr.IsAny<String>(), ItExpr.IsAny<String>())
                   .ReturnsAsync(true);
@@ -427,9 +565,14 @@ public class HighwayDebridClientTest
     [Fact]
     public async Task Delete_PassesService_ForNumericId()
     {
-        var torrent = new Torrent { RdId = "4213", Type = DownloadType.Nzb };
+        var torrent = new Torrent
+        {
+            RdId = "4213",
+            Type = DownloadType.Nzb
+        };
 
         var clientMock = CreateClient();
+
         clientMock.Protected()
                   .Setup<Task<Boolean>>("DeleteTransfer", ItExpr.IsAny<String>(), ItExpr.IsAny<String>())
                   .ReturnsAsync(true);
@@ -452,11 +595,20 @@ public class HighwayDebridClientTest
             RdHost = "TORRENT/Some.Release",
             RdFiles = JsonSerializer.Serialize(new List<DebridClientFile>
             {
-                new() { Id = 0, Path = "Some.Release/Some.Release.mkv", Selected = true }
+                new()
+                {
+                    Id = 0,
+                    Path = "Some.Release/Some.Release.mkv",
+                    Selected = true
+                }
             })
         };
 
-        var download = new Download { Link = "highway://4213/torrent/0", FileName = "Some.Release.mkv" };
+        var download = new Download
+        {
+            Link = "highway://4213/torrent/0",
+            FileName = "Some.Release.mkv"
+        };
 
         var path = HighwayDebridClient.GetSymlinkPath(torrent, download);
 
@@ -472,11 +624,20 @@ public class HighwayDebridClientTest
             RdHost = "TORRENT/Some.Release",
             RdFiles = JsonSerializer.Serialize(new List<DebridClientFile>
             {
-                new() { Id = 0, Path = "TORRENT/Some.Release/Some.Release.mkv", Selected = true }
+                new()
+                {
+                    Id = 0,
+                    Path = "TORRENT/Some.Release/Some.Release.mkv",
+                    Selected = true
+                }
             })
         };
 
-        var download = new Download { Link = "highway://4213/torrent/0", FileName = "Some.Release.mkv" };
+        var download = new Download
+        {
+            Link = "highway://4213/torrent/0",
+            FileName = "Some.Release.mkv"
+        };
 
         var path = HighwayDebridClient.GetSymlinkPath(torrent, download);
 
@@ -487,9 +648,16 @@ public class HighwayDebridClientTest
     public async Task GetUser_UsesUsernameFromStats()
     {
         var clientMock = CreateClient();
+
         clientMock.Protected()
                   .Setup<Task<Stats?>>("GetStats")
-                  .ReturnsAsync(new Stats { Username = "maxmuster", Plan = "Pro", Premium = true, PlanExpiresAt = 1761955200 });
+                  .ReturnsAsync(new Stats
+                  {
+                      Username = "maxmuster",
+                      Plan = "Pro",
+                      Premium = true,
+                      PlanExpiresAt = 1761955200
+                  });
 
         var user = await clientMock.Object.GetUser();
 
@@ -501,7 +669,14 @@ public class HighwayDebridClientTest
     public async Task GetUser_LeavesExpirationNull_WhenPlanHasNoExpiry()
     {
         var clientMock = CreateClient();
-        clientMock.Protected().Setup<Task<Stats?>>("GetStats").ReturnsAsync(new Stats { Username = "maxmuster", PlanExpiresAt = null });
+
+        clientMock.Protected()
+                  .Setup<Task<Stats?>>("GetStats")
+                  .ReturnsAsync(new Stats
+                  {
+                      Username = "maxmuster",
+                      PlanExpiresAt = null
+                  });
 
         var user = await clientMock.Object.GetUser();
 
@@ -512,7 +687,13 @@ public class HighwayDebridClientTest
     public async Task GetUser_FallsBackToPlan_WhenNoUsername()
     {
         var clientMock = CreateClient();
-        clientMock.Protected().Setup<Task<Stats?>>("GetStats").ReturnsAsync(new Stats { Plan = "Pro" });
+
+        clientMock.Protected()
+                  .Setup<Task<Stats?>>("GetStats")
+                  .ReturnsAsync(new Stats
+                  {
+                      Plan = "Pro"
+                  });
 
         var user = await clientMock.Object.GetUser();
 
@@ -523,7 +704,7 @@ public class HighwayDebridClientTest
     public async Task GetUser_FallsBackToStub_WhenStatsUnavailable()
     {
         var clientMock = CreateClient();
-        clientMock.Protected().Setup<Task<Stats?>>("GetStats").ReturnsAsync((Stats?)null);
+        clientMock.Protected().Setup<Task<Stats?>>("GetStats").ReturnsAsync((Stats?) null);
 
         var user = await clientMock.Object.GetUser();
 
@@ -536,13 +717,23 @@ public class HighwayDebridClientTest
         const String hash = "3641ad15ad451518f558d5ce5b76be4a618911c1";
 
         var clientMock = CreateClient();
+
         clientMock.Protected()
                   .Setup<Task<CheckResponse?>>("CheckCache", ItExpr.Is<String>(h => h == hash), ItExpr.Is<String>(s => s == "torrent"))
                   .ReturnsAsync(new CheckResponse
                   {
                       Service = "torrent",
-                      Results = new() { [hash] = new CheckEntry { Known = true, Ready = true, Id = "4213" } }
+                      Results = new()
+                      {
+                          [hash] = new()
+                          {
+                              Known = true,
+                              Ready = true,
+                              Id = "4213"
+                          }
+                      }
                   });
+
         clientMock.Protected()
                   .Setup<Task<Transfer?>>("GetTransfer", ItExpr.Is<String>(i => i == "4213"), ItExpr.IsAny<String>())
                   .ReturnsAsync(new Transfer
@@ -550,8 +741,16 @@ public class HighwayDebridClientTest
                       Id = "4213",
                       Files =
                       [
-                          new TransferFile { Path = "Some.Release/Some.Release.mkv", Size = 8120 },
-                          new TransferFile { Path = "Some.Release/info.nfo", Size = 42 }
+                          new()
+                          {
+                              Path = "Some.Release/Some.Release.mkv",
+                              Size = 8120
+                          },
+                          new()
+                          {
+                              Path = "Some.Release/info.nfo",
+                              Size = 42
+                          }
                       ]
                   });
 
@@ -568,12 +767,20 @@ public class HighwayDebridClientTest
         const String hash = "3641ad15ad451518f558d5ce5b76be4a618911c1";
 
         var clientMock = CreateClient();
+
         clientMock.Protected()
                   .Setup<Task<CheckResponse?>>("CheckCache", ItExpr.IsAny<String>(), ItExpr.IsAny<String>())
                   .ReturnsAsync(new CheckResponse
                   {
                       Service = "torrent",
-                      Results = new() { [hash] = new CheckEntry { Known = true, Ready = false } }
+                      Results = new()
+                      {
+                          [hash] = new()
+                          {
+                              Known = true,
+                              Ready = false
+                          }
+                      }
                   });
 
         Assert.Empty(await clientMock.Object.GetAvailableFiles(hash));

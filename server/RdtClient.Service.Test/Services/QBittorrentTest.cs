@@ -1,6 +1,6 @@
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System.Text.Json;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.DebridClient;
@@ -13,8 +13,8 @@ public class QBittorrentTest
     private readonly Mock<Authentication> _authenticationMock;
     private readonly Mock<ILogger<QBittorrent>> _loggerMock;
     private readonly QBittorrent _qBittorrent;
-    private readonly TestSettings _settings;
     private readonly TorrentRunnerState _runnerState;
+    private readonly TestSettings _settings;
     private readonly Mock<Torrents> _torrentsMock;
 
     public QBittorrentTest()
@@ -441,5 +441,4 @@ public class QBittorrentTest
         Assert.Single(result);
         Assert.Equal(Path.Combine("/data/downloads", "movies", torrentRootName) + Path.DirectorySeparatorChar, result[0].ContentPath);
     }
-
 }

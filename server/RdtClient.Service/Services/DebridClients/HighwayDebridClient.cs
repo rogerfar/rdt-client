@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Net;
-using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
@@ -66,6 +65,7 @@ public class HighwayDebridClient(
         return new()
         {
             Username = String.IsNullOrWhiteSpace(username) ? "HIGHWAY" : username,
+
             // Dated plans (subscription/legacy) get an expiry; unlimited/no-expiry plans don't, but are
             // still premium - Premium below is what tells the UI that (see DebridClientUser.Premium).
             Expiration = stats?.PlanExpiresAt is { } expiresAt ? DateTimeOffset.FromUnixTimeSeconds(expiresAt) : null,
@@ -77,7 +77,9 @@ public class HighwayDebridClient(
     {
         using var content = new MultipartFormDataContent
         {
-            { new StringContent(magnetLink), "magnet" }
+            {
+                new StringContent(magnetLink), "magnet"
+            }
         };
 
         var result = await PostTransfer(content);
@@ -148,7 +150,7 @@ public class HighwayDebridClient(
             // older server builds ignore ?check= and return the transfer list instead
         }
 
-        if (check?.Results == null || !check.Results.TryGetValue(hash, out var entry) || entry == null || !entry.Ready)
+        if (check?.Results == null || !check.Results.TryGetValue(hash, out var entry) || !entry.Ready)
         {
             return [];
         }
@@ -484,7 +486,7 @@ public class HighwayDebridClient(
         }
 
         using var request = new HttpRequestMessage(method, url);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        request.Headers.Authorization = new("Bearer", token);
         request.Content = content;
 
         var httpClient = httpClientFactory.CreateClient();
@@ -529,7 +531,7 @@ public class HighwayDebridClient(
                 throw new($"The HIGHWAY token does not belong to a high-way.me account ({error}). {message}");
             }
 
-            throw new($"HIGHWAY request failed ({(Int32)response.StatusCode} {error}): {message ?? body}");
+            throw new($"HIGHWAY request failed ({(Int32) response.StatusCode} {error}): {message ?? body}");
         }
 
         if (String.IsNullOrWhiteSpace(body))
@@ -571,11 +573,13 @@ public class HighwayDebridClient(
     private static MultipartFormDataContent BuildFileContent(Byte[] bytes, String fileName)
     {
         var fileContent = new ByteArrayContent(bytes);
-        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        fileContent.Headers.ContentType = new("application/octet-stream");
 
         return new()
         {
-            { fileContent, "file", fileName }
+            {
+                fileContent, "file", fileName
+            }
         };
     }
 

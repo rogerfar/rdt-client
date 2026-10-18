@@ -18,7 +18,7 @@ public static class Logger
         }
 
         var stats = TorrentRunner.GetStats(download.DownloadId);
-        var done = (Int32)(((Double)stats.BytesDone / stats.BytesTotal) * 100);
+        var done = (Int32) (((Double) stats.BytesDone / stats.BytesTotal) * 100);
 
         if (done < 0 || Double.IsNaN(done) || Double.IsInfinity(done))
         {

@@ -9,10 +9,10 @@ namespace RdtClient.Service.Services.Downloaders;
 public class BezzadDownloader : IDownloader
 {
     private const Int32 BindRetryDelayMilliseconds = 1000;
+    private readonly IDelayProvider _delayProvider;
 
     private readonly DownloadConfiguration _downloadConfiguration;
     private readonly DownloadService _downloadService;
-    private readonly IDelayProvider _delayProvider;
     private readonly String _filePath;
     private readonly ILogger _logger;
     private readonly String _uri;
@@ -67,7 +67,7 @@ public class BezzadDownloader : IDownloader
             DownloadProgress.Invoke(this,
                                     new()
                                     {
-                                        Speed = (Int64)args.BytesPerSecondSpeed,
+                                        Speed = (Int64) args.BytesPerSecondSpeed,
                                         BytesDone = args.ReceivedBytesSize,
                                         BytesTotal = args.TotalBytesToReceive
                                     });
@@ -232,7 +232,7 @@ public class BezzadDownloader : IDownloader
 
         if (compatibleRemoteAddresses.Length == 0)
         {
-            throw new SocketException((Int32)SocketError.HostNotFound);
+            throw new SocketException((Int32) SocketError.HostNotFound);
         }
 
         Exception? lastError = null;

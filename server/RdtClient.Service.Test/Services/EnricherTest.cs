@@ -302,7 +302,7 @@ public class EnricherTest : IDisposable
         var enrichedDict = BEncodedValue.Decode<BEncodedDictionary>(enrichedBytes);
 
         // Assert
-        var announceList = (BEncodedList)enrichedDict["announce-list"];
+        var announceList = (BEncodedList) enrichedDict["announce-list"];
         var flattened = announceList.Cast<BEncodedList>().SelectMany(l => l.Cast<BEncodedString>().Select(s => s.Text)).ToList();
         Assert.Contains(originalTracker, flattened);
         Assert.Contains(newTracker, flattened);
@@ -325,9 +325,9 @@ public class EnricherTest : IDisposable
         var enrichedDict = BEncodedValue.Decode<BEncodedDictionary>(enrichedBytes);
 
         // Assert
-        var announceList = (BEncodedList)enrichedDict["announce-list"];
+        var announceList = (BEncodedList) enrichedDict["announce-list"];
         var flattened = announceList.Cast<BEncodedList>().SelectMany(l => l.Cast<BEncodedString>().Select(s => s.Text)).ToList();
-        var announce = ((BEncodedString)enrichedDict["announce"]).Text;
+        var announce = ((BEncodedString) enrichedDict["announce"]).Text;
         Assert.Equal(flattened.First(), announce);
     }
 
@@ -349,7 +349,7 @@ public class EnricherTest : IDisposable
         var enrichedDict = BEncodedValue.Decode<BEncodedDictionary>(enrichedBytes);
 
         // Assert
-        var announceList = (BEncodedList)enrichedDict["announce-list"];
+        var announceList = (BEncodedList) enrichedDict["announce-list"];
         var flattened = announceList.Cast<BEncodedList>().SelectMany(l => l.Cast<BEncodedString>().Select(s => s.Text)).ToList();
 
         Assert.Single(flattened);
@@ -391,7 +391,7 @@ public class EnricherTest : IDisposable
         var enrichedDict = BEncodedValue.Decode<BEncodedDictionary>(enrichedBytes);
 
         // Assert
-        var announceList = (BEncodedList)enrichedDict["announce-list"];
+        var announceList = (BEncodedList) enrichedDict["announce-list"];
         var flattened = announceList.Cast<BEncodedList>().SelectMany(l => l.Cast<BEncodedString>().Select(s => s.Text)).ToList();
         Assert.Contains(originalTracker, flattened);
     }
@@ -412,7 +412,7 @@ public class EnricherTest : IDisposable
         var enrichedDict = BEncodedValue.Decode<BEncodedDictionary>(enrichedBytes);
 
         // Assert
-        var announceList = (BEncodedList)enrichedDict["announce-list"];
+        var announceList = (BEncodedList) enrichedDict["announce-list"];
         var flattened = announceList.Cast<BEncodedList>().SelectMany(l => l.Cast<BEncodedString>().Select(s => s.Text)).ToList();
         Assert.Contains(newTracker, flattened);
     }
@@ -520,7 +520,7 @@ public class EnricherTest : IDisposable
 
         // Assert
         Assert.True(enrichedDict.ContainsKey("announce"));
-        Assert.Equal(newTrackers[0], ((BEncodedString)enrichedDict["announce"]).Text);
+        Assert.Equal(newTrackers[0], ((BEncodedString) enrichedDict["announce"]).Text);
     }
 
     [Fact]
@@ -566,12 +566,12 @@ public class EnricherTest : IDisposable
         var enrichedDict = BEncodedValue.Decode<BEncodedDictionary>(enrichedBytes);
 
         // Assert
-        var announceList = (BEncodedList)enrichedDict["announce-list"];
+        var announceList = (BEncodedList) enrichedDict["announce-list"];
         Assert.Equal(newTrackers.Length, announceList.Count);
 
         Assert.Collection(announceList,
-                          tier => Assert.Equal(newTrackers[0], ((BEncodedString)((BEncodedList)tier)[0]).Text),
-                          tier => Assert.Equal(newTrackers[1], ((BEncodedString)((BEncodedList)tier)[0]).Text));
+                          tier => Assert.Equal(newTrackers[0], ((BEncodedString) ((BEncodedList) tier)[0]).Text),
+                          tier => Assert.Equal(newTrackers[1], ((BEncodedString) ((BEncodedList) tier)[0]).Text));
     }
 
     [Fact]
@@ -609,7 +609,7 @@ public class EnricherTest : IDisposable
         var enrichedDict = BEncodedValue.Decode<BEncodedDictionary>(enrichedBytes);
 
         // Assert
-        var finalAnnounceList = ((BEncodedList)enrichedDict["announce-list"])
+        var finalAnnounceList = ((BEncodedList) enrichedDict["announce-list"])
                                 .Cast<BEncodedList>()
                                 .SelectMany(tier => tier.Cast<BEncodedString>().Select(t => t.Text))
                                 .ToList();
@@ -618,6 +618,6 @@ public class EnricherTest : IDisposable
         Assert.Contains("http://existing.com/announce", finalAnnounceList);
         Assert.Contains("udp://new1", finalAnnounceList);
         Assert.Equal(3, finalAnnounceList.Count);
-        Assert.Contains(((BEncodedString)enrichedDict["announce"]).Text, finalAnnounceList);
+        Assert.Contains(((BEncodedString) enrichedDict["announce"]).Text, finalAnnounceList);
     }
 }

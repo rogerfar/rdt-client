@@ -9,6 +9,25 @@ public class TorrentDownloadRaceTests : IAsyncLifetime
 {
     private readonly String _databasePath = Path.Combine(Path.GetTempPath(), $"rdt-client-race-{Guid.NewGuid():N}.sqlite");
 
+    public async Task InitializeAsync()
+    {
+        await using var context = CreateContext();
+        await context.Database.EnsureDeletedAsync();
+        await context.Database.EnsureCreatedAsync();
+    }
+
+    public Task DisposeAsync()
+    {
+        SqliteConnection.ClearAllPools();
+
+        if (File.Exists(_databasePath))
+        {
+            File.Delete(_databasePath);
+        }
+
+        return Task.CompletedTask;
+    }
+
     [Fact]
     public async Task Add_WhenTorrentIsDeletedAfterItWasRead_DoesNotThrowAndDoesNotInsertDownload()
     {
@@ -121,25 +140,6 @@ public class TorrentDownloadRaceTests : IAsyncLifetime
         }
 
         Assert.Null(exception);
-    }
-
-    public async Task InitializeAsync()
-    {
-        await using var context = CreateContext();
-        await context.Database.EnsureDeletedAsync();
-        await context.Database.EnsureCreatedAsync();
-    }
-
-    public Task DisposeAsync()
-    {
-        SqliteConnection.ClearAllPools();
-
-        if (File.Exists(_databasePath))
-        {
-            File.Delete(_databasePath);
-        }
-
-        return Task.CompletedTask;
     }
 
     private DataContext CreateContext()

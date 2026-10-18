@@ -12,8 +12,8 @@ public class QBittorrentControllerTest
 {
     private readonly QBittorrentController _controller;
     private readonly Mock<QBittorrent> _qBittorrentMock;
-    private readonly Mock<Torrents> _torrentsMock;
     private readonly TestSettings _settings;
+    private readonly Mock<Torrents> _torrentsMock;
 
     public QBittorrentControllerTest()
     {
