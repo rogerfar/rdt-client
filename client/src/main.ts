@@ -3,7 +3,7 @@ import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 
 import { environment } from './environments/environment';
 import { FileSizePipe } from './app/filesize.pipe';
-import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi, withXhr } from '@angular/common/http';
 import { AuthInterceptor } from './app/auth.interceptor';
 import { APP_BASE_HREF } from '@angular/common';
 import { BrowserModule, bootstrapApplication } from '@angular/platform-browser';
@@ -23,6 +23,6 @@ bootstrapApplication(AppComponent, {
     FileSizePipe,
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
     { provide: APP_BASE_HREF, useValue: (window as any)['_app_base'] || '/' },
-    provideHttpClient(withInterceptorsFromDi()),
+    provideHttpClient(withXhr(), withInterceptorsFromDi()),
   ],
 }).catch((err) => console.error(err));

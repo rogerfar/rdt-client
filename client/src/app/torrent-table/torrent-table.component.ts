@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { Torrent } from '../models/torrent.model';
@@ -17,6 +17,7 @@ import { FileSizePipe } from '../filesize.pipe';
   templateUrl: './torrent-table.component.html',
   styleUrls: ['./torrent-table.component.scss'],
   imports: [FormsModule, NgClass, DecimalPipe, DatePipe, TorrentStatusPipe, FileSizePipe],
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
 })
 export class TorrentTableComponent implements OnInit, OnDestroy {

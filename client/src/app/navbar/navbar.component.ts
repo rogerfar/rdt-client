@@ -1,4 +1,12 @@
-import { Component, DestroyRef, ElementRef, HostListener, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  HostListener,
+  OnInit,
+  inject,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth.service';
@@ -13,6 +21,7 @@ import { filter } from 'rxjs';
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss'],
   imports: [RouterLink, NgClass, DatePipe, FormsModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
 })
 export class NavbarComponent implements OnInit {

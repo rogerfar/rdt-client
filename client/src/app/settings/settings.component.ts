@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { Setting } from '../models/setting.model';
 import { NgClass, KeyValuePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -11,6 +11,7 @@ import { SettingsService } from '../settings.service';
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss'],
   imports: [NgClass, FormsModule, KeyValuePipe, Nl2BrPipe, FileSizePipe],
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
 })
 export class SettingsComponent implements OnInit {

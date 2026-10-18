@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { AuthService } from '../auth.service';
 import { FormsModule } from '@angular/forms';
 import { NgClass } from '@angular/common';
@@ -8,6 +8,7 @@ import { NgClass } from '@angular/common';
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
   imports: [FormsModule, NgClass],
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
 })
 export class ProfileComponent {

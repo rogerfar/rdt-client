@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { NgClass } from '@angular/common';
@@ -9,6 +9,7 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './setup.component.html',
   styleUrls: ['./setup.component.scss'],
   imports: [FormsModule, NgClass],
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
 })
 export class SetupComponent {

@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { DownloadType, Torrent, TorrentFileAvailability } from '../models/torrent.model';
@@ -14,6 +14,7 @@ import { catchError, concatMap, from, map, of, toArray } from 'rxjs';
   templateUrl: './add-new-torrent.component.html',
   styleUrls: ['./add-new-torrent.component.scss'],
   imports: [FormsModule, NgClass],
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
 })
 export class AddNewTorrentComponent implements OnInit {
