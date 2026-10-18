@@ -261,6 +261,11 @@ public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authen
                 progress = rdProgress;
             }
 
+            if (torrent.Completed == null && progress >= 1.0)
+            {
+                progress = 0.99;
+            }
+
             var remaining = TimeSpan.Zero;
 
             if (progress > 0 && progress < 1.0)

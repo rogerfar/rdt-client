@@ -76,6 +76,7 @@ public class QBittorrentTest
                 Hash = "hash1",
                 RdName = "Torrent 1",
                 RdProgress = 100, // Real-Debrid is 100%
+                Completed = DateTimeOffset.UtcNow,
                 Type = DownloadType.Torrent,
                 Downloads = new List<Download>
                 {
@@ -99,6 +100,58 @@ public class QBittorrentTest
         // Assert
         Assert.Single(result);
         Assert.Equal(1.0f, result[0].Progress);
+    }
+
+    [Fact]
+    public async Task TorrentInfo_ShouldNotReport100Percent_WhenLocalDownloadHasNotStarted()
+    {
+        var torrent = new Torrent
+        {
+            TorrentId = Guid.NewGuid(),
+            Hash = "hash1",
+            RdName = "Torrent 1",
+            RdProgress = 100,
+            Type = DownloadType.Torrent,
+            Downloads = new List<Download>()
+        };
+
+        _torrentsMock.Setup(m => m.Get()).ReturnsAsync(new List<Torrent> { torrent });
+
+        var result = await _qBittorrent.TorrentInfo();
+
+        Assert.Single(result);
+        Assert.True(result[0].Progress < 1.0f);
+    }
+
+    [Fact]
+    public async Task TorrentInfo_ShouldNotReport100Percent_WhenLocalFilesArePreallocatedBeforeCompletion()
+    {
+        var downloadId = Guid.NewGuid();
+        var torrentId = Guid.NewGuid();
+        var torrent = new Torrent
+        {
+            TorrentId = torrentId,
+            Hash = "hash1",
+            RdName = "Torrent 1",
+            RdProgress = 100,
+            Type = DownloadType.Torrent,
+            Downloads = new List<Download>
+            {
+                new()
+                {
+                    DownloadId = downloadId,
+                    TorrentId = torrentId
+                }
+            }
+        };
+
+        _torrentsMock.Setup(m => m.Get()).ReturnsAsync(new List<Torrent> { torrent });
+        _torrentsMock.Setup(m => m.GetDownloadStats(downloadId)).Returns((0, 1000, 1000));
+
+        var result = await _qBittorrent.TorrentInfo();
+
+        Assert.Single(result);
+        Assert.True(result[0].Progress < 1.0f);
     }
 
     [Fact]
