@@ -179,7 +179,7 @@ cd docker-rdtclient
 docker build \
   --no-cache \
   --pull \
-  -t rogerfar/rtd-client:latest .
+  -t rogerfar/rdt-client:latest .
 ```
 
 The ARM variants can be built on x86_64 hardware using `multiarch/qemu-user-static`
