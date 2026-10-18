@@ -195,6 +195,7 @@ public class DbSettingsProvider
 <a href=""https://www.premiumize.me/"" target=""_blank"" rel=""noopener"">https://www.premiumize.me/</a>
 <a href=""https://debrid-link.com/"" target=""_blank"" rel=""noopener"">https://debrid-link.com/</a>
 <a href=""https://torbox.app/"" target=""_blank"" rel=""noopener"">https://torbox.app/</a>
+<a href=""https://high-way.me/"" target=""_blank"" rel=""noopener"">https://high-way.me/</a>
 At this point only 1 provider can be used at the time.")]
     public Provider Provider { get; set; } = Provider.RealDebrid;
 
@@ -208,7 +209,8 @@ or
 or
 <a href=""https://torbox.app/settings/"" target=""_blank"" rel=""noopener"">https://torbox.app/settings/</a>
 or
-<a href=""https://debrid-link.com/webapp/apikey"" target=""_blank"" rel=""noopener"">https://debrid-link.com/webapp/apikey</a>")]
+<a href=""https://debrid-link.com/webapp/apikey"" target=""_blank"" rel=""noopener"">https://debrid-link.com/webapp/apikey</a>
+For HIGHWAY, log in to your HIGHWAY Center and create a token under ""Sitzungen"" &rarr; ""API-Token erstellen"".")]
     public String ApiKey { get; set; } = "";
 
     /// <summary>

@@ -33,6 +33,7 @@ public class Torrents(
     RealDebridDebridClient realDebridDebridClient,
     DebridLinkClient debridLinkClient,
     TorBoxDebridClient torBoxDebridClient,
+    HighwayDebridClient highwayDebridClient,
     ISettings settings,
     ITorrentRunnerState runnerState)
 {
@@ -56,6 +57,7 @@ public class Torrents(
                 Provider.AllDebrid => allDebridDebridClient,
                 Provider.DebridLink => debridLinkClient,
                 Provider.TorBox => torBoxDebridClient,
+                Provider.HIGHWAY => highwayDebridClient,
                 _ => throw new("Invalid Provider")
             };
         }
@@ -703,6 +705,7 @@ public class Torrents(
             Provider = Enum.GetName(settings.Current.Provider.Provider),
             UserName = user.Username,
             Expiration = user.Expiration,
+            Premium = user.Premium || user.Expiration.HasValue,
             CurrentVersion = UpdateChecker.CurrentVersion,
             LatestVersion = UpdateChecker.LatestVersion,
             IsInsecure = UpdateChecker.IsInsecure,
@@ -756,6 +759,35 @@ public class Torrents(
                         logger.LogInformation("Migrated TorBox torrent RdId from hash to torrent id for {TorrentName} ({Hash}) -> {RdId}",
                                               torrent.RdName ?? rdTorrent.Filename,
                                               rdTorrent.Hash,
+                                              rdTorrent.Id);
+                    }
+                }
+
+                // HIGHWAY promotes a queued spool reference (32-hex id) to a numeric transfer id once a slot frees.
+                if (torrent == null
+                    && Settings.Get.Provider.Provider == Provider.HIGHWAY
+                    && !String.IsNullOrWhiteSpace(rdTorrent.Id)
+                    && Int64.TryParse(rdTorrent.Id, out _)
+                    && !String.IsNullOrWhiteSpace(rdTorrent.Filename))
+                {
+                    torrent = torrents.FirstOrDefault(localTorrent => localTorrent.ClientKind is null or Provider.HIGHWAY
+                                                                      && localTorrent.Type == rdTorrent.Type
+                                                                      && !String.IsNullOrWhiteSpace(localTorrent.RdId)
+                                                                      && localTorrent.RdId.Length == 32
+                                                                      && localTorrent.RdId.All(Uri.IsHexDigit)
+                                                                      && String.Equals(localTorrent.RdName, rdTorrent.Filename, StringComparison.OrdinalIgnoreCase));
+
+                    if (torrent != null)
+                    {
+                        torrentsByRdId.Remove(torrent.RdId!);
+
+                        await torrentData.UpdateRdId(torrent, rdTorrent.Id);
+                        torrent.RdId = rdTorrent.Id;
+                        torrent.ClientKind = Provider.HIGHWAY;
+                        torrentsByRdId[rdTorrent.Id] = torrent;
+
+                        logger.LogInformation("Promoted HIGHWAY spool reference to transfer id for {TorrentName} -> {RdId}",
+                                              torrent.RdName ?? rdTorrent.Filename,
                                               rdTorrent.Id);
                     }
                 }

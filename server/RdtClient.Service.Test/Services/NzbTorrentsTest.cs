@@ -30,6 +30,7 @@ public class NzbTorrentsTest
                         null!,
                         null!,
                         null!,
+                        null!,
                         new TestSettings(),
                         new TorrentRunnerState());
     }

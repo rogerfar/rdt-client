@@ -45,6 +45,8 @@
           </span>
           @if (profile.expiration) {
             <span>Premium Status: {{ profile.expiration | date }}</span>
+          } @else if (profile.premium) {
+            <span>Premium Status: Unlimited</span>
           } @else {
             <span class="no-premium">Not premium</span>
           }

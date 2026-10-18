@@ -17,5 +17,8 @@ public enum Provider
     TorBox,
 
     [Description("DebridLink")]
-    DebridLink
+    DebridLink,
+
+    [Description("HIGHWAY")]
+    HIGHWAY
 }

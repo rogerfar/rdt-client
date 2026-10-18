@@ -19,7 +19,7 @@ public class QBittorrentControllerTest
     {
         _settings = new();
         _qBittorrentMock = new(new Mock<ILogger<QBittorrent>>().Object, _settings, null!, null!, null!, new TorrentRunnerState());
-        _torrentsMock = new(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, _settings, new TorrentRunnerState());
+        _torrentsMock = new(null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, null!, _settings, new TorrentRunnerState());
 
         _controller = new(new Mock<ILogger<QBittorrentController>>().Object,
                           _qBittorrentMock.Object,
