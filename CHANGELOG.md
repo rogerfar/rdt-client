@@ -4,9 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.143] - 2026-10-18
 ### Added
 - Added a download speed limit slider to the navbar when the Bezzad downloader is selected, plus a setting for the slider's maximum.
+- Added HIGHWAY support.
+
+### Fixed
+- Fixed reporting a torrent complete when it really isn't yet.
+
+### Changed
+- Upgrade to Angular 22
 
 ## [2.0.142] - 2026-08-03
 ### Fixed
