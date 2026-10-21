@@ -161,6 +161,7 @@ public class DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFacto
              4   Torrent is downloading
              5   Torrent is queued to seed
              6   Torrent is seeding
+             8   Torrent is seeding (finished)
              100  Torrent is stored
             */
 
@@ -173,6 +174,7 @@ public class DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFacto
                 "4" => TorrentStatus.Downloading,
                 "5" => TorrentStatus.Finished,
                 "6" => TorrentStatus.Finished,
+                "8" => TorrentStatus.Finished,
                 _ => TorrentStatus.Error
             };
         }
