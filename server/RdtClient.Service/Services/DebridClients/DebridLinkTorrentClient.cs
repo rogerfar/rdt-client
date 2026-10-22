@@ -173,6 +173,7 @@ public class DebridLinkClient(ILogger<DebridLinkClient> logger, IHttpClientFacto
                 "4" => TorrentStatus.Downloading,
                 "5" => TorrentStatus.Finished,
                 "6" => TorrentStatus.Finished,
+                "8" => TorrentStatus.Finished,
                 _ => TorrentStatus.Error
             };
         }
