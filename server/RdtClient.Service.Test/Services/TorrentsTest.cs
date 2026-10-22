@@ -5,13 +5,18 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Moq.Protected;
 using RdtClient.Data.Data;
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.Internal;
+using RdtClient.Service.Helpers;
 using RdtClient.Service.Services;
+using RdtClient.Service.Services.DebridClients;
 using RdtClient.Service.Wrappers;
+using TorBoxNET;
 using DownloadClient = RdtClient.Data.Enums.DownloadClient;
+using Torrent = RdtClient.Data.Models.Data.Torrent;
 using TorrentsService = RdtClient.Service.Services.Torrents;
 
 namespace RdtClient.Service.Test.Services;
@@ -531,5 +536,99 @@ public class TorrentsTest
                                      Times.Once);
 
         mocks.TorrentDataMock.Verify(t => t.UpdateRetry(requeuedTorrent.TorrentId, null, 3), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateRdData_AutoDeletesMissingTorBoxTorrent_OnlyAfterListingGracePeriod()
+    {
+        // Arrange
+        var mocks = new Mocks();
+        var settings = new TestSettings();
+        settings.Current.Provider.Provider = Provider.TorBox;
+        settings.Current.Provider.AutoDelete = true;
+
+        var trackedByHash = new Torrent
+        {
+            TorrentId = Guid.NewGuid(),
+            Hash = "dd8255ecdc7ca55fb0bbf81323d87062db1f6d1c",
+            RdId = "dd8255ecdc7ca55fb0bbf81323d87062db1f6d1c",
+            RdStatus = TorrentStatus.Processing,
+            Type = DownloadType.Torrent,
+            Downloads = []
+        };
+
+        var trackedById = new Torrent
+        {
+            TorrentId = Guid.NewGuid(),
+            Hash = "08ada5a7a6183aae1e09d831df6748d566095a10",
+            RdId = "12345",
+            RdAdded = DateTimeOffset.UtcNow.AddHours(-1),
+            RdStatus = TorrentStatus.Processing,
+            Type = DownloadType.Torrent,
+            Downloads = []
+        };
+
+        var recentlyAdded = new Torrent
+        {
+            TorrentId = Guid.NewGuid(),
+            Hash = "9e93c97410e2d6e05ee5d1cc7044a5e2e6f9339d",
+            RdId = "12346",
+            RdAdded = DateTimeOffset.UtcNow.AddMinutes(-2),
+            RdStatus = TorrentStatus.Processing,
+            Type = DownloadType.Torrent,
+            Downloads = []
+        };
+
+        var notYetListed = new Torrent
+        {
+            TorrentId = Guid.NewGuid(),
+            Hash = "ce9f5c48b0d69fa59a66b2aa74faf118a05ee953",
+            RdId = "12347",
+            RdStatus = TorrentStatus.Processing,
+            Type = DownloadType.Torrent,
+            Downloads = []
+        };
+
+        mocks.TorrentDataMock.Setup(t => t.Get()).ReturnsAsync(new List<Torrent> { trackedByHash, trackedById, recentlyAdded, notYetListed });
+
+        var torBoxClientMock = new Mock<TorBoxDebridClient>(new Mock<ILogger<TorBoxDebridClient>>().Object,
+                                                            new Mock<IHttpClientFactory>().Object,
+                                                            new Mock<IDownloadableFileFilter>().Object,
+                                                            new Mock<IRateLimitCoordinator>().Object,
+                                                            settings);
+
+        torBoxClientMock.Protected().Setup<Task<IEnumerable<TorrentInfoResult>?>>("GetCurrentTorrents").ReturnsAsync(new List<TorrentInfoResult>());
+        torBoxClientMock.Protected().Setup<Task<IEnumerable<TorrentInfoResult>?>>("GetQueuedTorrents").ReturnsAsync(new List<TorrentInfoResult>());
+        torBoxClientMock.Protected().Setup<Task<IEnumerable<UsenetInfoResult>?>>("GetCurrentUsenet").ReturnsAsync(new List<UsenetInfoResult>());
+        torBoxClientMock.Protected().Setup<Task<IEnumerable<UsenetInfoResult>?>>("GetQueuedUsenet").ReturnsAsync(new List<UsenetInfoResult>());
+
+        var torrentsMock = new Mock<TorrentsService>(mocks.TorrentsLoggerMock.Object,
+                                                     mocks.TorrentDataMock.Object,
+                                                     mocks.DownloadsMock.Object,
+                                                     mocks.ProcessFactoryMock.Object,
+                                                     new MockFileSystem(),
+                                                     mocks.EnricherMock.Object,
+                                                     null!,
+                                                     null!,
+                                                     null!,
+                                                     null!,
+                                                     torBoxClientMock.Object,
+                                                     null!,
+                                                     settings,
+                                                     new TorrentRunnerState())
+        {
+            CallBase = true
+        };
+
+        torrentsMock.Setup(t => t.Delete(It.IsAny<Guid>(), It.IsAny<Boolean>(), It.IsAny<Boolean>(), It.IsAny<Boolean>())).Returns(Task.CompletedTask);
+
+        // Act
+        await torrentsMock.Object.UpdateRdData();
+
+        // Assert
+        torrentsMock.Verify(t => t.Delete(trackedByHash.TorrentId, It.IsAny<Boolean>(), It.IsAny<Boolean>(), It.IsAny<Boolean>()), Times.Never);
+        torrentsMock.Verify(t => t.Delete(recentlyAdded.TorrentId, It.IsAny<Boolean>(), It.IsAny<Boolean>(), It.IsAny<Boolean>()), Times.Never);
+        torrentsMock.Verify(t => t.Delete(notYetListed.TorrentId, It.IsAny<Boolean>(), It.IsAny<Boolean>(), It.IsAny<Boolean>()), Times.Never);
+        torrentsMock.Verify(t => t.Delete(trackedById.TorrentId, true, false, true), Times.Once);
     }
 }
