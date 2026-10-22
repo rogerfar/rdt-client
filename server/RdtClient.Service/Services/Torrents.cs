@@ -41,6 +41,8 @@ public class Torrents(
 
     private static readonly SemaphoreSlim TorrentResetLock = new(1, 1);
 
+    private static readonly TimeSpan TorBoxListingGracePeriod = TimeSpan.FromMinutes(15);
+
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         ReferenceHandler = ReferenceHandler.IgnoreCycles
@@ -836,7 +838,11 @@ public class Torrents(
             {
                 var rdTorrent = torrent.RdId != null && providerTorrentsById.TryGetValue(torrent.RdId, out var providerTorrent) ? providerTorrent : null;
 
-                if (rdTorrent == null && settings.Current.Provider.AutoDelete && torrent.RdStatus != TorrentStatus.Queued && torrent.RdStatus != TorrentStatus.Finished)
+                if (rdTorrent == null
+                    && settings.Current.Provider.AutoDelete
+                    && torrent.RdStatus != TorrentStatus.Queued
+                    && torrent.RdStatus != TorrentStatus.Finished
+                    && !IsAwaitingTorBoxListing(torrent))
                 {
                     await Delete(torrent.TorrentId, true, false, true);
                 }
@@ -1229,6 +1235,25 @@ public class Torrents(
         {
             // ignored
         }
+    }
+
+    /// <summary>
+    ///     TorBox's list endpoints can lag behind adds and starts by minutes, so a TorBox torrent that is still tracked by hash, or
+    ///     was created on TorBox recently, being absent from the lists does not mean it was deleted.
+    /// </summary>
+    private Boolean IsAwaitingTorBoxListing(Torrent torrent)
+    {
+        if (settings.Current.Provider.Provider != Provider.TorBox || torrent.Type != DownloadType.Torrent || String.IsNullOrWhiteSpace(torrent.RdId))
+        {
+            return false;
+        }
+
+        if (torrent.RdId.Equals(torrent.Hash, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return torrent.RdAdded == null || torrent.RdAdded > DateTimeOffset.UtcNow - TorBoxListingGracePeriod;
     }
 
     private static Dictionary<String, Torrent> CreateTorrentLookupByRdId(IEnumerable<Torrent> torrents)

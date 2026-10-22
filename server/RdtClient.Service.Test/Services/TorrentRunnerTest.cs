@@ -78,4 +78,49 @@ public class TorrentRunnerTest
                                                      It.IsAny<Boolean>()),
                                Times.Never);
     }
+
+    [Fact]
+    public void GetLifetimeStart_NonTorBox_IsAdded()
+    {
+        var added = DateTimeOffset.UtcNow.AddHours(-5);
+        var torrent = new Torrent { Added = added, RdAdded = added.AddHours(2), RdStatusRaw = "queued", Type = DownloadType.Torrent };
+
+        Assert.Equal(added, TorrentRunner.GetLifetimeStart(torrent, Provider.RealDebrid));
+    }
+
+    [Fact]
+    public void GetLifetimeStart_TorBoxQueued_HasNotStarted()
+    {
+        var torrent = new Torrent { Added = DateTimeOffset.UtcNow.AddHours(-5), RdAdded = DateTimeOffset.UtcNow.AddHours(-5), RdStatusRaw = "queued", Type = DownloadType.Torrent };
+
+        Assert.Null(TorrentRunner.GetLifetimeStart(torrent, Provider.TorBox));
+    }
+
+    [Fact]
+    public void GetLifetimeStart_TorBoxStartedAfterQueueing_IsProviderCreated()
+    {
+        var added = DateTimeOffset.UtcNow.AddHours(-5);
+        var started = DateTimeOffset.UtcNow.AddMinutes(-10);
+        var torrent = new Torrent { Added = added, RdAdded = started, RdStatusRaw = "downloading", Type = DownloadType.Torrent };
+
+        Assert.Equal(started, TorrentRunner.GetLifetimeStart(torrent, Provider.TorBox));
+    }
+
+    [Fact]
+    public void GetLifetimeStart_TorBoxProviderCreatedBeforeAdded_IsAdded()
+    {
+        var added = DateTimeOffset.UtcNow.AddHours(-1);
+        var torrent = new Torrent { Added = added, RdAdded = added.AddDays(-3), RdStatusRaw = "downloading", Type = DownloadType.Torrent };
+
+        Assert.Equal(added, TorrentRunner.GetLifetimeStart(torrent, Provider.TorBox));
+    }
+
+    [Fact]
+    public void GetLifetimeStart_TorBoxUsenet_IsAdded()
+    {
+        var added = DateTimeOffset.UtcNow.AddHours(-5);
+        var torrent = new Torrent { Added = added, RdAdded = added.AddHours(2), RdStatusRaw = "queued", Type = DownloadType.Nzb };
+
+        Assert.Equal(added, TorrentRunner.GetLifetimeStart(torrent, Provider.TorBox));
+    }
 }

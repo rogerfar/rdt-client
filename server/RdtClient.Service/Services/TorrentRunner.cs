@@ -355,7 +355,9 @@ public class TorrentRunner(
         // Process torrent lifetime
         foreach (var torrent in allTorrents.Where(m => m.Downloads.Count == 0 && m.Completed == null && m.Lifetime > 0))
         {
-            if (torrent.Added.AddMinutes(torrent.Lifetime) > DateTime.UtcNow)
+            var lifetimeStart = GetLifetimeStart(torrent, settings.Current.Provider.Provider);
+
+            if (lifetimeStart == null || lifetimeStart.Value.AddMinutes(torrent.Lifetime) > DateTime.UtcNow)
             {
                 continue;
             }
@@ -814,6 +816,26 @@ public class TorrentRunner(
         };
 
         return TimeSpan.FromSeconds(seconds);
+    }
+
+    /// <summary>
+    ///     TorBox holds downloads in its own queue while all active slots are in use, so a TorBox torrent's lifetime does not run
+    ///     while it is queued there and starts when TorBox created the active download.
+    /// </summary>
+    /// <returns>When the lifetime started, or null when it has not started yet.</returns>
+    public static DateTimeOffset? GetLifetimeStart(Torrent torrent, Provider provider)
+    {
+        if (provider != Provider.TorBox || torrent.Type != DownloadType.Torrent)
+        {
+            return torrent.Added;
+        }
+
+        if (torrent.RdStatusRaw == "queued")
+        {
+            return null;
+        }
+
+        return torrent.RdAdded > torrent.Added ? torrent.RdAdded : torrent.Added;
     }
 
     private void Log(String message, Download? download, Torrent? torrent)
