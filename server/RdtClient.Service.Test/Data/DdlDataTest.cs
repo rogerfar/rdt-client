@@ -91,6 +91,7 @@ public sealed class DdlDataTest : IDisposable
 
         await downloadData.UpdateFileName(download.DownloadId, "x.part2.rar");
         await downloadData.UpdateError(download.DownloadId, "LINK_HOST_NOT_SUPPORTED");
+        await downloadData.UpdateLastError(download.DownloadId, "rapidgator: LINK_HOST_NOT_SUPPORTED");
         await downloadData.UpdateCompleted(download.DownloadId, DateTimeOffset.UtcNow);
 
         Assert.Equal("https://nitroflare.com/view/B/x.part2.rar", await downloadData.SwitchToNextMirror(download.DownloadId));
@@ -99,6 +100,8 @@ public sealed class DdlDataTest : IDisposable
         Assert.Equal("https://nitroflare.com/view/B/x.part2.rar", saved.Path);
         Assert.Equal("https://ddownload.com/c/x.part2.rar", saved.Mirrors);
         Assert.Null(saved.Error);
+        // The requeued download keeps the reason it left the previous host, for the UI.
+        Assert.Equal("rapidgator: LINK_HOST_NOT_SUPPORTED", saved.LastError);
         Assert.Null(saved.Completed);
         Assert.Null(saved.Link);
         Assert.Null(saved.FileName);

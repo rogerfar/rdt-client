@@ -97,6 +97,7 @@ public static class TorrentDtoMapper
             Completed = download.Completed,
             RetryCount = download.RetryCount,
             Error = download.Error,
+            LastError = download.LastError,
             BytesTotal = bytesTotal,
             BytesDone = bytesDone,
             Speed = speed

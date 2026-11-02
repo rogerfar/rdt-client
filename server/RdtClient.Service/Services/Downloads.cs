@@ -76,6 +76,11 @@ public class Downloads(DownloadData downloadData) : IDownloads
         await downloadData.UpdateError(downloadId, error);
     }
 
+    public async Task UpdateLastError(Guid downloadId, String? lastError)
+    {
+        await downloadData.UpdateLastError(downloadId, lastError);
+    }
+
     public async Task UpdateRetryCount(Guid downloadId, Int32 retryCount)
     {
         await downloadData.UpdateRetryCount(downloadId, retryCount);

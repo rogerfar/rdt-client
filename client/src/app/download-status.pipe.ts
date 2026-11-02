@@ -6,7 +6,7 @@ import { FileSizePipe } from './filesize.pipe';
 export class DownloadStatusPipe implements PipeTransform {
   private pipe = inject(FileSizePipe);
 
-  transform(value: Download): string {
+  transform(value: Download, retryAttempts?: number): string {
     if (!value) {
       return 'Pending';
     }
@@ -46,7 +46,18 @@ export class DownloadStatusPipe implements PipeTransform {
     }
 
     if (value.downloadQueued) {
-      return 'Download queued';
+      const retryAt = new Date(value.downloadQueued);
+
+      if (retryAt.getTime() > Date.now()) {
+        const time = retryAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const attempt = retryAttempts ? ` (${value.retryCount}/${retryAttempts})` : '';
+
+        return value.lastError
+          ? `Retrying at ${time}${attempt} · ${value.lastError}`
+          : `Retrying at ${time}${attempt}`;
+      }
+
+      return value.lastError ? `Download queued · last error: ${value.lastError}` : 'Download queued';
     }
 
     return 'Pending';

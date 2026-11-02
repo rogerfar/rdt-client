@@ -251,6 +251,21 @@ public class DownloadData(DataContext dataContext, ILogger<DownloadData>? logger
         await dataContext.SaveChangesAsync();
     }
 
+    public async Task UpdateLastError(Guid downloadId, String? lastError)
+    {
+        var dbDownload = await dataContext.Downloads
+                                          .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+        if (dbDownload == null)
+        {
+            return;
+        }
+
+        dbDownload.LastError = lastError;
+
+        await dataContext.SaveChangesAsync();
+    }
+
     public async Task UpdateRetryCount(Guid downloadId, Int32 retryCount)
     {
         var dbDownload = await dataContext.Downloads

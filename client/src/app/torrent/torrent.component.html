@@ -372,8 +372,12 @@
                   <td>
                     {{ download.bytesTotal | filesize }}
                   </td>
-                  <td>
-                    {{ download | downloadStatus }}
+                  <td
+                    [class.has-text-warning]="
+                      download.lastError && !download.error && !download.downloadStarted && !download.completed
+                    "
+                  >
+                    {{ download | downloadStatus: torrent.downloadRetryAttempts }}
                   </td>
                 </tr>
                 @if (expanded) {
@@ -393,6 +397,11 @@
                             <div class="field">
                               <label class="label">Error</label>
                               {{ download.error }}
+                            </div>
+                          } @else if (download.lastError) {
+                            <div class="field">
+                              <label class="label">Last error</label>
+                              {{ download.lastError }}
                             </div>
                           }
                           <div class="field">

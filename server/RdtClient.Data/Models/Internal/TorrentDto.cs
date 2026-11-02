@@ -66,6 +66,7 @@ public class DownloadDto
     public DateTimeOffset? Completed { get; set; }
     public Int32 RetryCount { get; set; }
     public String? Error { get; set; }
+    public String? LastError { get; set; }
     public Int64 BytesTotal { get; set; }
     public Int64 BytesDone { get; set; }
     public Int64 Speed { get; set; }

@@ -236,6 +236,9 @@ namespace RdtClient.Data.Migrations
                     b.Property<string>("FileName")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("LastError")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Link")
                         .HasColumnType("TEXT");
 

@@ -210,6 +210,8 @@ public class TorrentRunner(
                     // Retry the download if an error is encountered.
                     LogError($"Download reported an error: {downloadClient.Error}", download, download.Torrent);
 
+                    await downloads.UpdateLastError(downloadId, DescribeError(download, download.Torrent!, downloadClient.Error));
+
                     Log($"Download retry count {download.RetryCount}/{download.Torrent!.DownloadRetryAttempts}, torrent retry count {download.Torrent.RetryCount}/{download.Torrent.TorrentRetryAttempts}",
                         download,
                         download.Torrent);
@@ -544,6 +546,8 @@ public class TorrentRunner(
                     {
                         logger.LogError(ex, "Cannot unrestrict link: {ex.Message}", ex.Message);
 
+                        await downloads.UpdateLastError(download.DownloadId, DescribeError(download, torrent, ex.Message));
+
                         // The debrid service may refuse one host (LINK_HOST_NOT_SUPPORTED) but accept the same file elsewhere.
                         if (torrent.Type == DownloadType.Ddl && await downloads.SwitchToNextMirror(download.DownloadId) is { } mirror)
                         {
@@ -850,6 +854,16 @@ public class TorrentRunner(
             NextDequeueTime = nextDequeueTime,
             SecondsRemaining = secondsRemaining
         });
+    }
+
+    /// <summary>
+    ///     Direct downloads can move between hosts, so the error names the host it came from.
+    /// </summary>
+    private static String DescribeError(Download download, Torrent torrent, String error)
+    {
+        return torrent.Type == DownloadType.Ddl && Uri.IsWellFormedUriString(download.Path, UriKind.Absolute)
+            ? $"{DirectDownloadHelper.HostOf(download.Path)}: {error}"
+            : error;
     }
 
     private static TimeSpan GetDownloadLinkRetryDelay(Int32 retryCount)

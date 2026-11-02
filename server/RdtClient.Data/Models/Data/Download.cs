@@ -29,6 +29,12 @@ public class Download
 
     public String? Error { get; set; }
 
+    /// <summary>
+    ///     The error that sent the download back to the queue (retry or mirror switch). Unlike <see cref="Error" /> it does not
+    ///     fail the download; it only tells the UI why the download is still queued.
+    /// </summary>
+    public String? LastError { get; set; }
+
     public String? RemoteId { get; set; }
 
     public String? FileName { get; set; }
