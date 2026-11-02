@@ -251,6 +251,21 @@ public class DownloadData(DataContext dataContext, ILogger<DownloadData>? logger
         await dataContext.SaveChangesAsync();
     }
 
+    public async Task UpdateSize(Guid downloadId, Int64 size)
+    {
+        var dbDownload = await dataContext.Downloads
+                                          .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+        if (dbDownload == null)
+        {
+            return;
+        }
+
+        dbDownload.Size = size;
+
+        await dataContext.SaveChangesAsync();
+    }
+
     public async Task UpdateLastError(Guid downloadId, String? lastError)
     {
         var dbDownload = await dataContext.Downloads

@@ -18,6 +18,12 @@ public static partial class DirectDownloadHelper
     public const String MetaSource = "x-ddl-source";
 
     public const String HostPreferenceEnvVar = "DDL_HOST_PREFERENCE";
+
+    /// <summary>
+    ///     Hosts whose links are never used, comma separated (e.g. "nitroflare"): the debrid service can't download from
+    ///     them reliably, so neither the host pick nor a mirror should land there.
+    /// </summary>
+    public const String HostBlacklistEnvVar = "DDL_HOST_BLACKLIST";
     public const String DefaultHostPreference = "rapidgator,nitroflare,ddownload,1fichier,katfile,fikper";
 
     private static readonly Dictionary<String, String> HostAliases = new(StringComparer.OrdinalIgnoreCase)
@@ -109,9 +115,9 @@ public static partial class DirectDownloadHelper
     ///     order, so a part the debrid service refuses can be fetched from another mirror. Files are matched by the name in
     ///     the hoster URL; a link without a file name gets no mirrors.
     /// </summary>
-    public static IList<DirectDownloadPart> PlanParts(String text, String? hostPreference = null)
+    public static IList<DirectDownloadPart> PlanParts(String text, String? hostPreference = null, String? hostBlacklist = null)
     {
-        var hosts = RankHosts(text, hostPreference);
+        var hosts = RankHosts(text, hostPreference, hostBlacklist);
 
         if (hosts.Count == 0)
         {
@@ -136,9 +142,9 @@ public static partial class DirectDownloadHelper
     ///     package the same release differently (one file vs. split archives), so per-file mirrors cannot always cover a host
     ///     outage; these let the whole item move to another host. Planning them again picks the next host.
     /// </summary>
-    public static String? FallbackLinks(String text, String? hostPreference = null)
+    public static String? FallbackLinks(String text, String? hostPreference = null, String? hostBlacklist = null)
     {
-        var rest = RankHosts(text, hostPreference).Skip(1).SelectMany(g => g).ToList();
+        var rest = RankHosts(text, hostPreference, hostBlacklist).Skip(1).SelectMany(g => g).ToList();
 
         return rest.Count > 0 ? String.Join('\n', rest) : null;
     }
@@ -155,6 +161,26 @@ public static partial class DirectDownloadHelper
     public static Boolean IsHostRejection(String? error)
     {
         return error != null && error.Contains("LINK_HOST_", StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Attempts a direct download gets for a temporary error (<see cref="IsTemporaryError" />): with the runner's delays,
+    ///     about 7 hours, enough to wait out a hoster's maintenance at the debrid service.
+    /// </summary>
+    public const Int32 TemporaryErrorRetryAttempts = 30;
+
+    public static Int32 RetryAttempts(Int32 configured, Boolean temporary)
+    {
+        return temporary ? Math.Max(configured, TemporaryErrorRetryAttempts) : configured;
+    }
+
+    /// <summary>
+    ///     True when the debrid service only refuses because too many downloads run on this host right now
+    ///     (LINK_TOO_MANY_DOWNLOADS): waiting is better than moving the part to another host.
+    /// </summary>
+    public static Boolean IsHostBusy(String? error)
+    {
+        return error != null && error.Contains("LINK_TOO_MANY_DOWNLOADS", StringComparison.Ordinal);
     }
 
     private static readonly Regex TemporaryStatusRegex = new(@"status code does not indicate success: (429|502|503|504)\b", RegexOptions.Compiled);
@@ -178,11 +204,20 @@ public static partial class DirectDownloadHelper
     ///     has), then the configured preference, then the number of links. Counting links alone would favour a host that
     ///     splits the release into archives over one that offers the whole file.
     /// </summary>
-    private static List<List<String>> RankHosts(String text, String? hostPreference)
+    private static List<List<String>> RankHosts(String text, String? hostPreference, String? hostBlacklist)
     {
         var preferred = HostPreference(hostPreference);
 
         var links = ExtractLinks(text);
+
+        var blacklist = HostBlacklist(hostBlacklist);
+        var allowed = links.Where(l => !blacklist.Contains(HostOf(l))).ToList();
+
+        // A post that is only on blacklisted hosts is still tried, rather than failing for want of links.
+        if (allowed.Count > 0)
+        {
+            links = allowed;
+        }
 
         var lastPart = links.Select(RarPart)
                             .Where(p => p != null)
@@ -323,6 +358,19 @@ public static partial class DirectDownloadHelper
     ///     Resolves the host tie-break order: the UI setting, else the DDL_HOST_PREFERENCE environment variable, else the
     ///     default. Entries may be names, domains or aliases ("nitroflare", "rapidgator.net", "rg.to").
     /// </summary>
+    /// <summary>
+    ///     The blacklisted hosts (<see cref="HostBlacklistEnvVar" />), normalized like the preference. The value overrides
+    ///     the environment variable (tests).
+    /// </summary>
+    public static ISet<String> HostBlacklist(String? value = null)
+    {
+        value ??= Environment.GetEnvironmentVariable(HostBlacklistEnvVar) ?? "";
+
+        return value.Split([',', ';', ' ', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Select(HostKey)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
     public static IList<String> HostPreference(String? setting)
     {
         var value = new[] { setting, Environment.GetEnvironmentVariable(HostPreferenceEnvVar) }.FirstOrDefault(v => !String.IsNullOrWhiteSpace(v))

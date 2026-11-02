@@ -362,6 +362,9 @@
                       }
                     </td>
                     <td class="break-all">
+                      @if (download.host) {
+                        <span class="tag is-dark download-host">{{ download.host }}</span>
+                      }
                       @if (download.link) {
                         {{ download.link | decodeURI }}
                       }

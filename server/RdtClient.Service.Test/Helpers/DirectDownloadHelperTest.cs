@@ -167,6 +167,36 @@ public class DirectDownloadHelperTest
     }
 
     [Fact]
+    public void PlanParts_NeverUsesABlacklistedHostUnlessItIsTheOnlyOne()
+    {
+        const String text = """
+                            https://nitroflare.com/view/C/Movie.2026.1080p-GRP.part1.rar
+                            https://nitroflare.com/view/D/Movie.2026.1080p-GRP.part2.rar
+                            https://ddownload.com/e/Movie.2026.1080p-GRP.part1.rar
+                            https://ddownload.com/f/Movie.2026.1080p-GRP.part2.rar
+                            """;
+
+        var parts = DirectDownloadHelper.PlanParts(text, "nitroflare,ddownload", "nitroflare.com");
+
+        Assert.Equal(["https://ddownload.com/e/Movie.2026.1080p-GRP.part1.rar", "https://ddownload.com/f/Movie.2026.1080p-GRP.part2.rar"],
+                     parts.Select(p => p.Link));
+        Assert.All(parts, p => Assert.Empty(p.Mirrors));
+        Assert.Null(DirectDownloadHelper.FallbackLinks(text, "nitroflare,ddownload", "nitroflare"));
+
+        var onlyBlacklisted = DirectDownloadHelper.PlanParts("https://nitroflare.com/view/C/Movie.2026.1080p-GRP.mkv", null, "nitroflare");
+        Assert.Equal("https://nitroflare.com/view/C/Movie.2026.1080p-GRP.mkv", Assert.Single(onlyBlacklisted).Link);
+    }
+
+    [Theory]
+    [InlineData("Too many concurrent downloads for this host (LINK_TOO_MANY_DOWNLOADS)", true)]
+    [InlineData("Host under maintenance or not available (LINK_HOST_UNAVAILABLE)", false)]
+    [InlineData(null, false)]
+    public void IsHostBusy(String? error, Boolean expected)
+    {
+        Assert.Equal(expected, DirectDownloadHelper.IsHostBusy(error));
+    }
+
+    [Fact]
     public void PlanParts_KeepsTheSameFileOnOtherHostsAsMirrors()
     {
         const String text = """

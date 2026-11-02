@@ -255,6 +255,9 @@ namespace RdtClient.Data.Migrations
                     b.Property<int>("RetryCount")
                         .HasColumnType("INTEGER");
 
+                    b.Property<long?>("Size")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid>("TorrentId")
                         .HasColumnType("TEXT");
 

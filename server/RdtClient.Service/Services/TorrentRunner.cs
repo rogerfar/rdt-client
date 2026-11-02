@@ -245,6 +245,13 @@ public class TorrentRunner(
                 {
                     Log($"Download finished successfully", download, download.Torrent);
 
+                    var size = downloadClient.FileSize > 0 ? downloadClient.FileSize : downloadClient.BytesTotal;
+
+                    if (size > 0)
+                    {
+                        await downloads.UpdateSize(downloadId, size);
+                    }
+
                     await downloads.UpdateDownloadFinished(downloadId, DateTimeOffset.UtcNow);
                     await downloads.UpdateUnpackingQueued(downloadId, DateTimeOffset.UtcNow);
                 }
@@ -556,12 +563,17 @@ public class TorrentRunner(
 
                         var temporary = torrent.Type == DownloadType.Ddl && DirectDownloadHelper.IsTemporaryError(ex.Message);
 
+                        // Too many downloads at once on this host clears as the others finish, so the part waits for its
+                        // turn on the same host instead of moving to a mirror on a host that may work worse.
+                        var hostBusy = torrent.Type == DownloadType.Ddl && DirectDownloadHelper.IsHostBusy(ex.Message);
+
                         // The debrid service may refuse one host (LINK_HOST_NOT_SUPPORTED) but accept the same file elsewhere.
-                        if (torrent.Type == DownloadType.Ddl && await downloads.SwitchToNextMirror(download.DownloadId) is { } mirror)
+                        if (torrent.Type == DownloadType.Ddl && !hostBusy && await downloads.SwitchToNextMirror(download.DownloadId) is { } mirror)
                         {
                             Log($"Switching to mirror {mirror}", download, torrent);
                         }
                         else if (torrent.Type == DownloadType.Ddl &&
+                                 !hostBusy &&
                                  DirectDownloadHelper.IsHostRejection(ex.Message) &&
                                  await torrents.SwitchDdlHost(torrent.TorrentId) is { } host)
                         {
@@ -874,15 +886,9 @@ public class TorrentRunner(
             : error;
     }
 
-    /// <summary>
-    ///     Attempts a direct download gets for a temporary error (<see cref="DirectDownloadHelper.IsTemporaryError" />): with the
-    ///     delays below, about 7 hours, enough to wait out a hoster's maintenance at the debrid service.
-    /// </summary>
-    private const Int32 TemporaryErrorRetryAttempts = 30;
-
     private static Int32 RetryAttempts(Torrent torrent, Boolean temporary)
     {
-        return temporary ? Math.Max(torrent.DownloadRetryAttempts, TemporaryErrorRetryAttempts) : torrent.DownloadRetryAttempts;
+        return DirectDownloadHelper.RetryAttempts(torrent.DownloadRetryAttempts, temporary);
     }
 
     private static TimeSpan GetDownloadLinkRetryDelay(Int32 retryCount, Boolean temporary = false)

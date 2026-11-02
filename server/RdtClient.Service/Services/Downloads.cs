@@ -76,6 +76,11 @@ public class Downloads(DownloadData downloadData) : IDownloads
         await downloadData.UpdateError(downloadId, error);
     }
 
+    public async Task UpdateSize(Guid downloadId, Int64 size)
+    {
+        await downloadData.UpdateSize(downloadId, size);
+    }
+
     public async Task UpdateLastError(Guid downloadId, String? lastError)
     {
         await downloadData.UpdateLastError(downloadId, lastError);

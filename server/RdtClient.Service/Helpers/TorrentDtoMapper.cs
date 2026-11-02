@@ -27,7 +27,7 @@ public static class TorrentDtoMapper
                                     Boolean includeFiles,
                                     Boolean includeFileOrMagnet)
     {
-        var downloads = includeDownloads ? torrent.Downloads.Select(download => ToDto(download, getDownloadStats)).ToList() : [];
+        var downloads = includeDownloads ? torrent.Downloads.Select(download => ToDto(torrent, download, getDownloadStats)).ToList() : [];
 
         return new()
         {
@@ -77,9 +77,10 @@ public static class TorrentDtoMapper
         };
     }
 
-    private static DownloadDto ToDto(Download download, Func<Guid, (Int64 Speed, Int64 BytesTotal, Int64 BytesDone)> getDownloadStats)
+    private static DownloadDto ToDto(Torrent torrent, Download download, Func<Guid, (Int64 Speed, Int64 BytesTotal, Int64 BytesDone)> getDownloadStats)
     {
         var (speed, bytesTotal, bytesDone) = getDownloadStats(download.DownloadId);
+        var isDdl = torrent.Type == DownloadType.Ddl;
 
         return new()
         {
@@ -98,7 +99,10 @@ public static class TorrentDtoMapper
             RetryCount = download.RetryCount,
             Error = download.Error,
             LastError = download.LastError,
-            BytesTotal = bytesTotal,
+            RetryAttempts = DirectDownloadHelper.RetryAttempts(torrent.DownloadRetryAttempts, isDdl && DirectDownloadHelper.IsTemporaryError(download.LastError)),
+            Host = isDdl && Uri.IsWellFormedUriString(download.Path, UriKind.Absolute) ? DirectDownloadHelper.HostOf(download.Path) : null,
+            // Live figures while the download or its unpacking runs, else the size kept when it finished.
+            BytesTotal = bytesTotal > 0 ? bytesTotal : download.Size ?? 0,
             BytesDone = bytesDone,
             Speed = speed
         };

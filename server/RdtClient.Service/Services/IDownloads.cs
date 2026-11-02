@@ -20,6 +20,7 @@ public interface IDownloads
     Task UpdateCompleted(Guid downloadId, DateTimeOffset? dateTime);
     Task UpdateError(Guid downloadId, String? error);
     Task UpdateLastError(Guid downloadId, String? lastError);
+    Task UpdateSize(Guid downloadId, Int64 size);
     Task UpdateRetryCount(Guid downloadId, Int32 retryCount);
     Task UpdateRemoteId(Guid downloadId, String remoteId);
     Task DeleteForTorrent(Guid torrentId);

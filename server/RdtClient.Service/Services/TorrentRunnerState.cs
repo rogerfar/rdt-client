@@ -32,7 +32,7 @@ public class TorrentRunnerState : ITorrentRunnerState
 
         if (ActiveUnpackClients.TryGetValue(downloadId, out var unpackClient))
         {
-            return (0, 100, unpackClient.Progess);
+            return (0, unpackClient.BytesTotal, unpackClient.BytesDone);
         }
 
         return (0, 0, 0);

@@ -27,6 +27,11 @@ public class Download
 
     public Int32 RetryCount { get; set; }
 
+    /// <summary>
+    ///     The file size once the download finished; the live downloader only knows it while it runs.
+    /// </summary>
+    public Int64? Size { get; set; }
+
     public String? Error { get; set; }
 
     /// <summary>

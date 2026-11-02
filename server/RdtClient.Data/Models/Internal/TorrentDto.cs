@@ -67,6 +67,8 @@ public class DownloadDto
     public Int32 RetryCount { get; set; }
     public String? Error { get; set; }
     public String? LastError { get; set; }
+    public Int32 RetryAttempts { get; set; } // attempts this download gets, more than the item's setting while it waits out a temporary error
+    public String? Host { get; set; } // direct downloads: the file host of the link in use
     public Int64 BytesTotal { get; set; }
     public Int64 BytesDone { get; set; }
     public Int64 Speed { get; set; }
