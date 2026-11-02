@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgClass } from '@angular/common';
@@ -13,6 +13,7 @@ const LINKS_FRAGMENT_PREFIX = 'links=';
   templateUrl: './ddl.component.html',
   styleUrls: ['./ddl.component.scss'],
   imports: [FormsModule, NgClass, RouterLink],
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
 })
 export class DdlComponent implements OnInit {
