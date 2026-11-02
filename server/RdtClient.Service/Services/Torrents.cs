@@ -216,6 +216,40 @@ public class Torrents(
         return newTorrent;
     }
 
+    /// <summary>
+    ///     Adds a direct-download item straight from pasted hoster links, without a post or an indexer. The links are its
+    ///     payload, stored like a file so a retry adds them again instead of waiting for links nobody sends.
+    /// </summary>
+    public virtual async Task<Torrent> AddDdlLinksToDebridQueue(String linksText, String? name, Torrent torrent)
+    {
+        var parts = DirectDownloadHelper.PlanParts(linksText, Settings.Get.General.DdlHostPreference);
+
+        if (parts.Count == 0)
+        {
+            throw new("No links found in the submitted text");
+        }
+
+        var hash = DirectDownloadHelper.LinksHash(linksText);
+
+        if (await torrentData.GetByHash(hash) != null)
+        {
+            throw new("These links were already added");
+        }
+
+        torrent.RdName = String.IsNullOrWhiteSpace(name) ? DirectDownloadHelper.ReleaseName(parts[0].Link) : name.Trim();
+        torrent.RdStatus = TorrentStatus.Queued;
+
+        var newTorrent = await AddQueued(hash, Convert.ToBase64String(Encoding.UTF8.GetBytes(linksText)), true, DownloadType.Ddl, torrent);
+
+        Log($"Adding {torrent.RdName} (direct download) from pasted links", newTorrent);
+
+        await AddDdlLinks(newTorrent.TorrentId, linksText);
+
+        await CopyAddedTorrent(newTorrent);
+
+        return newTorrent;
+    }
+
     public virtual async Task<Torrent?> GetDdlByPostUrl(String postUrl)
     {
         var torrent = await torrentData.GetByHash(DirectDownloadHelper.Hash(postUrl));
@@ -1041,7 +1075,11 @@ public class Torrents(
 
             Torrent newTorrent;
 
-            if (torrent.Type == DownloadType.Ddl)
+            if (torrent.Type == DownloadType.Ddl && torrent.IsFile)
+            {
+                newTorrent = await AddDdlLinksToDebridQueue(Encoding.UTF8.GetString(Convert.FromBase64String(payloadContent)), torrent.RdName, torrent);
+            }
+            else if (torrent.Type == DownloadType.Ddl)
             {
                 newTorrent = await AddDdlToDebridQueue(payloadContent, torrent.RdName ?? payloadContent, torrent);
             }

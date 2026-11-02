@@ -299,6 +299,12 @@ A stand-in NZB creates an item in the **Waiting for links** state. Nothing is do
 
 Set **Settings → General → Direct download waiting webhook** to a Discord-compatible webhook URL to be notified when an item starts waiting for links.
 
+##### Adding links by hand
+
+Links you already have do not need a post or an indexer: **Add → Direct links**, paste them (any text, every mirror if you like) and optionally give the release a name, else it is taken from the file names. The download starts right away. The same links pasted twice are refused. Retrying such an item adds its links again. The same is available as `POST /Api/Torrents/UploadDdlLinks` `{"links": "...", "name": "...", "torrent": {...}}`, with the `torrent` settings of `UploadNzbLink`.
+
+When the `/ddl` page finds no item waiting for the post, it offers to download its links this way.
+
 ##### Which links are downloaded
 
 Posts usually list the same release on several hosts, sometimes packaged differently (one file on one host, split `.partN.rar` archives on another). RdtClient downloads from a single host:

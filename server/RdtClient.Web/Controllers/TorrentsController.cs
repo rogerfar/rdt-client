@@ -267,6 +267,37 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
         return Ok();
     }
 
+    [HttpPost]
+    [Route("UploadDdlLinks")]
+    public async Task<ActionResult> UploadDdlLinks([FromBody] TorrentControllerUploadDdlLinksRequest? request)
+    {
+        if (request == null || String.IsNullOrWhiteSpace(request.Links))
+        {
+            return BadRequest("Links are required");
+        }
+
+        if (request.Torrent == null)
+        {
+            return BadRequest("Invalid Torrent");
+        }
+
+        logger.LogDebug("Add direct-download links {name}", request.Name);
+
+        try
+        {
+            var torrent = await torrents.AddDdlLinksToDebridQueue(request.Links, request.Name, request.Torrent);
+
+            return Ok(new
+            {
+                torrent.TorrentId
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
     [HttpGet]
     [Route("Ddl")]
     public async Task<ActionResult<TorrentDto>> GetDdl([FromQuery] String? postUrl)
@@ -461,6 +492,13 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
 
 public class TorrentControllerUploadFileRequest
 {
+    public Torrent? Torrent { get; set; }
+}
+
+public class TorrentControllerUploadDdlLinksRequest
+{
+    public String? Links { get; set; }
+    public String? Name { get; set; }
     public Torrent? Torrent { get; set; }
 }
 

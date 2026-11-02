@@ -6,12 +6,21 @@
   </div>
 } @else if (notFound) {
   <div class="notification is-warning is-light">
-    No direct-download item is waiting for this post yet. Grab it in Sonarr/Radarr first.
+    No item is waiting for this post. Grab it in Sonarr/Radarr to have it imported, or download the links now.
   </div>
   @if (postUrl) {
     <div class="field">
       <label class="label">Post</label>
       <a class="break-all" href="{{ postUrl }}" target="_blank" rel="noopener noreferrer">{{ postUrl }}</a>
+    </div>
+  }
+  @if (hasLinks) {
+    <div class="field ddl-actions">
+      <div class="control">
+        <a class="button is-primary" [routerLink]="['/add']" [queryParams]="{ type: 'ddl' }" [fragment]="'links=' + links">
+          Download these links
+        </a>
+      </div>
     </div>
   }
 } @else if (alreadyAdded) {

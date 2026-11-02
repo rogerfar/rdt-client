@@ -49,7 +49,7 @@ public static class TorrentDtoMapper
             Type = torrent.Type,
             FileOrMagnet = includeFileOrMagnet ? torrent.Payload?.Content : null,
             IsFile = torrent.IsFile,
-            PostUrl = torrent.Type == DownloadType.Ddl ? torrent.Payload?.Content : null,
+            PostUrl = torrent.Type == DownloadType.Ddl && !torrent.IsFile ? torrent.Payload?.Content : null,
             Priority = torrent.Priority,
             RetryCount = torrent.RetryCount,
             DownloadRetryAttempts = torrent.DownloadRetryAttempts,

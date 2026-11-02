@@ -221,4 +221,24 @@ public class DirectDownloadHelperTest
         Assert.Equal(hash.ToLowerInvariant(), hash);
         Assert.Equal(hash, DirectDownloadHelper.Hash(" https://ddl-site.example/post/ "));
     }
+
+    [Fact]
+    public void LinksHash_IgnoresOrderAndSurroundingText()
+    {
+        var a = DirectDownloadHelper.LinksHash("https://rapidgator.net/file/a/x.part1.rar.html\nhttps://rapidgator.net/file/b/x.part2.rar.html");
+        var b = DirectDownloadHelper.LinksHash("Mirror:\nhttps://rapidgator.net/file/b/x.part2.rar.html, https://rapidgator.net/file/a/x.part1.rar.html");
+
+        Assert.Equal(a, b);
+        Assert.NotEqual(a, DirectDownloadHelper.LinksHash("https://rapidgator.net/file/a/x.part1.rar.html"));
+    }
+
+    [Theory]
+    [InlineData("https://rapidgator.net/file/abc/Movie.2026.1080p-GRP.part01.rar.html", "Movie.2026.1080p-GRP")]
+    [InlineData("https://nitroflare.com/view/ABC/Movie.2026.1080p-GRP.part2.rar", "Movie.2026.1080p-GRP")]
+    [InlineData("https://nitroflare.com/view/ABC/Movie.2026.1080p-GRP.mkv", "Movie.2026.1080p-GRP")]
+    [InlineData("https://ddownload.com/abc123", "ddownload")]
+    public void ReleaseName_StripsHosterAndArchiveSuffixes(String link, String expected)
+    {
+        Assert.Equal(expected, DirectDownloadHelper.ReleaseName(link));
+    }
 }

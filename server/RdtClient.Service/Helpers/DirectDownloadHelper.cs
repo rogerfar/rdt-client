@@ -166,11 +166,7 @@ public static partial class DirectDownloadHelper
     {
         var preferred = HostPreference(hostPreference);
 
-        var links = UrlRegex().Matches(text)
-                              .Select(m => m.Value.TrimEnd('.', ',', ')', ']', ';'))
-                              .Where(m => Uri.TryCreate(m, UriKind.Absolute, out _))
-                              .Distinct()
-                              .ToList();
+        var links = ExtractLinks(text);
 
         var lastPart = links.Select(RarPart)
                             .Where(p => p != null)
@@ -184,6 +180,44 @@ public static partial class DirectDownloadHelper
                     .ThenByDescending(g => g.Count())
                     .Select(g => g.ToList())
                     .ToList();
+    }
+
+    private static List<String> ExtractLinks(String text)
+    {
+        return UrlRegex().Matches(text)
+                         .Select(m => m.Value.TrimEnd('.', ',', ')', ']', ';'))
+                         .Where(m => Uri.TryCreate(m, UriKind.Absolute, out _))
+                         .Distinct()
+                         .ToList();
+    }
+
+    /// <summary>
+    ///     Identifies an item added from pasted links rather than from a post: the same links pasted twice, in any order,
+    ///     give the same hash.
+    /// </summary>
+    public static String LinksHash(String text)
+    {
+        return Hash("links:" + String.Join('\n', ExtractLinks(text).Order(StringComparer.Ordinal)));
+    }
+
+    /// <summary>
+    ///     A release name for pasted links: the file name of the picked link, without ".html", its ".partN.rar" suffix or its
+    ///     extension ("Movie.2026.1080p-GRP.part01.rar.html" → "Movie.2026.1080p-GRP"). Falls back to the host name.
+    /// </summary>
+    public static String ReleaseName(String link)
+    {
+        var name = HtmlSuffixRegex().Replace(HttpUtility.UrlDecode(new Uri(link).Segments.Last()).Trim('/'), "");
+
+        if (!name.Contains('.'))
+        {
+            return HostOf(link);
+        }
+
+        var part = RarPartRegex().Match(name);
+
+        name = part.Success ? name[..part.Index] : Path.GetFileNameWithoutExtension(name);
+
+        return FileHelper.RemoveInvalidFileNameChars(name);
     }
 
     private static Boolean HasEveryPart(IEnumerable<String> hostLinks, Dictionary<String, Int32> lastPart)

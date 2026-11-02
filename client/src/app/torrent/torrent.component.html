@@ -571,7 +571,7 @@
       <p>Are you sure you want to retry this {{ kindLower }}?</p>
       <p>
         This action will delete all the {{ kindLower }} data + all local downloads. Then it will add the original
-        {{ isDdl ? "post again, waiting for its links" : isNzb ? "NZB to the provider again" : "magnet link or torrent file to the provider again" }}.
+        {{ isDdl && torrent.isFile ? "links again" : isDdl ? "post again, waiting for its links" : isNzb ? "NZB to the provider again" : "magnet link or torrent file to the provider again" }}.
       </p>
       @if (retryError?.length > 0) {
         <div class="notification is-danger is-light">Error retrying {{ kindLower }}: {{ retryError }}</div>

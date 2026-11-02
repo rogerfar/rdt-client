@@ -112,6 +112,14 @@ export class TorrentService {
     });
   }
 
+  public uploadDdlLinks(links: string, name: string, torrent: Torrent): Observable<{ torrentId: string }> {
+    return this.http.post<{ torrentId: string }>(`${this.baseHref}Api/Torrents/UploadDdlLinks`, {
+      links,
+      name,
+      torrent,
+    });
+  }
+
   public uploadNzbFile(file: File, torrent: Torrent): Observable<void> {
     const formData: FormData = new FormData();
     formData.append('file', file);
