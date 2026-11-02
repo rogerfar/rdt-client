@@ -140,6 +140,19 @@ public class DirectDownloadHelperTest
         Assert.Equal(expected, DirectDownloadHelper.IsHostRejection(error));
     }
 
+    [Theory]
+    [InlineData("Host under maintenance or not available (LINK_HOST_UNAVAILABLE)", true)]
+    [InlineData("Too many concurrent downloads for this host (LINK_TOO_MANY_DOWNLOADS)", true)]
+    [InlineData("Response status code does not indicate success: 503 (unavailable).", true)]
+    [InlineData("Response status code does not indicate success: 404 (Not Found).", false)]
+    [InlineData("This link is not available on the file hoster website (LINK_DOWN)", false)]
+    [InlineData("This host or link is not supported (LINK_HOST_NOT_SUPPORTED)", false)]
+    [InlineData(null, false)]
+    public void IsTemporaryError(String? error, Boolean expected)
+    {
+        Assert.Equal(expected, DirectDownloadHelper.IsTemporaryError(error));
+    }
+
     [Fact]
     public void HostPreference_NormalizesDomainsAndAliases()
     {

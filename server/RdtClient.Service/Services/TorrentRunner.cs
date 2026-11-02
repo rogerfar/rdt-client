@@ -216,11 +216,17 @@ public class TorrentRunner(
                         download,
                         download.Torrent);
 
-                    if (download.RetryCount < download.Torrent.DownloadRetryAttempts)
-                    {
-                        Log($"Retrying download", download, download.Torrent);
+                    var isDdl = download.Torrent.Type == DownloadType.Ddl;
+                    var temporary = isDdl && DirectDownloadHelper.IsTemporaryError(downloadClient.Error);
 
-                        await downloads.Reset(downloadId);
+                    if (download.RetryCount < RetryAttempts(download.Torrent, temporary))
+                    {
+                        // Direct downloads wait between attempts: retrying at once hits the same overloaded debrid server again.
+                        DateTimeOffset? retryAt = isDdl ? DateTimeOffset.UtcNow.Add(GetDownloadLinkRetryDelay(download.RetryCount + 1, temporary)) : null;
+
+                        Log($"Retrying download{(retryAt != null ? $" at {retryAt:u}" : "")}", download, download.Torrent);
+
+                        await downloads.Reset(downloadId, retryAt);
                         await downloads.UpdateRetryCount(downloadId, download.RetryCount + 1);
                     }
                     else if (download.Torrent.Type == DownloadType.Ddl && await downloads.SwitchToNextMirror(downloadId) is { } mirror)
@@ -548,6 +554,8 @@ public class TorrentRunner(
 
                         await downloads.UpdateLastError(download.DownloadId, DescribeError(download, torrent, ex.Message));
 
+                        var temporary = torrent.Type == DownloadType.Ddl && DirectDownloadHelper.IsTemporaryError(ex.Message);
+
                         // The debrid service may refuse one host (LINK_HOST_NOT_SUPPORTED) but accept the same file elsewhere.
                         if (torrent.Type == DownloadType.Ddl && await downloads.SwitchToNextMirror(download.DownloadId) is { } mirror)
                         {
@@ -559,13 +567,13 @@ public class TorrentRunner(
                         {
                             Log($"Debrid service rejected the host, switched the item to {host}", download, torrent);
                         }
-                        else if (download.RetryCount < torrent.DownloadRetryAttempts)
+                        else if (download.RetryCount < RetryAttempts(torrent, temporary))
                         {
                             var retryCount = download.RetryCount + 1;
-                            var retryDelay = GetDownloadLinkRetryDelay(retryCount);
+                            var retryDelay = GetDownloadLinkRetryDelay(retryCount, temporary);
                             var retryAt = DateTimeOffset.UtcNow.Add(retryDelay);
 
-                            Log($"Retrying download link generation {retryCount}/{torrent.DownloadRetryAttempts} at {retryAt:u}", download, torrent);
+                            Log($"Retrying download link generation {retryCount}/{RetryAttempts(torrent, temporary)} at {retryAt:u}", download, torrent);
 
                             await downloads.Reset(download.DownloadId, retryAt);
                             await downloads.UpdateRetryCount(download.DownloadId, retryCount);
@@ -866,8 +874,31 @@ public class TorrentRunner(
             : error;
     }
 
-    private static TimeSpan GetDownloadLinkRetryDelay(Int32 retryCount)
+    /// <summary>
+    ///     Attempts a direct download gets for a temporary error (<see cref="DirectDownloadHelper.IsTemporaryError" />): with the
+    ///     delays below, about 7 hours, enough to wait out a hoster's maintenance at the debrid service.
+    /// </summary>
+    private const Int32 TemporaryErrorRetryAttempts = 30;
+
+    private static Int32 RetryAttempts(Torrent torrent, Boolean temporary)
     {
+        return temporary ? Math.Max(torrent.DownloadRetryAttempts, TemporaryErrorRetryAttempts) : torrent.DownloadRetryAttempts;
+    }
+
+    private static TimeSpan GetDownloadLinkRetryDelay(Int32 retryCount, Boolean temporary = false)
+    {
+        if (temporary)
+        {
+            return TimeSpan.FromMinutes(retryCount switch
+            {
+                <= 1 => 1,
+                2 => 2,
+                3 => 5,
+                4 => 10,
+                _ => 15
+            });
+        }
+
         var seconds = retryCount switch
         {
             <= 1 => 15,

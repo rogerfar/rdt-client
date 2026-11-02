@@ -157,6 +157,22 @@ public static partial class DirectDownloadHelper
         return error != null && error.Contains("LINK_HOST_", StringComparison.Ordinal);
     }
 
+    private static readonly Regex TemporaryStatusRegex = new(@"status code does not indicate success: (429|502|503|504)\b", RegexOptions.Compiled);
+
+    /// <summary>
+    ///     True for errors that clear up by themselves: the hoster is under maintenance at the debrid service, too many
+    ///     downloads run on it at once, or the debrid download server is briefly overloaded (HTTP 429/502/503/504). These are
+    ///     worth waiting out for hours instead of failing the download after a few quick retries.
+    /// </summary>
+    public static Boolean IsTemporaryError(String? error)
+    {
+        return error != null &&
+               (error.Contains("LINK_HOST_UNAVAILABLE", StringComparison.Ordinal) ||
+                error.Contains("LINK_TOO_MANY_DOWNLOADS", StringComparison.Ordinal) ||
+                error.Contains("LINK_TEMPORARY_UNAVAILABLE", StringComparison.Ordinal) ||
+                TemporaryStatusRegex.IsMatch(error));
+    }
+
     /// <summary>
     ///     Groups the links by host, best first: hosts with a complete archive set (no ".partN.rar" missing that another host
     ///     has), then the configured preference, then the number of links. Counting links alone would favour a host that

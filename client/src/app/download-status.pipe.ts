@@ -50,7 +50,11 @@ export class DownloadStatusPipe implements PipeTransform {
 
       if (retryAt.getTime() > Date.now()) {
         const time = retryAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const attempt = retryAttempts ? ` (${value.retryCount}/${retryAttempts})` : '';
+        // Temporary errors (host maintenance, busy debrid servers) get more attempts than the item's setting.
+        const attempt =
+          retryAttempts && value.retryCount <= retryAttempts
+            ? ` (${value.retryCount}/${retryAttempts})`
+            : ` (retry ${value.retryCount})`;
 
         return value.lastError
           ? `Retrying at ${time}${attempt} · ${value.lastError}`
