@@ -55,6 +55,17 @@ public class TorrentRunner(
             Log(JsonSerializer.Serialize(settingsCopy));
         }
 
+        if (settings.Current.General.DownloadsPaused && !settings.Current.General.KeepDownloadsPausedAfterRestart)
+        {
+            Log("Downloads were paused, resuming them because 'Keep downloads paused after a restart' is disabled");
+
+            await settings.Update("General:DownloadsPaused", false);
+        }
+        else if (settings.Current.General.DownloadsPaused)
+        {
+            Log("Downloads are paused, no downloads will be started until they are resumed");
+        }
+
         // When starting up reset any pending downloads or unpackings so that they are restarted.
         var allTorrents = await torrents.Get();
 
@@ -181,6 +192,11 @@ public class TorrentRunner(
                     await downloadStationDownloader.Update();
                 }
             }
+        }
+
+        if (settings.Current.General.DownloadsPaused)
+        {
+            await StopActiveBezzadDownloadsForPause();
         }
 
         // Check if any torrents are finished downloading to the host, remove them from the active download list.
@@ -490,6 +506,14 @@ public class TorrentRunner(
                 foreach (var download in queuedDownloads)
                 {
                     Log($"Processing to download", download, torrent);
+
+                    // Break rather than return, so queued unpacks below still run while downloads are paused.
+                    if (settings.Current.General.DownloadsPaused)
+                    {
+                        Log($"Not starting download because downloads are paused", download, torrent);
+
+                        break;
+                    }
 
                     if (runnerState.ActiveDownloadClients.Count >= settingDownloadLimit && torrent.DownloadClient != Data.Enums.DownloadClient.Symlink)
                     {
@@ -814,6 +838,34 @@ public class TorrentRunner(
         };
 
         return TimeSpan.FromSeconds(seconds);
+    }
+
+    /// <summary>
+    ///     Stops the active Bezzad downloads and puts them back in the queue, so they continue from their partial
+    ///     .download file once downloads are resumed. Other download clients are left to finish.
+    /// </summary>
+    private async Task StopActiveBezzadDownloadsForPause()
+    {
+        foreach (var (downloadId, downloadClient) in runnerState.ActiveDownloadClients.ToList())
+        {
+            // A finished download is left to the completion handling below, so its result is not lost.
+            if (downloadClient.Type != Data.Enums.DownloadClient.Bezzad || downloadClient.Finished)
+            {
+                continue;
+            }
+
+            // Remove it first: a cancelled DownloadClient reports Finished without an error, which the
+            // completion handling would otherwise treat as a successful download.
+            if (!runnerState.ActiveDownloadClients.TryRemove(downloadId, out _))
+            {
+                continue;
+            }
+
+            await downloadClient.Cancel();
+            await downloads.UpdateDownloadStarted(downloadId, null);
+
+            Log($"Stopped download {downloadId} because downloads are paused, it will continue when they are resumed");
+        }
     }
 
     private void Log(String message, Download? download, Torrent? torrent)

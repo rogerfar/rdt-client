@@ -47,6 +47,14 @@ public class DbSettingsGeneral
     [Description("Maximum amount of downloads that get unpacked on your host at the same time. Set to 0 to disable unpacking.")]
     public Int32 UnpackLimit { get; set; } = 1;
 
+    [DisplayName("Downloads paused")]
+    [Description("When enabled, no new downloads to your host are started and active Bezzad downloads are stopped. Stopped Bezzad downloads continue from where they were when downloads are resumed. Downloads from other download clients that are already running are left to finish. Can also be switched with the pause button in the navbar.")]
+    public Boolean DownloadsPaused { get; set; } = false;
+
+    [DisplayName("Keep downloads paused after a restart")]
+    [Description("When enabled, downloads stay paused when RDT-Client restarts. When disabled, a restart resumes them.")]
+    public Boolean KeepDownloadsPausedAfterRestart { get; set; } = true;
+
     [DisplayName("Categories")]
     [Description("Expose these categories through the QBittorrent API. Define multiple categories by separating them with a comma.")]
     public String? Categories { get; set; } = null;

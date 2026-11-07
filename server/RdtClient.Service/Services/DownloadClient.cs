@@ -13,7 +13,7 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
 
     public IDownloader? Downloader;
 
-    public Data.Enums.DownloadClient Type { get; private set; }
+    public Data.Enums.DownloadClient Type { get; private set; } = torrent.DownloadClient;
 
     public Boolean Finished { get; private set; }
 

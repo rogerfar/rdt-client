@@ -43,6 +43,8 @@ export class NavbarComponent implements OnInit {
   public speedLimitMax = 100;
   public speedLimitSaving = false;
   public speedLimitError: string;
+  public downloadsPaused = false;
+  public downloadsPausedSaving = false;
 
   constructor() {
     this.router.events
@@ -139,6 +141,29 @@ export class NavbarComponent implements OnInit {
       });
   }
 
+  public toggleDownloadsPaused(): void {
+    if (this.downloadsPausedSaving) {
+      return;
+    }
+
+    const paused = !this.downloadsPaused;
+    this.downloadsPausedSaving = true;
+
+    this.settingsService
+      .updateValue('General:DownloadsPaused', paused)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.downloadsPaused = paused;
+          this.downloadsPausedSaving = false;
+        },
+        error: (err) => {
+          this.downloadsPausedSaving = false;
+          console.error('Unable to change the download pause state', err);
+        },
+      });
+  }
+
   public logout(): void {
     this.authService.logout().subscribe({ next: () => this.router.navigate(['/login']), error: console.error });
   }
@@ -157,6 +182,7 @@ export class NavbarComponent implements OnInit {
 
           // DownloadClient enum: 0 = Bezzad
           this.speedLimitVisible = Number(value('DownloadClient:Client')) === 0;
+          this.downloadsPaused = String(value('General:DownloadsPaused')).toLowerCase() === 'true';
           this.speedLimit = Math.max(Number(value('DownloadClient:MaxSpeed')) || 0, 0);
 
           const sliderMax = Number(value('DownloadClient:MaxSpeedSliderMax')) || 100;
