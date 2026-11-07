@@ -43,6 +43,7 @@ export class NavbarComponent implements OnInit {
   public speedLimitMax = 100;
   public speedLimitSaving = false;
   public speedLimitError: string;
+  public speedLimitShared = false;
 
   constructor() {
     this.router.events
@@ -139,6 +140,31 @@ export class NavbarComponent implements OnInit {
       });
   }
 
+  public setSpeedLimitShared(shared: boolean): void {
+    if (this.speedLimitShared === shared || this.speedLimitSaving) {
+      return;
+    }
+
+    const previous = this.speedLimitShared;
+    this.speedLimitShared = shared;
+    this.speedLimitSaving = true;
+    this.speedLimitError = null;
+
+    this.settingsService
+      .updateValue('DownloadClient:MaxSpeedShared', shared)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.speedLimitSaving = false;
+        },
+        error: (err) => {
+          this.speedLimitSaving = false;
+          this.speedLimitShared = previous;
+          this.speedLimitError = err.error ?? 'Unable to save speed limit mode';
+        },
+      });
+  }
+
   public logout(): void {
     this.authService.logout().subscribe({ next: () => this.router.navigate(['/login']), error: console.error });
   }
@@ -157,6 +183,8 @@ export class NavbarComponent implements OnInit {
 
           // DownloadClient enum: 0 = Bezzad
           this.speedLimitVisible = Number(value('DownloadClient:Client')) === 0;
+          const shared = value('DownloadClient:MaxSpeedShared');
+          this.speedLimitShared = String(shared).toLowerCase() === 'true';
           this.speedLimit = Math.max(Number(value('DownloadClient:MaxSpeed')) || 0, 0);
 
           const sliderMax = Number(value('DownloadClient:MaxSpeedSliderMax')) || 100;

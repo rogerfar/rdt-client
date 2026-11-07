@@ -57,13 +57,19 @@
     <div class="navbar-end">
       @if (speedLimitVisible) {
         <div class="navbar-item has-dropdown speed-limit" [class.is-active]="speedLimitOpen">
-          <a class="navbar-link" (click)="toggleSpeedLimit()" title="Download speed limit (per download)">
+          <a
+            class="navbar-link"
+            (click)="toggleSpeedLimit()"
+            [title]="
+              speedLimitShared ? 'Download speed limit (all downloads combined)' : 'Download speed limit (per download)'
+            "
+          >
             <span class="icon">
               <i class="fas fa-tachometer-alt" aria-hidden="true"></i>
             </span>
             <span class="speed-limit-label">
               @if (speedLimit > 0) {
-                {{ speedLimit }} MB/s
+                {{ speedLimit }} MB/s {{ speedLimitShared ? "total" : "each" }}
               } @else {
                 Unlimited
               }
@@ -72,7 +78,30 @@
 
           <div class="navbar-dropdown is-right speed-limit-dropdown">
             <div class="speed-limit-title">
-              <span>Speed limit per download</span>
+              <div class="buttons has-addons speed-limit-mode" role="group" aria-label="Apply the speed limit to">
+                <button
+                  type="button"
+                  class="button is-small"
+                  [class.is-link]="!speedLimitShared"
+                  [class.is-selected]="!speedLimitShared"
+                  [attr.aria-pressed]="!speedLimitShared"
+                  title="Each download gets the full limit"
+                  (click)="setSpeedLimitShared(false)"
+                >
+                  Per download
+                </button>
+                <button
+                  type="button"
+                  class="button is-small"
+                  [class.is-link]="speedLimitShared"
+                  [class.is-selected]="speedLimitShared"
+                  [attr.aria-pressed]="speedLimitShared"
+                  title="The limit is shared between all active downloads"
+                  (click)="setSpeedLimitShared(true)"
+                >
+                  Total
+                </button>
+              </div>
               @if (speedLimitSaving) {
                 <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
               }

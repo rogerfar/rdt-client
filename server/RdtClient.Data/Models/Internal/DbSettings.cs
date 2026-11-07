@@ -109,8 +109,12 @@ public class DbSettingsDownloadClient
     public String MappedPath { get; set; } = @"C:\Downloads";
 
     [DisplayName("Download speed (in MB/s) (only used for the Bezzad Downloader)")]
-    [Description("Maximum download speed in MB/s, applied per concurrent download (not a global limit). The effective total ceiling is this value multiplied by the 'Maximum parallel downloads' setting. For example, 40 with 2 parallel downloads is roughly 80 MB/s total, and 40 with 4 parallel downloads is roughly 160 MB/s total, so overall throughput can appear to exceed the value set here. When set to 0 unlimited speed is used.")]
+    [Description("Maximum download speed in MB/s. By default this is applied per concurrent download (not a global limit), so the effective total ceiling is this value multiplied by the 'Maximum parallel downloads' setting: for example, 40 with 2 parallel downloads is roughly 80 MB/s total. Enable 'Share download speed across all downloads' below to make it a total limit instead. When set to 0 unlimited speed is used.")]
     public Int32 MaxSpeed { get; set; } = 0;
+
+    [DisplayName("Share download speed across all downloads (only used for the Bezzad Downloader)")]
+    [Description("When enabled, the download speed above is a total for all active downloads combined, split evenly between them and rebalanced as downloads start and finish. When disabled, each download gets the full speed above.")]
+    public Boolean MaxSpeedShared { get; set; } = false;
 
     [DisplayName("Download speed slider maximum (in MB/s) (only used for the Bezzad Downloader)")]
     [Description("Upper bound of the download speed slider shown on the Torrents page when the Bezzad Downloader is selected. Set this to roughly your line speed.")]
