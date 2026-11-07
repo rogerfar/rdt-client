@@ -120,7 +120,9 @@ This [downloader](https://github.com/bezzad/Downloader) can be used to download 
 
 It has the following options:
 
-- Download speed (in MB/s): Maximum speed in MB/s applied **per concurrent download** (aggregated across that download's chunks), not a global limit. The effective total ceiling is this value multiplied by the "Maximum parallel downloads" setting. For example, 40 MB/s with 2 parallel downloads is roughly 80 MB/s total, and 40 MB/s with 4 parallel downloads is roughly 160 MB/s total, so total throughput can appear higher than the number you set here. Set to 0 for unlimited.
+- Download speed (in MB/s): Maximum speed in MB/s. By default it is applied **per concurrent download** (aggregated across that download's chunks), not as a global limit. The effective total ceiling is then this value multiplied by the "Maximum parallel downloads" setting. For example, 40 MB/s with 2 parallel downloads is roughly 80 MB/s total, and 40 MB/s with 4 parallel downloads is roughly 160 MB/s total. Set to 0 for unlimited.
+- Share download speed across all downloads: When enabled, the download speed above becomes a **total** for all active downloads combined. It is split evenly between them and rebalanced as downloads start, pause and finish, so 40 MB/s with 2 active downloads gives roughly 20 MB/s each. Off by default. It can also be switched with the Per download / Total toggle in the speed limit menu in the navbar, which shows the current mode next to the limit.
+- Download speed slider maximum (in MB/s): The upper bound of the speed limit slider in the navbar. Set this to roughly your line speed.
 - Parallel connections per download: This number indicates how many parallel it will use per download. This can increase speed, recommended is no more than 8.
 - Parallel chunks per download: This number indicates in how many chunks each download is split, recommended is no more than 8.
 - Connection Timeout: This number indicates the timeout in milliseconds before a download chunk times out. It will retry each chunk 5 times before completely failing.

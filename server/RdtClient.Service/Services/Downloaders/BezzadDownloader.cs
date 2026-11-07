@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using Downloader;
@@ -9,6 +10,11 @@ namespace RdtClient.Service.Services.Downloaders;
 public class BezzadDownloader : IDownloader
 {
     private const Int32 BindRetryDelayMilliseconds = 1000;
+
+    // Downloads that are currently transferring (started, not paused, not finished). Used to split
+    // the speed limit between them when DownloadClient:MaxSpeedShared is enabled.
+    private static readonly ConcurrentDictionary<BezzadDownloader, Byte> ActiveDownloaders = new();
+
     private readonly IDelayProvider _delayProvider;
 
     private readonly DownloadConfiguration _downloadConfiguration;
@@ -93,7 +99,34 @@ public class BezzadDownloader : IDownloader
                                      });
 
             _finished = true;
+            Unregister();
         };
+    }
+
+    public static Int32 ActiveCount => ActiveDownloaders.Count;
+
+    /// <summary>The speed limit currently applied to this download in bytes per second, 0 when unlimited.</summary>
+    public Int64 CurrentMaxBytesPerSecond => _downloadConfiguration.MaximumBytesPerSecond;
+
+    /// <summary>
+    ///     Bytes per second for one download. 0 means unlimited. When shared, the total is split evenly
+    ///     between the active downloads; a download that is not active yet is counted as one more.
+    /// </summary>
+    public static Int64 CalculateMaxBytesPerSecond(Int32 maxSpeedMegabytes, Boolean shared, Int32 activeCount)
+    {
+        if (maxSpeedMegabytes <= 0)
+        {
+            return 0;
+        }
+
+        var total = (Int64) maxSpeedMegabytes * 1024 * 1024;
+
+        if (!shared || activeCount <= 1)
+        {
+            return total;
+        }
+
+        return Math.Max(1, total / activeCount);
     }
 
     public event EventHandler<DownloadCompleteEventArgs>? DownloadComplete;
@@ -102,6 +135,8 @@ public class BezzadDownloader : IDownloader
     public Task<String> Download()
     {
         _logger.Debug($"Starting download of {_uri}, writing to path: {_filePath}");
+
+        Register();
 
         _ = RunDownloadAsync();
         _ = StartTimer();
@@ -114,6 +149,7 @@ public class BezzadDownloader : IDownloader
         _logger.Debug($"Cancelling download {_uri}");
 
         _finished = true;
+        Unregister();
         _downloadService.CancelAsync();
 
         return Task.CompletedTask;
@@ -123,6 +159,7 @@ public class BezzadDownloader : IDownloader
     {
         _logger.Debug($"Pausing download {_uri}");
         _downloadService.Pause();
+        Unregister();
 
         return Task.CompletedTask;
     }
@@ -130,9 +167,55 @@ public class BezzadDownloader : IDownloader
     public Task Resume()
     {
         _logger.Debug($"Resuming download {_uri}");
+
+        if (!_finished)
+        {
+            Register();
+        }
+
         _downloadService.Resume();
 
         return Task.CompletedTask;
+    }
+
+    private void Register()
+    {
+        if (ActiveDownloaders.TryAdd(this, 0))
+        {
+            RebalanceActive();
+        }
+    }
+
+    private void Unregister()
+    {
+        if (ActiveDownloaders.TryRemove(this, out _))
+        {
+            RebalanceActive();
+        }
+    }
+
+    // Re-apply the speed limit on every active download straight away, so the shared total holds as
+    // soon as a download starts, pauses or finishes rather than on each download's next 5 second refresh.
+    private static void RebalanceActive()
+    {
+        foreach (var downloader in ActiveDownloaders.Keys)
+        {
+            downloader.ApplySpeedLimit();
+        }
+    }
+
+    private void ApplySpeedLimit()
+    {
+        var shared = Settings.Get.DownloadClient.MaxSpeedShared;
+        var activeCount = ActiveDownloaders.Count;
+
+        // Not registered yet (constructor) or paused: count this download as the next one to start.
+        if (!ActiveDownloaders.ContainsKey(this))
+        {
+            activeCount++;
+        }
+
+        _downloadConfiguration.MaximumBytesPerSecond = CalculateMaxBytesPerSecond(Settings.Get.DownloadClient.MaxSpeed, shared, activeCount);
     }
 
     private SocketsHttpHandler CreateHttpMessageHandler()
@@ -221,6 +304,7 @@ public class BezzadDownloader : IDownloader
                                      });
 
             _finished = true;
+            Unregister();
         }
     }
 
@@ -285,14 +369,7 @@ public class BezzadDownloader : IDownloader
 
     private void SetSettings()
     {
-        var settingDownloadMaxSpeed = Settings.Get.DownloadClient.MaxSpeed;
-
-        if (settingDownloadMaxSpeed <= 0)
-        {
-            settingDownloadMaxSpeed = 0;
-        }
-
-        settingDownloadMaxSpeed = settingDownloadMaxSpeed * 1024 * 1024;
+        ApplySpeedLimit();
 
         var settingDownloadTimeout = Settings.Get.DownloadClient.Timeout;
 
@@ -317,7 +394,6 @@ public class BezzadDownloader : IDownloader
             _downloadConfiguration.ChunkCount = Settings.Get.DownloadClient.ChunkCount;
         }
 
-        _downloadConfiguration.MaximumBytesPerSecond = settingDownloadMaxSpeed;
         _downloadConfiguration.ParallelDownload = settingParallelCount > 1;
         _downloadConfiguration.ParallelCount = settingParallelCount;
         _downloadConfiguration.BlockTimeout = settingDownloadTimeout;
