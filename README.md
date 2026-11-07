@@ -118,6 +118,8 @@ Currently there 4 available download clients:
 
 This [downloader](https://github.com/bezzad/Downloader) can be used to download files in parallel and with multiple chunks.
 
+Downloads are written to a temporary `.download` file next to the final file, which is renamed when the download completes. If a download is stopped, or RDT-Client is restarted part way through, the download continues from that file instead of starting over. A download that fails is cleared and starts over on its next retry.
+
 It has the following options:
 
 - Download speed (in MB/s): Maximum speed in MB/s applied **per concurrent download** (aggregated across that download's chunks), not a global limit. The effective total ceiling is this value multiplied by the "Maximum parallel downloads" setting. For example, 40 MB/s with 2 parallel downloads is roughly 80 MB/s total, and 40 MB/s with 4 parallel downloads is roughly 160 MB/s total, so total throughput can appear higher than the number you set here. Set to 0 for unlimited.
