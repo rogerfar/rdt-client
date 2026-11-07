@@ -110,6 +110,18 @@ If you use Proxmox for your homelab, you can run rdt-client in a linux container
 1. Same goes for `Mapped path`, but this is the destination path from your docker mapping. This is a path on your host. For Windows, this will most likely be the same as the `Download path`.
 1. Save your settings.
 
+### Pausing downloads
+
+The pause button in the navbar pauses all downloads to your host, and shows `Paused` while they are paused. Click it again to resume. The same switch is the `Downloads paused` setting.
+
+While downloads are paused:
+
+- No new downloads to your host are started. Torrents are still added to your debrid provider, and unpacking carries on.
+- Active Bezzad downloads are stopped and continue from where they were once downloads are resumed (see below).
+- Downloads from the other download clients that are already running are left to finish.
+
+By default downloads stay paused when RDT-Client restarts. Disable `Keep downloads paused after a restart` to have a restart resume them.
+
 ### Download Clients
 
 Currently there 4 available download clients:
@@ -117,6 +129,8 @@ Currently there 4 available download clients:
 #### Bezzad Downloader
 
 This [downloader](https://github.com/bezzad/Downloader) can be used to download files in parallel and with multiple chunks.
+
+Downloads are written to a temporary `.download` file next to the final file, which is renamed when the download completes. If a download is stopped, or RDT-Client is restarted part way through, the download continues from that file instead of starting over. A download that fails is cleared and starts over on its next retry.
 
 It has the following options:
 

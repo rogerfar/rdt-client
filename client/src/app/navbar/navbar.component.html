@@ -55,6 +55,26 @@
     </div>
 
     <div class="navbar-end">
+      <a
+        class="navbar-item downloads-pause"
+        role="button"
+        [class.is-paused]="downloadsPaused"
+        [attr.aria-pressed]="downloadsPaused"
+        [title]="downloadsPaused ? 'Downloads are paused, click to resume them' : 'Pause downloads'"
+        (click)="toggleDownloadsPaused()"
+      >
+        <span class="icon">
+          @if (downloadsPausedSaving) {
+            <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+          } @else {
+            <i class="fas" [ngClass]="downloadsPaused ? 'fa-play' : 'fa-pause'" aria-hidden="true"></i>
+          }
+        </span>
+        @if (downloadsPaused) {
+          <span class="tag is-warning">Paused</span>
+        }
+      </a>
+
       @if (speedLimitVisible) {
         <div class="navbar-item has-dropdown speed-limit" [class.is-active]="speedLimitOpen">
           <a class="navbar-link" (click)="toggleSpeedLimit()" title="Download speed limit (per download)">

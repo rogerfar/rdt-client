@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- Added a pause button to the navbar that pauses all downloads to your host. Active Bezzad downloads are stopped and continue from where they were when downloads are resumed. Downloads stay paused after a restart unless the new "Keep downloads paused after a restart" setting is disabled.
+
+### Changed
+- Bezzad downloads now resume from their partial `.download` file after being stopped or after a restart, instead of starting over.
+
 ## [2.0.143] - 2026-10-18
 ### Added
 - Added a download speed limit slider to the navbar when the Bezzad downloader is selected, plus a setting for the slider's maximum.

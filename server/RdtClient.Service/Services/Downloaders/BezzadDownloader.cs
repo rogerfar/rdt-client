@@ -39,6 +39,11 @@ public class BezzadDownloader : IDownloader
             MaxTryAgainOnFailure = 5,
             RangeDownload = false,
             ClearPackageOnCompletionWithFailure = true,
+
+            // Keep resume metadata at the end of the partial .download file (written at most once a
+            // second), so a download that was stopped, or interrupted by a restart, continues from
+            // where it was instead of starting over. Failed downloads are still cleared above.
+            EnableAutoResumeDownload = true,
             CheckDiskSizeBeforeDownload = false,
             MaximumMemoryBufferBytes = 1024 * 1024 * 10,
             CustomHttpMessageHandlerFactory = CreateHttpMessageHandler,
