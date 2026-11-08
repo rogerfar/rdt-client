@@ -1,0 +1,19 @@
+.label {
+  margin-bottom: 0;
+}
+
+.break-all {
+  word-break: break-all;
+}
+
+@media screen and (max-width: 768px) {
+  .ddl-actions {
+    .control {
+      width: 100%;
+
+      .button {
+        width: 100%;
+      }
+    }
+  }
+}

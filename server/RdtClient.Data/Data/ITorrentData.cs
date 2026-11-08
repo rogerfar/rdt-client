@@ -26,6 +26,7 @@ public interface ITorrentData
     Task UpdateComplete(Guid torrentId, String? error, DateTimeOffset? datetime, Boolean retry);
     Task UpdateFilesSelected(Guid torrentId, DateTimeOffset datetime);
     Task UpdatePriority(Guid torrentId, Int32? priority);
+    Task UpdateDdlFallbackLinks(Guid torrentId, String? links);
     Task UpdateRetry(Guid torrentId, DateTimeOffset? dateTime, Int32 retryCount);
     Task UpdateError(Guid torrentId, String error);
     Task Delete(Guid torrentId);

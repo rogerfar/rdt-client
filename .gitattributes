@@ -1,0 +1,5 @@
+# Default: normalize line endings to LF on checkout
+* text=auto eol=lf
+
+# s6-overlay scripts and config MUST be LF — CRLF breaks s6-rc-compile
+root/etc/s6-overlay/**/* text eol=lf

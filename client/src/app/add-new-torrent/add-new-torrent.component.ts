@@ -24,10 +24,14 @@ export class AddNewTorrentComponent implements OnInit {
   private settingsService = inject(SettingsService);
   private activatedRoute = inject(ActivatedRoute);
 
-  public type: 'torrent' | 'nzb' = 'torrent';
+  public type: 'torrent' | 'nzb' | 'ddl' = 'torrent';
   public fileName: string;
   public magnetLink: string;
   public nzbLink: string;
+  public ddlLinks = '';
+  public ddlName = '';
+  public ddlHosts: { name: string; count: number }[] = [];
+  public ddlNameGuess: string;
   private currentTorrentFile: string;
 
   public provider: string;
@@ -74,10 +78,8 @@ export class AddNewTorrentComponent implements OnInit {
 
   ngOnInit(): void {
     this.activatedRoute.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
-      if (params['type'] === 'nzb') {
-        this.type = 'nzb';
-      } else if (params['type'] === 'torrent') {
-        this.type = 'torrent';
+      if (params['type'] === 'nzb' || params['type'] === 'torrent' || params['type'] === 'ddl') {
+        this.type = params['type'];
       }
 
       if (params['magnet']) {
@@ -87,6 +89,13 @@ export class AddNewTorrentComponent implements OnInit {
       if (params['nzb']) {
         this.nzbLink = decodeURIComponent(params['nzb']);
         this.type = 'nzb';
+      }
+
+      // Links handed over by the /ddl page travel in the fragment, like the bookmarklet's, so they never reach the server logs.
+      const fragment = this.activatedRoute.snapshot.fragment;
+      if (this.type === 'ddl' && fragment?.startsWith('links=')) {
+        this.ddlLinks = fragment.substring('links='.length);
+        this.readDdlLinks();
       }
     });
 
@@ -160,10 +169,41 @@ export class AddNewTorrentComponent implements OnInit {
     }
   }
 
-  public changeType(type: 'torrent' | 'nzb'): void {
+  public changeType(type: 'torrent' | 'nzb' | 'ddl'): void {
     this.type = type;
     this.fileName = null;
     this.selectedFiles = [];
+  }
+
+  /**
+   * Counts the pasted links per host and guesses the release name from the first file name, the way the server does
+   * (".html", ".partN.rar" and the extension dropped). The server makes the actual host pick.
+   */
+  public readDdlLinks(): void {
+    const links = [...new Set(this.ddlLinks.match(/https?:\/\/[^\s"'<>]+/gi) ?? [])]
+      .map((link) => link.replace(/[.,)\];]+$/, ''))
+      .map((link) => {
+        try {
+          return new URL(link);
+        } catch {
+          return null;
+        }
+      })
+      .filter((url) => url != null);
+
+    const counts = new Map<string, number>();
+    for (const url of links) {
+      const labels = url.hostname.toLowerCase().split('.');
+      const host = labels.length >= 2 ? labels[labels.length - 2] : url.hostname;
+      counts.set(host, (counts.get(host) ?? 0) + 1);
+    }
+    this.ddlHosts = [...counts].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
+
+    const file = links
+      .map((url) => decodeURIComponent(url.pathname.split('/').filter((s) => s).pop() ?? '').replace(/\.html?$/i, ''))
+      .find((name) => name.includes('.'));
+    const part = /\.part0*\d+\.rar$/i;
+    this.ddlNameGuess = file == null ? null : part.test(file) ? file.replace(part, '') : file.replace(/\.[^.]+$/, '');
   }
 
   public pickFile(evt: Event): void {
@@ -270,6 +310,20 @@ export class AddNewTorrentComponent implements OnInit {
         this.error = 'No magnet or file uploaded';
         this.saving = false;
       }
+    } else if (this.type === 'ddl') {
+      torrent.type = DownloadType.Ddl;
+      if (this.ddlHosts.length === 0) {
+        this.error = 'No links found';
+        this.saving = false;
+        return;
+      }
+      this.torrentService.uploadDdlLinks(this.ddlLinks, this.ddlName, torrent).subscribe({
+        next: (result) => this.router.navigate(['/torrent', result.torrentId]),
+        error: (err) => {
+          this.error = err.error;
+          this.saving = false;
+        },
+      });
     } else {
       if (this.nzbLink) {
         this.torrentService.uploadNzbLink(this.nzbLink, torrent).subscribe({
@@ -332,7 +386,7 @@ export class AddNewTorrentComponent implements OnInit {
   }
 
   public checkFiles(): void {
-    if (this.type === 'nzb') {
+    if (this.type !== 'torrent') {
       return;
     }
     if (this.magnetLink && this.magnetLink === this.currentTorrentFile) {

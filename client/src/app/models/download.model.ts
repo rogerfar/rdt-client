@@ -12,6 +12,9 @@ export class Download {
   public unpackingFinished: Date;
   public completed: Date;
   public error: string;
+  public lastError: string;
+  public retryAttempts: number;
+  public host: string;
   public bytesTotal: number;
   public bytesDone: number;
   public speed: number;

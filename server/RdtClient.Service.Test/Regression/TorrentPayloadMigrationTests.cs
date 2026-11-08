@@ -37,9 +37,11 @@ public class TorrentPayloadMigrationTests : IAsyncLifetime
         await using var migrationContext = CreateContext();
         var migrations = migrationContext.Database.GetMigrations().ToList();
 
-        Assert.True(migrations.Count >= 2);
+        var payloadMigrationIndex = migrations.FindIndex(m => m.EndsWith("_MoveSourcePayloadToPayloadTable", StringComparison.Ordinal));
 
-        var previousMigration = migrations[^2];
+        Assert.True(payloadMigrationIndex > 0);
+
+        var previousMigration = migrations[payloadMigrationIndex - 1];
         var migrator = migrationContext.GetService<IMigrator>();
 
         await migrator.MigrateAsync(previousMigration);

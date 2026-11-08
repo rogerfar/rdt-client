@@ -13,6 +13,12 @@
           <span>NZB</span>
         </a>
       </li>
+      <li [class.is-active]="type === 'ddl'">
+        <a (click)="changeType('ddl')">
+          <span class="icon is-small"><i class="fas fa-link" aria-hidden="true"></i></span>
+          <span>Direct links</span>
+        </a>
+      </li>
     </ul>
   </div>
 </div>
@@ -113,13 +119,58 @@
     </div>
   </div>
 
+  <div [hidden]="type !== 'ddl'">
+    <div class="field">
+      <label class="label" for="ddlLinks">Hoster links</label>
+      <div class="control">
+        <textarea
+          id="ddlLinks"
+          class="textarea"
+          rows="8"
+          placeholder="https://rapidgator.net/file/…&#10;https://nitroflare.com/view/…"
+          [(ngModel)]="ddlLinks"
+          (ngModelChange)="readDdlLinks()"
+          [disabled]="saving"
+        ></textarea>
+      </div>
+      @if (ddlHosts.length > 0) {
+        <div class="tags ddl-hosts">
+          @for (host of ddlHosts; track host.name) {
+            <span class="tag is-info">{{ host.name }} × {{ host.count }}</span>
+          }
+        </div>
+      }
+      <p class="help">
+        Paste the links as they come, one per line or not. With several mirrors, one host is downloaded and the others are
+        kept as fallback. Multi-part RARs are extracted once every part is in.
+      </p>
+    </div>
+
+    <div class="field">
+      <label class="label" for="ddlName">Name <span class="optional">(optional)</span></label>
+      <div class="control">
+        <input
+          id="ddlName"
+          class="input"
+          type="text"
+          [(ngModel)]="ddlName"
+          [placeholder]="ddlNameGuess || 'Taken from the file name'"
+          [disabled]="saving"
+        />
+      </div>
+      <p class="help">The folder the download is saved to.</p>
+    </div>
+  </div>
+
   <div class="field" style="margin-top: 10px">
     <div class="control">
       <button class="button is-success" [disabled]="saving" [ngClass]="{ 'is-loading': saving }" (click)="ok()">
         @if (type === "torrent") {
           <span>Add Torrent</span>
-        } @else {
+        } @else if (type === "nzb") {
           <span>Add NZB</span>
+        } @else {
+          <span>Add download</span>
         }
       </button>
     </div>

@@ -12,7 +12,7 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
     public virtual async Task<SabnzbdQueue> GetQueue()
     {
         var allTorrents = await torrents.Get();
-        var activeTorrents = allTorrents.Where(t => t.Type == DownloadType.Nzb && t.Completed == null).ToList();
+        var activeTorrents = allTorrents.Where(t => IsSabType(t.Type) && t.Completed == null).ToList();
 
         var queue = new SabnzbdQueue
         {
@@ -30,7 +30,11 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
                                       if (dlStats.Count > 0)
                                       {
                                           var downloadProgress = dlBytesTotal > 0 ? Math.Clamp((Double) dlBytesDone / dlBytesTotal, 0.0, 1.0) : 0;
-                                          progress = (rdProgress + downloadProgress) / 2.0;
+                                          progress = t.Type == DownloadType.Ddl ? downloadProgress : (rdProgress + downloadProgress) / 2.0;
+                                      }
+                                      else if (t.Type == DownloadType.Ddl)
+                                      {
+                                          progress = 0;
                                       }
                                       else
                                       {
@@ -75,7 +79,7 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
                                           MbLeft = (Math.Max(mbLeftBytes, 0) / 1048576.0).ToString("0.00"),
                                           Percentage = (progress * 100.0).ToString("0"),
 
-                                          Status = t.RdStatus switch
+                                          Status = t.Type == DownloadType.Ddl ? (t.Downloads.Count == 0 ? "Queued" : "Downloading") : t.RdStatus switch
                                           {
                                               TorrentStatus.Queued => "Queued",
                                               TorrentStatus.Processing => "Downloading",
@@ -103,7 +107,7 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
     public virtual async Task<SabnzbdHistory> GetHistory()
     {
         var allTorrents = await torrents.Get();
-        var completedTorrents = allTorrents.Where(t => t.Type == DownloadType.Nzb && t.Completed != null).ToList();
+        var completedTorrents = allTorrents.Where(t => IsSabType(t.Type) && t.Completed != null).ToList();
 
         var savePath = settings.DefaultSavePath;
 
@@ -168,7 +172,11 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
             Priority = (priority ?? settings.Current.Integrations.Default.Priority) > 0 ? 1 : null
         };
 
-        var result = await torrents.AddNzbFileToDebridQueue(fileBytes, fileName, torrent);
+        var standIn = DirectDownloadHelper.ParseStandIn(fileBytes);
+
+        var result = standIn != null
+            ? await torrents.AddDdlToDebridQueue(standIn.PostUrl, standIn.Title, torrent)
+            : await torrents.AddNzbFileToDebridQueue(fileBytes, fileName, torrent);
 
         return result.Hash;
     }
@@ -204,7 +212,7 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
     {
         var torrent = await torrents.GetByHash(hash);
 
-        if (torrent == null || torrent.Type != DownloadType.Nzb)
+        if (torrent == null || !IsSabType(torrent.Type))
         {
             return;
         }
@@ -235,6 +243,11 @@ public class Sabnzbd(ILogger<Sabnzbd> logger, Torrents torrents, AppSettings app
 
                 break;
         }
+    }
+
+    private static Boolean IsSabType(DownloadType type)
+    {
+        return type is DownloadType.Nzb or DownloadType.Ddl;
     }
 
     public virtual List<String> GetCategories()

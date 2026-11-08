@@ -27,7 +27,7 @@ public static class TorrentDtoMapper
                                     Boolean includeFiles,
                                     Boolean includeFileOrMagnet)
     {
-        var downloads = includeDownloads ? torrent.Downloads.Select(download => ToDto(download, getDownloadStats)).ToList() : [];
+        var downloads = includeDownloads ? torrent.Downloads.Select(download => ToDto(torrent, download, getDownloadStats)).ToList() : [];
 
         return new()
         {
@@ -49,6 +49,7 @@ public static class TorrentDtoMapper
             Type = torrent.Type,
             FileOrMagnet = includeFileOrMagnet ? torrent.Payload?.Content : null,
             IsFile = torrent.IsFile,
+            PostUrl = torrent.Type == DownloadType.Ddl && !torrent.IsFile ? torrent.Payload?.Content : null,
             Priority = torrent.Priority,
             RetryCount = torrent.RetryCount,
             DownloadRetryAttempts = torrent.DownloadRetryAttempts,
@@ -76,9 +77,10 @@ public static class TorrentDtoMapper
         };
     }
 
-    private static DownloadDto ToDto(Download download, Func<Guid, (Int64 Speed, Int64 BytesTotal, Int64 BytesDone)> getDownloadStats)
+    private static DownloadDto ToDto(Torrent torrent, Download download, Func<Guid, (Int64 Speed, Int64 BytesTotal, Int64 BytesDone)> getDownloadStats)
     {
         var (speed, bytesTotal, bytesDone) = getDownloadStats(download.DownloadId);
+        var isDdl = torrent.Type == DownloadType.Ddl;
 
         return new()
         {
@@ -96,7 +98,11 @@ public static class TorrentDtoMapper
             Completed = download.Completed,
             RetryCount = download.RetryCount,
             Error = download.Error,
-            BytesTotal = bytesTotal,
+            LastError = download.LastError,
+            RetryAttempts = DirectDownloadHelper.RetryAttempts(torrent.DownloadRetryAttempts, isDdl && DirectDownloadHelper.IsTemporaryError(download.LastError)),
+            Host = isDdl && Uri.IsWellFormedUriString(download.Path, UriKind.Absolute) ? DirectDownloadHelper.HostOf(download.Path) : null,
+            // Live figures while the download or its unpacking runs, else the size kept when it finished.
+            BytesTotal = bytesTotal > 0 ? bytesTotal : download.Size ?? 0,
             BytesDone = bytesDone,
             Speed = speed
         };
@@ -107,6 +113,11 @@ public static class TorrentDtoMapper
         if (!String.IsNullOrWhiteSpace(torrent.Error))
         {
             return torrent.Error;
+        }
+
+        if (torrent.Type == DownloadType.Ddl && torrent.Downloads.Count == 0 && torrent.Completed == null)
+        {
+            return "Waiting for links";
         }
 
         if (torrent.Downloads.Count > 0)

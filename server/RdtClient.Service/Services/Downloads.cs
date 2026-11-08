@@ -76,6 +76,16 @@ public class Downloads(DownloadData downloadData) : IDownloads
         await downloadData.UpdateError(downloadId, error);
     }
 
+    public async Task UpdateSize(Guid downloadId, Int64 size)
+    {
+        await downloadData.UpdateSize(downloadId, size);
+    }
+
+    public async Task UpdateLastError(Guid downloadId, String? lastError)
+    {
+        await downloadData.UpdateLastError(downloadId, lastError);
+    }
+
     public async Task UpdateRetryCount(Guid downloadId, Int32 retryCount)
     {
         await downloadData.UpdateRetryCount(downloadId, retryCount);
@@ -94,5 +104,10 @@ public class Downloads(DownloadData downloadData) : IDownloads
     public async Task Reset(Guid downloadId, DateTimeOffset? downloadQueued = null)
     {
         await downloadData.Reset(downloadId, downloadQueued);
+    }
+
+    public async Task<String?> SwitchToNextMirror(Guid downloadId)
+    {
+        return await downloadData.SwitchToNextMirror(downloadId);
     }
 }

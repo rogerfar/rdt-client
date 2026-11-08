@@ -1,7 +1,8 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MonoTorrent;
+using RdtClient.Data.Enums;
 using RdtClient.Data.Models.DebridClient;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Service.BackgroundServices;
@@ -210,9 +211,9 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
 
         var bytes = await ReadFormFileBytes(file);
 
-        var torrent = await MonoTorrent.Torrent.LoadAsync(bytes);
+        var torrent = await TorrentFileHelper.Read(bytes);
 
-        var result = await torrents.GetAvailableFiles(torrent.InfoHashes.V1OrV2.ToHex());
+        var result = await torrents.GetAvailableFiles(torrent.InfoHash);
 
         return Ok(result);
     }
@@ -267,6 +268,99 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
     }
 
     [HttpPost]
+    [Route("UploadDdlLinks")]
+    public async Task<ActionResult> UploadDdlLinks([FromBody] TorrentControllerUploadDdlLinksRequest? request)
+    {
+        if (request == null || String.IsNullOrWhiteSpace(request.Links))
+        {
+            return BadRequest("Links are required");
+        }
+
+        if (request.Torrent == null)
+        {
+            return BadRequest("Invalid Torrent");
+        }
+
+        logger.LogDebug("Add direct-download links {name}", request.Name);
+
+        try
+        {
+            var torrent = await torrents.AddDdlLinksToDebridQueue(request.Links, request.Name, request.Torrent);
+
+            return Ok(new
+            {
+                torrent.TorrentId
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpGet]
+    [Route("Ddl")]
+    public async Task<ActionResult<TorrentDto>> GetDdl([FromQuery] String? postUrl)
+    {
+        if (String.IsNullOrWhiteSpace(postUrl))
+        {
+            return BadRequest("postUrl is required");
+        }
+
+        var torrent = await torrents.GetDdlByPostUrl(postUrl);
+
+        if (torrent == null)
+        {
+            return NotFound("No direct-download item for this post");
+        }
+
+        return await GetById(torrent.TorrentId);
+    }
+
+    [HttpPost]
+    [Route("DdlLinks")]
+    public async Task<ActionResult> DdlLinks([FromBody] TorrentControllerDdlLinksRequest? request)
+    {
+        if (request == null || String.IsNullOrWhiteSpace(request.Links))
+        {
+            return BadRequest("Links are required");
+        }
+
+        Torrent? torrent = null;
+
+        if (request.TorrentId != null)
+        {
+            torrent = await torrents.GetById(request.TorrentId.Value);
+        }
+        else if (!String.IsNullOrWhiteSpace(request.PostUrl))
+        {
+            torrent = await torrents.GetDdlByPostUrl(request.PostUrl);
+        }
+
+        if (torrent == null)
+        {
+            return NotFound("No direct-download item found");
+        }
+
+        logger.LogDebug("Adding direct-download links to {torrentId}", torrent.TorrentId);
+
+        try
+        {
+            var count = await torrents.AddDdlLinks(torrent.TorrentId, request.Links);
+
+            return Ok(new
+            {
+                torrent.TorrentId,
+                Links = count
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPost]
     [Route("RetryDownload/{downloadId:guid}")]
     public async Task<ActionResult> RetryDownload(Guid downloadId)
     {
@@ -315,9 +409,9 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
         {
             var bytes = await ReadFormFileBytes(file);
 
-            var torrent = await MonoTorrent.Torrent.LoadAsync(bytes);
+            var torrent = await TorrentFileHelper.Read(bytes);
 
-            availableFiles = await torrents.GetAvailableFiles(torrent.InfoHashes.V1OrV2.ToHex());
+            availableFiles = await torrents.GetAvailableFiles(torrent.InfoHash);
         }
         else
         {
@@ -399,6 +493,20 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
 public class TorrentControllerUploadFileRequest
 {
     public Torrent? Torrent { get; set; }
+}
+
+public class TorrentControllerUploadDdlLinksRequest
+{
+    public String? Links { get; set; }
+    public String? Name { get; set; }
+    public Torrent? Torrent { get; set; }
+}
+
+public class TorrentControllerDdlLinksRequest
+{
+    public Guid? TorrentId { get; set; }
+    public String? PostUrl { get; set; }
+    public String? Links { get; set; }
 }
 
 public class TorrentControllerUploadMagnetRequest

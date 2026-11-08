@@ -1,10 +1,64 @@
+@if (isWaitingForDdlLinks) {
+  <div class="card mb-5">
+    <header class="card-header">
+      <p class="card-header-title">Waiting for links</p>
+    </header>
+    <div class="card-content">
+      <div class="field">
+        <label class="label">Release</label>
+        <span class="break-all">{{ torrent.rdName }}</span>
+      </div>
+      <div class="field">
+        <label class="label">Post</label>
+        <a class="break-all" href="{{ torrent.postUrl }}" target="_blank" rel="noopener noreferrer">
+          {{ torrent.postUrl }}
+        </a>
+        <p class="help">
+          Open the post, unlock the links, then paste them here (all mirrors are fine, one is picked automatically).
+        </p>
+      </div>
+      <div class="field">
+        <label class="label" for="ddlLinks">Links</label>
+        <div class="control">
+          <textarea
+            id="ddlLinks"
+            class="textarea"
+            rows="5"
+            placeholder="Paste the download links here, one per line"
+            [(ngModel)]="ddlLinks"
+            [disabled]="addingDdlLinks"
+          ></textarea>
+        </div>
+      </div>
+      <div class="field ddl-actions">
+        <div class="control">
+          <button
+            class="button is-success"
+            (click)="addDdlLinks()"
+            [disabled]="addingDdlLinks || !hasDdlLinks"
+            [ngClass]="{ 'is-loading': addingDdlLinks }"
+          >
+            Add links
+          </button>
+        </div>
+      </div>
+      @if (ddlError) {
+        <div class="notification is-danger is-light">{{ ddlError }}</div>
+      }
+    </div>
+  </div>
+}
+@if (ddlSuccess) {
+  <div class="notification is-success is-light mb-5">{{ ddlSuccess }}</div>
+}
+
 <div class="tabs">
   <ul>
     <li [ngClass]="{ 'is-active': activeTab === 0 }" (click)="activeTab = 0">
       <a>General</a>
     </li>
     <li [ngClass]="{ 'is-active': activeTab === 1 }" (click)="activeTab = 1">
-      <a>Torrent Files</a>
+      <a>{{ kind }} Files</a>
     </li>
     <li [ngClass]="{ 'is-active': activeTab === 2 }" (click)="activeTab = 2">
       <a>Downloads</a>
@@ -25,10 +79,10 @@
         <div style="flex: 1 1 0">
           <div class="field is-grouped is-grouped-multiline action-buttons">
             <div class="control">
-              <button class="button is-danger" (click)="showDeleteModal()">Delete Torrent</button>
+              <button class="button is-danger" (click)="showDeleteModal()">Delete {{ kind }}</button>
             </div>
             <div class="control">
-              <button class="button is-primary" (click)="showRetryModal()">Retry Torrent</button>
+              <button class="button is-primary" (click)="showRetryModal()">Retry {{ kind }}</button>
             </div>
             <div class="control">
               <button class="button is-light" (click)="showUpdateSettingsModal()">Change Settings</button>
@@ -83,7 +137,7 @@
             }
           </div>
           <div class="field">
-            <label class="label">Post Torrent Download Action</label>
+            <label class="label">Post {{ kind }} Download Action</label>
             @switch (torrent.downloadAction) {
               @case (0) {
                 Download all files above a certain size
@@ -103,13 +157,13 @@
                 Do nothing
               }
               @case (1) {
-                Remove torrent from Real-Debrid and Real-Debrid Client
+                Remove {{ kindLower }} from the provider and the client
               }
               @case (2) {
-                Remove torrent from Real-Debrid
+                Remove {{ kindLower }} from the provider
               }
               @case (3) {
-                Remove torrent from client
+                Remove {{ kindLower }} from the client
               }
             }
           </div>
@@ -134,21 +188,21 @@
             <label class="label">Exclude files</label>
             {{ torrent.excludeRegex }}
           </div>
-          @if (!torrent.isFile) {
+          @if (!isDdl && !torrent.isFile) {
             <div class="field">
-              <label class="label">Magnet</label>
+              <label class="label">{{ isNzb ? "NZB link" : "Magnet" }}</label>
               @if (!copied) {
                 <span [cdkCopyToClipboard]="torrent.fileOrMagnet" (click)="copied = true">
-                  Click to copy magnet link to clipboard
+                  Click to copy {{ isNzb ? "NZB" : "magnet" }} link to clipboard
                 </span>
               } @else {
                 <span>Link copied to clipboard!</span>
               }
             </div>
-          } @else {
+          } @else if (!isDdl) {
             <div class="field">
-              <label class="label">Torrent file</label>
-              <span (click)="download()">Click to download torrent file</span>
+              <label class="label">{{ kind }} file</label>
+              <span (click)="download()">Click to download {{ kindLower }} file</span>
             </div>
           }
           <div class="field">
@@ -308,6 +362,9 @@
                       }
                     </td>
                     <td class="break-all">
+                      @if (download.host) {
+                        <span class="tag is-dark download-host">{{ download.host }}</span>
+                      }
                       @if (download.link) {
                         {{ download.link | decodeURI }}
                       }
@@ -318,8 +375,12 @@
                   <td>
                     {{ download.bytesTotal | filesize }}
                   </td>
-                  <td>
-                    {{ download | downloadStatus }}
+                  <td
+                    [class.has-text-warning]="
+                      download.lastError && !download.error && !download.downloadStarted && !download.completed
+                    "
+                  >
+                    {{ download | downloadStatus: torrent.downloadRetryAttempts }}
                   </td>
                 </tr>
                 @if (expanded) {
@@ -339,6 +400,11 @@
                             <div class="field">
                               <label class="label">Error</label>
                               {{ download.error }}
+                            </div>
+                          } @else if (download.lastError) {
+                            <div class="field">
+                              <label class="label">Last error</label>
+                              {{ download.lastError }}
                             </div>
                           }
                           <div class="field">
@@ -453,22 +519,22 @@
   <div class="modal-background"></div>
   <div class="modal-card">
     <header class="modal-card-head">
-      <p class="modal-card-title">Delete torrent</p>
+      <p class="modal-card-title">Delete {{ kindLower }}</p>
       <button class="delete" aria-label="close" (click)="deleteCancel()"></button>
     </header>
     <section class="modal-card-body">
-      <p>Are you sure you want to delete this torrent?</p>
+      <p>Are you sure you want to delete this {{ kindLower }}?</p>
       <div class="field">
         <label class="label"></label>
         <div class="control">
           <label class="checkbox">
             <input type="checkbox" [(ngModel)]="deleteData" (change)="updateDeleteSelectAll()" />
-            Delete Torrent from client
+            Delete {{ kind }} from client
           </label>
           <br />
           <label class="checkbox">
             <input type="checkbox" [(ngModel)]="deleteRdTorrent" (change)="updateDeleteSelectAll()" />
-            Delete Torrent from provider
+            Delete {{ kind }} from provider
           </label>
           <br />
           <label class="checkbox">
@@ -484,10 +550,10 @@
         </div>
       </div>
       <div class="notification is-primary">
-        Deleting a torrent from Real-Debrid will automatically delete it here too.
+        Deleting a {{ kindLower }} from the provider will automatically delete it here too.
       </div>
       @if (deleteError?.length > 0) {
-        <div class="notification is-danger is-light">Error deleting torrent: {{ deleteError }}</div>
+        <div class="notification is-danger is-light">Error deleting {{ kindLower }}: {{ deleteError }}</div>
       }
     </section>
     <footer class="modal-card-foot">
@@ -510,17 +576,17 @@
   <div class="modal-background"></div>
   <div class="modal-card">
     <header class="modal-card-head">
-      <p class="modal-card-title">Retry torrent</p>
+      <p class="modal-card-title">Retry {{ kindLower }}</p>
       <button class="delete" aria-label="close" (click)="retryCancel()"></button>
     </header>
     <section class="modal-card-body">
-      <p>Are you sure you want to retry this torrent?</p>
+      <p>Are you sure you want to retry this {{ kindLower }}?</p>
       <p>
-        This action will delete all the torrent data + all local downloads. Then it will re-add the original magnet link
-        or torrent file to Real-Debrid.
+        This action will delete all the {{ kindLower }} data + all local downloads. Then it will add the original
+        {{ isDdl && torrent.isFile ? "links again" : isDdl ? "post again, waiting for its links" : isNzb ? "NZB to the provider again" : "magnet link or torrent file to the provider again" }}.
       </p>
       @if (retryError?.length > 0) {
-        <div class="notification is-danger is-light">Error retrying torrent: {{ retryError }}</div>
+        <div class="notification is-danger is-light">Error retrying {{ kindLower }}: {{ retryError }}</div>
       }
     </section>
     <footer class="modal-card-foot">
@@ -578,12 +644,12 @@
   <div class="modal-background"></div>
   <div class="modal-card">
     <header class="modal-card-head">
-      <p class="modal-card-title">Update torrent settings</p>
+      <p class="modal-card-title">Update {{ kindLower }} settings</p>
       <button class="delete" aria-label="close" (click)="updateSettingsCancel()"></button>
     </header>
     <section class="modal-card-body">
       <p>
-        Settings that are blank do not have the same values for each torrent. Updating a setting with a blank value will
+        Settings that are blank do not have the same values for each {{ kindLower }}. Updating a setting with a blank value will
         not update it.
       </p>
       <div class="field">
@@ -597,7 +663,7 @@
           </select>
         </div>
         <p class="help">
-          Select which downloader is used to download this torrent from the debrid provider to your host.
+          Select which downloader is used to download this {{ kindLower }} from the debrid provider to your host.
         </p>
       </div>
       <div class="field">
@@ -610,7 +676,7 @@
           </select>
         </div>
         <p class="help">
-          When a torrent is finished downloading on the provider, perform this action. Use this setting if you only want
+          When a {{ kindLower }} is finished downloading on the provider, perform this action. Use this setting if you only want
           to add files to Real-Debrid but not download them to the host.
         </p>
       </div>
@@ -627,7 +693,7 @@
           <input class="input" type="number" step="1" [(ngModel)]="updateSettingsPriority" />
         </div>
         <p class="help">
-          Set the priority for this torrent where 1 is the highest. When empty it will be assigned the lowest priority.
+          Set the priority for this {{ kindLower }} where 1 is the highest. When empty it will be assigned the lowest priority.
         </p>
       </div>
       <div class="field">
@@ -645,7 +711,7 @@
         <p class="help">When a single download fails it will retry it this many times before marking it as failed.</p>
       </div>
       <div class="field">
-        <label class="label">Automatic retry torrent</label>
+        <label class="label">Automatic retry {{ kindLower }}</label>
         <div class="control">
           <input
             class="input"
@@ -657,8 +723,8 @@
           />
         </div>
         <p class="help">
-          When a single download has failed multiple times (see setting above) or when the torrent itself received an
-          error it will retry the full torrent this many times before marking it failed.
+          When a single download has failed multiple times (see setting above) or when the {{ kindLower }} itself received an
+          error it will retry the full {{ kindLower }} this many times before marking it failed.
         </p>
       </div>
       <div class="field">
@@ -672,7 +738,7 @@
         </p>
       </div>
       <div class="field">
-        <label class="label">Torrent maximum lifetime</label>
+        <label class="label">{{ kind }} maximum lifetime</label>
         <div class="control">
           <input
             class="input"
@@ -684,8 +750,8 @@
           />
         </div>
         <p class="help">
-          The maximum lifetime of a torrent in minutes. When this time has passed, mark the torrent as error. If the
-          torrent is completed and has downloads, the lifetime setting will not apply. 0 to disable.
+          The maximum lifetime of a {{ kindLower }} in minutes. When this time has passed, mark the {{ kindLower }} as error. If
+          the {{ kindLower }} is completed and has downloads, the lifetime setting will not apply. 0 to disable.
         </p>
       </div>
     </section>

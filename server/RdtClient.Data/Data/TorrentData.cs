@@ -222,7 +222,9 @@ public class TorrentData(DataContext dataContext, ILogger<TorrentData>? logger =
             }
         }
 
-        if (!String.IsNullOrWhiteSpace(error) && retry)
+        // A direct download re-added by a retry waits for links that nothing sends again (the indexer bridge only sends
+        // them on grab), and its parts already went through every mirror. Fail it right away so the *arr can move on.
+        if (!String.IsNullOrWhiteSpace(error) && retry && dbTorrent.Type != DownloadType.Ddl)
         {
             if (dbTorrent.RetryCount < dbTorrent.TorrentRetryAttempts)
             {
@@ -247,6 +249,20 @@ public class TorrentData(DataContext dataContext, ILogger<TorrentData>? logger =
         }
 
         dbTorrent.FilesSelected = datetime;
+
+        await dataContext.SaveChangesAsync();
+    }
+
+    public async Task UpdateDdlFallbackLinks(Guid torrentId, String? links)
+    {
+        var dbTorrent = await dataContext.Torrents.FirstOrDefaultAsync(m => m.TorrentId == torrentId);
+
+        if (dbTorrent == null)
+        {
+            return;
+        }
+
+        dbTorrent.DdlFallbackLinks = links;
 
         await dataContext.SaveChangesAsync();
     }

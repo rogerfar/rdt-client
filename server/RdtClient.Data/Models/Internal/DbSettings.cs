@@ -76,6 +76,14 @@ Supports the following parameters:
     [Description("When a torrent file or magnet is added, create a copy in this directory.")]
     public String? CopyAddedTorrents { get; set; } = null;
 
+    [DisplayName("Direct download waiting webhook")]
+    [Description("Discord-compatible webhook URL called when a direct-download item is added and is waiting for its hoster links.")]
+    public String? DdlWaitingWebhook { get; set; } = null;
+
+    [DisplayName("Direct download host preference")]
+    [Description("Comma-separated hosts, most preferred first (e.g. nitroflare,rapidgator). When a post lists several mirrors, the host with the most parts is kept; this order breaks ties. Leave empty to use the DDL_HOST_PREFERENCE environment variable, or else rapidgator,nitroflare,ddownload,1fichier,katfile,fikper.")]
+    public String? DdlHostPreference { get; set; } = null;
+
     [DisplayName("Tracker enrichment list")]
     [Description("Optional. Specify the URL of a tracker list file to be appended to magnet links and torrent files.")]
     public String? TrackerEnrichmentList { get; set; } = null;

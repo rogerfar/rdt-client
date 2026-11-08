@@ -1,7 +1,7 @@
 import { Component, DestroyRef, OnDestroy, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { Torrent } from '../models/torrent.model';
+import { DownloadType, Torrent } from '../models/torrent.model';
 import { DiskSpaceStatus } from '../models/disk-space-status.model';
 import { RateLimitStatus } from '../models/rate-limit-status.model';
 import { TorrentService } from '../torrent.service';
@@ -151,6 +151,28 @@ export class TorrentTableComponent implements OnInit, OnDestroy {
 
   public openTorrent(torrentId: string): void {
     this.router.navigate([`/torrent/${torrentId}`]);
+  }
+
+  public typeLabel(torrent: Torrent): string {
+    switch (torrent.type) {
+      case DownloadType.Nzb:
+        return 'NZB';
+      case DownloadType.Ddl:
+        return 'DDL';
+      default:
+        return 'Torrent';
+    }
+  }
+
+  public typeClass(torrent: Torrent): string {
+    switch (torrent.type) {
+      case DownloadType.Nzb:
+        return 'is-info';
+      case DownloadType.Ddl:
+        return 'is-warning';
+      default:
+        return 'is-success';
+    }
   }
 
   public toggleDeleteSelectAll(event: Event) {

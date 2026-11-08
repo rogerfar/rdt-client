@@ -4,6 +4,7 @@ This is a web interface to manage your torrents on Real-Debrid, AllDebrid, Premi
 
 - Add new torrents through magnets or files
 - Add usenet downloads through NZB files (TorBox, Premiumize and HIGHWAY only)
+- Add direct downloads from file hosts (Real-Debrid and AllDebrid only), fed to Sonarr/Radarr by an indexer bridge, see [Direct downloads](#direct-downloads-file-hosts)
 - Download all files from Real-Debrid, AllDebrid, Premiumize, TorBox or HIGHWAY to your local machine automatically
 - Unpack all files when finished downloading
 - Implements a fake qBittorrent API so you can hook up other applications like Sonarr, Radarr or Couchpotato.
@@ -251,6 +252,73 @@ RdtClient also emulates part of the SABnzbd API so Sonarr and Radarr can add NZB
 1. Hit `Test` and then `Save` if all is well.
 
 When importing completed NZB downloads, Sonarr/Radarr must be able to access the path reported by RdtClient. In Docker setups this may require a Remote Path Mapping from the RdtClient download path to the path mounted inside Sonarr/Radarr.
+
+#### Direct downloads (file hosts)
+
+RdtClient can download releases that are published as file-host links (Rapidgator, Nitroflare, DDownload, 1fichier, …) instead of torrents or NZBs. It relies on your debrid provider to unlock the hoster links, so it needs **Real-Debrid or AllDebrid**; other providers do not unlock arbitrary hoster links. It has been tested with AllDebrid.
+
+Sonarr and Radarr cannot search file hosts themselves. You need an *indexer bridge*: a small Newznab-compatible service, specific to the site that lists the releases, that you add to Sonarr/Radarr as an indexer. When Sonarr/Radarr grab a release, the bridge returns a **stand-in NZB** instead of a real one:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<nzb xmlns="http://www.newzbin.com/DTD/2003/nzb">
+  <head>
+    <meta type="name">Movie.2026.1080p.WEB-DL-GRP</meta>
+    <meta type="x-ddl-post">https://example.com/movie-2026-1080p-web-dl-grp/</meta>
+    <meta type="x-ddl-source">example</meta>
+  </head>
+  <file poster="bridge" date="0" subject="Movie.2026.1080p.WEB-DL-GRP">
+    <groups><group>alt.binaries.ddl</group></groups>
+    <segments><segment bytes="1" number="1">placeholder@ddl.invalid</segment></segments>
+  </file>
+</nzb>
+```
+
+- `x-ddl-post` (required) is the http(s) URL of the release post. It identifies the item: the same post URL always maps to the same item.
+- `name` (optional) is the release name; the end of the post URL is used when it is missing.
+- `x-ddl-source` (optional) is informational.
+- The dummy `<file>` is only there so Sonarr/Radarr accept the NZB. RdtClient never reads it.
+
+Set up the download client exactly as in [Usenet/NZB](#usenetnzb) above (`SABnzbd`, port `6500`, category `sonarr` or `radarr`). Sonarr/Radarr send releases from a Newznab indexer to their usenet client, so the bridge's grabs land here while torrents keep going to the qBittorrent client.
+
+##### Waiting for links
+
+A stand-in NZB creates an item in the **Waiting for links** state. Nothing is downloaded until the hoster links of the post are supplied, in one of three ways:
+
+- **Item page**: paste the links into the *Waiting for links* box. Any text works, links are extracted from it.
+- **`/ddl` page**: open `/ddl?post=<post url>#links=<url-encoded links, one per line>`. The page shows the matching item and asks for confirmation. The links are passed in the URL fragment so they never reach the server logs, which makes it convenient for a bookmarklet run on the post page.
+- **API**, for automation (the bridge itself can unlock the post and submit the links):
+
+  ```
+  POST /Api/Torrents/DdlLinks   {"postUrl": "<post url>", "links": "<text containing the links>"}
+                                or {"torrentId": "<item id>", "links": "..."}
+  GET  /Api/Torrents/Ddl?postUrl=<post url>      the item for this post, 404 if there is none
+  ```
+
+  Authenticate with the session cookie from `POST /Api/Authentication/Login` `{"userName": "...", "password": "..."}`. `DdlLinks` returns `404` while Sonarr/Radarr have not handed the NZB over yet, so retry for a little while after a grab.
+
+Set **Settings → General → Direct download waiting webhook** to a Discord-compatible webhook URL to be notified when an item starts waiting for links.
+
+##### Adding links by hand
+
+Links you already have do not need a post or an indexer: **Add → Direct links**, paste them (any text, every mirror if you like) and optionally give the release a name, else it is taken from the file names. The download starts right away. The same links pasted twice are refused. Retrying such an item adds its links again. The same is available as `POST /Api/Torrents/UploadDdlLinks` `{"links": "...", "name": "...", "torrent": {...}}`, with the `torrent` settings of `UploadNzbLink`.
+
+When the `/ddl` page finds no item waiting for the post, it offers to download its links this way.
+
+##### Which links are downloaded
+
+Posts usually list the same release on several hosts, sometimes packaged differently (one file on one host, split `.partN.rar` archives on another). RdtClient downloads from a single host:
+
+1. Hosts whose archive set is complete come first: a host missing a `.partN.rar` that another host has is passed over.
+2. Then the configured host order: **Settings → General → Direct download host preference** (for example `nitroflare,rapidgator`), else the `DDL_HOST_PREFERENCE` environment variable, else `rapidgator,nitroflare,ddownload,1fichier,katfile,fikper`. Entries can be names, domains or aliases (`rg.to`, `nitro.download`).
+3. Then the number of links, as a last tie-break.
+
+The other hosts are kept as fallbacks:
+
+- **Per file**: when the same file name exists on another host, it is kept as a mirror of that part and used if the debrid provider refuses the link.
+- **Whole host**: when the provider rejects the host itself (for example AllDebrid `LINK_HOST_UNAVAILABLE` or `LINK_HOST_NOT_SUPPORTED`) and no mirror of the file exists, the item switches to the next host's links. This only happens before any download of the item has started, so files of two packagings never mix.
+
+Multi-part RAR archives are extracted once every part is downloaded, then the parts are deleted.
 
 ### Running within a folder
 

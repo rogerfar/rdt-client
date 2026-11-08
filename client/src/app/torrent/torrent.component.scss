@@ -24,7 +24,8 @@ table {
 }
 
 @media screen and (max-width: 768px) {
-  .action-buttons {
+  .action-buttons,
+  .ddl-actions {
     .control {
       width: 100%;
 
@@ -42,4 +43,8 @@ table {
       text-align: center;
     }
   }
+}
+
+.download-host {
+  margin-right: 6px;
 }

@@ -2,7 +2,7 @@ import { Component, DestroyRef, OnInit, inject, ChangeDetectionStrategy } from '
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { saveAs } from 'file-saver-es';
-import { RealDebridStatus, Torrent } from '../models/torrent.model';
+import { DownloadType, RealDebridStatus, Torrent } from '../models/torrent.model';
 import { TorrentService } from '../torrent.service';
 import { NgClass, DatePipe } from '@angular/common';
 import { CdkCopyToClipboard } from '@angular/cdk/clipboard';
@@ -63,6 +63,11 @@ export class TorrentComponent implements OnInit {
   public downloadRetryError: string;
   public downloadRetrying: boolean;
   public downloadRetryId: string;
+
+  public ddlLinks: string = '';
+  public ddlError: string;
+  public ddlSuccess: string;
+  public addingDdlLinks: boolean;
 
   public isUpdateSettingsModalActive: boolean;
 
@@ -125,9 +130,78 @@ export class TorrentComponent implements OnInit {
       ...currentTorrent,
       ...updatedTorrent,
       fileOrMagnet: updatedTorrent.fileOrMagnet ?? currentTorrent?.fileOrMagnet,
+      postUrl: updatedTorrent.postUrl ?? currentTorrent?.postUrl,
       files: hasIncomingFiles ? updatedTorrent.files : (currentTorrent?.files ?? []),
       downloads: updatedTorrent.downloads ?? currentTorrent?.downloads ?? [],
     };
+  }
+
+  public get kind(): string {
+    switch (this.torrent?.type) {
+      case DownloadType.Nzb:
+        return 'NZB';
+      case DownloadType.Ddl:
+        return 'Download';
+      default:
+        return 'Torrent';
+    }
+  }
+
+  public get kindLower(): string {
+    return this.kind === 'NZB' ? 'NZB' : this.kind.toLowerCase();
+  }
+
+  public get isDdl(): boolean {
+    return this.torrent?.type === DownloadType.Ddl;
+  }
+
+  public get isNzb(): boolean {
+    return this.torrent?.type === DownloadType.Nzb;
+  }
+
+  public get isWaitingForDdlLinks(): boolean {
+    return (
+      this.torrent != null &&
+      this.torrent.type === DownloadType.Ddl &&
+      (this.torrent.downloads ?? []).length === 0 &&
+      this.torrent.completed === null
+    );
+  }
+
+  public get hasDdlLinks(): boolean {
+    return this.ddlLinks != null && this.ddlLinks.trim().length > 0;
+  }
+
+  public addDdlLinks(): void {
+    if (!this.hasDdlLinks) {
+      return;
+    }
+
+    this.addingDdlLinks = true;
+    this.ddlError = null;
+    this.ddlSuccess = null;
+
+    this.torrentService.addDdlLinks({ torrentId: this.torrent.torrentId, links: this.ddlLinks }).subscribe({
+      next: (result) => {
+        this.addingDdlLinks = false;
+        this.ddlLinks = '';
+        this.ddlSuccess = `${result.links} links added`;
+
+        this.refresh();
+      },
+      error: (err) => {
+        this.ddlError = err.error;
+        this.addingDdlLinks = false;
+      },
+    });
+  }
+
+  private refresh(): void {
+    this.torrentService.get(this.torrent.torrentId).subscribe({
+      next: (torrent) => {
+        this.torrent = torrent;
+      },
+    });
   }
 
   public download(): void {
@@ -138,8 +212,9 @@ export class TorrentComponent implements OnInit {
       byteArray[index] = binaryString.charCodeAt(index);
     }
 
-    const blob = new Blob([byteArray], { type: 'application/x-bittorrent' });
-    saveAs(blob, `${this.torrent.rdName}.torrent`);
+    const [type, extension] = this.isNzb ? ['application/x-nzb', 'nzb'] : ['application/x-bittorrent', 'torrent'];
+    const blob = new Blob([byteArray], { type });
+    saveAs(blob, `${this.torrent.rdName}.${extension}`);
   }
 
   public showDeleteModal(): void {

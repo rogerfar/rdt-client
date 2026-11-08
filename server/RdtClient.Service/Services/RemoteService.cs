@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
+using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Internal;
 using RdtClient.Service.Helpers;
 

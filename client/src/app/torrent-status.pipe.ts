@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { RealDebridStatus, Torrent } from './models/torrent.model';
+import { DownloadType, RealDebridStatus, Torrent } from './models/torrent.model';
 import { FileSizePipe } from './filesize.pipe';
 
 const fileSizePipe = new FileSizePipe();
@@ -10,6 +10,10 @@ export function getTorrentStatus(torrent: Torrent): string {
   }
 
   const downloads = torrent.downloads ?? [];
+
+  if (torrent.type === DownloadType.Ddl && downloads.length === 0 && torrent.completed == null) {
+    return 'Waiting for links';
+  }
 
   if (downloads.length > 0) {
     let allFinished = true;

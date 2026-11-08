@@ -27,11 +27,28 @@ public class Download
 
     public Int32 RetryCount { get; set; }
 
+    /// <summary>
+    ///     The file size once the download finished; the live downloader only knows it while it runs.
+    /// </summary>
+    public Int64? Size { get; set; }
+
     public String? Error { get; set; }
+
+    /// <summary>
+    ///     The error that sent the download back to the queue (retry or mirror switch). Unlike <see cref="Error" /> it does not
+    ///     fail the download; it only tells the UI why the download is still queued.
+    /// </summary>
+    public String? LastError { get; set; }
 
     public String? RemoteId { get; set; }
 
     public String? FileName { get; set; }
+
+    /// <summary>
+    ///     Direct downloads only: the same file on other hosts, one link per line, tried in order when
+    ///     <see cref="Path" /> can't be unrestricted or downloaded.
+    /// </summary>
+    public String? Mirrors { get; set; }
 
     [NotMapped]
     public Int64 BytesTotal { get; set; }
@@ -59,4 +76,9 @@ public class DownloadInfo
     ///     either a fake or the unrestricted link
     /// </summary>
     public required String RestrictedLink;
+
+    /// <summary>
+    ///     Alternative restricted links for the same file, one per line. See <see cref="Download.Mirrors" />.
+    /// </summary>
+    public String? Mirrors;
 }

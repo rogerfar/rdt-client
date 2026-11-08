@@ -4,6 +4,42 @@ table {
     td.break-all {
       word-break: break-all;
     }
+    .type-tag {
+      margin-right: 0.5rem;
+      vertical-align: text-bottom;
+    }
+  }
+}
+
+// Fixed column widths: with automatic layout the browser re-measures every column whenever a status text
+// (download speed, percentage) changes length, so columns jump and rows re-wrap on each update.
+// The name column takes whatever width is left.
+.torrents-table {
+  table-layout: fixed;
+  font-variant-numeric: tabular-nums;
+
+  th:nth-child(1) {
+    width: 2.5rem;
+  }
+  th:nth-child(3) {
+    width: 6.5rem;
+  }
+  th:nth-child(4),
+  th:nth-child(5) {
+    width: 5.5rem;
+  }
+  th:nth-child(6) {
+    width: 4.5rem;
+  }
+  th:nth-child(7),
+  th:nth-child(8) {
+    width: 7rem;
+  }
+  th:nth-child(9) {
+    width: 10.5rem;
+  }
+  th:nth-child(10) {
+    width: 17rem;
   }
 }
 

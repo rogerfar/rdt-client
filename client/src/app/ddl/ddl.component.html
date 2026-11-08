@@ -1,0 +1,86 @@
+@if (loading) {
+  <div>
+    <div class="fa-3x">
+      <i class="fas fa-spinner fa-spin"></i>
+    </div>
+  </div>
+} @else if (notFound) {
+  <div class="notification is-warning is-light">
+    No item is waiting for this post. Grab it in Sonarr/Radarr to have it imported, or download the links now.
+  </div>
+  @if (postUrl) {
+    <div class="field">
+      <label class="label">Post</label>
+      <a class="break-all" href="{{ postUrl }}" target="_blank" rel="noopener noreferrer">{{ postUrl }}</a>
+    </div>
+  }
+  @if (hasLinks) {
+    <div class="field ddl-actions">
+      <div class="control">
+        <a class="button is-primary" [routerLink]="['/add']" [queryParams]="{ type: 'ddl' }" [fragment]="'links=' + links">
+          Download these links
+        </a>
+      </div>
+    </div>
+  }
+} @else if (alreadyAdded) {
+  <div class="notification is-info is-light">Links were already added</div>
+  <div class="field">
+    <label class="label">Release</label>
+    <span class="break-all">{{ torrent.rdName }}</span>
+  </div>
+  <div class="field ddl-actions">
+    <div class="control">
+      <a class="button is-primary" [routerLink]="['/torrent', torrent.torrentId]">Open this item</a>
+    </div>
+  </div>
+} @else if (torrent) {
+  <div class="card">
+    <header class="card-header">
+      <p class="card-header-title">Add direct-download links</p>
+    </header>
+    <div class="card-content">
+      <div class="field">
+        <label class="label">Release</label>
+        <span class="break-all">{{ torrent.rdName }}</span>
+      </div>
+      <div class="field">
+        <label class="label">Post</label>
+        <a class="break-all" href="{{ torrent.postUrl }}" target="_blank" rel="noopener noreferrer">
+          {{ torrent.postUrl }}
+        </a>
+      </div>
+      <div class="field">
+        <label class="label" for="ddlLinks">Links</label>
+        <div class="control">
+          <textarea
+            id="ddlLinks"
+            class="textarea"
+            rows="8"
+            placeholder="Paste the download links here, one per line"
+            [(ngModel)]="links"
+            [disabled]="saving"
+          ></textarea>
+        </div>
+        <p class="help">All mirrors are fine, one is picked automatically.</p>
+      </div>
+      <div class="field ddl-actions">
+        <div class="control">
+          <button
+            class="button is-success"
+            (click)="confirm()"
+            [disabled]="saving || !hasLinks"
+            [ngClass]="{ 'is-loading': saving }"
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+      @if (error) {
+        <div class="notification is-danger is-light">{{ error }}</div>
+      }
+    </div>
+  </div>
+} @else if (error) {
+  <div class="notification is-danger is-light">{{ error }}</div>
+}

@@ -46,6 +46,12 @@ public class Torrent
 
     public String? Error { get; set; }
 
+    /// <summary>
+    ///     Direct downloads only: hoster links of the hosts not in use, one per line. The item moves to them when the debrid
+    ///     service rejects the current host.
+    /// </summary>
+    public String? DdlFallbackLinks { get; set; }
+
     [InverseProperty("Torrent")]
     public IList<Download> Downloads { get; set; } = [];
 

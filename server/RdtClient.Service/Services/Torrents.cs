@@ -185,6 +185,180 @@ public class Torrents(
         return nzbNewTorrent;
     }
 
+    public virtual async Task<Torrent> AddDdlToDebridQueue(String postUrl, String title, Torrent torrent)
+    {
+        var hash = DirectDownloadHelper.Hash(postUrl);
+        var existing = await torrentData.GetByHash(hash);
+
+        if (existing != null)
+        {
+            return existing;
+        }
+
+        torrent.RdName = title;
+        torrent.RdStatus = TorrentStatus.Queued;
+
+        var newTorrent = await AddQueued(hash, postUrl, false, DownloadType.Ddl, torrent);
+
+        Log($"Adding {postUrl} (direct download) to queue, waiting for links", newTorrent);
+
+        try
+        {
+            await DirectDownloadHelper.NotifyWaiting(Settings.Get.General.DdlWaitingWebhook, title, postUrl);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Could not send the direct-download waiting notification: {Message}", ex.Message);
+        }
+
+        await CopyAddedTorrent(newTorrent);
+
+        return newTorrent;
+    }
+
+    /// <summary>
+    ///     Adds a direct-download item straight from pasted hoster links, without a post or an indexer. The links are its
+    ///     payload, stored like a file so a retry adds them again instead of waiting for links nobody sends.
+    /// </summary>
+    public virtual async Task<Torrent> AddDdlLinksToDebridQueue(String linksText, String? name, Torrent torrent)
+    {
+        var parts = DirectDownloadHelper.PlanParts(linksText, Settings.Get.General.DdlHostPreference);
+
+        if (parts.Count == 0)
+        {
+            throw new("No links found in the submitted text");
+        }
+
+        var hash = DirectDownloadHelper.LinksHash(linksText);
+
+        if (await torrentData.GetByHash(hash) != null)
+        {
+            throw new("These links were already added");
+        }
+
+        torrent.RdName = String.IsNullOrWhiteSpace(name) ? DirectDownloadHelper.ReleaseName(parts[0].Link) : name.Trim();
+        torrent.RdStatus = TorrentStatus.Queued;
+
+        var newTorrent = await AddQueued(hash, Convert.ToBase64String(Encoding.UTF8.GetBytes(linksText)), true, DownloadType.Ddl, torrent);
+
+        Log($"Adding {torrent.RdName} (direct download) from pasted links", newTorrent);
+
+        await AddDdlLinks(newTorrent.TorrentId, linksText);
+
+        await CopyAddedTorrent(newTorrent);
+
+        return newTorrent;
+    }
+
+    public virtual async Task<Torrent?> GetDdlByPostUrl(String postUrl)
+    {
+        var torrent = await torrentData.GetByHash(DirectDownloadHelper.Hash(postUrl));
+
+        return torrent?.Type == DownloadType.Ddl ? torrent : null;
+    }
+
+    public virtual async Task<Int32> AddDdlLinks(Guid torrentId, String linksText)
+    {
+        var torrent = await torrentData.GetById(torrentId) ?? throw new($"Torrent {torrentId} not found");
+
+        if (torrent.Type != DownloadType.Ddl)
+        {
+            throw new("This item is not a direct download");
+        }
+
+        if (torrent.Downloads.Count > 0 || torrent.Completed != null)
+        {
+            throw new("Links were already added to this item");
+        }
+
+        var parts = DirectDownloadHelper.PlanParts(linksText, Settings.Get.General.DdlHostPreference);
+
+        if (parts.Count == 0)
+        {
+            throw new("No links found in the submitted text");
+        }
+
+        foreach (var part in parts)
+        {
+            await downloads.TryAddForTorrent(torrent.TorrentId,
+                                             new()
+                                             {
+                                                 FileName = null,
+                                                 RestrictedLink = part.Link,
+                                                 Mirrors = part.Mirrors.Count > 0 ? String.Join('\n', part.Mirrors) : null
+                                             });
+        }
+
+        await torrentData.UpdateDdlFallbackLinks(torrent.TorrentId, DirectDownloadHelper.FallbackLinks(linksText, Settings.Get.General.DdlHostPreference));
+
+        var now = DateTimeOffset.UtcNow;
+
+        torrent.RdStatus = TorrentStatus.Finished;
+        torrent.RdStatusRaw = "links added";
+        torrent.RdProgress = 100;
+        torrent.RdAdded = now;
+        torrent.RdEnded = now;
+
+        await torrentData.UpdateRdData(torrent);
+        await torrentData.UpdateFilesSelected(torrent.TorrentId, now);
+
+        Log($"Added {parts.Count} direct-download links ({parts.Sum(p => p.Mirrors.Count)} mirrors)", torrent);
+
+        return parts.Count;
+    }
+
+    /// <summary>
+    ///     Replaces the downloads of a direct-download item with the links of its next fallback host. Only done before any
+    ///     download has started, so files of two packagings never mix. Returns the new host, or null when it cannot switch.
+    /// </summary>
+    public virtual async Task<String?> SwitchDdlHost(Guid torrentId)
+    {
+        var torrent = await torrentData.GetById(torrentId);
+
+        if (torrent?.Type != DownloadType.Ddl || String.IsNullOrWhiteSpace(torrent.DdlFallbackLinks) || torrent.Downloads.Any(m => m.DownloadStarted != null))
+        {
+            return null;
+        }
+
+        var hostPreference = Settings.Get.General.DdlHostPreference;
+        var parts = DirectDownloadHelper.PlanParts(torrent.DdlFallbackLinks, hostPreference);
+
+        if (parts.Count == 0)
+        {
+            return null;
+        }
+
+        await downloads.DeleteForTorrent(torrentId);
+
+        foreach (var part in parts)
+        {
+            await downloads.TryAddForTorrent(torrentId,
+                                             new()
+                                             {
+                                                 FileName = null,
+                                                 RestrictedLink = part.Link,
+                                                 Mirrors = part.Mirrors.Count > 0 ? String.Join('\n', part.Mirrors) : null
+                                             });
+        }
+
+        await torrentData.UpdateDdlFallbackLinks(torrentId, DirectDownloadHelper.FallbackLinks(torrent.DdlFallbackLinks, hostPreference));
+
+        var host = DirectDownloadHelper.HostOf(parts[0].Link);
+
+        Log($"Switched direct download to {host} ({parts.Count} links)", torrent);
+
+        return host;
+    }
+
+    public async Task<String> UseLinkFileName(Guid downloadId, String unrestrictedLink)
+    {
+        var fileName = DirectDownloadHelper.FileNameFromLink(unrestrictedLink);
+
+        await downloads.UpdateFileName(downloadId, fileName);
+
+        return fileName;
+    }
+
     public virtual async Task<Torrent> AddMagnetToDebridQueue(String magnetLink, Torrent torrent)
     {
         var enriched = await enricher.EnrichMagnetLink(magnetLink);
@@ -246,7 +420,7 @@ public class Torrents(
 
         String fileAsBase64;
 
-        MonoTorrent.Torrent monoTorrent;
+        TorrentFileInfo monoTorrent;
 
         if (enriched.SequenceEqual(bytes))
         {
@@ -261,7 +435,7 @@ public class Torrents(
 
         try
         {
-            monoTorrent = await MonoTorrent.Torrent.LoadAsync(bytes);
+            monoTorrent = await TorrentFileHelper.Read(bytes);
         }
         catch (Exception ex)
         {
@@ -286,9 +460,9 @@ public class Torrents(
                     throw new($"Cannot add torrent, the torrent source '{monoTorrent.Source}' is a banned tracker.");
                 }
 
-                if (monoTorrent.AnnounceUrls != null)
+                if (monoTorrent.AnnounceUrls.Count > 0)
                 {
-                    var bannedUrls = monoTorrent.AnnounceUrls.SelectMany(m => m).Where(m => m.Trim().ToLower().Contains(bannedTrackerCompare)).ToList();
+                    var bannedUrls = monoTorrent.AnnounceUrls.Where(m => m.Trim().ToLower().Contains(bannedTrackerCompare)).ToList();
 
                     if (bannedUrls.Count > 0)
                     {
@@ -303,7 +477,7 @@ public class Torrents(
         torrent.RdStatus = TorrentStatus.Queued;
         torrent.RdName = monoTorrent.Name;
 
-        var hash = monoTorrent.InfoHashes.V1OrV2.ToHex();
+        var hash = monoTorrent.InfoHash;
 
         var newTorrent = await AddQueued(hash, fileAsBase64, true, DownloadType.Torrent, torrent);
 
@@ -332,6 +506,7 @@ public class Torrents(
             {
                 DownloadType.Nzb => ".nzb",
                 DownloadType.Torrent => torrent.IsFile ? ".torrent" : ".magnet",
+                DownloadType.Ddl => ".url",
                 _ => throw new ArgumentException("Unexpected DownloadType")
             };
 
@@ -832,7 +1007,7 @@ public class Torrents(
                 }
             }
 
-            foreach (var torrent in torrents)
+            foreach (var torrent in torrents.Where(m => m.Type != DownloadType.Ddl))
             {
                 var rdTorrent = torrent.RdId != null && providerTorrentsById.TryGetValue(torrent.RdId, out var providerTorrent) ? providerTorrent : null;
 
@@ -900,7 +1075,15 @@ public class Torrents(
 
             Torrent newTorrent;
 
-            if (torrent.Type == DownloadType.Nzb)
+            if (torrent.Type == DownloadType.Ddl && torrent.IsFile)
+            {
+                newTorrent = await AddDdlLinksToDebridQueue(Encoding.UTF8.GetString(Convert.FromBase64String(payloadContent)), torrent.RdName, torrent);
+            }
+            else if (torrent.Type == DownloadType.Ddl)
+            {
+                newTorrent = await AddDdlToDebridQueue(payloadContent, torrent.RdName ?? payloadContent, torrent);
+            }
+            else if (torrent.Type == DownloadType.Nzb)
             {
                 if (torrent.IsFile)
                 {
@@ -1212,6 +1395,11 @@ public class Torrents(
 
     private async Task UpdateTorrentClientData(Torrent torrent, DebridClientTorrent? torrentClientTorrent = null)
     {
+        if (torrent.Type == DownloadType.Ddl)
+        {
+            return;
+        }
+
         try
         {
             var originalTorrent = CaptureRdState(torrent);

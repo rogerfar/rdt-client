@@ -17,11 +17,20 @@ public class UnpackClient(Download download, String destinationPath)
 
     public String? Error { get; private set; }
 
-    public Int32 Progess { get; private set; }
+    private Int64 _bytesTotal;
+    private Int64 _bytesDone;
+
+    /// <summary>
+    ///     Uncompressed size of the archive being extracted, 0 until it is opened.
+    /// </summary>
+    public Int64 BytesTotal => Interlocked.Read(ref _bytesTotal);
+
+    public Int64 BytesDone => Interlocked.Read(ref _bytesDone);
 
     public void Start()
     {
-        Progess = 0;
+        Interlocked.Exchange(ref _bytesTotal, 0);
+        Interlocked.Exchange(ref _bytesDone, 0);
 
         try
         {
@@ -98,9 +107,17 @@ public class UnpackClient(Download download, String destinationPath)
             }
             else
             {
-                Extract(filePath, extractPath, cancellationToken);
+                var parts = Extract(filePath, extractPath, cancellationToken);
 
                 await FileHelper.Delete(filePath);
+
+                if (_torrent.Type == DownloadType.Ddl)
+                {
+                    foreach (var part in parts)
+                    {
+                        await FileHelper.Delete(part);
+                    }
+                }
             }
 
             if (_torrent.ClientKind == Provider.TorBox)
@@ -145,34 +162,99 @@ public class UnpackClient(Download download, String destinationPath)
         return entries;
     }
 
-    private void Extract(String filePath, String extractPath, CancellationToken cancellationToken)
+    private List<String> Extract(String filePath, String extractPath, CancellationToken cancellationToken)
     {
-        var parts = ArchiveFactory.GetFileParts(filePath);
+        var parts = ArchiveFactory.GetFileParts(filePath).ToList();
 
         var fi = parts.Select(m => new FileInfo(m));
 
         var extension = Path.GetExtension(filePath);
 
-        IArchive archive;
+        using IArchive archive = extension == ".zip" ? ZipArchive.Open(fi) : RarArchive.Open(fi);
 
-        if (extension == ".zip")
+        // Extract entry by entry through a counting stream: the library's ExtractToDirectory only reports progress once
+        // per file, as a 0-1 fraction, so a release that is a single big video showed 0% until it was done.
+        Interlocked.Exchange(ref _bytesTotal, archive.TotalUncompressSize);
+        Interlocked.Exchange(ref _bytesDone, 0);
+
+        var root = Path.TrimEndingDirectorySeparator(Path.GetFullPath(extractPath));
+
+        foreach (var entry in archive.Entries)
         {
-            archive = ZipArchive.Open(fi);
-        }
-        else
-        {
-            archive = RarArchive.Open(fi);
-        }
+            cancellationToken.ThrowIfCancellationRequested();
 
-        archive.ExtractToDirectory(extractPath,
-                                   d =>
-                                   {
-                                       Progess = (Int32) Math.Round(d);
-                                   },
-                                   cancellationToken);
+            var path = Path.GetFullPath(Path.Combine(root, entry.Key ?? throw new("Archive entry without a name")));
 
-        archive.Dispose();
+            if (!path.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+            {
+                throw new($"Archive entry {entry.Key} points outside the download folder");
+            }
+
+            if (entry.IsDirectory)
+            {
+                Directory.CreateDirectory(path);
+
+                continue;
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+
+            using var file = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, 1 << 20);
+            using var counting = new CountingStream(file, count => Interlocked.Add(ref _bytesDone, count), cancellationToken);
+            entry.WriteTo(counting);
+        }
 
         GC.Collect();
+
+        return parts;
+    }
+
+    /// <summary>
+    ///     Write-only pass-through that reports the bytes written and stops the extraction when it is cancelled.
+    /// </summary>
+    private sealed class CountingStream(Stream inner, Action<Int64> written, CancellationToken cancellationToken) : Stream
+    {
+        public override Boolean CanRead => false;
+        public override Boolean CanSeek => false;
+        public override Boolean CanWrite => true;
+        public override Int64 Length => throw new NotSupportedException();
+
+        public override Int64 Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
+
+        public override void Write(Byte[] buffer, Int32 offset, Int32 count)
+        {
+            Write(buffer.AsSpan(offset, count));
+        }
+
+        public override void Write(ReadOnlySpan<Byte> buffer)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            inner.Write(buffer);
+            written(buffer.Length);
+        }
+
+        public override void Flush()
+        {
+            inner.Flush();
+        }
+
+        public override Int32 Read(Byte[] buffer, Int32 offset, Int32 count)
+        {
+            throw new NotSupportedException();
+        }
+
+        public override Int64 Seek(Int64 offset, SeekOrigin origin)
+        {
+            throw new NotSupportedException();
+        }
+
+        public override void SetLength(Int64 value)
+        {
+            throw new NotSupportedException();
+        }
     }
 }

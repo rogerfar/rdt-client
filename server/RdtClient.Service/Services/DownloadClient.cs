@@ -23,6 +23,12 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
     public Int64 BytesTotal { get; private set; }
     public Int64 BytesDone { get; private set; }
 
+    /// <summary>
+    ///     Size of the downloaded file on disk once the download completed. Unlike <see cref="BytesTotal" /> it is known
+    ///     even when the server sent no Content-Length.
+    /// </summary>
+    public Int64 FileSize { get; private set; }
+
     private Int64 LastBytesDone { get; set; }
 
     public async Task<String> Start()
@@ -89,8 +95,14 @@ public class DownloadClient(Download download, Torrent torrent, String destinati
 
             Downloader.DownloadComplete += (_, args) =>
             {
-                Finished = true;
                 Error ??= args.Error;
+
+                if (Error == null && filePath != null && File.Exists(filePath))
+                {
+                    FileSize = new FileInfo(filePath).Length;
+                }
+
+                Finished = true;
 
                 if (Error == null && expectedFileSize is > 0)
                 {

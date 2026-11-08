@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AddNewTorrentComponent } from './add-new-torrent/add-new-torrent.component';
 import { authResolver } from './auth-resolver.service';
+import { DdlComponent } from './ddl/ddl.component';
 import { LoginComponent } from './login/login.component';
 import { MainLayoutComponent } from './main-layout/main-layout.component';
 import { ProfileComponent } from './profile/profile.component';
@@ -37,6 +38,10 @@ const routes: Routes = [
       {
         path: 'add',
         component: AddNewTorrentComponent,
+      },
+      {
+        path: 'ddl',
+        component: DdlComponent,
       },
       {
         path: 'settings',

@@ -20,6 +20,7 @@ export class Torrent {
 
   public fileOrMagnet: string;
   public isFile: boolean;
+  public postUrl: string;
 
   public retryCount: number;
   public downloadRetryAttempts: number;
@@ -81,4 +82,5 @@ export enum RealDebridStatus {
 export enum DownloadType {
   Torrent = 0,
   Nzb = 1,
+  Ddl = 2,
 }

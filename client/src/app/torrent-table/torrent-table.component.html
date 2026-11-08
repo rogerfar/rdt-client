@@ -25,7 +25,7 @@
 }
 <div class="table-container">
   @if (!isMobile) {
-    <table class="table is-fullwidth is-hoverable">
+    <table class="table is-fullwidth is-hoverable torrents-table">
       <thead>
         <tr>
           <th>
@@ -48,11 +48,12 @@
       </thead>
       <tbody>
         @for (torrent of sortedTorrents; track torrent.torrentId) {
-          <tr>
-            <td>
+          <tr (click)="openTorrent(torrent.torrentId)">
+            <td (click)="$event.stopPropagation()">
               <input type="checkbox" (click)="toggleSelect(torrent.torrentId)" [checked]="isSelected(torrent.torrentId)" />
             </td>
-            <td (click)="openTorrent(torrent.torrentId)" class="break-all">
+            <td class="break-all">
+              <span class="tag is-light type-tag" [ngClass]="typeClass(torrent)">{{ typeLabel(torrent) }}</span>
               {{ torrent.rdName }}
             </td>
             <td>
@@ -97,6 +98,7 @@
           <div class="mobile-card-body" (click)="openTorrent(torrent.torrentId)">
             <p class="mobile-card-name">{{ torrent.rdName }}</p>
             <div class="tags mb-2">
+              <span class="tag is-light" [ngClass]="typeClass(torrent)">{{ typeLabel(torrent) }}</span>
               <span class="tag is-info is-light">{{ torrent.statusText ?? (torrent | status) }}</span>
               @if (torrent.category) {
                 <span class="tag is-light">{{ torrent.category }}</span>

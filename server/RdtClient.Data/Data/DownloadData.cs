@@ -61,6 +61,7 @@ public class DownloadData(DataContext dataContext, ILogger<DownloadData>? logger
             TorrentId = torrentId,
             FileName = downloadInfo.FileName,
             Path = downloadInfo.RestrictedLink,
+            Mirrors = downloadInfo.Mirrors,
             Added = DateTimeOffset.UtcNow,
             DownloadQueued = DateTimeOffset.UtcNow,
             RetryCount = 0
@@ -250,6 +251,36 @@ public class DownloadData(DataContext dataContext, ILogger<DownloadData>? logger
         await dataContext.SaveChangesAsync();
     }
 
+    public async Task UpdateSize(Guid downloadId, Int64 size)
+    {
+        var dbDownload = await dataContext.Downloads
+                                          .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+        if (dbDownload == null)
+        {
+            return;
+        }
+
+        dbDownload.Size = size;
+
+        await dataContext.SaveChangesAsync();
+    }
+
+    public async Task UpdateLastError(Guid downloadId, String? lastError)
+    {
+        var dbDownload = await dataContext.Downloads
+                                          .FirstOrDefaultAsync(m => m.DownloadId == downloadId);
+
+        if (dbDownload == null)
+        {
+            return;
+        }
+
+        dbDownload.LastError = lastError;
+
+        await dataContext.SaveChangesAsync();
+    }
+
     public async Task UpdateRetryCount(Guid downloadId, Int32 retryCount)
     {
         var dbDownload = await dataContext.Downloads
@@ -310,6 +341,34 @@ public class DownloadData(DataContext dataContext, ILogger<DownloadData>? logger
         dbDownload.Error = null;
 
         await dataContext.SaveChangesAsync();
+    }
+
+    /// <summary>
+    ///     Moves the download to its next mirror and queues it again. Returns the new link, or null when no mirror is left.
+    /// </summary>
+    public async Task<String?> SwitchToNextMirror(Guid downloadId)
+    {
+        var dbDownload = await dataContext.Downloads
+                                          .FirstOrDefaultAsync(m => m.DownloadId == downloadId)
+                         ?? throw new($"Cannot find download with ID {downloadId}");
+
+        var mirrors = (dbDownload.Mirrors ?? "").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        if (mirrors.Length == 0)
+        {
+            return null;
+        }
+
+        dbDownload.Path = mirrors[0];
+        dbDownload.Mirrors = mirrors.Length > 1 ? String.Join('\n', mirrors.Skip(1)) : null;
+        dbDownload.FileName = null;
+        dbDownload.RemoteId = null;
+
+        await dataContext.SaveChangesAsync();
+
+        await Reset(downloadId);
+
+        return mirrors[0];
     }
 
     private static Boolean IsDuplicateDownloadViolation(DbUpdateException exception)
