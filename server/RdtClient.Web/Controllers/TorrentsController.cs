@@ -211,9 +211,9 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
 
         var bytes = await ReadFormFileBytes(file);
 
-        var torrent = await MonoTorrent.Torrent.LoadAsync(bytes);
+        var torrent = await TorrentFileHelper.Read(bytes);
 
-        var result = await torrents.GetAvailableFiles(torrent.InfoHashes.V1OrV2.ToHex());
+        var result = await torrents.GetAvailableFiles(torrent.InfoHash);
 
         return Ok(result);
     }
@@ -409,9 +409,9 @@ public class TorrentsController(ILogger<TorrentsController> logger, Torrents tor
         {
             var bytes = await ReadFormFileBytes(file);
 
-            var torrent = await MonoTorrent.Torrent.LoadAsync(bytes);
+            var torrent = await TorrentFileHelper.Read(bytes);
 
-            availableFiles = await torrents.GetAvailableFiles(torrent.InfoHashes.V1OrV2.ToHex());
+            availableFiles = await torrents.GetAvailableFiles(torrent.InfoHash);
         }
         else
         {

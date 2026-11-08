@@ -420,7 +420,7 @@ public class Torrents(
 
         String fileAsBase64;
 
-        MonoTorrent.Torrent monoTorrent;
+        TorrentFileInfo monoTorrent;
 
         if (enriched.SequenceEqual(bytes))
         {
@@ -435,7 +435,7 @@ public class Torrents(
 
         try
         {
-            monoTorrent = await MonoTorrent.Torrent.LoadAsync(bytes);
+            monoTorrent = await TorrentFileHelper.Read(bytes);
         }
         catch (Exception ex)
         {
@@ -460,9 +460,9 @@ public class Torrents(
                     throw new($"Cannot add torrent, the torrent source '{monoTorrent.Source}' is a banned tracker.");
                 }
 
-                if (monoTorrent.AnnounceUrls != null)
+                if (monoTorrent.AnnounceUrls.Count > 0)
                 {
-                    var bannedUrls = monoTorrent.AnnounceUrls.SelectMany(m => m).Where(m => m.Trim().ToLower().Contains(bannedTrackerCompare)).ToList();
+                    var bannedUrls = monoTorrent.AnnounceUrls.Where(m => m.Trim().ToLower().Contains(bannedTrackerCompare)).ToList();
 
                     if (bannedUrls.Count > 0)
                     {
@@ -477,7 +477,7 @@ public class Torrents(
         torrent.RdStatus = TorrentStatus.Queued;
         torrent.RdName = monoTorrent.Name;
 
-        var hash = monoTorrent.InfoHashes.V1OrV2.ToHex();
+        var hash = monoTorrent.InfoHash;
 
         var newTorrent = await AddQueued(hash, fileAsBase64, true, DownloadType.Torrent, torrent);
 
