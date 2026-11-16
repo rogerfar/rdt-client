@@ -247,6 +247,76 @@ public class QBittorrentTest
     }
 
     [Fact]
+    public async Task TorrentFileContents_ShouldNameFilesRelativeToSavePath()
+    {
+        // Arrange
+        var torrent = new Torrent
+        {
+            Hash = "hash1",
+            Type = DownloadType.Torrent,
+            RdName = "Example.Movie.2025.1080p",
+            RdFiles = JsonSerializer.Serialize(new List<DebridClientFile>
+            {
+                new()
+                {
+                    Id = 1,
+                    Path = "/Example.Movie.2025.1080p.mp4",
+                    Selected = true
+                },
+                new()
+                {
+                    Id = 2,
+                    Path = "/Subs/English.srt",
+                    Selected = true
+                }
+            })
+        };
+
+        _torrentsMock.Setup(m => m.GetByHash("hash1")).ReturnsAsync(torrent);
+
+        // Act
+        var result = await _qBittorrent.TorrentFileContents("hash1");
+
+        // Assert
+        Assert.NotNull(result);
+
+        Assert.Collection(result!,
+                          first => Assert.Equal("Example.Movie.2025.1080p/Example.Movie.2025.1080p.mp4", first.Name),
+                          second => Assert.Equal("Example.Movie.2025.1080p/Subs/English.srt", second.Name));
+    }
+
+    [Fact]
+    public async Task TorrentFileContents_ShouldNotRepeatTorrentName_WhenFilePathStartsWithIt()
+    {
+        // Arrange
+        var torrent = new Torrent
+        {
+            Hash = "hash1",
+            Type = DownloadType.Torrent,
+            RdName = "Example.Show.S01.1080p",
+            RdFiles = JsonSerializer.Serialize(new List<DebridClientFile>
+            {
+                new()
+                {
+                    Id = 1,
+                    Path = "/Example.Show.S01.1080p/Example.Show.S01E01.1080p.mkv",
+                    Selected = true
+                }
+            })
+        };
+
+        _torrentsMock.Setup(m => m.GetByHash("hash1")).ReturnsAsync(torrent);
+
+        // Act
+        var result = await _qBittorrent.TorrentFileContents("hash1");
+
+        // Assert
+        Assert.NotNull(result);
+
+        Assert.Collection(result!, first => Assert.Equal("Example.Show.S01.1080p/Example.Show.S01E01.1080p.mkv", first.Name));
+    }
+
+    [Fact]
     public async Task TorrentProperties_ShouldExposePublicTorrentFlag()
     {
         // Arrange

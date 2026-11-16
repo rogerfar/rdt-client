@@ -2,6 +2,7 @@
 using RdtClient.Data.Enums;
 using RdtClient.Data.Models.Data;
 using RdtClient.Data.Models.QBittorrent;
+using RdtClient.Service.Helpers;
 
 namespace RdtClient.Service.Services;
 
@@ -514,7 +515,7 @@ public class QBittorrent(ILogger<QBittorrent> logger, ISettings settings, Authen
                       .Select((file, index) => new TorrentFileItem
                       {
                           Index = index,
-                          Name = file.Path,
+                          Name = DownloadHelper.GetRelativeFilePath(torrent, file.Path),
                           Size = file.Bytes,
                           Progress = file.Selected ? progress : 0f,
                           Priority = file.Selected ? 1 : 0,

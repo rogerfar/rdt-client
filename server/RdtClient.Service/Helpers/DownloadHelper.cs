@@ -106,6 +106,40 @@ public static class DownloadHelper
         return filePath;
     }
 
+    /// <summary>
+    ///     Where GetDownloadPath writes a torrent file, relative to the download path and with '/' separators, which is
+    ///     how qBittorrent names the files of a torrent.
+    /// </summary>
+    public static String GetRelativeFilePath(Torrent torrent, String path)
+    {
+        path = path.Trim('/').Trim('\\');
+
+        if (torrent.RdName == null)
+        {
+            return path;
+        }
+
+        var directory = RemoveInvalidPathChars(torrent.RdName);
+
+        var relativePath = directory;
+
+        var subPath = Path.GetDirectoryName(path);
+
+        if (!String.IsNullOrWhiteSpace(subPath))
+        {
+            subPath = StripTorrentNamePrefix(subPath, directory);
+
+            if (!String.IsNullOrWhiteSpace(subPath))
+            {
+                relativePath = Path.Combine(relativePath, subPath);
+            }
+        }
+
+        var fileName = FileHelper.RemoveInvalidFileNameChars(Path.GetFileName(path));
+
+        return Path.Combine(relativePath, fileName).Replace(Path.DirectorySeparatorChar, '/');
+    }
+
     public static String? GetFileName(Download download)
     {
         if (String.IsNullOrWhiteSpace(download.Link))
